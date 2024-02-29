@@ -616,23 +616,6 @@
           }
         }
       },
-      "obs-websocket-dotnet/5.0.0.3": {
-        "type": "package",
-        "dependencies": {
-          "Newtonsoft.Json": "13.0.1",
-          "Websocket.Client": "4.4.43"
-        },
-        "compile": {
-          "lib/netstandard2.0/obs-websocket-dotnet.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/obs-websocket-dotnet.dll": {
-            "related": ".xml"
-          }
-        }
-      },
       "System.Diagnostics.DiagnosticSource/8.0.0": {
         "type": "package",
         "dependencies": {
@@ -835,6 +818,20 @@
           "lib/net6.0/Websocket.Client.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "obs-websocket-dotnet/5.0.0.3": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.1",
+          "Websocket.Client": "4.4.43"
+        },
+        "compile": {
+          "bin/placeholder/obs-websocket-dotnet.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/obs-websocket-dotnet.dll": {}
         }
       },
       "SpotifyAPI.Web/1.0.0": {
@@ -1801,20 +1798,6 @@
         "packageIcon.png"
       ]
     },
-    "obs-websocket-dotnet/5.0.0.3": {
-      "sha512": "XQ8i/e/3hHfQxxU3r2YQ6Ha3SI7uqOspb06ExSQH41SRESznywJNXB1ijRqOI+uZIpPf0slS9Sj50a+GBjTN5w==",
-      "type": "package",
-      "path": "obs-websocket-dotnet/5.0.0.3",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "LICENSE",
-        "lib/netstandard2.0/obs-websocket-dotnet.dll",
-        "lib/netstandard2.0/obs-websocket-dotnet.xml",
-        "obs-websocket-dotnet.5.0.0.3.nupkg.sha512",
-        "obs-websocket-dotnet.nuspec"
-      ]
-    },
     "System.Diagnostics.DiagnosticSource/8.0.0": {
       "sha512": "c9xLpVz6PL9lp/djOWtk5KPDZq3cSYpmXoJQY524EOtuFl5z9ZtsotpsyrDW40U1DRnQSYvcPKEUV0X//u6gkQ==",
       "type": "package",
@@ -2184,15 +2167,20 @@
         "websocket.client.nuspec"
       ]
     },
+    "obs-websocket-dotnet/5.0.0.3": {
+      "type": "project",
+      "path": "../../../OBS-websocket-test/obs-websocket-dotnet/obs-websocket-dotnet.csproj",
+      "msbuildProject": "../../../OBS-websocket-test/obs-websocket-dotnet/obs-websocket-dotnet.csproj"
+    },
     "SpotifyAPI.Web/1.0.0": {
       "type": "project",
-      "path": "../../../../../../source/repos/SpotifyAPI-NET/SpotifyAPI.Web/SpotifyAPI.Web.csproj",
-      "msbuildProject": "../../../../../../source/repos/SpotifyAPI-NET/SpotifyAPI.Web/SpotifyAPI.Web.csproj"
+      "path": "../../../../../../../source/repos/SpotifyAPI-NET/SpotifyAPI.Web/SpotifyAPI.Web.csproj",
+      "msbuildProject": "../../../../../../../source/repos/SpotifyAPI-NET/SpotifyAPI.Web/SpotifyAPI.Web.csproj"
     },
     "SpotifyAPI.Web.Auth/1.0.0": {
       "type": "project",
-      "path": "../../../../../../source/repos/SpotifyAPI-NET/SpotifyAPI.Web.Auth/SpotifyAPI.Web.Auth.csproj",
-      "msbuildProject": "../../../../../../source/repos/SpotifyAPI-NET/SpotifyAPI.Web.Auth/SpotifyAPI.Web.Auth.csproj"
+      "path": "../../../../../../../source/repos/SpotifyAPI-NET/SpotifyAPI.Web.Auth/SpotifyAPI.Web.Auth.csproj",
+      "msbuildProject": "../../../../../../../source/repos/SpotifyAPI-NET/SpotifyAPI.Web.Auth/SpotifyAPI.Web.Auth.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -2212,11 +2200,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\SpekkieTwitchBot\\SpekkieTwitchBot\\SpekkieTwitchBot.csproj",
+      "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot\\SpekkieTwitchBot.csproj",
       "projectName": "SpekkieTwitchBot",
-      "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\SpekkieTwitchBot\\SpekkieTwitchBot\\SpekkieTwitchBot.csproj",
+      "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot\\SpekkieTwitchBot.csproj",
       "packagesPath": "C:\\Users\\tomsp\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\SpekkieTwitchBot\\SpekkieTwitchBot\\obj\\",
+      "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -2238,6 +2226,9 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
+            "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\OBS-websocket-test\\obs-websocket-dotnet\\obs-websocket-dotnet.csproj": {
+              "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\OBS-websocket-test\\obs-websocket-dotnet\\obs-websocket-dotnet.csproj"
+            },
             "C:\\Users\\tomsp\\source\\repos\\SpotifyAPI-NET\\SpotifyAPI.Web.Auth\\SpotifyAPI.Web.Auth.csproj": {
               "projectPath": "C:\\Users\\tomsp\\source\\repos\\SpotifyAPI-NET\\SpotifyAPI.Web.Auth\\SpotifyAPI.Web.Auth.csproj"
             },

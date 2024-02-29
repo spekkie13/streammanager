@@ -407,18 +407,6 @@
           }
         }
       },
-      "obs-websocket-dotnet/5.0.0.3": {
-        "dependencies": {
-          "Newtonsoft.Json": "13.0.3",
-          "Websocket.Client": "4.4.43"
-        },
-        "runtime": {
-          "lib/netstandard2.0/obs-websocket-dotnet.dll": {
-            "assemblyVersion": "5.0.0.3",
-            "fileVersion": "5.0.0.3"
-          }
-        }
-      },
       "System.Diagnostics.DiagnosticSource/8.0.0": {
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
@@ -529,6 +517,15 @@
             "assemblyVersion": "4.4.0.0",
             "fileVersion": "4.4.0.0"
           }
+        }
+      },
+      "obs-websocket-dotnet/5.0.0.3": {
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "Websocket.Client": "4.4.43"
+        },
+        "runtime": {
+          "obs-websocket-dotnet.dll": {}
         }
       },
       "SpotifyAPI.Web/1.0.0": {
@@ -767,13 +764,6 @@
       "path": "newtonsoft.json/13.0.3",
       "hashPath": "newtonsoft.json.13.0.3.nupkg.sha512"
     },
-    "obs-websocket-dotnet/5.0.0.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-XQ8i/e/3hHfQxxU3r2YQ6Ha3SI7uqOspb06ExSQH41SRESznywJNXB1ijRqOI+uZIpPf0slS9Sj50a+GBjTN5w==",
-      "path": "obs-websocket-dotnet/5.0.0.3",
-      "hashPath": "obs-websocket-dotnet.5.0.0.3.nupkg.sha512"
-    },
     "System.Diagnostics.DiagnosticSource/8.0.0": {
       "type": "package",
       "serviceable": true,
@@ -857,6 +847,11 @@
       "sha512": "sha512-h0sS4zsnXrVkYyMYDaRc0k/oV54uXXBlN/HOHAK5d/RWleLTmWS6bxtt0l3D5Q2rgtfLinkHLdf4sOqdrxZ0NA==",
       "path": "websocket.client/4.4.43",
       "hashPath": "websocket.client.4.4.43.nupkg.sha512"
+    },
+    "obs-websocket-dotnet/5.0.0.3": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     },
     "SpotifyAPI.Web/1.0.0": {
       "type": "project",

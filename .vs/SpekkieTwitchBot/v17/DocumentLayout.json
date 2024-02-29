@@ -1,84 +1,12 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\SpekkieTwitchBot\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{1C50416A-E914-42E5-A1C5-0B8051CCF34F}|SpekkieTwitchBot\\SpekkieTwitchBot.csproj|c:\\users\\tomsp\\onedrive\\bureaublad\\projecten\\rider\\spekkietwitchbot\\spekkietwitchbot\\src\\twitch\\commandhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1C50416A-E914-42E5-A1C5-0B8051CCF34F}|SpekkieTwitchBot\\SpekkieTwitchBot.csproj|solutionrelative:spekkietwitchbot\\src\\twitch\\commandhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1C50416A-E914-42E5-A1C5-0B8051CCF34F}|SpekkieTwitchBot\\SpekkieTwitchBot.csproj|c:\\users\\tomsp\\onedrive\\bureaublad\\projecten\\rider\\spekkietwitchbot\\spekkietwitchbot\\src\\general\\streammanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1C50416A-E914-42E5-A1C5-0B8051CCF34F}|SpekkieTwitchBot\\SpekkieTwitchBot.csproj|solutionrelative:spekkietwitchbot\\src\\general\\streammanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1C50416A-E914-42E5-A1C5-0B8051CCF34F}|SpekkieTwitchBot\\SpekkieTwitchBot.csproj|c:\\users\\tomsp\\onedrive\\bureaublad\\projecten\\rider\\spekkietwitchbot\\spekkietwitchbot\\src\\spotify\\spotifymanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1C50416A-E914-42E5-A1C5-0B8051CCF34F}|SpekkieTwitchBot\\SpekkieTwitchBot.csproj|solutionrelative:spekkietwitchbot\\src\\spotify\\spotifymanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5D4A5C68-A58D-4D4A-83F9-B8D9F8F6D202}|..\\..\\..\\..\\..\\source\\repos\\SpotifyAPI-NET\\SpotifyAPI.Web\\SpotifyAPI.Web.csproj|c:\\users\\tomsp\\source\\repos\\spotifyapi-net\\spotifyapi.web\\clients\\playerclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    }
-  ],
+  "WorkspaceRootPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\",
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 1,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": [
-        {
-          "DockedHeight": 200,
-          "SelectedChildIndex": 2,
-          "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "StreamManager.cs",
-              "DocumentMoniker": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\SpekkieTwitchBot\\SpekkieTwitchBot\\src\\General\\StreamManager.cs",
-              "RelativeDocumentMoniker": "SpekkieTwitchBot\\src\\General\\StreamManager.cs",
-              "ToolTip": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\SpekkieTwitchBot\\SpekkieTwitchBot\\src\\General\\StreamManager.cs",
-              "RelativeToolTip": "SpekkieTwitchBot\\src\\General\\StreamManager.cs",
-              "ViewState": "AQIAABQAAAAAAAAAAAAIwDMAAAAOAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-02-20T10:39:16.843Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "PlayerClient.cs",
-              "DocumentMoniker": "C:\\Users\\tomsp\\source\\repos\\SpotifyAPI-NET\\SpotifyAPI.Web\\Clients\\PlayerClient.cs",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\source\\repos\\SpotifyAPI-NET\\SpotifyAPI.Web\\Clients\\PlayerClient.cs",
-              "ToolTip": "C:\\Users\\tomsp\\source\\repos\\SpotifyAPI-NET\\SpotifyAPI.Web\\Clients\\PlayerClient.cs",
-              "RelativeToolTip": "..\\..\\..\\..\\..\\source\\repos\\SpotifyAPI-NET\\SpotifyAPI.Web\\Clients\\PlayerClient.cs",
-              "ViewState": "AQIAAFEAAAAAAAAAAADwvwAAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-02-19T21:14:55.532Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "CommandHandler.cs",
-              "DocumentMoniker": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\SpekkieTwitchBot\\SpekkieTwitchBot\\src\\Twitch\\CommandHandler.cs",
-              "RelativeDocumentMoniker": "SpekkieTwitchBot\\src\\Twitch\\CommandHandler.cs",
-              "ToolTip": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\SpekkieTwitchBot\\SpekkieTwitchBot\\src\\Twitch\\CommandHandler.cs",
-              "RelativeToolTip": "SpekkieTwitchBot\\src\\Twitch\\CommandHandler.cs",
-              "ViewState": "AQIAAAUAAAAAAAAAAADwv0YAAAAFAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-02-19T15:45:48.954Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "SpotifyManager.cs",
-              "DocumentMoniker": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\SpekkieTwitchBot\\SpekkieTwitchBot\\src\\Spotify\\SpotifyManager.cs",
-              "RelativeDocumentMoniker": "SpekkieTwitchBot\\src\\Spotify\\SpotifyManager.cs",
-              "ToolTip": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\SpekkieTwitchBot\\SpekkieTwitchBot\\src\\Spotify\\SpotifyManager.cs",
-              "RelativeToolTip": "SpekkieTwitchBot\\src\\Spotify\\SpotifyManager.cs",
-              "ViewState": "AQIAAB4AAAAAAAAAAAAgwFcAAAAbAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-02-19T15:40:06.908Z"
-            }
-          ]
-        }
-      ]
+      "DocumentGroups": []
     }
   ]
 }
