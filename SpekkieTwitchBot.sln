@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpekkieTwitchBot", "SpekkieTwitchBot\SpekkieTwitchBot.csproj", "{1C50416A-E914-42E5-A1C5-0B8051CCF34F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "obs-websocket-dotnet", "..\OBS-websocket-test\obs-websocket-dotnet\obs-websocket-dotnet.csproj", "{2E954AD5-9EB8-4AAC-8D26-012322CBD67E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpotifyAPI.Web", "..\..\..\..\..\source\repos\SpotifyAPI-NET\SpotifyAPI.Web\SpotifyAPI.Web.csproj", "{5D4A5C68-A58D-4D4A-83F9-B8D9F8F6D202}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpotifyAPI.Web.Auth", "..\..\..\..\..\source\repos\SpotifyAPI-NET\SpotifyAPI.Web.Auth\SpotifyAPI.Web.Auth.csproj", "{4AC38898-C9AA-4184-B2EF-C763C174E318}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C50416A-E914-42E5-A1C5-0B8051CCF34F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C50416A-E914-42E5-A1C5-0B8051CCF34F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C50416A-E914-42E5-A1C5-0B8051CCF34F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C50416A-E914-42E5-A1C5-0B8051CCF34F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E954AD5-9EB8-4AAC-8D26-012322CBD67E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E954AD5-9EB8-4AAC-8D26-012322CBD67E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E954AD5-9EB8-4AAC-8D26-012322CBD67E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E954AD5-9EB8-4AAC-8D26-012322CBD67E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D4A5C68-A58D-4D4A-83F9-B8D9F8F6D202}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D4A5C68-A58D-4D4A-83F9-B8D9F8F6D202}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D4A5C68-A58D-4D4A-83F9-B8D9F8F6D202}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D4A5C68-A58D-4D4A-83F9-B8D9F8F6D202}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AC38898-C9AA-4184-B2EF-C763C174E318}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AC38898-C9AA-4184-B2EF-C763C174E318}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AC38898-C9AA-4184-B2EF-C763C174E318}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AC38898-C9AA-4184-B2EF-C763C174E318}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1515C6B0-920B-4A26-B87A-56ECB9E054ED}
+	EndGlobalSection
+EndGlobal
