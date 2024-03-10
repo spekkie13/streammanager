@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
-using SpekkieTwitchBot.Models.Auth;
+using SpekkieTwitchBot.Models.Spotify;
 using SpotifyAPI.Web;
 
 namespace SpekkieTwitchBot.Spotify;
@@ -131,7 +131,9 @@ public class SpotifyService : BackgroundService
     private void UpdateSongImg(CurrentlyPlaying? currentlyPlaying)
     {
         FullTrack? currentSong = (FullTrack?) currentlyPlaying?.Item;
-        string url = currentSong == null ? $"{currentSong?.Album.Images.First().Url}" : "https://upload.wikimedia.org/wikipedia/commons/1/10/Button_cancel.svg";
+        string url = "https://cdn.discordapp.com/attachments/690305144994267156/749345899032870961/hitnotdone.png";
+        if (currentSong != null)
+            url = $"{currentSong.Album.Images.First().Url}";
         var imageBytes = _Client.GetByteArrayAsync(url).Result;
         FileHandler.WriteCurrentSongImage(imageBytes);
     }

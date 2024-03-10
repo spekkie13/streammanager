@@ -25,7 +25,7 @@ public class ObsWebsocketService : IHostedService
     {
         string jsonData = FileHandler.ReadTwitchAuthFile();
         TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);
-        _Url = auth?.Url ?? "";
+        _Url = auth?.Obs_url ?? "";
         _Password = auth?.Password ?? "";
         _KeepAliveTokenSource = new CancellationTokenSource();
         

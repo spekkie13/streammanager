@@ -1,4 +1,4 @@
-namespace SpekkieTwitchBot.Models.Auth;
+namespace SpekkieTwitchBot.Models.Spotify;
 
 public class SpotifyAuth
 {

@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace SpekkieTwitchBot.Models.Auth;
+namespace SpekkieTwitchBot.Models.Spotify;
 
 public class TokenResponse
 {
