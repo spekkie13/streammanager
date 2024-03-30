@@ -26,7 +26,7 @@ public static class AuthUtils
 
     public static AuthorizationCodeTokenResponse GetSpotifyToken(HttpClient client, SpotifyAuth auth)
     {
-        var accessToken = RefreshAccessToken(auth.client_id, auth.client_secret, auth.refresh_token, client).Result;
+        var accessToken = RefreshSpotifyAccessToken(auth.client_id, auth.client_secret, auth.refresh_token, client).Result;
         AuthorizationCodeTokenResponse tokenResponse = new ()
         {
             RefreshToken = accessToken?.RefreshToken ?? "",
@@ -38,7 +38,7 @@ public static class AuthUtils
         return tokenResponse;
     }
     
-    private static async Task<TokenResponse?> RefreshAccessToken(string clientId, string clientSecret, string refreshToken, HttpClient client)
+    private static async Task<TokenResponse?> RefreshSpotifyAccessToken(string clientId, string clientSecret, string refreshToken, HttpClient client)
     {
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -61,5 +61,4 @@ public static class AuthUtils
         Console.WriteLine($"Error refreshing access token: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return null;
     }
-
 }

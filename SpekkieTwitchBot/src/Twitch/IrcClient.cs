@@ -45,7 +45,7 @@ public class IrcClient
         TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);
         _Username = auth?.BotName ?? "";
         _Channel = $"#{auth?.BroadcasterName}";
-        _OAuth = auth?.OAuth ?? "";
+        _OAuth = auth?.Implicit_OAuth ?? "";
     }
     
     public void SendIrcMessage(string message)

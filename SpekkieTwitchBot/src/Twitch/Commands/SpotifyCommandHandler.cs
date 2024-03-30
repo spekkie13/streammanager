@@ -1,5 +1,6 @@
 ﻿using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Spotify;
+using System.Media;
 
 namespace SpekkieTwitchBot.Twitch.Commands;
 
@@ -84,4 +85,21 @@ public class SpotifyCommandHandler
         _IrcClient.SendPublicChatMessage($"current queue: {queue}");
     }
 
+    public void PlaySound()
+    {
+        string path = @"C:\Users\tomsp\OneDrive\Bureaublad\Muziek\Gerenderde Projecten\Future Bounce WIP.wav";
+        SoundPlayer player = new SoundPlayer
+        {
+            SoundLocation = path
+        };
+
+        try
+        {
+            player.Play();
+        }
+        catch (Exception ex)
+        {
+            Console.Write(ex.Message);
+        }
+    }
 }

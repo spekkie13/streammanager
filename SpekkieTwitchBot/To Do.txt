@@ -1,0 +1,7 @@
+﻿On Stream 15/03
+-> Transfer custom commands from 
+   TwitchChatService to CustomTwitchClient
+   
+-> Fetch Channel Point Redemption List
+-> Handle Channel Point Redemptions
+-> Sound Channel Point Redemption

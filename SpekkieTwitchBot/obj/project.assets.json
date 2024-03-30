@@ -1553,6 +1553,25 @@
           "lib/netcoreapp2.0/_._": {}
         }
       },
+      "System.Windows.Extensions/8.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/System.Windows.Extensions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/System.Windows.Extensions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net6.0/System.Windows.Extensions.dll": {
+            "assetType": "runtime",
+            "rid": "win"
+          }
+        }
+      },
       "TwitchLib/3.5.3": {
         "type": "package",
         "dependencies": {
@@ -1744,7 +1763,7 @@
           "lib/netstandard2.0/TwitchLib.Communication.dll": {}
         }
       },
-      "TwitchLib.EventSub.Core/2.0.0": {
+      "TwitchLib.EventSub.Core/2.3.1": {
         "type": "package",
         "compile": {
           "lib/net6.0/TwitchLib.EventSub.Core.dll": {
@@ -1757,11 +1776,12 @@
           }
         }
       },
-      "TwitchLib.EventSub.Websockets/0.0.3": {
+      "TwitchLib.EventSub.Websockets/0.4.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Extensions.Logging": "6.0.0",
-          "TwitchLib.EventSub.Core": "2.0.0"
+          "Microsoft.Extensions.Logging": "7.0.0",
+          "System.Text.Json": "7.0.1",
+          "TwitchLib.EventSub.Core": "2.3.1"
         },
         "compile": {
           "lib/net6.0/TwitchLib.EventSub.Websockets.dll": {
@@ -5183,6 +5203,33 @@
         "version.txt"
       ]
     },
+    "System.Windows.Extensions/8.0.0": {
+      "sha512": "Obg3a90MkOw9mYKxrardLpY2u0axDMrSmy4JCdq2cYbelM2cUwmUir5Bomvd1yxmPL9h5LVHU1tuKBZpUjfASg==",
+      "type": "package",
+      "path": "system.windows.extensions/8.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net6.0/System.Windows.Extensions.dll",
+        "lib/net6.0/System.Windows.Extensions.xml",
+        "lib/net7.0/System.Windows.Extensions.dll",
+        "lib/net7.0/System.Windows.Extensions.xml",
+        "lib/net8.0/System.Windows.Extensions.dll",
+        "lib/net8.0/System.Windows.Extensions.xml",
+        "runtimes/win/lib/net6.0/System.Windows.Extensions.dll",
+        "runtimes/win/lib/net6.0/System.Windows.Extensions.xml",
+        "runtimes/win/lib/net7.0/System.Windows.Extensions.dll",
+        "runtimes/win/lib/net7.0/System.Windows.Extensions.xml",
+        "runtimes/win/lib/net8.0/System.Windows.Extensions.dll",
+        "runtimes/win/lib/net8.0/System.Windows.Extensions.xml",
+        "system.windows.extensions.8.0.0.nupkg.sha512",
+        "system.windows.extensions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
     "TwitchLib/3.5.3": {
       "sha512": "3aknwRYBxkIi3PD/OiLaLOa33/NIkL5f7L67w6GzD5B9igDVxXoVdepU32KzzP5Hg7ddoVfMSfKgpRVRxmatKA==",
       "type": "package",
@@ -6565,10 +6612,10 @@
         "twitchlib.communication.nuspec"
       ]
     },
-    "TwitchLib.EventSub.Core/2.0.0": {
-      "sha512": "1Rx5e5qgRKAzsBop26qhotNRGdYAAXdA+5GL2DYaZv0dz6fzbM0RN4hn2UZ8nznFiZ+XHyzMX1BeLvm02aPQpQ==",
+    "TwitchLib.EventSub.Core/2.3.1": {
+      "sha512": "6uoFu2k4Zw7X5ZPl5vf9bRM5rH3ET62ZykT8lsH/S6Wa47yNu2Jvd1WbmW4J9hWD/oDJM1jPBFH8QC/e+FKM2g==",
       "type": "package",
-      "path": "twitchlib.eventsub.core/2.0.0",
+      "path": "twitchlib.eventsub.core/2.3.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -6583,14 +6630,14 @@
         "lib/netstandard2.0/TwitchLib.EventSub.Core.xml",
         "lib/netstandard2.1/TwitchLib.EventSub.Core.dll",
         "lib/netstandard2.1/TwitchLib.EventSub.Core.xml",
-        "twitchlib.eventsub.core.2.0.0.nupkg.sha512",
+        "twitchlib.eventsub.core.2.3.1.nupkg.sha512",
         "twitchlib.eventsub.core.nuspec"
       ]
     },
-    "TwitchLib.EventSub.Websockets/0.0.3": {
-      "sha512": "l2gsLUYdcS+CMxOi2TbA96lrS5cPfauSNXjpbaJP4RAMBxcR44XSCNUxb195wCs/hCDTFZWrj6k4A/fmKvaQLg==",
+    "TwitchLib.EventSub.Websockets/0.4.0": {
+      "sha512": "hYtuTuenGS61xYQ5r1dEqwNa1rSi0KeYeOyFymQBnTcdw/GNbWUyUZvZHlzaPqE4xETqf0lQkW/NpLpvDCG3FQ==",
       "type": "package",
-      "path": "twitchlib.eventsub.websockets/0.0.3",
+      "path": "twitchlib.eventsub.websockets/0.4.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -6603,7 +6650,7 @@
         "lib/netstandard2.0/TwitchLib.EventSub.Websockets.xml",
         "lib/netstandard2.1/TwitchLib.EventSub.Websockets.dll",
         "lib/netstandard2.1/TwitchLib.EventSub.Websockets.xml",
-        "twitchlib.eventsub.websockets.0.0.3.nupkg.sha512",
+        "twitchlib.eventsub.websockets.0.4.0.nupkg.sha512",
         "twitchlib.eventsub.websockets.nuspec"
       ]
     },
@@ -6694,7 +6741,11 @@
       "Microsoft.Extensions.Hosting >= 8.0.0",
       "SpotifyAPI.Web >= 1.0.0",
       "SpotifyAPI.Web.Auth >= 1.0.0",
+      "System.Windows.Extensions >= 8.0.0",
       "TwitchLib >= 3.5.3",
+      "TwitchLib.Client >= 3.3.1",
+      "TwitchLib.EventSub.Websockets >= 0.4.0",
+      "TwitchLib.PubSub >= 3.2.6",
       "WebSocketSharp-netstandard >= 1.0.1",
       "obs-websocket-dotnet >= 5.0.0.3"
     ]
@@ -6762,9 +6813,25 @@
             "target": "Package",
             "version": "[8.0.0, )"
           },
+          "System.Windows.Extensions": {
+            "target": "Package",
+            "version": "[8.0.0, )"
+          },
           "TwitchLib": {
             "target": "Package",
             "version": "[3.5.3, )"
+          },
+          "TwitchLib.Client": {
+            "target": "Package",
+            "version": "[3.3.1, )"
+          },
+          "TwitchLib.EventSub.Websockets": {
+            "target": "Package",
+            "version": "[0.4.0, )"
+          },
+          "TwitchLib.PubSub": {
+            "target": "Package",
+            "version": "[3.2.6, )"
           },
           "WebSocketSharp-netstandard": {
             "target": "Package",

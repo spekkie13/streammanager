@@ -10,9 +10,20 @@ public static class FileHandler
     {
         SetupSongFiles();
         SetupTimerFile();
+        SetupCounterFiles();
+    }
+
+    private static void SetupCounterFiles()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Counters";
+        if (!Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+
+        if (!File.Exists(dir + "/afgeleid.txt"))
+            File.Create(dir + "/afgeleid.txt");
     }
     
-    public static void SetupTimerFile()
+    private static void SetupTimerFile()
     {
         string dir = BaseDir + $"{Path.DirectorySeparatorChar}Timer";
         if(!Directory.Exists(dir))
@@ -66,6 +77,11 @@ public static class FileHandler
         return jsonData;
     }
 
+    public static void WriteTwitchAuthFile(string text)
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch.json";
+        File.WriteAllText(dir, text);
+    }
     public static string ReadSpotifyAuthFile()
     {
         string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Spotify.json";
@@ -98,5 +114,19 @@ public static class FileHandler
         {
             Console.WriteLine($"Error writing to the file: {ex.Message}");
         }
+    }
+
+    public static void WriteAfgeleidCounter(string text)
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Counters";
+        File.WriteAllText(dir + "/afgeleid.txt", text);
+    }
+    
+    public static string ReadAfgeleidCounter()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Counters";
+        string text = File.ReadAllText(dir + "/afgeleid.txt");
+        if (string.IsNullOrEmpty(text)) text = "0";
+        return text;
     }
 }

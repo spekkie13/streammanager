@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "eCVnQiAOAAJAXtBwpNDw4ghxSB274CeMqbzEi2PXjciYZXylv/5Tb0Fnyb39PcqRD6dAt5vR8iLAHCt1I1LJGw==",
+  "dgSpecHash": "KqMlWSnFe4Y3W2bOm08UqelBCzJWaIpXh/Xe7AjuL+hXtYOP3IYWls4iSYQv9ipaguWTI8F6AoN+y7m7qXs9pQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot\\SpekkieTwitchBot.csproj",
   "expectedPackageFiles": [
@@ -90,6 +90,7 @@
     "C:\\Users\\tomsp\\.nuget\\packages\\system.threading.tasks\\4.3.0\\system.threading.tasks.4.3.0.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\system.threading.tasks.extensions\\4.5.4\\system.threading.tasks.extensions.4.5.4.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\system.valuetuple\\4.5.0\\system.valuetuple.4.5.0.nupkg.sha512",
+    "C:\\Users\\tomsp\\.nuget\\packages\\system.windows.extensions\\8.0.0\\system.windows.extensions.8.0.0.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib\\3.5.3\\twitchlib.3.5.3.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib.api\\3.8.0\\twitchlib.api.3.8.0.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib.api.core\\3.8.0\\twitchlib.api.core.3.8.0.nupkg.sha512",
@@ -102,8 +103,8 @@
     "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib.client.enums\\3.3.1\\twitchlib.client.enums.3.3.1.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib.client.models\\3.3.1\\twitchlib.client.models.3.3.1.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib.communication\\1.0.4\\twitchlib.communication.1.0.4.nupkg.sha512",
-    "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib.eventsub.core\\2.0.0\\twitchlib.eventsub.core.2.0.0.nupkg.sha512",
-    "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib.eventsub.websockets\\0.0.3\\twitchlib.eventsub.websockets.0.0.3.nupkg.sha512",
+    "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib.eventsub.core\\2.3.1\\twitchlib.eventsub.core.2.3.1.nupkg.sha512",
+    "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib.eventsub.websockets\\0.4.0\\twitchlib.eventsub.websockets.0.4.0.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\twitchlib.pubsub\\3.2.6\\twitchlib.pubsub.3.2.6.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\unosquare.swan.lite\\3.1.0\\unosquare.swan.lite.3.1.0.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\websocket.client\\4.4.43\\websocket.client.4.4.43.nupkg.sha512",

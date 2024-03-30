@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Twitch.Commands;
 
 namespace SpekkieTwitchBot.Twitch;
@@ -12,7 +13,11 @@ public class TwitchChatService : BackgroundService
     private static Dictionary<string, Action> _CommandHandlers = new ();
     private const string BroadcasterName = "spekkie1313";
 
-    public TwitchChatService(IrcClient ircClient, SpotifyCommandHandler spotifyCommandHandler, TextCommandHandler textCommandHandler, TimerCommandHandler timerCommandHandler)
+    public TwitchChatService(
+        IrcClient ircClient, 
+        SpotifyCommandHandler spotifyCommandHandler, 
+        TextCommandHandler textCommandHandler, 
+        TimerCommandHandler timerCommandHandler)
     {
         _IrcClient = ircClient;
         _SpotifyCommandHandler = spotifyCommandHandler;
@@ -49,7 +54,7 @@ public class TwitchChatService : BackgroundService
         {
             { "!commands", HandleCommandsCommand },
             { "!exitbot", () => HandleExitBotCommand(username) },
-
+            { "!afgeleid", HandleAfgeleidCommand},
             { "!hello", _TextCommandHandler.HandleHelloCommand },
             { "!twitter", _TextCommandHandler.HandleGetTwitterCommand },
             { "!youtube", _TextCommandHandler.HandleGetYouTubeCommand },
@@ -71,6 +76,7 @@ public class TwitchChatService : BackgroundService
             { "!queue", _SpotifyCommandHandler.HandleGetQueueCommand },
             { "!addsong", () => _SpotifyCommandHandler.HandleAddSongToQueueCommand(message.Split(' ')[1]) },
             { "!playsong", () => _SpotifyCommandHandler.HandlePlaySpecificSongCommand(message.Split(' ')[1], username) },
+            { "!playsound", () => _SpotifyCommandHandler.PlaySound() },
         };
 
         if (_CommandHandlers.TryGetValue(command, out Action? handler))
@@ -102,5 +108,14 @@ public class TwitchChatService : BackgroundService
         if (!username.Equals(BroadcasterName)) return;
         _IrcClient.SendPublicChatMessage("Bye! Have a beautiful time!");
         Environment.Exit(0);
+    }
+
+    private void HandleAfgeleidCommand()
+    {
+        string afgeleidtext = FileHandler.ReadAfgeleidCounter();
+        int afgeleid = Convert.ToInt32(afgeleidtext);
+        afgeleid++;
+        _IrcClient.SendPublicChatMessage($"Spekkie is {afgeleid}x afgeleid geweest");
+        FileHandler.WriteAfgeleidCounter(afgeleid.ToString());
     }
 }

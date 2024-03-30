@@ -1,0 +1,18 @@
+﻿{
+  "metadata":{
+    "message_id":"c48e02bd-0f9-452b-9533-3b269ae9d498",
+    "message_type":"session_welcome",
+    "message_timestamp":"2024-03-25T12:46:29.191399583Z"
+  },
+  "payload":{
+    "session":{
+      "id":"AgoQon8OcicQRQKD8Wee4Ql8JRIGY2VsbC1j",
+      "status":"connected",
+      "connected_at":"2024-03-25T12:46:29.180777335Z",
+      "keepalive_timeout_seconds":10,
+      "reconnect_url":null
+    }
+  }
+}
+
+"{\"type\": \"subscribe\", \"data\": {\"topics\": [\"channel.follow\"], \"auth_token\": \"YOUR_AUTH_TOKEN\"}}";

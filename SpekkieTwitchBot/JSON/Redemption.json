@@ -1,0 +1,23 @@
+﻿{
+  "badge-info": "subscriber/59",
+  "badges": {
+    "badge1": "broadcaster/1",
+    "badge2": "subscriber/3012",
+    "badge3": "twitchcon-2024---rotterdam/1"
+  },
+  "color": "#008000",
+  "custom-reward-id": "65f3465e-163d-430e-8c64-cc471dcdafac",
+  "display-name": "spekkie1313",
+  "emotes": {},
+  "first-msg": 0,
+  "flags": {},
+  "id": "566afc58-8180-465f-8013-f15918cce951",
+  "mod": 0,
+  "returning-chatter": 0,
+  "room-id": "30731359",
+  "subscriber": 1,
+  "tmi-sent-ts": "1710503949947",
+  "turbo": "0",
+  "user-id": "30731359",
+  "user-type": ":spekkie1313!spekkie1313@spekkie1313.tmi.twitch.tv PRIVMSG #spekkie1313 :[playerTag]"
+}

@@ -134,9 +134,25 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
+            "System.Windows.Extensions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
             "TwitchLib": {
               "target": "Package",
               "version": "[3.5.3, )"
+            },
+            "TwitchLib.Client": {
+              "target": "Package",
+              "version": "[3.3.1, )"
+            },
+            "TwitchLib.EventSub.Websockets": {
+              "target": "Package",
+              "version": "[0.4.0, )"
+            },
+            "TwitchLib.PubSub": {
+              "target": "Package",
+              "version": "[3.2.6, )"
             },
             "WebSocketSharp-netstandard": {
               "target": "Package",
