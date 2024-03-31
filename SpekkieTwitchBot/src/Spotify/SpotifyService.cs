@@ -131,9 +131,8 @@ public class SpotifyService : BackgroundService
     private void UpdateSongImg(CurrentlyPlaying? currentlyPlaying)
     {
         FullTrack? currentSong = (FullTrack?) currentlyPlaying?.Item;
-        string url = "https://cdn.discordapp.com/attachments/690305144994267156/749345899032870961/hitnotdone.png";
-        if (currentSong != null)
-            url = $"{currentSong.Album.Images.First().Url}";
+        if (currentSong == null) return;
+        string url = $"{currentSong.Album.Images.First().Url}";
         var imageBytes = _Client.GetByteArrayAsync(url).Result;
         FileHandler.WriteCurrentSongImage(imageBytes);
     }

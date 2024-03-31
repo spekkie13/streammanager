@@ -1,4 +1,5 @@
-﻿using System.Timers;
+﻿#nullable disable
+using System.Timers;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using TwitchLib.Communication.Clients;
@@ -13,29 +14,28 @@ using TwitchLib.PubSub.Models.Responses.Messages;
 using TwitchLib.PubSub.Models.Responses.Messages.AutomodCaughtMessage;
 using TwitchLib.PubSub.Models.Responses.Messages.Redemption;
 using TwitchLib.PubSub.Models.Responses.Messages.UserModerationNotifications;
+using Message = TwitchLib.PubSub.Models.Responses.Message;
+using Timer = System.Timers.Timer;
 using Following = SpekkieTwitchBot.Models.Twitch.Pubsub.Following;
 using ITwitchPubSub = SpekkieTwitchBot.Models.Twitch.Pubsub.ITwitchPubSub;
-using Message = TwitchLib.PubSub.Models.Responses.Message;
-using OnBitsReceivedV2Args = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnBitsReceivedV2Args;
 using OnChannelPointsRewardRedeemedArgs = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnChannelPointsRewardRedeemedArgs;
-using OnRewardRedeemedArgs = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnRewardRedeemedArgs;
-using Timer = System.Timers.Timer;
+using OnBitsReceivedV2Args = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnBitsReceivedV2Args;
 
 namespace SpekkieTwitchBot.Twitch.Pubsub;
 
-public class CustomPubSub : ITwitchPubSub
+public class CustomPubsub : ITwitchPubSub
 {
     private readonly WebSocketClient _socket;
     private readonly List<PreviousRequest> _previousRequests = new List<PreviousRequest>();
     private readonly Semaphore _previousRequestsSemaphore = new Semaphore(1, 1);
-    private readonly ILogger<CustomPubSub> _logger;
+    private readonly ILogger<CustomPubsub> _logger;
     private readonly Timer _pingTimer = new Timer();
     private readonly Timer _pongTimer = new Timer();
     private bool _pongReceived;
     private readonly List<string> _topicList = new List<string>();
     private readonly Dictionary<string, string> _topicToChannelId = new Dictionary<string, string>();
     private static readonly Random Random = new Random();
-
+    
     public event EventHandler OnPubSubServiceConnected;
     public event EventHandler<OnPubSubServiceErrorArgs> OnPubSubServiceError;
     public event EventHandler OnPubSubServiceClosed;
@@ -68,7 +68,6 @@ public class CustomPubSub : ITwitchPubSub
     public event EventHandler<OnCustomRewardUpdatedArgs> OnCustomRewardUpdated;
     [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
     public event EventHandler<OnCustomRewardDeletedArgs> OnCustomRewardDeleted;
-
     [Obsolete(
         "This event fires on an undocumented/retired/obsolete topic. Consider using OnChannelPointsRewardRedeemed",
         false)]
@@ -84,8 +83,8 @@ public class CustomPubSub : ITwitchPubSub
     public event EventHandler<OnPredictionArgs> OnPrediction;
     public event EventHandler<OnAutomodCaughtMessageArgs> OnAutomodCaughtMessage;
     public event EventHandler<OnAutomodCaughtUserMessage> OnAutomodCaughtUserMessage;
-    
-    public CustomPubSub(ILogger<CustomPubSub> logger)
+
+    public CustomPubsub(ILogger<CustomPubsub> logger = null)
     {
         _logger = logger;
         _socket = new WebSocketClient(new ClientOptions
@@ -100,50 +99,69 @@ public class CustomPubSub : ITwitchPubSub
         _pongTimer.Elapsed += PongTimerTick;
     }
 
-    private void OnError(object? sender, OnErrorEventArgs e)
+    private void OnError(object sender, OnErrorEventArgs e)
     {
-        _logger.LogError($"OnError in PubSub Websocket connection occured! Exception: {(object)e.Exception}");
-        OnPubSubServiceError(this, new OnPubSubServiceErrorArgs
+        ILogger<CustomPubsub> logger = _logger;
+        if (logger != null)
+            logger.LogError($"OnError in PubSub Websocket connection occured! Exception: {e.Exception}");
+        EventHandler<OnPubSubServiceErrorArgs> pubSubServiceError = OnPubSubServiceError;
+        if (pubSubServiceError == null)
+            return;
+        pubSubServiceError(this, new OnPubSubServiceErrorArgs
         {
             Exception = e.Exception
         });
     }
-    
-    private void OnMessage(object? sender, OnMessageEventArgs e)
+
+    private void OnMessage(object sender, OnMessageEventArgs e)
     {
-        _logger.LogDebug($"Received Websocket OnMessage: {e.Message}");
-        OnLog(this, new OnLogArgs
-        {
-            Data = e.Message
-        });
+        ILogger<CustomPubsub> logger = _logger;
+        if (logger != null)
+            logger.LogDebug("Received Websocket OnMessage: " + e.Message);
+        EventHandler<OnLogArgs> onLog = OnLog;
+        if (onLog != null)
+            onLog(this, new OnLogArgs
+            {
+                Data = e.Message
+            });
         ParseMessage(e.Message);
     }
 
-    private void Socket_OnDisconnected(object? sender, EventArgs e)
+    private void Socket_OnDisconnected(object sender, EventArgs e)
     {
-        _logger.LogWarning("PubSub Websocket connection closed");
+        ILogger<CustomPubsub> logger = _logger;
+        if (logger != null)
+            logger.LogWarning("PubSub Websocket connection closed");
         _pingTimer.Stop();
         _pongTimer.Stop();
-        OnPubSubServiceClosed(this, null!);
+        EventHandler subServiceClosed = OnPubSubServiceClosed;
+        if (subServiceClosed == null)
+            return;
+        subServiceClosed(this, null);
     }
 
-    private void Socket_OnConnected(object? sender, EventArgs e)
+    private void Socket_OnConnected(object sender, EventArgs e)
     {
+        ILogger<CustomPubsub> logger = _logger;
+        if (logger != null)
+            logger.LogInformation("PubSub Websocket connection established");
         _pingTimer.Interval = 180000.0;
         _pingTimer.Elapsed += PingTimerTick;
         _pingTimer.Start();
-        OnPubSubServiceConnected(this, null);
-        _logger.LogInformation("PubSub Websocket connection established");
+        EventHandler serviceConnected = OnPubSubServiceConnected;
+        if (serviceConnected == null)
+            return;
+        serviceConnected(this, null);
     }
 
-    private void PingTimerTick(object? sender, ElapsedEventArgs e)
+    private void PingTimerTick(object sender, ElapsedEventArgs e)
     {
         _pongReceived = false;
         _socket.Send(new JObject(new JProperty("type", "PING")).ToString());
         _pongTimer.Start();
     }
 
-    private void PongTimerTick(object? sender, ElapsedEventArgs e)
+    private void PongTimerTick(object sender, ElapsedEventArgs e)
     {
         _pongTimer.Stop();
         if (_pongReceived)
@@ -154,7 +172,7 @@ public class CustomPubSub : ITwitchPubSub
 
     private void ParseMessage(string message)
     {
-        switch (JObject.Parse(message).SelectToken("type")!.ToString().ToLower())
+        switch (JObject.Parse(message).SelectToken("type")?.ToString().ToLower())
         {
             case "response":
                 Response response = new Response(message);
@@ -168,18 +186,19 @@ public class CustomPubSub : ITwitchPubSub
                         while (index < _previousRequests.Count)
                         {
                             PreviousRequest previousRequest = _previousRequests[index];
-                            if (string.Equals(previousRequest.Nonce, response.Nonce,
-                                    StringComparison.CurrentCulture))
+                            if (string.Equals(previousRequest.Nonce, response.Nonce, StringComparison.CurrentCulture))
                             {
                                 _previousRequests.RemoveAt(index);
                                 _topicToChannelId.TryGetValue(previousRequest.Topic, out var str);
-                                OnListenResponse(this, new OnListenResponseArgs
-                                {
-                                    Response = response,
-                                    Topic = previousRequest.Topic,
-                                    Successful = response.Successful,
-                                    ChannelId = str
-                                });
+                                EventHandler<OnListenResponseArgs> onListenResponse = OnListenResponse;
+                                if (onListenResponse != null)
+                                    onListenResponse(this, new OnListenResponseArgs
+                                    {
+                                        Response = response,
+                                        Topic = previousRequest.Topic,
+                                        Successful = response.Successful,
+                                        ChannelId = str
+                                    });
                                 flag = true;
                             }
                             else
@@ -194,39 +213,44 @@ public class CustomPubSub : ITwitchPubSub
                     if (flag)
                         return;
                 }
+
                 break;
             case nameof(message):
                 Message message1 = new Message(message);
-                _topicToChannelId.TryGetValue(message1.Topic, out var str1);
+                _topicToChannelId.TryGetValue(message1.Topic, out string str1);
                 string str2 = str1 ?? "";
                 switch (message1.Topic.Split('.')[0])
                 {
                     case "automod-queue":
-                        if (message1.MessageData is AutomodQueue messageData1)
-                            switch (messageData1.Type)
-                            {
-                                case AutomodQueueType.CaughtMessage:
+                        AutomodQueue messageData1 = message1.MessageData as AutomodQueue;
+                        switch (messageData1.Type)
+                        {
+                            case AutomodQueueType.CaughtMessage:
+                                AutomodCaughtMessage
+                                    data1 =
+                                        messageData1.Data as AutomodCaughtMessage;
+                                EventHandler<OnAutomodCaughtMessageArgs> automodCaughtMessage =
+                                    OnAutomodCaughtMessage;
+                                if (automodCaughtMessage == null)
+                                    return;
+                                automodCaughtMessage(this, new OnAutomodCaughtMessageArgs
                                 {
-                                    AutomodCaughtMessage? data1 = messageData1.Data as AutomodCaughtMessage;
-                                    EventHandler<OnAutomodCaughtMessageArgs> automodCaughtMessage = OnAutomodCaughtMessage;
-                                    automodCaughtMessage(this, new OnAutomodCaughtMessageArgs
-                                    {
-                                        ChannelId = str2,
-                                        AutomodCaughtMessage = data1
-                                    });
-                                    break;
-                                }
-                                case AutomodQueueType.Unknown:
-                                    UnaccountedFor("Unknown automod queue type. Msg: " + messageData1.RawData);
-                                    break;
-                                default:
-                                    throw new ArgumentOutOfRangeException();
-                            }
-                        break;
+                                    ChannelId = str2,
+                                    AutomodCaughtMessage = data1
+                                });
+                                return;
+                            case AutomodQueueType.Unknown:
+                                UnaccountedFor("Unknown automod queue type. Msg: " + messageData1.RawData);
+                                return;
+                            default:
+                                return;
+                        }
                     case "channel-bits-events-v1":
                         if (message1.MessageData is ChannelBitsEvents messageData2)
                         {
                             EventHandler<OnBitsReceivedArgs> onBitsReceived = OnBitsReceived;
+                            if (onBitsReceived == null)
+                                return;
                             onBitsReceived(this, new OnBitsReceivedArgs
                             {
                                 BitsUsed = messageData2.BitsUsed,
@@ -247,6 +271,8 @@ public class CustomPubSub : ITwitchPubSub
                         if (message1.MessageData is ChannelBitsEventsV2 messageData3)
                         {
                             EventHandler<OnBitsReceivedV2Args> onBitsReceivedV2 = OnBitsReceivedV2;
+                            if (onBitsReceivedV2 == null)
+                                return;
                             onBitsReceivedV2(this, new OnBitsReceivedV2Args
                             {
                                 IsAnonymous = messageData3.IsAnonymous,
@@ -265,39 +291,44 @@ public class CustomPubSub : ITwitchPubSub
 
                         break;
                     case "channel-ext-v1":
-                        ChannelExtensionBroadcast? messageData4 = message1.MessageData as ChannelExtensionBroadcast;
+                        ChannelExtensionBroadcast messageData4 = message1.MessageData as ChannelExtensionBroadcast;
                         EventHandler<OnChannelExtensionBroadcastArgs> extensionBroadcast =
                             OnChannelExtensionBroadcast;
+                        if (extensionBroadcast == null)
+                            return;
                         extensionBroadcast(this, new OnChannelExtensionBroadcastArgs
                         {
-                            Messages = messageData4?.Messages,
+                            Messages = messageData4.Messages,
                             ChannelId = str2
                         });
                         return;
                     case "channel-points-channel-v1":
-                        if (message1.MessageData is ChannelPointsChannel messageData5)
-                            switch (messageData5.Type)
-                            {
-                                case ChannelPointsChannelType.RewardRedeemed:
-                                    RewardRedeemed? data2 = messageData5.Data as RewardRedeemed;
-                                    EventHandler<OnChannelPointsRewardRedeemedArgs> pointsRewardRedeemed =
-                                        OnChannelPointsRewardRedeemed;
-                                    pointsRewardRedeemed(this, new OnChannelPointsRewardRedeemedArgs
-                                    {
-                                        ChannelId = data2?.Redemption.ChannelId,
-                                        RewardRedeemed = data2
-                                    });
+                        ChannelPointsChannel messageData5 = message1.MessageData as ChannelPointsChannel;
+                        switch (messageData5.Type)
+                        {
+                            case ChannelPointsChannelType.RewardRedeemed:
+                                RewardRedeemed data2 = messageData5.Data as RewardRedeemed;
+                                EventHandler<OnChannelPointsRewardRedeemedArgs> pointsRewardRedeemed =
+                                    OnChannelPointsRewardRedeemed;
+                                if (pointsRewardRedeemed == null)
                                     return;
-                                case ChannelPointsChannelType.Unknown:
-                                    UnaccountedFor("Unknown channel points type. Msg: " + messageData5.RawData);
-                                    return;
-                                default:
-                                    return;
-                            }
-                        break;
+                                pointsRewardRedeemed(this, new OnChannelPointsRewardRedeemedArgs
+                                {
+                                    ChannelId = data2.Redemption.ChannelId,
+                                    RewardRedeemed = data2
+                                });
+                                return;
+                            case ChannelPointsChannelType.Unknown:
+                                UnaccountedFor("Unknown channel points type. Msg: " + messageData5.RawData);
+                                return;
+                            default:
+                                return;
+                        }
                     case "channel-subscribe-events-v1":
-                        ChannelSubscription? messageData6 = message1.MessageData as ChannelSubscription;
+                        ChannelSubscription messageData6 = message1.MessageData as ChannelSubscription;
                         EventHandler<OnChannelSubscriptionArgs> channelSubscription = OnChannelSubscription;
+                        if (channelSubscription == null)
+                            return;
                         channelSubscription(this, new OnChannelSubscriptionArgs
                         {
                             Subscription = messageData6,
@@ -305,7 +336,7 @@ public class CustomPubSub : ITwitchPubSub
                         });
                         return;
                     case "chat_moderator_actions":
-                        ChatModeratorActions? messageData7 = message1.MessageData as ChatModeratorActions;
+                        ChatModeratorActions messageData7 = message1.MessageData as ChatModeratorActions;
                         string str3 = "";
                         switch (messageData7?.ModerationAction.ToLower())
                         {
@@ -313,6 +344,8 @@ public class CustomPubSub : ITwitchPubSub
                                 if (messageData7.Args.Count > 1)
                                     str3 = messageData7.Args[1];
                                 EventHandler<OnBanArgs> onBan = OnBan;
+                                if (onBan == null)
+                                    return;
                                 onBan(this, new OnBanArgs
                                 {
                                     BannedBy = messageData7.CreatedBy,
@@ -325,6 +358,8 @@ public class CustomPubSub : ITwitchPubSub
                                 return;
                             case "clear":
                                 EventHandler<OnClearArgs> onClear = OnClear;
+                                if (onClear == null)
+                                    return;
                                 onClear(this, new OnClearArgs
                                 {
                                     Moderator = messageData7.CreatedBy,
@@ -333,6 +368,8 @@ public class CustomPubSub : ITwitchPubSub
                                 return;
                             case "delete":
                                 EventHandler<OnMessageDeletedArgs> onMessageDeleted = OnMessageDeleted;
+                                if (onMessageDeleted == null)
+                                    return;
                                 onMessageDeleted(this, new OnMessageDeletedArgs
                                 {
                                     DeletedBy = messageData7.CreatedBy,
@@ -346,6 +383,8 @@ public class CustomPubSub : ITwitchPubSub
                                 return;
                             case "emoteonly":
                                 EventHandler<OnEmoteOnlyArgs> onEmoteOnly = OnEmoteOnly;
+                                if (onEmoteOnly == null)
+                                    return;
                                 onEmoteOnly(this, new OnEmoteOnlyArgs
                                 {
                                     Moderator = messageData7.CreatedBy,
@@ -354,6 +393,8 @@ public class CustomPubSub : ITwitchPubSub
                                 return;
                             case "emoteonlyoff":
                                 EventHandler<OnEmoteOnlyOffArgs> onEmoteOnlyOff = OnEmoteOnlyOff;
+                                if (onEmoteOnlyOff == null)
+                                    return;
                                 onEmoteOnlyOff(this, new OnEmoteOnlyOffArgs
                                 {
                                     Moderator = messageData7.CreatedBy,
@@ -362,6 +403,8 @@ public class CustomPubSub : ITwitchPubSub
                                 return;
                             case "host":
                                 EventHandler<OnHostArgs> onHost = OnHost;
+                                if (onHost == null)
+                                    return;
                                 onHost(this, new OnHostArgs
                                 {
                                     HostedChannel = messageData7.Args[0],
@@ -370,16 +413,20 @@ public class CustomPubSub : ITwitchPubSub
                                 });
                                 return;
                             case "r9kbeta":
-                                EventHandler<OnR9kBetaArgs> onR9KBeta = OnR9kBeta;
-                                onR9KBeta(this, new OnR9kBetaArgs
+                                EventHandler<OnR9kBetaArgs> onR9kBeta = OnR9kBeta;
+                                if (onR9kBeta == null)
+                                    return;
+                                onR9kBeta(this, new OnR9kBetaArgs
                                 {
                                     Moderator = messageData7.CreatedBy,
                                     ChannelId = str2
                                 });
                                 return;
                             case "r9kbetaoff":
-                                EventHandler<OnR9kBetaOffArgs> onR9KBetaOff = OnR9kBetaOff ?? throw new ArgumentNullException(nameof(message));
-                                onR9KBetaOff(this, new OnR9kBetaOffArgs
+                                EventHandler<OnR9kBetaOffArgs> onR9kBetaOff = OnR9kBetaOff;
+                                if (onR9kBetaOff == null)
+                                    return;
+                                onR9kBetaOff(this, new OnR9kBetaOffArgs
                                 {
                                     Moderator = messageData7.CreatedBy,
                                     ChannelId = str2
@@ -387,6 +434,8 @@ public class CustomPubSub : ITwitchPubSub
                                 return;
                             case "subscribers":
                                 EventHandler<OnSubscribersOnlyArgs> onSubscribersOnly = OnSubscribersOnly;
+                                if (onSubscribersOnly == null)
+                                    return;
                                 onSubscribersOnly(this, new OnSubscribersOnlyArgs
                                 {
                                     Moderator = messageData7.CreatedBy,
@@ -394,8 +443,9 @@ public class CustomPubSub : ITwitchPubSub
                                 });
                                 return;
                             case "subscribersoff":
-                                EventHandler<OnSubscribersOnlyOffArgs> subscribersOnlyOff =
-                                    OnSubscribersOnlyOff;
+                                EventHandler<OnSubscribersOnlyOffArgs> subscribersOnlyOff = OnSubscribersOnlyOff;
+                                if (subscribersOnlyOff == null)
+                                    return;
                                 subscribersOnlyOff(this, new OnSubscribersOnlyOffArgs
                                 {
                                     Moderator = messageData7.CreatedBy,
@@ -406,6 +456,8 @@ public class CustomPubSub : ITwitchPubSub
                                 if (messageData7.Args.Count > 2)
                                     str3 = messageData7.Args[2];
                                 EventHandler<OnTimeoutArgs> onTimeout = OnTimeout;
+                                if (onTimeout == null)
+                                    return;
                                 onTimeout(this, new OnTimeoutArgs
                                 {
                                     TimedoutBy = messageData7.CreatedBy,
@@ -419,6 +471,8 @@ public class CustomPubSub : ITwitchPubSub
                                 return;
                             case "unban":
                                 EventHandler<OnUnbanArgs> onUnban = OnUnban;
+                                if (onUnban == null)
+                                    return;
                                 onUnban(this, new OnUnbanArgs
                                 {
                                     UnbannedBy = messageData7.CreatedBy,
@@ -430,6 +484,8 @@ public class CustomPubSub : ITwitchPubSub
                                 return;
                             case "untimeout":
                                 EventHandler<OnUntimeoutArgs> onUntimeout = OnUntimeout;
+                                if (onUntimeout == null)
+                                    return;
                                 onUntimeout(this, new OnUntimeoutArgs
                                 {
                                     UntimeoutedBy = messageData7.CreatedBy,
@@ -444,64 +500,70 @@ public class CustomPubSub : ITwitchPubSub
                         break;
                     case "community-points-channel-v1":
                         CommunityPointsChannel messageData8 = (CommunityPointsChannel)message1.MessageData;
-                        CommunityPointsChannelType? nullable1 = messageData8?.Type;
-                        if (!nullable1.HasValue)
-                            return;
+                        CommunityPointsChannelType? nullable1 = messageData8.Type;
                         switch (nullable1.GetValueOrDefault())
                         {
                             case CommunityPointsChannelType.RewardRedeemed:
                                 EventHandler<OnRewardRedeemedArgs> onRewardRedeemed = OnRewardRedeemed;
+                                if (onRewardRedeemed == null)
+                                    return;
                                 onRewardRedeemed(this, new OnRewardRedeemedArgs
                                 {
-                                    TimeStamp = messageData8?.TimeStamp ?? DateTime.Now,
-                                    ChannelId = messageData8?.ChannelId,
-                                    Login = messageData8?.Login,
-                                    DisplayName = messageData8?.DisplayName,
-                                    Message = messageData8?.Message,
-                                    RewardId = messageData8?.RewardId ?? new Guid(),
-                                    RewardTitle = messageData8?.RewardTitle,
-                                    RewardPrompt = messageData8?.RewardPrompt,
-                                    RewardCost = messageData8?.RewardCost ?? 100,
-                                    Status = messageData8?.Status,
-                                    RedemptionId = messageData8?.RedemptionId ?? new Guid()
+                                    TimeStamp = messageData8.TimeStamp,
+                                    ChannelId = messageData8.ChannelId,
+                                    Login = messageData8.Login,
+                                    DisplayName = messageData8.DisplayName,
+                                    Message = messageData8.Message,
+                                    RewardId = messageData8.RewardId,
+                                    RewardTitle = messageData8.RewardTitle,
+                                    RewardPrompt = messageData8.RewardPrompt,
+                                    RewardCost = messageData8.RewardCost,
+                                    Status = messageData8.Status,
+                                    RedemptionId = messageData8.RedemptionId
                                 });
                                 return;
                             case CommunityPointsChannelType.CustomRewardUpdated:
-                                EventHandler<OnCustomRewardUpdatedArgs> customRewardUpdated =
-                                    OnCustomRewardUpdated;
+                                EventHandler<OnCustomRewardUpdatedArgs>
+                                    customRewardUpdated = OnCustomRewardUpdated;
+                                if (customRewardUpdated == null)
+                                    return;
                                 customRewardUpdated(this, new OnCustomRewardUpdatedArgs
                                 {
-                                    TimeStamp = messageData8?.TimeStamp ?? DateTime.Now,
-                                    ChannelId = messageData8?.ChannelId,
-                                    RewardId = messageData8?.RewardId ?? new Guid(),
-                                    RewardTitle = messageData8?.RewardTitle,
-                                    RewardPrompt = messageData8?.RewardPrompt,
-                                    RewardCost = messageData8?.RewardCost ?? 100
+                                    TimeStamp = messageData8.TimeStamp,
+                                    ChannelId = messageData8.ChannelId,
+                                    RewardId = messageData8.RewardId,
+                                    RewardTitle = messageData8.RewardTitle,
+                                    RewardPrompt = messageData8.RewardPrompt,
+                                    RewardCost = messageData8.RewardCost
                                 });
                                 return;
                             case CommunityPointsChannelType.CustomRewardCreated:
-                                EventHandler<OnCustomRewardCreatedArgs> customRewardCreated =
-                                    OnCustomRewardCreated;
+                                EventHandler<OnCustomRewardCreatedArgs>
+                                    customRewardCreated = OnCustomRewardCreated;
+                                if (customRewardCreated == null)
+                                    return;
                                 customRewardCreated(this, new OnCustomRewardCreatedArgs
                                 {
-                                    TimeStamp = messageData8?.TimeStamp ?? DateTime.Now,
-                                    ChannelId = messageData8?.ChannelId,
-                                    RewardId = messageData8?.RewardId ?? new Guid(),
-                                    RewardTitle = messageData8?.RewardTitle,
-                                    RewardPrompt = messageData8?.RewardPrompt,
-                                    RewardCost = messageData8?.RewardCost ?? 100
+                                    TimeStamp = messageData8.TimeStamp,
+                                    ChannelId = messageData8.ChannelId,
+                                    RewardId = messageData8.RewardId,
+                                    RewardTitle = messageData8.RewardTitle,
+                                    RewardPrompt = messageData8.RewardPrompt,
+                                    RewardCost = messageData8.RewardCost
                                 });
                                 return;
                             case CommunityPointsChannelType.CustomRewardDeleted:
-                                EventHandler<OnCustomRewardDeletedArgs> customRewardDeleted =
-                                    OnCustomRewardDeleted;
+                                EventHandler<OnCustomRewardDeletedArgs>
+                                    customRewardDeleted = OnCustomRewardDeleted;
+                                if (customRewardDeleted == null)
+                                    return;
                                 customRewardDeleted(this, new OnCustomRewardDeletedArgs
                                 {
-                                    TimeStamp = messageData8?.TimeStamp ?? DateTime.Now,
-                                    ChannelId = messageData8?.ChannelId,
-                                    RewardId = messageData8?.RewardId ?? new Guid(),
-                                    RewardTitle = messageData8?.RewardTitle,
-                                    RewardPrompt = messageData8?.RewardPrompt
+                                    TimeStamp = messageData8.TimeStamp,
+                                    ChannelId = messageData8.ChannelId,
+                                    RewardId = messageData8.RewardId,
+                                    RewardTitle = messageData8.RewardTitle,
+                                    RewardPrompt = messageData8.RewardPrompt
                                 });
                                 return;
                             default:
@@ -511,6 +573,8 @@ public class CustomPubSub : ITwitchPubSub
                         Following messageData9 = (Following)message1.MessageData;
                         messageData9.FollowedChannelId = message1.Topic.Split('.')[1];
                         EventHandler<OnFollowArgs> onFollow = OnFollow;
+                        if (onFollow == null)
+                            return;
                         onFollow(this, new OnFollowArgs
                         {
                             FollowedChannelId = messageData9.FollowedChannelId,
@@ -521,25 +585,27 @@ public class CustomPubSub : ITwitchPubSub
                         return;
                     case "leaderboard-events-v1":
                         LeaderboardEvents messageData10 = (LeaderboardEvents)message1.MessageData;
-                        LeaderBoardType? nullable2 = messageData10?.Type;
-                        if (!nullable2.HasValue)
-                            return;
+                        LeaderBoardType? nullable2 = messageData10.Type;
                         switch (nullable2.GetValueOrDefault())
                         {
                             case LeaderBoardType.BitsUsageByChannel:
                                 EventHandler<OnLeaderboardEventArgs> onLeaderboardBits = OnLeaderboardBits;
+                                if (onLeaderboardBits == null)
+                                    return;
                                 onLeaderboardBits(this, new OnLeaderboardEventArgs
                                 {
-                                    ChannelId = messageData10?.ChannelId,
-                                    TopList = messageData10?.Top
+                                    ChannelId = messageData10.ChannelId,
+                                    TopList = messageData10.Top
                                 });
                                 return;
                             case LeaderBoardType.SubGiftSent:
                                 EventHandler<OnLeaderboardEventArgs> onLeaderboardSubs = OnLeaderboardSubs;
+                                if (onLeaderboardSubs == null)
+                                    return;
                                 onLeaderboardSubs(this, new OnLeaderboardEventArgs
                                 {
-                                    ChannelId = messageData10?.ChannelId,
-                                    TopList = messageData10?.Top
+                                    ChannelId = messageData10.ChannelId,
+                                    TopList = messageData10.Top
                                 });
                                 return;
                             default:
@@ -547,47 +613,51 @@ public class CustomPubSub : ITwitchPubSub
                         }
                     case "predictions-channel-v1":
                         PredictionEvents messageData11 = (PredictionEvents)message1.MessageData;
-                        PredictionType? nullable3 = messageData11?.Type;
+                        PredictionType? nullable3 = messageData11.Type;
                         if (nullable3.HasValue)
                         {
                             switch (nullable3.GetValueOrDefault())
                             {
                                 case PredictionType.EventCreated:
                                     EventHandler<OnPredictionArgs> onPrediction1 = OnPrediction;
+                                    if (onPrediction1 == null)
+                                        return;
                                     onPrediction1(this, new OnPredictionArgs
                                     {
-                                        CreatedAt = messageData11?.CreatedAt,
-                                        Title = messageData11?.Title,
-                                        ChannelId = messageData11?.ChannelId,
-                                        EndedAt = messageData11?.EndedAt,
-                                        Id = messageData11?.Id ?? new Guid(),
-                                        Outcomes = messageData11?.Outcomes,
-                                        LockedAt = messageData11?.LockedAt,
-                                        PredictionTime = messageData11?.PredictionTime ?? 30,
-                                        Status = messageData11?.Status ?? new PredictionStatus(),
-                                        WinningOutcomeId = messageData11?.WinningOutcomeId,
-                                        Type = messageData11?.Type ?? new PredictionType()
+                                        CreatedAt = messageData11.CreatedAt,
+                                        Title = messageData11.Title,
+                                        ChannelId = messageData11.ChannelId,
+                                        EndedAt = messageData11.EndedAt,
+                                        Id = messageData11.Id,
+                                        Outcomes = messageData11.Outcomes,
+                                        LockedAt = messageData11.LockedAt,
+                                        PredictionTime = messageData11.PredictionTime,
+                                        Status = messageData11.Status,
+                                        WinningOutcomeId = messageData11.WinningOutcomeId,
+                                        Type = messageData11.Type
                                     });
                                     return;
                                 case PredictionType.EventUpdated:
                                     EventHandler<OnPredictionArgs> onPrediction2 = OnPrediction;
+                                    if (onPrediction2 == null)
+                                        return;
                                     onPrediction2(this, new OnPredictionArgs
                                     {
-                                        CreatedAt = messageData11?.CreatedAt,
-                                        Title = messageData11?.Title,
-                                        ChannelId = messageData11?.ChannelId,
-                                        EndedAt = messageData11?.EndedAt,
-                                        Id = messageData11?.Id ?? new Guid(),
-                                        Outcomes = messageData11?.Outcomes,
-                                        LockedAt = messageData11?.LockedAt,
-                                        PredictionTime = messageData11?.PredictionTime ?? 30,
-                                        Status = messageData11?.Status ?? new PredictionStatus(),
-                                        WinningOutcomeId = messageData11?.WinningOutcomeId,
-                                        Type = messageData11?.Type ?? new PredictionType()
+                                        CreatedAt = messageData11.CreatedAt,
+                                        Title = messageData11.Title,
+                                        ChannelId = messageData11.ChannelId,
+                                        EndedAt = messageData11.EndedAt,
+                                        Id = messageData11.Id,
+                                        Outcomes = messageData11.Outcomes,
+                                        LockedAt = messageData11.LockedAt,
+                                        PredictionTime = messageData11.PredictionTime,
+                                        Status = messageData11.Status,
+                                        WinningOutcomeId = messageData11.WinningOutcomeId,
+                                        Type = messageData11.Type
                                     });
                                     return;
                                 default:
-                                    UnaccountedFor($"Prediction Type: {(object?)messageData11?.Type}");
+                                    UnaccountedFor($"Prediction Type: {messageData11.Type}");
                                     return;
                             }
                         }
@@ -596,62 +666,71 @@ public class CustomPubSub : ITwitchPubSub
                         return;
                     case "raid":
                         RaidEvents messageData12 = (RaidEvents)message1.MessageData;
-                        RaidType? nullable4 = messageData12?.Type;
+                        RaidType? nullable4 = messageData12.Type;
                         if (!nullable4.HasValue)
                             return;
                         switch (nullable4.GetValueOrDefault())
                         {
                             case RaidType.RaidUpdate:
                                 EventHandler<OnRaidUpdateArgs> onRaidUpdate = OnRaidUpdate;
+                                if (onRaidUpdate == null)
+                                    return;
                                 onRaidUpdate(this, new OnRaidUpdateArgs
                                 {
-                                    Id = messageData12?.Id ?? new Guid(),
-                                    ChannelId = messageData12?.ChannelId,
-                                    TargetChannelId = messageData12?.TargetChannelId,
-                                    AnnounceTime = messageData12?.AnnounceTime ?? DateTime.Now,
-                                    RaidTime = messageData12?.RaidTime ?? DateTime.Now,
-                                    RemainingDurationSeconds = messageData12?.RemainigDurationSeconds ?? 0,
-                                    ViewerCount = messageData12?.ViewerCount ?? 0
+                                    Id = messageData12.Id,
+                                    ChannelId = messageData12.ChannelId,
+                                    TargetChannelId = messageData12.TargetChannelId,
+                                    AnnounceTime = messageData12.AnnounceTime,
+                                    RaidTime = messageData12.RaidTime,
+                                    RemainingDurationSeconds = messageData12.RemainigDurationSeconds,
+                                    ViewerCount = messageData12.ViewerCount
                                 });
                                 return;
                             case RaidType.RaidUpdateV2:
                                 EventHandler<OnRaidUpdateV2Args> onRaidUpdateV2 = OnRaidUpdateV2;
+                                if (onRaidUpdateV2 == null)
+                                    return;
                                 onRaidUpdateV2(this, new OnRaidUpdateV2Args
                                 {
-                                    Id = messageData12?.Id ?? new Guid(),
-                                    ChannelId = messageData12?.ChannelId,
-                                    TargetChannelId = messageData12?.TargetChannelId,
-                                    TargetLogin = messageData12?.TargetLogin,
-                                    TargetDisplayName = messageData12?.TargetDisplayName,
-                                    TargetProfileImage = messageData12?.TargetProfileImage,
-                                    ViewerCount = messageData12?.ViewerCount ?? 0
+                                    Id = messageData12.Id,
+                                    ChannelId = messageData12.ChannelId,
+                                    TargetChannelId = messageData12.TargetChannelId,
+                                    TargetLogin = messageData12.TargetLogin,
+                                    TargetDisplayName = messageData12.TargetDisplayName,
+                                    TargetProfileImage = messageData12.TargetProfileImage,
+                                    ViewerCount = messageData12.ViewerCount
                                 });
                                 return;
                             case RaidType.RaidGo:
                                 EventHandler<OnRaidGoArgs> onRaidGo = OnRaidGo;
+                                if (onRaidGo == null)
+                                    return;
                                 onRaidGo(this, new OnRaidGoArgs
                                 {
-                                    Id = messageData12?.Id ?? new Guid(),
-                                    ChannelId = messageData12?.ChannelId,
-                                    TargetChannelId = messageData12?.TargetChannelId,
-                                    TargetLogin = messageData12?.TargetLogin,
-                                    TargetDisplayName = messageData12?.TargetDisplayName,
-                                    TargetProfileImage = messageData12?.TargetProfileImage,
-                                    ViewerCount = messageData12?.ViewerCount ?? 0
+                                    Id = messageData12.Id,
+                                    ChannelId = messageData12.ChannelId,
+                                    TargetChannelId = messageData12.TargetChannelId,
+                                    TargetLogin = messageData12.TargetLogin,
+                                    TargetDisplayName = messageData12.TargetDisplayName,
+                                    TargetProfileImage = messageData12.TargetProfileImage,
+                                    ViewerCount = messageData12.ViewerCount
                                 });
                                 return;
                             default:
                                 return;
                         }
                     case "user-moderation-notifications":
-                        UserModerationNotifications? messageData13 =
+                        UserModerationNotifications messageData13 =
                                 message1.MessageData as UserModerationNotifications;
-                        if (messageData13 != null && messageData13.Type != UserModerationNotificationsType.AutomodCaughtMessage)
+                        if (messageData13.Type != UserModerationNotificationsType.AutomodCaughtMessage)
                             return;
-                        TwitchLib.PubSub.Models.Responses.Messages.UserModerationNotificationsTypes.AutomodCaughtMessage? data3 =
-                                messageData13?.Data as TwitchLib.PubSub.Models.Responses.Messages.UserModerationNotificationsTypes.AutomodCaughtMessage;
+                        TwitchLib.PubSub.Models.Responses.Messages.UserModerationNotificationsTypes.AutomodCaughtMessage
+                            data3 =
+                                messageData13.Data as TwitchLib.PubSub.Models.Responses.Messages.UserModerationNotificationsTypes.AutomodCaughtMessage;
                         EventHandler<OnAutomodCaughtUserMessage> caughtUserMessage =
                             OnAutomodCaughtUserMessage;
+                        if (caughtUserMessage == null)
+                            return;
                         caughtUserMessage(this, new OnAutomodCaughtUserMessage
                         {
                             ChannelId = str2,
@@ -661,55 +740,65 @@ public class CustomPubSub : ITwitchPubSub
                         return;
                     case "video-playback-by-id":
                         VideoPlayback messageData14 = (VideoPlayback) message1.MessageData;
-                        VideoPlaybackType? nullable5 = messageData14?.Type;
+                        VideoPlaybackType? nullable5 = messageData14.Type;
                         if (nullable5.HasValue)
                         {
                             switch (nullable5.GetValueOrDefault())
                             {
                                 case VideoPlaybackType.StreamUp:
                                     EventHandler<OnStreamUpArgs> onStreamUp = OnStreamUp;
+                                    if (onStreamUp == null)
+                                        return;
                                     onStreamUp(this, new OnStreamUpArgs
                                     {
-                                        PlayDelay = messageData14?.PlayDelay ?? 0,
-                                        ServerTime = messageData14?.ServerTime,
+                                        PlayDelay = messageData14.PlayDelay,
+                                        ServerTime = messageData14.ServerTime,
                                         ChannelId = str2
                                     });
                                     return;
                                 case VideoPlaybackType.StreamDown:
                                     EventHandler<OnStreamDownArgs> onStreamDown = OnStreamDown;
+                                    if (onStreamDown == null)
+                                        return;
                                     onStreamDown(this, new OnStreamDownArgs
                                     {
-                                        ServerTime = messageData14?.ServerTime,
+                                        ServerTime = messageData14.ServerTime,
                                         ChannelId = str2
                                     });
                                     return;
                                 case VideoPlaybackType.ViewCount:
                                     EventHandler<OnViewCountArgs> onViewCount = OnViewCount;
+                                    if (onViewCount == null)
+                                        return;
                                     onViewCount(this, new OnViewCountArgs
                                     {
-                                        ServerTime = messageData14?.ServerTime,
-                                        Viewers = messageData14?.Viewers ?? 1,
+                                        ServerTime = messageData14.ServerTime,
+                                        Viewers = messageData14.Viewers,
                                         ChannelId = str2
                                     });
                                     return;
                                 case VideoPlaybackType.Commercial:
                                     EventHandler<OnCommercialArgs> onCommercial = OnCommercial;
+                                    if (onCommercial == null)
+                                        return;
                                     onCommercial(this, new OnCommercialArgs
                                     {
-                                        ServerTime = messageData14?.ServerTime,
-                                        Length = messageData14?.Length ?? 0,
+                                        ServerTime = messageData14.ServerTime,
+                                        Length = messageData14.Length,
                                         ChannelId = str2
                                     });
                                     return;
-                                default:
-                                    throw new ArgumentOutOfRangeException();
                             }
                         }
+                        else
+                            break;
 
                         break;
                     case "whispers":
                         Whisper messageData15 = (Whisper)message1.MessageData;
                         EventHandler<OnWhisperArgs> onWhisper = OnWhisper;
+                        if (onWhisper == null)
+                            return;
                         onWhisper(this, new OnWhisperArgs
                         {
                             Whisper = messageData15,
@@ -732,23 +821,21 @@ public class CustomPubSub : ITwitchPubSub
 
     private static string GenerateNonce()
     {
-        return new string(Enumerable
-            .Repeat<string>("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8)
-            .Select((Func<string, char>)(s => s[Random.Next(s.Length)]))
-            .ToArray());
+        return new string(Enumerable.Repeat("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8)
+            .Select((Func<string, char>)(s => s[Random.Next(s.Length)])).ToArray());
     }
 
     private void ListenToTopic(string topic) => _topicList.Add(topic);
-    
+
     private void ListenToTopics(params string[] topics)
     {
         foreach (string topic in topics)
             _topicList.Add(topic);
     }
 
-    public void SendTopics(string oauth = "", bool unlisten = false)
+    public void SendTopics(string oauth = null, bool unlisten = false)
     {
-        if (oauth.Contains("oauth:"))
+        if (oauth != null && oauth.Contains("oauth:"))
             oauth = oauth.Replace("oauth:", "");
         string nonce = GenerateNonce();
         JArray content = new JArray();
@@ -766,25 +853,28 @@ public class CustomPubSub : ITwitchPubSub
             _previousRequestsSemaphore.Release();
         }
 
-        JObject jobject = new JObject(new JProperty("type", !unlisten ? (object)"LISTEN" : "UNLISTEN"), new JProperty("nonce", nonce), new JProperty("data", new JObject(new JProperty("topics", content))));
-        ((JContainer)jobject.SelectToken("data")!).Add(new JProperty("auth_token", oauth));
-        bool success = _socket.Send(jobject.ToString());
-        Console.WriteLine($"TOPIC SEND STATUS: {success}");
+        JObject jobject = new JObject(new JProperty("type", !unlisten ? "LISTEN" : (object)"UNLISTEN"), new JProperty("nonce", nonce), new JProperty("data", new JObject(new JProperty("topics", content))));
+        if (oauth != null)
+            ((JContainer)jobject.SelectToken("data"))?.Add(new JProperty("auth_token", oauth));
+        _socket.Send(jobject.ToString());
         _topicList.Clear();
     }
-    
+
     private void UnaccountedFor(string message)
     {
-        _logger.LogInformation("[TwitchPubSub] " + message);
+        ILogger<CustomPubsub> logger = _logger;
+        if (logger == null)
+            return;
+        logger.LogInformation("[TwitchPubSub] " + message);
     }
-    
+
     public void ListenToFollows(string channelId)
     {
         string str = "following." + channelId;
         _topicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
-    
+
     public void ListenToChatModeratorActions(string userId, string channelId)
     {
         string str = "chat_moderator_actions." + userId + "." + channelId;
@@ -805,14 +895,14 @@ public class CustomPubSub : ITwitchPubSub
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
-    
+
     public void ListenToChannelExtensionBroadcast(string channelId, string extensionId)
     {
         string str = "channel-ext-v1." + channelId + "-" + extensionId + "-broadcast";
         _topicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
-    
+
     [Obsolete("This topic is deprecated by Twitch. Please use ListenToBitsEventsV2()", false)]
     public void ListenToBitsEvents(string channelTwitchId)
     {
@@ -820,30 +910,29 @@ public class CustomPubSub : ITwitchPubSub
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
-    
+
     public void ListenToBitsEventsV2(string channelTwitchId)
     {
         string str = "channel-bits-events-v2." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
-    
+
     public void ListenToVideoPlayback(string channelTwitchId)
     {
         string str = "video-playback-by-id." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
-    
+
     public void ListenToWhispers(string channelTwitchId)
     {
         string str = "whispers." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
-    
-    [Obsolete(
-        "This method listens to an undocumented/retired/obsolete topic. Consider using ListenToChannelPoints()",
+
+    [Obsolete("This method listens to an undocumented/retired/obsolete topic. Consider using ListenToChannelPoints()",
         false)]
     public void ListenToRewards(string channelTwitchId)
     {
@@ -851,14 +940,14 @@ public class CustomPubSub : ITwitchPubSub
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
-    
+
     public void ListenToChannelPoints(string channelTwitchId)
     {
         string str = "channel-points-channel-v1." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
-    
+
     public void ListenToLeaderboards(string channelTwitchId)
     {
         string key1 = "leaderboard-events-v1.bits-usage-by-channel-v1-" + channelTwitchId + "-WEEK";
@@ -867,31 +956,31 @@ public class CustomPubSub : ITwitchPubSub
         _topicToChannelId[key2] = channelTwitchId;
         ListenToTopics(key1, key2);
     }
-    
+
     public void ListenToRaid(string channelTwitchId)
     {
         string str = "raid." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
-    
+
     public void ListenToSubscriptions(string channelId)
     {
         string str = "channel-subscribe-events-v1." + channelId;
         _topicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
-    
+
     public void ListenToPredictions(string channelTwitchId)
     {
         string str = "predictions-channel-v1." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
-    
+
     public void Connect() => _socket.Open();
-    
+
     public void Disconnect() => _socket.Close();
-    
+
     public void TestMessageParser(string testJsonString) => ParseMessage(testJsonString);
 }

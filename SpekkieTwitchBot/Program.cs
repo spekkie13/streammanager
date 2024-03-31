@@ -11,8 +11,6 @@ using SpekkieTwitchBot.Twitch.Commands;
 using SpekkieTwitchBot.Twitch.Pubsub;
 using TwitchLib.EventSub.Websockets.Extensions;
 using SpekkieTwitchBot.Web;
-using TwitchLib.Client;
-using TwitchLib.PubSub;
 
 namespace SpekkieTwitchBot;
 public static class Program
@@ -36,7 +34,7 @@ public static class Program
                 services.AddSingleton<IrcClient>();
                 services.AddSingleton<SpotifyService>();
                 services.AddSingleton<CustomTwitchClient>();
-                services.AddSingleton<TwitchPubSub>();
+                services.AddSingleton<CustomPubsub>();
                 services.AddSingleton<EventTimer>();
                 services.AddSingleton<EventTimerService>();
                 services.AddSingleton<SpotifyCommandHandler>();
@@ -47,7 +45,6 @@ public static class Program
                 services.AddHostedService<SpotifyService>();
                 services.AddHostedService<EventTimerService>();
                 services.AddHostedService<ObsWebsocketService>();
-                services.AddHostedService<TwitchChatService>();
                 services.AddHostedService<TwitchWebsocketService>();
             });
 }

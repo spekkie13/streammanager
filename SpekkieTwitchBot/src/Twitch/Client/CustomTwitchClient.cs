@@ -171,8 +171,7 @@ namespace SpekkieTwitchBot.Twitch.Client
             char whisperCommandIdentifier = '!',
             bool autoReListenOnExceptions = true)
         {
-            Log(string.Format("TwitchLib-TwitchClient initialized, assembly version: {0}",
-                Assembly.GetExecutingAssembly().GetName().Version));
+            Log($"CustomTwitchClient initialized, assembly version: {Assembly.GetExecutingAssembly().GetName().Version}");
             ConnectionCredentials = credentials;
             TwitchUsername = ConnectionCredentials.TwitchUsername;
             if (chatCommandIdentifier != char.MinValue)
@@ -706,36 +705,29 @@ namespace SpekkieTwitchBot.Twitch.Client
 
         private void HandlePrivMsg(IrcMessage ircMessage)
         {
-            ChatMessage chatMessage =
-                new ChatMessage(TwitchUsername, ircMessage, ref _channelEmotes, WillReplaceEmotes);
+            ChatMessage chatMessage = new ChatMessage(TwitchUsername, ircMessage, ref _channelEmotes, WillReplaceEmotes);
             foreach (JoinedChannel joinedChannel in JoinedChannels.Where((Func<JoinedChannel, bool>)(x =>
                          string.Equals(x.Channel, ircMessage.Channel, StringComparison.InvariantCultureIgnoreCase))))
                 joinedChannel.HandleMessage(chatMessage);
             EventHandler<OnMessageReceivedArgs> onMessageReceived = OnMessageReceived;
-            if (onMessageReceived != null)
-                onMessageReceived(this, new OnMessageReceivedArgs
+            onMessageReceived?.Invoke(this, new OnMessageReceivedArgs
+            {
+                ChatMessage = chatMessage
+            });
+            if (ircMessage.Tags.TryGetValue("msg-id", out var str) && str == "user-intro")
+            {
+                EventHandler<OnUserIntroArgs> onUserIntro = OnUserIntro;
+                onUserIntro?.Invoke(this, new OnUserIntroArgs
                 {
                     ChatMessage = chatMessage
                 });
-            string str;
-            if (ircMessage.Tags.TryGetValue("msg-id", out str) && str == "user-intro")
-            {
-                EventHandler<OnUserIntroArgs> onUserIntro = OnUserIntro;
-                if (onUserIntro != null)
-                    onUserIntro(this, new OnUserIntroArgs
-                    {
-                        ChatMessage = chatMessage
-                    });
             }
 
             if (_chatCommandIdentifiers == null || _chatCommandIdentifiers.Count == 0 ||
                 string.IsNullOrEmpty(chatMessage.Message) || !_chatCommandIdentifiers.Contains(chatMessage.Message[0]))
                 return;
             ChatCommand chatCommand = new ChatCommand(chatMessage);
-            EventHandler<OnChatCommandReceivedArgs> chatCommandReceived = OnChatCommandReceived;
-            if (chatCommandReceived == null)
-                return;
-            chatCommandReceived(this, new OnChatCommandReceivedArgs
+            OnChatCommandReceived?.Invoke(this, new OnChatCommandReceivedArgs
             {
                 Command = chatCommand
             });

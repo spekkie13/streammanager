@@ -39,7 +39,7 @@ public interface ITwitchPubSub
     [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
     event EventHandler<OnCustomRewardDeletedArgs> OnCustomRewardDeleted;
     [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
-    event EventHandler<OnRewardRedeemedArgs> OnRewardRedeemed;
+    event EventHandler<TwitchLib.PubSub.Events.OnRewardRedeemedArgs> OnRewardRedeemed;
     event EventHandler<OnChannelPointsRewardRedeemedArgs> OnChannelPointsRewardRedeemed;
     event EventHandler<OnLeaderboardEventArgs> OnLeaderboardSubs;
     event EventHandler<OnLeaderboardEventArgs> OnLeaderboardBits;
