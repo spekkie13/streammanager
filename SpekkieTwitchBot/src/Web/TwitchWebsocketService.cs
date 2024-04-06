@@ -1,12 +1,10 @@
-﻿using System.Net;
+﻿using System.Net.Http.Headers;
+using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using SpekkieTwitchBot.Auth;
-using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Twitch;
-using SpekkieTwitchBot.Twitch;
 using SpekkieTwitchBot.Twitch.Client;
 using SpekkieTwitchBot.Twitch.Commands;
 using SpekkieTwitchBot.Twitch.Pubsub;
@@ -25,47 +23,41 @@ public class TwitchWebsocketService : IHostedService
     private readonly ILogger<TwitchWebsocketService> _Logger;
     private readonly CustomTwitchClient _TwitchClient;
     private readonly CustomPubsub _TwitchPubSub;
-    private TwitchAuth _TwitchAuth;
-    private IrcClient _IrcClient;
-    private SpotifyCommandHandler _SpotifyCommandHandler;
-    private TextCommandHandler _TextCommandHandler;
-    private TimerCommandHandler _TimerCommandHandler;
-    private const string BroadcasterName = "spekkie1313";
-    private static Dictionary<string, Action> _CommandHandlers = new ();
+    private readonly SpotifyCommandHandler _SpotifyCommandHandler;
+    private readonly GeneralCommandHandler _GeneralCommandHandler;
+    private readonly TwitchAuth _TwitchAuth;
 
     public TwitchWebsocketService(
         IConfiguration configuration, 
         ILogger<TwitchWebsocketService> logger,
         CustomTwitchClient twitchClient, 
         CustomPubsub twitchPubSub,
-        IrcClient ircClient, 
         SpotifyCommandHandler spotifyCommandHandler, 
-        TextCommandHandler textCommandHandler, 
-        TimerCommandHandler timerCommandHandler)
+        GeneralCommandHandler generalCommandHandler)
     {
         _Configuration = configuration;
         _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        _IrcClient = ircClient;
         _SpotifyCommandHandler = spotifyCommandHandler;
-        _TextCommandHandler = textCommandHandler;
-        _TimerCommandHandler = timerCommandHandler;
+        _GeneralCommandHandler = generalCommandHandler;
 
         _TwitchClient = twitchClient ?? throw new ArgumentNullException(nameof(twitchClient));
         _TwitchPubSub = twitchPubSub ?? throw new ArgumentNullException(nameof(twitchPubSub));
 
-        SetupAuth();
+        _TwitchAuth = SetupAuth();
         SetupTwitchClient();
         SetupPubSub();
     }
 
-    private void SetupAuth()
+    private static TwitchAuth SetupAuth()
     {
-        _TwitchAuth = AuthUtils.GetTwitchAuth();
-        AuthorizationCredentials authCred = GetAuthorizationCredentials().Result ?? new AuthorizationCredentials();
-        ClientCredentials clientCred = GetClientCredentials().Result ?? new ClientCredentials();
-        _TwitchAuth.AppToken = authCred.access_token;
-        _TwitchAuth.UserToken = clientCred.access_token;
+        TwitchAuth twitchAuth = AuthService.GetTwitchAuth();
+        AuthorizationCredentials authCred = AuthService.GetAuthorizationCredentials(twitchAuth).Result ?? new AuthorizationCredentials();
+        ClientCredentials clientCred = AuthService.GetClientCredentials(twitchAuth).Result ?? new ClientCredentials();
+        twitchAuth.AppToken = authCred.access_token;
+        twitchAuth.UserToken = clientCred.access_token;
+
+        return twitchAuth;
     }
 
     private void SetupTwitchClient()
@@ -117,44 +109,40 @@ public class TwitchWebsocketService : IHostedService
         switch (e.RewardRedeemed.Redemption.Reward.Title)
         {
             case "Song Request":
-                bool success = HandleSongRequest(reward.UserInput);
-                
-                break;
-            default:
+                bool success = _SpotifyCommandHandler.HandleAddSongToQueueCommand(reward.UserInput);
+                //string status = success ? "FULFILLED" : "REJECTED";
+                // UpdateRedemption(id: e.RewardRedeemed.Redemption.Id, 
+                //       broadcasterId: _TwitchAuth.ChannelId,
+                //            rewardId: e.RewardRedeemed.Redemption.Reward.Id, 
+                //              status: status);
                 break;
         }
-        Console.WriteLine("Channel Points redeemed");
-        Console.WriteLine($"{e.RewardRedeemed.Redemption.Reward.Title}");
+        Console.WriteLine($"Redeemed: {e.RewardRedeemed.Redemption.Reward.Title}");
     }
     
     private void OnCommunitySubscription(object? sender, OnCommunitySubscriptionArgs e)
     {       
-        Console.WriteLine("new community sub");
-        Console.WriteLine($"{e.GiftedSubscription.DisplayName}");
+        Console.WriteLine($"{e.GiftedSubscription.DisplayName} just subscribed");
     }
     
     private void OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
     {       
-        Console.WriteLine("new community sub");
-        Console.WriteLine($"{e.Subscriber}");
+        Console.WriteLine($"{e.Subscriber} just subscribed");
     }
     
     private void OnGiftedSubscription(object? sender, OnGiftedSubscriptionArgs e)
     {       
-        Console.WriteLine("new community sub");
-        Console.WriteLine($"{e.GiftedSubscription.DisplayName}");
+        Console.WriteLine($"{e.GiftedSubscription.DisplayName} just gifted a sub");
     }
     
     private void OnReSubscriber(object? sender, OnReSubscriberArgs e)
     {       
-        Console.WriteLine("new community sub");
-        Console.WriteLine($"{e.ReSubscriber.DisplayName}");
+        Console.WriteLine($"{e.ReSubscriber.DisplayName} just subscribed for {e.ReSubscriber.Months} Months");
     }
     
     private void OnContinuedGiftSubscription(object? sender, OnContinuedGiftedSubscriptionArgs e)
     {       
-        Console.WriteLine("new community sub");
-        Console.WriteLine($"{e.ContinuedGiftedSubscription.DisplayName}");
+        Console.WriteLine($"{e.ContinuedGiftedSubscription.DisplayName} just continued their gifted subscription");
     }
     
     private void OnPrimePaidSubscriber(object? sender, OnPrimePaidSubscriberArgs e)
@@ -165,83 +153,28 @@ public class TwitchWebsocketService : IHostedService
 
     private void OnChatCommandReceived(object? sender, OnChatCommandReceivedArgs e)
     {
-        HandleCommand(e.Command);
+        _GeneralCommandHandler.HandleCommand(e.Command);
     }
-    
-    private void HandleCommand(ChatCommand command)
+
+    private async void UpdateRedemption(string id, string broadcasterId, string rewardId, string status)
     {
-        string username = command.ChatMessage.DisplayName;
-        string commandText = command.CommandText;
-        string commandArgs = command.ArgumentsAsString;
+        const string Url = "https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions";
         
-        _CommandHandlers = new Dictionary<string, Action>
-        {
-            { "commands", HandleCommandsCommand },
-            { "exitbot", () => HandleExitBotCommand(username) },
-            { "afgeleid", HandleAfgeleidCommand},
-            { "hello", _TextCommandHandler.HandleHelloCommand },
-            { "twitter", _TextCommandHandler.HandleGetTwitterCommand },
-            { "youtube", _TextCommandHandler.HandleGetYouTubeCommand },
-            { "discord", _TextCommandHandler.HandleGetDiscordCommand },
-            { "lurk", () => _TextCommandHandler.HandleLurkCommand(username) },
-            { "tag", _TextCommandHandler.HandleGetCocTagCommand },
-
-            { "pausetimer", _TimerCommandHandler.HandlePauseTimerCommand },
-            { "starttimer", _TimerCommandHandler.HandleStartTimerCommand },
-            { "addtime", () => _TimerCommandHandler.HandleAddTimeToTimerCommand(commandArgs) },
-            { "settime", () => _TimerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs) },
-
-            { "song", _SpotifyCommandHandler.HandleGetCurrentSongCommand },
-            { "playlist", _SpotifyCommandHandler.HandleGetCurrentPlaylistCommand },
-            { "pausemusic", _SpotifyCommandHandler.HandlePauseMusicCommand },
-            { "resumemusic", _SpotifyCommandHandler.HandleResumeMusicCommand },
-            { "next", _SpotifyCommandHandler.HandleNextSongCommand },
-            { "prev", _SpotifyCommandHandler.HandlePrevSongCommand },
-            { "queue", _SpotifyCommandHandler.HandleGetQueueCommand },
-            { "addsong", () => _SpotifyCommandHandler.HandleAddSongToQueueCommand(commandArgs) },
-            { "playsong", () => _SpotifyCommandHandler.HandlePlaySpecificSongCommand(commandArgs, username) },
-            { "playsound", () => _SpotifyCommandHandler.PlaySound() },
-        };
-
-        if (_CommandHandlers.TryGetValue(commandText, out Action? handler))
-            handler.Invoke();
-        else
-            HandleUnknownCommand();
+        using HttpClient client = new HttpClient(); 
+        client.DefaultRequestHeaders.Add("Client-Id", _TwitchAuth.ClientId);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", $"{_TwitchAuth.AppToken}");
+            
+        var requestContent = new StringContent($"{{\"status\":\"{status}\"}}", 
+            Encoding.UTF8, 
+            "application/json");
+        
+        string requestUrl = $"{Url}?broadcaster_id={broadcasterId}&reward_id={rewardId}&id={id}";
+        
+        HttpResponseMessage message = await client.PatchAsync(requestUrl, requestContent);
+            
+        Console.WriteLine(message);
     }
     
-    private void HandleCommandsCommand()
-    {
-        string commands = "";
-        foreach (string command in _CommandHandlers.Keys)
-        {
-            if (command != _CommandHandlers.Keys.Last())
-                commands += $"{command}, ";
-            else
-                commands += $"{command}";
-        }
-        _IrcClient.SendPublicChatMessage($"The following commands are available on this channel: {commands}");
-    }
-
-    private void HandleUnknownCommand()
-    {
-        _IrcClient.SendPublicChatMessage("Unknown command");
-    }
-
-    private void HandleExitBotCommand(string username)
-    {
-        if (!username.Equals(BroadcasterName)) return;
-        _IrcClient.SendPublicChatMessage("Bye! Have a beautiful time!");
-        Environment.Exit(0);
-    }
-
-    private void HandleAfgeleidCommand()
-    {
-        string afgeleidtext = FileHandler.ReadAfgeleidCounter();
-        int afgeleid = Convert.ToInt32(afgeleidtext);
-        afgeleid++;
-        _IrcClient.SendPublicChatMessage($"Spekkie is {afgeleid}x afgeleid geweest");
-        FileHandler.WriteAfgeleidCounter(afgeleid.ToString());
-    }
     
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -255,102 +188,5 @@ public class TwitchWebsocketService : IHostedService
         _TwitchClient.Disconnect();
         _TwitchPubSub.Disconnect();
         return Task.CompletedTask;
-    }
-    
-    private async Task<ClientCredentials?> GetClientCredentials()
-    {
-        using HttpClient client = new HttpClient();
-        var parameters = new FormUrlEncodedContent(new[]
-        {
-            new KeyValuePair<string, string>("client_id", _TwitchAuth.ClientId),
-            new KeyValuePair<string, string>("client_secret", _TwitchAuth.ClientSecret),
-            new KeyValuePair<string, string>("grant_type", "client_credentials")
-        });
-
-        var response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
-
-        if (response.IsSuccessStatusCode)
-        {
-            var responseContent = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(responseContent);
-            ClientCredentials? cred = JsonConvert.DeserializeObject<ClientCredentials>(responseContent);
-            return cred;
-        }
-        
-        Console.WriteLine($"Failed to get access token. Status code: {response.StatusCode}");
-        return null;
-    }
-
-    private async Task<AuthorizationCredentials?> GetAuthorizationCredentials()
-    {
-        using HttpClient client = new HttpClient();
-        var parameters = new FormUrlEncodedContent(new[]
-        {
-            new KeyValuePair<string, string>("client_id", _TwitchAuth.ClientId),
-            new KeyValuePair<string, string>("client_secret", _TwitchAuth.ClientSecret),
-            new KeyValuePair<string, string>("code", _TwitchAuth.Code),
-            new KeyValuePair<string, string>("grant_type", "authorization_code"),
-            new KeyValuePair<string, string>("redirect_uri", "http://localhost:3000/")
-        });
-
-        var response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
-
-        switch (response.StatusCode)
-        {
-            case HttpStatusCode.OK:
-                var responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(responseContent);
-                AuthorizationCredentials? cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent);
-                UpdateTwitchSettings(cred);
-                return cred;
-            case HttpStatusCode.BadRequest:
-                cred = await RefreshTokenAsync(_TwitchAuth.ClientId, _TwitchAuth.ClientSecret, _TwitchAuth.RefreshToken);
-                return cred;
-            default:
-                Console.WriteLine($"Failed to get tokens. Status code: {response.StatusCode}");
-                return null;
-        }
-    }
-    
-    async Task<AuthorizationCredentials?> RefreshTokenAsync(string clientId, string clientSecret, string refreshToken)
-    {
-        using HttpClient client = new HttpClient();
-        var parameters = new FormUrlEncodedContent(new[]
-        {
-            new KeyValuePair<string, string>("client_id", clientId),
-            new KeyValuePair<string, string>("client_secret", clientSecret),
-            new KeyValuePair<string, string>("grant_type", "refresh_token"),
-            new KeyValuePair<string, string>("refresh_token", refreshToken)
-        });
-
-        var response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
-
-        if (response.IsSuccessStatusCode)
-        {
-            var responseContent = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent);
-        }
-
-        Console.WriteLine($"Error refreshing token: {response.StatusCode}");
-        return null;
-    }
-
-    private void UpdateTwitchSettings(AuthorizationCredentials? cred)
-    {
-        _TwitchAuth.RefreshToken = cred?.refresh_token ?? "";
-        string json = JsonConvert.SerializeObject(_TwitchAuth);
-        FileHandler.WriteTwitchAuthFile(json);
-    }
-
-    private bool HandleSongRequest(string songUrl)
-    {
-        if (songUrl.Contains("open.spotify.com"))
-        {
-            _SpotifyCommandHandler.HandleAddSongToQueueCommand(songUrl);
-            return true;
-        }
-
-        _IrcClient.SendPublicChatMessage("Please provide a valid Spotify link");
-        return false;
     }
 }

@@ -85,24 +85,24 @@ public class ObsWebsocketService : IHostedService
 
         if(e.ObsCloseCode == ObsCloseCodes.AuthenticationFailed)
         {
-            _Logger.LogError("Authentication Failed");
+            Logger.LogError("Authentication Failed");
         }
         else if(e.WebsocketDisconnectionInfo != null)
             if (e.WebsocketDisconnectionInfo.Exception != null)
-                _Logger.LogError($@"Connection failed: 
+                Logger.LogError($@"Connection failed: 
                                      CloseCode: {e.ObsCloseCode} 
                                      Desc: {e.WebsocketDisconnectionInfo?.CloseStatusDescription} 
                                      Exception:{e.WebsocketDisconnectionInfo?.Exception?.Message}\n
                                      Type: {e.WebsocketDisconnectionInfo?.Type}");
             else
-                _Logger.LogError($@"Connection failed: 
+                Logger.LogError($@"Connection failed: 
                                      CloseCode: {e.ObsCloseCode} 
                                      Desc: {e.WebsocketDisconnectionInfo?.CloseStatusDescription} 
                                      Exception:{e.WebsocketDisconnectionInfo?.Exception?.Message}\n
                                      Type: {e.WebsocketDisconnectionInfo?.Type}");
         else
         {
-            _Logger.LogError($"Connection failed: CloseCode: {e.ObsCloseCode}");
+            Logger.LogError($"Connection failed: CloseCode: {e.ObsCloseCode}");
         }
     }
 
@@ -116,7 +116,7 @@ public class ObsWebsocketService : IHostedService
             OutputState.OBS_WEBSOCKET_OUTPUT_STOPPED => "Stream stopped...",
             _ => "State unknown...",
         };
-        _Logger.LogInformation($"Stream state changed to: {state}");
+        Logger.LogInfo($"Stream state changed to: {state}");
     }
 
     private void OnRecordStateChanged(object? sender, RecordStateChangedEventArgs args)
@@ -130,7 +130,7 @@ public class ObsWebsocketService : IHostedService
             OutputState.OBS_WEBSOCKET_OUTPUT_PAUSED => "Recording paused...",
             _ => "State unknown...",
         };
-        _Logger.LogInformation($"Recording state changed to: {state}");
+        Logger.LogInfo($"Recording state changed to: {state}");
     }
 
     private void OnVirtualCamStateChanged(object? sender, VirtualcamStateChangedEventArgs args)

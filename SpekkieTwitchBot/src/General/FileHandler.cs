@@ -11,6 +11,7 @@ public static class FileHandler
         SetupSongFiles();
         SetupTimerFile();
         SetupCounterFiles();
+        SetupLogFile();
     }
 
     private static void SetupCounterFiles()
@@ -48,7 +49,42 @@ public static class FileHandler
         if (!File.Exists(pictureDir))
             File.Create(pictureDir);
     }
-    
+
+    private static void SetupLogFile()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Log";
+
+        if (!Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+
+        if (!File.Exists(dir + "/log.txt"))
+            File.Create(dir + "/log.txt");
+    }
+
+    public static string ReadTwitchAuthFile()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch.json";
+        string jsonData = File.ReadAllText(dir);
+
+        return jsonData;
+    }
+
+    public static string ReadSpotifyAuthFile()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Spotify.json";
+        string jsonData = File.ReadAllText(dir);
+
+        return jsonData;
+    }
+
+    public static string ReadAfgeleidCounter()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Counters";
+        string text = File.ReadAllText(dir + "/afgeleid.txt");
+        if (string.IsNullOrEmpty(text)) text = "0";
+        return text;
+    }    
+
     public static void WriteRemainingTime(TimeSpan totalTime)
     {
         int hours = totalTime.Hours + 24 * totalTime.Days;
@@ -68,28 +104,13 @@ public static class FileHandler
             Console.WriteLine($"Error writing to the file: {ex.Message}");
         }
     }
-
-    public static string ReadTwitchAuthFile()
-    {
-        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch.json";
-        string jsonData = File.ReadAllText(dir);
-
-        return jsonData;
-    }
-
+    
     public static void WriteTwitchAuthFile(string text)
     {
         string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch.json";
         File.WriteAllText(dir, text);
     }
-    public static string ReadSpotifyAuthFile()
-    {
-        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Spotify.json";
-        string jsonData = File.ReadAllText(dir);
-
-        return jsonData;
-    }
-
+    
     public static void WriteSongFile(string text)
     {
         string title = text.Split(" by ")[0];
@@ -121,12 +142,18 @@ public static class FileHandler
         string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Counters";
         File.WriteAllText(dir + "/afgeleid.txt", text);
     }
-    
-    public static string ReadAfgeleidCounter()
+
+    public static void WriteLogText(string text)
     {
-        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Counters";
-        string text = File.ReadAllText(dir + "/afgeleid.txt");
-        if (string.IsNullOrEmpty(text)) text = "0";
-        return text;
+        string dir = BaseDir + $"{Path.DirectorySeparatorChar}Log{Path.DirectorySeparatorChar}Log.txt";
+        try
+        {
+            using StreamWriter writer = File.AppendText(dir);
+            writer.WriteLine(text);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"an error occured: {ex.Message}");
+        }
     }
 }

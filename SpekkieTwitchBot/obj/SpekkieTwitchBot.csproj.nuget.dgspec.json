@@ -134,6 +134,10 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
+            "SharpPcap": {
+              "target": "Package",
+              "version": "[6.3.0, )"
+            },
             "System.Windows.Extensions": {
               "target": "Package",
               "version": "[8.0.0, )"

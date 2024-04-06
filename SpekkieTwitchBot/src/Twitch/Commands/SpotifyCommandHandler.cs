@@ -1,6 +1,7 @@
 ﻿using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Spotify;
 using System.Media;
+using System.Runtime.InteropServices;
 
 namespace SpekkieTwitchBot.Twitch.Commands;
 
@@ -63,12 +64,17 @@ public class SpotifyCommandHandler
             : "Failed to skip to the previous song...");
     }
 
-    public void HandleAddSongToQueueCommand(string song)
+    public bool HandleAddSongToQueueCommand(string song)
     {
-        bool success = _SpotifyService.AddSongToQueue(song).Result;
-
-        string message = success ? "Added song to the queue..." : "Could not add song to the queue...";
-        _IrcClient.SendPublicChatMessage(message);
+        if (song.Contains("open.spotify.com"))
+        {
+            bool success = _SpotifyService.AddSongToQueue(song).Result;
+            string message = success ? "Added song to the queue..." : "Could not add song to the queue...";
+            _IrcClient.SendPublicChatMessage(message);
+            return success;
+        }
+        _IrcClient.SendPublicChatMessage("Please provide a valid spotify link");
+        return false;
     }
 
     public void HandlePlaySpecificSongCommand(string song, string username)
@@ -87,10 +93,11 @@ public class SpotifyCommandHandler
 
     public void PlaySound()
     {
-        string path = @"C:\Users\tomsp\OneDrive\Bureaublad\Muziek\Gerenderde Projecten\Future Bounce WIP.wav";
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+        const string Path = @"C:\Users\tomsp\OneDrive\Bureaublad\Muziek\Gerenderde Projecten\Future Bounce WIP.wav";
         SoundPlayer player = new SoundPlayer
         {
-            SoundLocation = path
+            SoundLocation = Path
         };
 
         try

@@ -19,8 +19,8 @@ public class SpotifyService : BackgroundService
     public SpotifyService()
     {
         _Client = new HttpClient();
-        SpotifyAuth spotifyAuth = AuthUtils.GetSpotifyAuth();
-        var tokenResponse = AuthUtils.GetSpotifyToken(_Client, spotifyAuth);
+        SpotifyAuth spotifyAuth = AuthService.GetSpotifyAuth();
+        var tokenResponse = AuthService.GetSpotifyToken(_Client, spotifyAuth);
         _Client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", tokenResponse.AccessToken);
     }
@@ -76,7 +76,7 @@ public class SpotifyService : BackgroundService
         if (response.IsSuccessStatusCode)
             return true;
         
-        Console.WriteLine($"Error pausing the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        Logger.LogError($"Error pausing the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return false;    
     }
 
@@ -87,7 +87,7 @@ public class SpotifyService : BackgroundService
         if (response.IsSuccessStatusCode)
             return true;
         
-        Console.WriteLine($"Error resuming the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        Logger.LogError($"Error resuming the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return false;
     }
 
@@ -98,8 +98,9 @@ public class SpotifyService : BackgroundService
         if (response.IsSuccessStatusCode)
             return true;
         
-        Console.WriteLine($"Error skipping to the next song: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
-        return false;    }    
+        Logger.LogError($"Error skipping to the next song: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        return false;    
+    }    
     
     public async Task<bool> SkipPrevSong()
     {
@@ -107,7 +108,7 @@ public class SpotifyService : BackgroundService
         if (response.IsSuccessStatusCode)
             return true;
         
-        Console.WriteLine($"Error skipping to the previous song: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        Logger.LogError($"Error skipping to the previous song: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return false;
     }
 
@@ -124,7 +125,7 @@ public class SpotifyService : BackgroundService
         if (response.IsSuccessStatusCode)
             return true;
         
-        Console.WriteLine($"Error adding the requested song to the queue: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        Logger.LogError($"Error adding the requested song to the queue: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return false;
     }
 

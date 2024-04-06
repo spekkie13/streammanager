@@ -40,6 +40,7 @@ public static class Program
                 services.AddSingleton<SpotifyCommandHandler>();
                 services.AddSingleton<TextCommandHandler>();
                 services.AddSingleton<TimerCommandHandler>();
+                services.AddSingleton<GeneralCommandHandler>();
                 services.AddSingleton<JoinedChannelManager>();
                 services.AddSingleton<IrcParser>();
                 services.AddHostedService<SpotifyService>();
