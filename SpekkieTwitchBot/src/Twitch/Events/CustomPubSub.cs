@@ -17,13 +17,13 @@ using TwitchLib.PubSub.Models.Responses.Messages.UserModerationNotifications;
 using Message = TwitchLib.PubSub.Models.Responses.Message;
 using Timer = System.Timers.Timer;
 using Following = SpekkieTwitchBot.Models.Twitch.Pubsub.Following;
-using ITwitchPubSub = SpekkieTwitchBot.Models.Twitch.Pubsub.ITwitchPubSub;
+using Interfaces_ITwitchPubSub = SpekkieTwitchBot.Models.Twitch.Pubsub.Interfaces.ITwitchPubSub;
 using OnChannelPointsRewardRedeemedArgs = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnChannelPointsRewardRedeemedArgs;
 using OnBitsReceivedV2Args = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnBitsReceivedV2Args;
 
-namespace SpekkieTwitchBot.Twitch.Pubsub;
+namespace SpekkieTwitchBot.Twitch.Events;
 
-public class CustomPubsub : ITwitchPubSub
+public class CustomPubsub : Interfaces_ITwitchPubSub
 {
     private readonly WebSocketClient _socket;
     private readonly List<PreviousRequest> _previousRequests = new List<PreviousRequest>();

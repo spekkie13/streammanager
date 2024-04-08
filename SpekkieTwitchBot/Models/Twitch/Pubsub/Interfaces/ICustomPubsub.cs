@@ -1,9 +1,8 @@
 ﻿#nullable disable
 using TwitchLib.PubSub.Events;
 using OnChannelPointsRewardRedeemedArgs = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnChannelPointsRewardRedeemedArgs;
-using OnRewardRedeemedArgs = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnRewardRedeemedArgs;
 
-namespace SpekkieTwitchBot.Models.Twitch.Pubsub;
+namespace SpekkieTwitchBot.Models.Twitch.Pubsub.Interfaces;
 
 public interface ITwitchPubSub
 {

@@ -8,7 +8,7 @@ using SpekkieTwitchBot.Spotify;
 using SpekkieTwitchBot.Twitch;
 using SpekkieTwitchBot.Twitch.Client;
 using SpekkieTwitchBot.Twitch.Commands;
-using SpekkieTwitchBot.Twitch.Pubsub;
+using SpekkieTwitchBot.Twitch.Events;
 using TwitchLib.EventSub.Websockets.Extensions;
 using SpekkieTwitchBot.Web;
 

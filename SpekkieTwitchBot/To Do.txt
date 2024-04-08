@@ -1,1 +1,10 @@
-﻿-> Search for a way to mark redemptions as completed
+﻿CHANNEL POINTS
+-> Search for a way to mark redemptions as completed
+
+FOLLOWERS
+-> Implement Follower Count & Follower Goal
+-> Implement Most Recent Follower
+
+SUBS
+-> Implement Sub Count & Sub Goal
+-> Implement Most Recent Sub & Most Recent Sub Gift

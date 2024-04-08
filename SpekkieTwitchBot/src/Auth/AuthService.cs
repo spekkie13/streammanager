@@ -57,14 +57,14 @@ public static class AuthService
         return null;
     }
     
-    public static TwitchAuth GetTwitchAuth()
+    private static TwitchAuth GetTwitchAuth()
     {
         string jsonData = FileHandler.ReadTwitchAuthFile();
         TwitchAuth auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData) ?? new TwitchAuth();
         return auth;
     }
 
-    public static async Task<ClientCredentials?> GetClientCredentials(TwitchAuth twitchAuth)
+    private static async Task<ClientCredentials?> GetClientCredentials(TwitchAuth twitchAuth)
     {
         using HttpClient client = new HttpClient();
         var parameters = new FormUrlEncodedContent(new[]
@@ -89,7 +89,7 @@ public static class AuthService
         return null;
     }
 
-    public static async Task<AuthorizationCredentials?> GetAuthorizationCredentials(TwitchAuth twitchAuth)
+    private static async Task<AuthorizationCredentials?> GetAuthorizationCredentials(TwitchAuth twitchAuth)
     {
         using HttpClient client = new HttpClient();
         var parameters = new FormUrlEncodedContent(new[]
@@ -144,6 +144,17 @@ public static class AuthService
         return null;
     }
 
+    public static TwitchAuth SetupAuth()
+    {
+        TwitchAuth twitchAuth = AuthService.GetTwitchAuth();
+        AuthorizationCredentials authCred = AuthService.GetAuthorizationCredentials(twitchAuth).Result ?? new AuthorizationCredentials();
+        ClientCredentials clientCred = AuthService.GetClientCredentials(twitchAuth).Result ?? new ClientCredentials();
+        twitchAuth.AppToken = authCred.access_token;
+        twitchAuth.UserToken = clientCred.access_token;
+
+        return twitchAuth;
+    }
+    
     private static void UpdateTwitchSettings(TwitchAuth twitchAuth, AuthorizationCredentials? authCred = null, ClientCredentials? clientCredentials = null)
     {
         if (authCred == null && clientCredentials != null)

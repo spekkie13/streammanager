@@ -4,18 +4,17 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SpekkieTwitchBot.Auth;
+using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Twitch;
-using SpekkieTwitchBot.Twitch.Client;
 using SpekkieTwitchBot.Twitch.Commands;
-using SpekkieTwitchBot.Twitch.Pubsub;
+using SpekkieTwitchBot.Twitch.Events.Handlers;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 using TwitchLib.PubSub.Events;
 using TwitchLib.PubSub.Models.Responses.Messages.Redemption;
-using AuthorizationCredentials = SpekkieTwitchBot.Models.Twitch.AuthorizationCredentials;
 using OnChannelPointsRewardRedeemedArgs = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnChannelPointsRewardRedeemedArgs;
 
-namespace SpekkieTwitchBot.Web;
+namespace SpekkieTwitchBot.Twitch.Events;
 
 public class TwitchWebsocketService : IHostedService
 {
@@ -44,33 +43,16 @@ public class TwitchWebsocketService : IHostedService
         _TwitchClient = twitchClient ?? throw new ArgumentNullException(nameof(twitchClient));
         _TwitchPubSub = twitchPubSub ?? throw new ArgumentNullException(nameof(twitchPubSub));
 
-        _TwitchAuth = SetupAuth();
+        _TwitchAuth = AuthService.SetupAuth();
         SetupTwitchClient();
         SetupPubSub();
-    }
-
-    private static TwitchAuth SetupAuth()
-    {
-        TwitchAuth twitchAuth = AuthService.GetTwitchAuth();
-        AuthorizationCredentials authCred = AuthService.GetAuthorizationCredentials(twitchAuth).Result ?? new AuthorizationCredentials();
-        ClientCredentials clientCred = AuthService.GetClientCredentials(twitchAuth).Result ?? new ClientCredentials();
-        twitchAuth.AppToken = authCred.access_token;
-        twitchAuth.UserToken = clientCred.access_token;
-
-        return twitchAuth;
     }
 
     private void SetupTwitchClient()
     {
         ConnectionCredentials cred = new ConnectionCredentials("spekkie1313", _TwitchAuth.Implicit_OAuth);
         _TwitchClient.Initialize(cred, _TwitchAuth.BroadcasterName);
-        _TwitchClient.OnCommunitySubscription += OnCommunitySubscription;
-        _TwitchClient.OnNewSubscriber += OnNewSubscriber;
-        _TwitchClient.OnGiftedSubscription += OnGiftedSubscription;
-        _TwitchClient.OnReSubscriber += OnReSubscriber;
-        _TwitchClient.OnContinuedGiftedSubscription += OnContinuedGiftSubscription;
-        _TwitchClient.OnPrimePaidSubscriber += OnPrimePaidSubscriber;
-        _TwitchClient.OnChatCommandReceived += OnChatCommandReceived;
+        _TwitchPubSub.OnChannelSubscription += SubEventHandler.HandleSub;
     }
     
     private void SetupPubSub()
@@ -78,7 +60,8 @@ public class TwitchWebsocketService : IHostedService
         _TwitchPubSub.OnPubSubServiceConnected += OnPubSubConnected;
         _TwitchPubSub.OnListenResponse += OnListenResponse;
         _TwitchPubSub.OnChannelPointsRewardRedeemed += OnChannelPointsRewardRedeemed;
-        
+        _TwitchClient.OnChatCommandReceived += OnChatCommandReceived;
+            
         _TwitchPubSub.ListenToVideoPlayback(_TwitchAuth.ChannelId);
         _TwitchPubSub.ListenToFollows(_TwitchAuth.ChannelId);
         _TwitchPubSub.ListenToSubscriptions(_TwitchAuth.ChannelId);
@@ -93,15 +76,16 @@ public class TwitchWebsocketService : IHostedService
     private void OnPubSubConnected(object? sender, EventArgs e)
     {
         _TwitchPubSub.SendTopics(_TwitchAuth.AppToken);
-        _Logger.LogInformation("Connected");
+        _Logger.LogInformation("Pubsub Service Connected");
     }
-
-    private void OnListenResponse(object? sender, OnListenResponseArgs e)
+    
+    private static void OnListenResponse(object? sender, OnListenResponseArgs e)
     {
-        Console.WriteLine(e.Successful
+        Logger.LogInfo(e.Successful
             ? $"Successfully listening to: {e.Topic}"
             : $"Failed to listen! Error: {e.Response.Error}");
     }
+
 
     private void OnChannelPointsRewardRedeemed(object? sender, OnChannelPointsRewardRedeemedArgs e)
     {
@@ -110,47 +94,16 @@ public class TwitchWebsocketService : IHostedService
         {
             case "Song Request":
                 bool success = _SpotifyCommandHandler.HandleAddSongToQueueCommand(reward.UserInput);
-                //string status = success ? "FULFILLED" : "REJECTED";
-                // UpdateRedemption(id: e.RewardRedeemed.Redemption.Id, 
-                //       broadcasterId: _TwitchAuth.ChannelId,
-                //            rewardId: e.RewardRedeemed.Redemption.Reward.Id, 
-                //              status: status);
+                string status = success ? "FULFILLED" : "REJECTED";
+                 UpdateRedemption(id: e.RewardRedeemed.Redemption.Id, 
+                       broadcasterId: _TwitchAuth.ChannelId,
+                            rewardId: e.RewardRedeemed.Redemption.Reward.Id, 
+                              status: status);
                 break;
         }
-        Console.WriteLine($"Redeemed: {e.RewardRedeemed.Redemption.Reward.Title}");
+        Logger.LogInfo($"Redeemed: {e.RewardRedeemed.Redemption.Reward.Title}");
     }
     
-    private void OnCommunitySubscription(object? sender, OnCommunitySubscriptionArgs e)
-    {       
-        Console.WriteLine($"{e.GiftedSubscription.DisplayName} just subscribed");
-    }
-    
-    private void OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
-    {       
-        Console.WriteLine($"{e.Subscriber} just subscribed");
-    }
-    
-    private void OnGiftedSubscription(object? sender, OnGiftedSubscriptionArgs e)
-    {       
-        Console.WriteLine($"{e.GiftedSubscription.DisplayName} just gifted a sub");
-    }
-    
-    private void OnReSubscriber(object? sender, OnReSubscriberArgs e)
-    {       
-        Console.WriteLine($"{e.ReSubscriber.DisplayName} just subscribed for {e.ReSubscriber.Months} Months");
-    }
-    
-    private void OnContinuedGiftSubscription(object? sender, OnContinuedGiftedSubscriptionArgs e)
-    {       
-        Console.WriteLine($"{e.ContinuedGiftedSubscription.DisplayName} just continued their gifted subscription");
-    }
-    
-    private void OnPrimePaidSubscriber(object? sender, OnPrimePaidSubscriberArgs e)
-    {       
-        Console.WriteLine("new community sub");
-        Console.WriteLine($"{e.PrimePaidSubscriber.DisplayName}");
-    }
-
     private void OnChatCommandReceived(object? sender, OnChatCommandReceivedArgs e)
     {
         _GeneralCommandHandler.HandleCommand(e.Command);
@@ -172,9 +125,8 @@ public class TwitchWebsocketService : IHostedService
         
         HttpResponseMessage message = await client.PatchAsync(requestUrl, requestContent);
             
-        Console.WriteLine(message);
+        Logger.LogInfo(message.ToString());
     }
-    
     
     public async Task StartAsync(CancellationToken cancellationToken)
     {

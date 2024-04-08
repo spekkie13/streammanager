@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Timers;
 using Microsoft.Extensions.Logging;
 using SpekkieTwitchBot.General;
+using SpekkieTwitchBot.Twitch.Client;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Enums.Internal;
 using TwitchLib.Client.Events;
@@ -16,7 +17,7 @@ using TwitchLib.Communication.Events;
 using TwitchLib.Communication.Interfaces;
 using Timer = System.Timers.Timer;
 
-namespace SpekkieTwitchBot.Twitch.Client
+namespace SpekkieTwitchBot.Twitch.Events
 {
     public class CustomTwitchClient : ITwitchClient
     {
@@ -39,19 +40,13 @@ namespace SpekkieTwitchBot.Twitch.Client
 
         public bool IsInitialized => _client != null;
 
-        public IReadOnlyList<JoinedChannel> JoinedChannels
-        {
-            get => _joinedChannelManager.GetJoinedChannels();
-        }
+        public IReadOnlyList<JoinedChannel> JoinedChannels => _joinedChannelManager.GetJoinedChannels();
 
         public string TwitchUsername { get; private set; }
 
         public WhisperMessage PreviousWhisper { get; private set; }
 
-        public bool IsConnected
-        {
-            get => IsInitialized && _client != null && _client.IsConnected;
-        }
+        public bool IsConnected => IsInitialized && _client is { IsConnected: true };
 
         public MessageEmoteCollection ChannelEmotes => _channelEmotes;
 
@@ -118,7 +113,7 @@ namespace SpekkieTwitchBot.Twitch.Client
         public event EventHandler<OnSuspendedArgs> OnSuspended;
         public event EventHandler<OnBannedArgs> OnBanned;
         public event EventHandler<OnSlowModeArgs> OnSlowMode;
-        public event EventHandler<OnR9kModeArgs> OnR9kMode;
+        public event EventHandler<OnR9kModeArgs> OnR9KMode;
         public event EventHandler<OnUserIntroArgs> OnUserIntro;
         public event EventHandler<OnUnaccountedForArgs> OnUnaccountedFor;
 
@@ -144,12 +139,11 @@ namespace SpekkieTwitchBot.Twitch.Client
             if (channel != null && channel[0] == '#')
                 channel = channel.Substring(1);
             ConnectionCredentials credentials1 = credentials;
-            List<string> channels = new List<string>();
-            channels.Add(channel);
+            List<string> channels = new List<string> { channel };
             int chatCommandIdentifier1 = chatCommandIdentifier;
             int whisperCommandIdentifier1 = whisperCommandIdentifier;
             int num = autoReListenOnExceptions ? 1 : 0;
-            initializeHelper(credentials1, channels, (char)chatCommandIdentifier1, (char)whisperCommandIdentifier1,
+            InitializeHelper(credentials1, channels, (char)chatCommandIdentifier1, (char)whisperCommandIdentifier1,
                 num != 0);
         }
 
@@ -161,11 +155,11 @@ namespace SpekkieTwitchBot.Twitch.Client
             bool autoReListenOnExceptions = true)
         {
             channels = channels.Select((Func<string, string>)(x => x[0] != '#' ? x : x.Substring(1))).ToList();
-            initializeHelper(credentials, channels, chatCommandIdentifier, whisperCommandIdentifier,
+            InitializeHelper(credentials, channels, chatCommandIdentifier, whisperCommandIdentifier,
                 autoReListenOnExceptions);
         }
 
-        private void initializeHelper(
+        private void InitializeHelper(
             ConnectionCredentials credentials,
             List<string> channels,
             char chatCommandIdentifier = '!',
@@ -180,7 +174,7 @@ namespace SpekkieTwitchBot.Twitch.Client
             if (whisperCommandIdentifier != char.MinValue)
                 _whisperCommandIdentifiers.Add(whisperCommandIdentifier);
             AutoReListenOnException = autoReListenOnExceptions;
-            if (channels != null && channels.Count > 0)
+            if (channels is { Count: > 0 })
             {
                 for (int i = 0; i < channels.Count; i++)
                 {
@@ -234,12 +228,12 @@ namespace SpekkieTwitchBot.Twitch.Client
                 object target = invocation.Target;
                 object[] parameters;
                 if (args != null)
-                    parameters = new object[2] { this, args };
+                    parameters = new[] { this, args };
                 else
-                    parameters = new object[2]
+                    parameters = new object[]
                     {
                         this,
-                        new EventArgs()
+                        EventArgs.Empty
                     };
                 method.Invoke(target, parameters);
             }
@@ -497,7 +491,7 @@ namespace SpekkieTwitchBot.Twitch.Client
 
         private void _client_OnMessage(object sender, OnMessageEventArgs e)
         {
-            string[] separator = new string[1] { "\r\n" };
+            string[] separator = { "\r\n" };
             foreach (string raw in e.Message.Split(separator, StringSplitOptions.None))
             {
                 if (raw.Length <= 1) continue;
@@ -724,10 +718,7 @@ namespace SpekkieTwitchBot.Twitch.Client
         {
             if (ircMessage.Message.Contains("Improperly formatted auth"))
             {
-                EventHandler<OnIncorrectLoginArgs> onIncorrectLogin = OnIncorrectLogin;
-                if (onIncorrectLogin == null)
-                    return;
-                onIncorrectLogin(this, new OnIncorrectLoginArgs
+                OnIncorrectLogin?.Invoke(this, new OnIncorrectLoginArgs
                 {
                     Exception = new ErrorLoggingInException(ircMessage.ToString(), TwitchUsername)
                 });
@@ -736,8 +727,7 @@ namespace SpekkieTwitchBot.Twitch.Client
             {
                 if (!ircMessage.Tags.TryGetValue("msg-id", out var str))
                 {
-                    EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
-                    onUnaccountedFor?.Invoke(this, new OnUnaccountedForArgs
+                    OnUnaccountedFor?.Invoke(this, new OnUnaccountedForArgs
                     {
                         BotUsername = TwitchUsername,
                         Channel = ircMessage.Channel,
@@ -750,23 +740,20 @@ namespace SpekkieTwitchBot.Twitch.Client
                 switch (str)
                 {
                     case "color_changed":
-                        EventHandler<OnChatColorChangedArgs> chatColorChanged = OnChatColorChanged;
-                        chatColorChanged?.Invoke(this, new OnChatColorChangedArgs
+                        OnChatColorChanged?.Invoke(this, new OnChatColorChangedArgs
                         {
                             Channel = ircMessage.Channel
                         });
                         break;
                     case "msg_banned":
-                        EventHandler<OnBannedArgs> onBanned = OnBanned;
-                        onBanned?.Invoke(this, new OnBannedArgs
+                        OnBanned?.Invoke(this, new OnBannedArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "msg_banned_email_alias":
-                        EventHandler<OnBannedEmailAliasArgs> bannedEmailAlias = OnBannedEmailAlias;
-                        bannedEmailAlias?.Invoke(this, new OnBannedEmailAliasArgs
+                        OnBannedEmailAlias?.Invoke(this, new OnBannedEmailAliasArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
@@ -777,134 +764,114 @@ namespace SpekkieTwitchBot.Twitch.Client
                             (Predicate<KeyValuePair<string, DateTime>>)(x => x.Key.ToLower() == ircMessage.Channel));
                         _joinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
                         QueueingJoinCheck();
-                        EventHandler<OnFailureToReceiveJoinConfirmationArgs> joinConfirmation =
-                            OnFailureToReceiveJoinConfirmation;
-                        joinConfirmation?.Invoke(this, new OnFailureToReceiveJoinConfirmationArgs
+                        OnFailureToReceiveJoinConfirmation?.Invoke(this, new OnFailureToReceiveJoinConfirmationArgs
                         {
                             Exception = new FailureToReceiveJoinConfirmationException(ircMessage.Channel,
                                 ircMessage.Message)
                         });
                         break;
                     case "msg_duplicate":
-                        EventHandler<OnDuplicateArgs> onDuplicate = OnDuplicate;
-                        onDuplicate?.Invoke(this, new OnDuplicateArgs
+                        OnDuplicate?.Invoke(this, new OnDuplicateArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "msg_emoteonly":
-                        EventHandler<OnEmoteOnlyArgs> onEmoteOnly = OnEmoteOnly;
-                        onEmoteOnly?.Invoke(this, new OnEmoteOnlyArgs
+                        OnEmoteOnly?.Invoke(this, new OnEmoteOnlyArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "msg_followersonly":
-                        EventHandler<OnFollowersOnlyArgs> onFollowersOnly = OnFollowersOnly;
-                        onFollowersOnly?.Invoke(this, new OnFollowersOnlyArgs
+                        OnFollowersOnly?.Invoke(this, new OnFollowersOnlyArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "msg_r9k":
-                        EventHandler<OnR9kModeArgs> onR9kMode = OnR9kMode;
-                        onR9kMode?.Invoke(this, new OnR9kModeArgs
+                        OnR9KMode?.Invoke(this, new OnR9kModeArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "msg_ratelimit":
-                        EventHandler<OnRateLimitArgs> onRateLimit = OnRateLimit;
-                        onRateLimit?.Invoke(this, new OnRateLimitArgs
+                        OnRateLimit?.Invoke(this, new OnRateLimitArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "msg_requires_verified_phone_number":
-                        EventHandler<OnRequiresVerifiedPhoneNumberArgs> verifiedPhoneNumber =
-                            OnRequiresVerifiedPhoneNumber;
-                        verifiedPhoneNumber?.Invoke(this, new OnRequiresVerifiedPhoneNumberArgs
+                        OnRequiresVerifiedPhoneNumber?.Invoke(this, new OnRequiresVerifiedPhoneNumberArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "msg_slowmode":
-                        EventHandler<OnSlowModeArgs> onSlowMode = OnSlowMode;
-                        onSlowMode?.Invoke(this, new OnSlowModeArgs
+                        OnSlowMode?.Invoke(this, new OnSlowModeArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "msg_subsonly":
-                        EventHandler<OnSubsOnlyArgs> onSubsOnly = OnSubsOnly;
-                        onSubsOnly?.Invoke(this, new OnSubsOnlyArgs
+                        OnSubsOnly?.Invoke(this, new OnSubsOnlyArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "msg_suspended":
-                        EventHandler<OnSuspendedArgs> onSuspended = OnSuspended;
-                        onSuspended?.Invoke(this, new OnSuspendedArgs
+                        OnSuspended?.Invoke(this, new OnSuspendedArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "msg_verified_email":
-                        EventHandler<OnRequiresVerifiedEmailArgs> requiresVerifiedEmail = OnRequiresVerifiedEmail;
-                        requiresVerifiedEmail?.Invoke(this, new OnRequiresVerifiedEmailArgs
+                        OnRequiresVerifiedEmail?.Invoke(this, new OnRequiresVerifiedEmailArgs
                         {
                             Channel = ircMessage.Channel,
                             Message = ircMessage.Message
                         });
                         break;
                     case "no_mods":
-                        EventHandler<OnModeratorsReceivedArgs> moderatorsReceived1 = OnModeratorsReceived;
-                        moderatorsReceived1?.Invoke(this, new OnModeratorsReceivedArgs
+                        OnModeratorsReceived?.Invoke(this, new OnModeratorsReceivedArgs
                         {
                             Channel = ircMessage.Channel,
                             Moderators = new List<string>()
                         });
                         break;
                     case "no_permission":
-                        EventHandler noPermissionError = OnNoPermissionError;
-                        noPermissionError?.Invoke(this, null);
+                        OnNoPermissionError?.Invoke(this, null);
                         break;
                     case "no_vips":
-                        EventHandler<OnVIPsReceivedArgs> onViPsReceived1 = OnVIPsReceived;
-                        onViPsReceived1?.Invoke(this, new OnVIPsReceivedArgs
+                        OnVIPsReceived?.Invoke(this, new OnVIPsReceivedArgs
                         {
                             Channel = ircMessage.Channel,
                             VIPs = new List<string>()
                         });
                         break;
                     case "raid_error_self":
-                        EventHandler onSelfRaidError = OnSelfRaidError;
-                        onSelfRaidError?.Invoke(this, null);
+                        OnSelfRaidError?.Invoke(this, null);
                         break;
                     case "raid_notice_mature":
-                        EventHandler isMatureAudience = OnRaidedChannelIsMatureAudience;
-                        isMatureAudience?.Invoke(this, null);
+                        OnRaidedChannelIsMatureAudience?.Invoke(this, null);
                         break;
                     case "room_mods":
-                        EventHandler<OnModeratorsReceivedArgs> moderatorsReceived2 = OnModeratorsReceived;
-                        moderatorsReceived2?.Invoke(this, new OnModeratorsReceivedArgs
+                        OnModeratorsReceived?.Invoke(this, new OnModeratorsReceivedArgs
                         {
                             Channel = ircMessage.Channel,
                             Moderators = ircMessage.Message.Replace(" ", "").Split(':')[1].Split(',').ToList()
                         });
                         break;
                     case "vips_success":
-                        EventHandler<OnVIPsReceivedArgs> onViPsReceived2 = OnVIPsReceived;
-                        onViPsReceived2?.Invoke(this, new OnVIPsReceivedArgs
+                        OnVIPsReceived?.Invoke(this, new OnVIPsReceivedArgs
                         {
                             Channel = ircMessage.Channel,
                             VIPs = ircMessage.Message.Replace(" ", "").Replace(".", "").Split(':')[1].Split(',')
@@ -912,8 +879,7 @@ namespace SpekkieTwitchBot.Twitch.Client
                         });
                         break;
                     default:
-                        EventHandler<OnUnaccountedForArgs> onUnaccountedFor1 = OnUnaccountedFor;
-                        onUnaccountedFor1?.Invoke(this, new OnUnaccountedForArgs
+                        OnUnaccountedFor?.Invoke(this, new OnUnaccountedForArgs
                         {
                             BotUsername = TwitchUsername,
                             Channel = ircMessage.Channel,
@@ -928,8 +894,7 @@ namespace SpekkieTwitchBot.Twitch.Client
 
         private void HandleJoin(IrcMessage ircMessage)
         {
-            EventHandler<OnUserJoinedArgs> onUserJoined = OnUserJoined;
-            onUserJoined?.Invoke(this, new OnUserJoinedArgs
+            OnUserJoined?.Invoke(this, new OnUserJoinedArgs
             {
                 Channel = ircMessage.Channel,
                 Username = ircMessage.User
@@ -1124,8 +1089,7 @@ namespace SpekkieTwitchBot.Twitch.Client
 
         private void HandleUserNotice(IrcMessage ircMessage)
         {
-            string str;
-            if (!ircMessage.Tags.TryGetValue("msg-id", out str))
+            if (!ircMessage.Tags.TryGetValue("msg-id", out var str))
             {
                 EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
                 onUnaccountedFor?.Invoke(this, new OnUnaccountedForArgs
@@ -1293,27 +1257,19 @@ namespace SpekkieTwitchBot.Twitch.Client
         private void LogError(string message, bool includeDate = false, bool includeTime = false)
         {
             string str = !(includeDate & includeTime)
-                ? (!includeDate ? DateTime.UtcNow.ToShortTimeString() ?? "" : DateTime.UtcNow.ToShortDateString() ?? "")
-                : string.Format("{0}", DateTime.UtcNow);
+                ? !includeDate ? DateTime.UtcNow.ToShortTimeString() : DateTime.UtcNow.ToShortDateString()
+                : $"{DateTime.UtcNow}";
             if (includeDate | includeTime)
             {
-                ILogger<CustomTwitchClient> logger = _logger;
-                if (logger != null)
-                    logger.LogError(string.Format("[TwitchLib, {0} - {1}] {2}",
-                        Assembly.GetExecutingAssembly().GetName().Version, str, message));
+                _logger?.LogError($"[TwitchLib, {Assembly.GetExecutingAssembly().GetName().Version} - {str}] {message}");
             }
             else
             {
-                ILogger<CustomTwitchClient> logger = _logger;
-                if (logger != null)
-                    logger.LogError(string.Format("[TwitchLib, {0}] {1}",
-                        Assembly.GetExecutingAssembly().GetName().Version, message));
+                _logger?.LogError($"[TwitchLib, {Assembly.GetExecutingAssembly().GetName().Version}] {message}");
             }
 
             EventHandler<OnLogArgs> onLog = OnLog;
-            if (onLog == null)
-                return;
-            onLog(this, new OnLogArgs
+            onLog?.Invoke(this, new OnLogArgs
             {
                 BotUsername = ConnectionCredentials?.TwitchUsername,
                 Data = message,
@@ -1328,13 +1284,13 @@ namespace SpekkieTwitchBot.Twitch.Client
             _client.Send(message);
         }
 
-        protected static void HandleNotInitialized()
+        private static void HandleNotInitialized()
         {
             throw new ClientNotInitializedException(
                 "The twitch client has not been initialized and cannot be used. Please call Initialize();");
         }
 
-        protected static void HandleNotConnected()
+        private static void HandleNotConnected()
         {
             throw new ClientNotConnectedException(
                 "In order to perform this action, the client must be connected to Twitch. To confirm connection, try performing this action in or after the OnConnected event has been fired.");
