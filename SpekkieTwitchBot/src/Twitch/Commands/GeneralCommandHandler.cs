@@ -1,4 +1,5 @@
-﻿using SpekkieTwitchBot.General;
+﻿using SpekkieTwitchBot.Constants;
+using SpekkieTwitchBot.General;
 using TwitchLib.Client.Models;
 
 namespace SpekkieTwitchBot.Twitch.Commands;
@@ -82,7 +83,7 @@ public class GeneralCommandHandler
     private void HandleExitBotCommand(string username)
     {
         if (!username.Equals(BroadcasterName)) return;
-        _IrcClient.SendPublicChatMessage("Bye! Have a beautiful time!");
+        _IrcClient.SendPublicChatMessage(TwitchConstants.BotExitMessage);
         Environment.Exit(0);
     }
 
@@ -94,5 +95,4 @@ public class GeneralCommandHandler
         _IrcClient.SendPublicChatMessage($"Spekkie is {afgeleid}x afgeleid geweest");
         FileHandler.WriteAfgeleidCounter(afgeleid.ToString());
     }
-
 }

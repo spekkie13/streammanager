@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SpekkieTwitchBot.Auth;
+using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Twitch;
 using SpekkieTwitchBot.Twitch.Commands;
@@ -50,7 +51,7 @@ public class TwitchWebsocketService : IHostedService
 
     private void SetupTwitchClient()
     {
-        ConnectionCredentials cred = new ConnectionCredentials("spekkie1313", _TwitchAuth.Implicit_OAuth);
+        ConnectionCredentials cred = new ConnectionCredentials(TwitchConstants.ChannelName, _TwitchAuth.Implicit_OAuth);
         _TwitchClient.Initialize(cred, _TwitchAuth.BroadcasterName);
         _TwitchPubSub.OnChannelSubscription += SubEventHandler.HandleSub;
     }
@@ -85,8 +86,7 @@ public class TwitchWebsocketService : IHostedService
             ? $"Successfully listening to: {e.Topic}"
             : $"Failed to listen! Error: {e.Response.Error}");
     }
-
-
+    
     private void OnChannelPointsRewardRedeemed(object? sender, OnChannelPointsRewardRedeemedArgs e)
     {
         Redemption reward = e.RewardRedeemed.Redemption;
@@ -111,8 +111,6 @@ public class TwitchWebsocketService : IHostedService
 
     private async void UpdateRedemption(string id, string broadcasterId, string rewardId, string status)
     {
-        const string Url = "https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions";
-        
         using HttpClient client = new HttpClient(); 
         client.DefaultRequestHeaders.Add("Client-Id", _TwitchAuth.ClientId);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", $"{_TwitchAuth.AppToken}");
@@ -121,7 +119,7 @@ public class TwitchWebsocketService : IHostedService
             Encoding.UTF8, 
             "application/json");
         
-        string requestUrl = $"{Url}?broadcaster_id={broadcasterId}&reward_id={rewardId}&id={id}";
+        string requestUrl = $"{TwitchConstants.TwitchChannelRedemptionsUrl}?broadcaster_id={broadcasterId}&reward_id={rewardId}&id={id}";
         
         HttpResponseMessage message = await client.PatchAsync(requestUrl, requestContent);
             
