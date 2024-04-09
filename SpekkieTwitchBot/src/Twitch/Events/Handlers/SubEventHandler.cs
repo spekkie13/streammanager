@@ -5,7 +5,7 @@ namespace SpekkieTwitchBot.Twitch.Events.Handlers;
 
 public class SubEventHandler
 {
-    public static void HandleSub(object? sender, OnChannelSubscriptionArgs e)
+    public void HandleSub(object? sender, OnChannelSubscriptionArgs e)
     {
         ChannelSubscription subscription = e.Subscription;
         if(!string.IsNullOrEmpty(subscription.RecipientName))
@@ -14,7 +14,7 @@ public class SubEventHandler
             HandleSelfSub(e.Subscription);
     }
 
-    private static void HandleSelfSub(ChannelSubscription subscription)
+    private void HandleSelfSub(ChannelSubscription subscription)
     {
         /* sub name => sub file
          * sub counter++
@@ -22,7 +22,7 @@ public class SubEventHandler
          */
     }
 
-    private static void HandleGiftedSub(ChannelSubscription subscription)
+    private void HandleGiftedSub(ChannelSubscription subscription)
     {
         /* sub name => sub file
          * sub gifter name => gifter file

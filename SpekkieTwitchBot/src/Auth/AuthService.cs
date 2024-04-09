@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.FileHandling.Spotify;
 using SpekkieTwitchBot.FileHandling.Twitch;
+using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Spotify;
 using SpekkieTwitchBot.Models.Twitch;
 using SpotifyAPI.Web;
@@ -15,15 +16,17 @@ public class AuthService
     private readonly SpotifyFileReader _SpotifyFileReader;
     private readonly TwitchFileReader _TwitchFileReader;
     private readonly TwitchFileWriter _TwitchFileWriter;
-    
+    private readonly Logger _Logger;
     public AuthService(
         SpotifyFileReader spotifyFileReader,
         TwitchFileReader twitchFileReader,
-        TwitchFileWriter twitchFileWriter)
+        TwitchFileWriter twitchFileWriter,
+        Logger logger)
     {
         _SpotifyFileReader = spotifyFileReader;
         _TwitchFileReader = twitchFileReader;
         _TwitchFileWriter = twitchFileWriter;
+        _Logger = logger;
     }
     
     public SpotifyAuth GetSpotifyAuth()
@@ -67,7 +70,7 @@ public class AuthService
             return new TokenResponse { AccessToken = tokenResponse?.AccessToken ?? "", RefreshToken = tokenResponse?.RefreshToken ?? "" };
         }
 
-        Console.WriteLine($"Error refreshing access token: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        _Logger.LogError($"Error refreshing access token: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return null;
     }
 
@@ -86,13 +89,13 @@ public class AuthService
         if (response.IsSuccessStatusCode)
         {
             var responseContent = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(responseContent);
+            _Logger.LogInfo(responseContent);
             ClientCredentials? cred = JsonConvert.DeserializeObject<ClientCredentials>(responseContent);
             UpdateTwitchSettings(twitchAuth, clientCredentials: cred);
             return cred;
         }
         
-        Console.WriteLine($"Failed to get access token. Status code: {response.StatusCode}");
+        _Logger.LogError($"Failed to get access token. Status code: {response.StatusCode}");
         return null;
     }
 
@@ -114,7 +117,7 @@ public class AuthService
         {
             case HttpStatusCode.OK:
                 var responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(responseContent);
+                _Logger.LogInfo(responseContent);
                 AuthorizationCredentials? cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent);
                 UpdateTwitchSettings(twitchAuth, authCred: cred);
                 return cred;
@@ -123,7 +126,7 @@ public class AuthService
                 UpdateTwitchSettings(twitchAuth, authCred: cred);
                 return cred;
             default:
-                Console.WriteLine($"Failed to get tokens. Status code: {response.StatusCode}");
+                _Logger.LogError($"Failed to get tokens. Status code: {response.StatusCode}");
                 return null;
         }
     }
@@ -147,14 +150,14 @@ public class AuthService
             return JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent);
         }
 
-        Console.WriteLine($"Error refreshing token: {response.StatusCode}");
+        _Logger.LogError($"Error refreshing token: {response.StatusCode}");
         return null;
     }
 
     public TwitchAuth SetupAuth()
     {
-        string jsonData = TwitchFileReader.ReadTwitchAuthFile();
-        TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);        
+        string jsonData = _TwitchFileReader.ReadTwitchAuthFile();
+        TwitchAuth auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData) ?? new TwitchAuth();        
         AuthorizationCredentials authCred = GetAuthorizationCredentials(auth).Result ?? new AuthorizationCredentials();
         ClientCredentials clientCred = GetClientCredentials(auth).Result ?? new ClientCredentials();
         auth.AppToken = authCred.access_token;

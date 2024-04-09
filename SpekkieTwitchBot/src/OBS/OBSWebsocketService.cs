@@ -27,9 +27,10 @@ public class ObsWebsocketService : IHostedService
         IConfiguration configuration, 
         ILogger<ObsWebsocketService> logger, 
         Logger generalLogger,
-        OBSWebsocket socket)
+        OBSWebsocket socket,
+        TwitchFileReader twitchFileReader)
     {
-        string jsonData = TwitchFileReader.ReadTwitchAuthFile();
+        string jsonData = twitchFileReader.ReadTwitchAuthFile();
         TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);
         _Url = auth?.Obs_Url ?? "";
         _Password = auth?.Password ?? "";

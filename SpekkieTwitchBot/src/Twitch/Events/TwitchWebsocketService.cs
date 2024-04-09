@@ -28,6 +28,10 @@ public class TwitchWebsocketService : IHostedService
     private readonly GeneralCommandHandler _GeneralCommandHandler;
     private readonly TwitchAuth _TwitchAuth;
 
+    private readonly SubEventHandler _SubEventHandler;
+    private readonly FollowEventHandler _FollowEventHandler;
+    private readonly ChannelPointHandler _ChannelPointHandler;
+
     public TwitchWebsocketService(
         IConfiguration configuration, 
         ILogger<TwitchWebsocketService> logger,
@@ -36,7 +40,11 @@ public class TwitchWebsocketService : IHostedService
         CustomTwitchClient twitchClient, 
         CustomPubsub twitchPubSub,
         SpotifyCommandHandler spotifyCommandHandler, 
-        GeneralCommandHandler generalCommandHandler)
+        GeneralCommandHandler generalCommandHandler,
+        SubEventHandler subEventHandler,
+        FollowEventHandler followEventHandler,
+        ChannelPointHandler channelPointHandler
+        )
     {
         _Configuration = configuration;
         _GeneralLogger = generalLogger;
@@ -49,6 +57,11 @@ public class TwitchWebsocketService : IHostedService
         _TwitchPubSub = twitchPubSub ?? throw new ArgumentNullException(nameof(twitchPubSub));
 
         _TwitchAuth = authService.SetupAuth();
+
+        _SubEventHandler = subEventHandler;
+        _FollowEventHandler = followEventHandler;
+        _ChannelPointHandler = channelPointHandler;
+        
         SetupTwitchClient();
         SetupPubSub();
     }
@@ -57,7 +70,8 @@ public class TwitchWebsocketService : IHostedService
     {
         ConnectionCredentials cred = new ConnectionCredentials(TwitchConstants.ChannelName, _TwitchAuth.Implicit_OAuth);
         _TwitchClient.Initialize(cred, _TwitchAuth.BroadcasterName);
-        _TwitchPubSub.OnChannelSubscription += SubEventHandler.HandleSub;
+        _TwitchPubSub.OnChannelSubscription += _SubEventHandler.HandleSub;
+        _TwitchPubSub.OnFollow += _FollowEventHandler.HandleFollow;
     }
     
     private void SetupPubSub()

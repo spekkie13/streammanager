@@ -43,7 +43,7 @@ public class IrcClient
 
     private void FillAuthorizationInfo()
     {
-        string jsonData = TwitchFileReader.ReadTwitchAuthFile();
+        string jsonData = _TwitchFileReader.ReadTwitchAuthFile();
         TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);
         _Username = auth?.BotName ?? "";
         _Channel = $"#{auth?.BroadcasterName}";
