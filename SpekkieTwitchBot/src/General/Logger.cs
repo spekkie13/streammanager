@@ -1,19 +1,28 @@
-﻿namespace SpekkieTwitchBot.General;
+﻿using SpekkieTwitchBot.FileHandling.General;
+
+namespace SpekkieTwitchBot.General;
 
 public class Logger
 {
-    public static void LogInfo(string text)
+    private readonly GeneralFileWriter _generalFileWriter;
+    
+    public Logger(GeneralFileWriter generalFileWriter)
     {
-        FileHandler.WriteLogText($"INFO: {text}");
+        _generalFileWriter = generalFileWriter;
+    }
+    
+    public void LogInfo(string text)
+    {
+        _generalFileWriter.WriteLogText($"INFO: {text}");
     }
 
-    public static void LogWarning(string text)
+    public void LogWarning(string text)
     {
-        FileHandler.WriteLogText($"WARN: {text}");
+        _generalFileWriter.WriteLogText($"WARN: {text}");
     }
 
-    public static void LogError(string text)
+    public void LogError(string text)
     {
-        FileHandler.WriteLogText($"ERROR: {text}");
+        _generalFileWriter.WriteLogText($"ERROR: {text}");
     }
 }

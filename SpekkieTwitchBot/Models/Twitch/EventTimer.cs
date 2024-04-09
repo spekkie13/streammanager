@@ -1,14 +1,16 @@
-﻿using SpekkieTwitchBot.General;
+﻿using SpekkieTwitchBot.FileHandling.Timer;
 
 namespace SpekkieTwitchBot.Models.Twitch;
 
 public class EventTimer
 {
     public readonly Timer Timer;
+    private readonly TimerFileWriter _timerFileWriter;
     private TimeSpan _RemainingTime;
 
-    public EventTimer()
+    public EventTimer(TimerFileWriter timerFileWriter)
     {
+        _timerFileWriter = timerFileWriter;
         _RemainingTime = new TimeSpan(1,15,15);
         Timer = new Timer(CountDownTick, null, 1000, 1000);
     }
@@ -25,7 +27,7 @@ public class EventTimer
         int minutes = _RemainingTime.Minutes;
         int seconds = _RemainingTime.Seconds;
         TimeSpan totalTime = new TimeSpan(hours, minutes, seconds);
-        FileHandler.WriteRemainingTime(totalTime);
+        _timerFileWriter.WriteRemainingTime(totalTime);
     }
 
     public void SetRemainingTime(TimeSpan time)

@@ -22,6 +22,7 @@ namespace SpekkieTwitchBot.Twitch.Events
     public class CustomTwitchClient : ITwitchClient
     {
         private IClient _client;
+        private Logger _GeneralLogger;
         private MessageEmoteCollection _channelEmotes = new MessageEmoteCollection();
         private readonly ICollection<char> _chatCommandIdentifiers = new HashSet<char>();
         private readonly ICollection<char> _whisperCommandIdentifiers = new HashSet<char>();
@@ -118,11 +119,13 @@ namespace SpekkieTwitchBot.Twitch.Events
         public event EventHandler<OnUnaccountedForArgs> OnUnaccountedFor;
 
         public CustomTwitchClient(
+            Logger generalLogger,
             IClient client = null,
             ClientProtocol protocol = ClientProtocol.WebSocket,
             ILogger<CustomTwitchClient> logger = null)
         {
             _logger = logger;
+            _GeneralLogger = generalLogger;
             _client = client;
             _protocol = protocol;
             _joinedChannelManager = new JoinedChannelManager();
@@ -166,7 +169,7 @@ namespace SpekkieTwitchBot.Twitch.Events
             char whisperCommandIdentifier = '!',
             bool autoReListenOnExceptions = true)
         {
-            Logger.LogInfo($"CustomTwitchClient initialized, assembly version: {Assembly.GetExecutingAssembly().GetName().Version}");
+            _GeneralLogger.LogInfo($"CustomTwitchClient initialized, assembly version: {Assembly.GetExecutingAssembly().GetName().Version}");
             ConnectionCredentials = credentials;
             TwitchUsername = ConnectionCredentials.TwitchUsername;
             if (chatCommandIdentifier != char.MinValue)
@@ -245,10 +248,7 @@ namespace SpekkieTwitchBot.Twitch.Events
                 HandleNotInitialized();
             Console.WriteLine("Writing: " + message);
             _client.Send(message);
-            EventHandler<OnSendReceiveDataArgs> onSendReceiveData = OnSendReceiveData;
-            if (onSendReceiveData == null)
-                return;
-            onSendReceiveData(this, new OnSendReceiveDataArgs
+            OnSendReceiveData?.Invoke(this, new OnSendReceiveDataArgs
             {
                 Direction = SendReceiveDirection.Sent,
                 Data = message
@@ -267,7 +267,7 @@ namespace SpekkieTwitchBot.Twitch.Events
                 return;
             if (message.Length > 500)
             {
-                Logger.LogError("Message length has exceeded the maximum character count. (500)");
+                _GeneralLogger.LogError("Message length has exceeded the maximum character count. (500)");
             }
             else
             {
@@ -328,17 +328,17 @@ namespace SpekkieTwitchBot.Twitch.Events
         {
             if (!IsInitialized)
                 HandleNotInitialized();
-            Logger.LogInfo("Connecting to: " + ConnectionCredentials.TwitchWebsocketURI);
+            _GeneralLogger.LogInfo("Connecting to: " + ConnectionCredentials.TwitchWebsocketURI);
             _joinedChannelManager.Clear();
             if (!_client.Open())
                 return false;
-            Logger.LogInfo("Should be connected!");
+            _GeneralLogger.LogInfo("Should be connected!");
             return true;
         }
 
         public void Disconnect()
         {
-            Logger.LogInfo("Disconnect Twitch Chat Client...");
+            _GeneralLogger.LogInfo("Disconnect Twitch Chat Client...");
             if (!IsInitialized)
                 HandleNotInitialized();
             _client.Close();
@@ -350,7 +350,7 @@ namespace SpekkieTwitchBot.Twitch.Events
         {
             if (!IsInitialized)
                 HandleNotInitialized();
-            Logger.LogWarning("Reconnecting to Twitch");
+            _GeneralLogger.LogWarning("Reconnecting to Twitch");
             _client.Reconnect();
         }
 
@@ -427,7 +427,7 @@ namespace SpekkieTwitchBot.Twitch.Events
             channel = channel.ToLower();
             if (channel[0] == '#')
                 channel = channel.Substring(1);
-            Logger.LogInfo("Leaving channel: " + channel);
+            _GeneralLogger.LogInfo("Leaving channel: " + channel);
             if (_joinedChannelManager.GetJoinedChannel(channel) == null)
                 return;
             _client.Send(Rfc2812.Part("#" + channel));
@@ -528,13 +528,13 @@ namespace SpekkieTwitchBot.Twitch.Events
             {
                 _currentlyJoiningChannels = true;
                 JoinedChannel joinedChannel = _joinChannelQueue.Dequeue();
-                Logger.LogInfo("Joining channel: " + joinedChannel.Channel);
+                _GeneralLogger.LogInfo("Joining channel: " + joinedChannel.Channel);
                 _client.Send(Rfc2812.Join("#" + joinedChannel.Channel.ToLower()));
                 _joinedChannelManager.AddJoinedChannel(new JoinedChannel(joinedChannel.Channel));
                 StartJoinedChannelTimer(joinedChannel.Channel);
             }
             else
-                Logger.LogInfo("Finished channel joining queue.");
+                _GeneralLogger.LogInfo("Finished channel joining queue.");
         }
 
         private void StartJoinedChannelTimer(string channel)
@@ -1223,12 +1223,12 @@ namespace SpekkieTwitchBot.Twitch.Events
 
         private void HandleCap(IrcMessage ircMessage)
         {
-            Logger.LogInfo(ircMessage.Message);
+            _GeneralLogger.LogInfo(ircMessage.Message);
         }
 
         private void UnaccountedFor(string ircString)
         {
-            Logger.LogWarning("Unaccounted for: " + ircString + " (please create a TwitchLib GitHub issue :P)");
+            _GeneralLogger.LogWarning("Unaccounted for: " + ircString + " (please create a TwitchLib GitHub issue :P)");
         }
 
         private void Log(string message, bool includeDate = false, bool includeTime = false)
@@ -1238,11 +1238,11 @@ namespace SpekkieTwitchBot.Twitch.Events
                 : $"{DateTime.UtcNow}";
             if (includeDate | includeTime)
             {
-                    Logger.LogInfo($"[TwitchLib, {Assembly.GetExecutingAssembly().GetName().Version} - {str}] {message}");
+                _GeneralLogger.LogInfo($"[TwitchLib, {Assembly.GetExecutingAssembly().GetName().Version} - {str}] {message}");
             }
             else
             {
-                    Logger.LogInfo($"[TwitchLib, {Assembly.GetExecutingAssembly().GetName().Version}] {message}");
+                _GeneralLogger.LogInfo($"[TwitchLib, {Assembly.GetExecutingAssembly().GetName().Version}] {message}");
             }
 
             EventHandler<OnLogArgs> onLog = OnLog;

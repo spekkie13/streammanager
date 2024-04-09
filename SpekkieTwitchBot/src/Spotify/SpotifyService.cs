@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
+using SpekkieTwitchBot.FileHandling.Spotify;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Spotify;
 using SpotifyAPI.Web;
@@ -12,15 +13,24 @@ namespace SpekkieTwitchBot.Spotify;
 
 public class SpotifyService : BackgroundService
 {
+    private readonly SpotifyFileWriter _SpotifyFileWriter;
+    private readonly Logger _Logger;
+    
     private readonly HttpClient _Client;
     private FullTrack? _CurrentSong;
     private CurrentlyPlaying? _CurrentPlayable;
 
-    public SpotifyService()
+    public SpotifyService(
+        SpotifyFileWriter spotifyFileWriter, 
+        AuthService authService,
+        Logger logger)
     {
         _Client = new HttpClient();
-        SpotifyAuth spotifyAuth = AuthService.GetSpotifyAuth();
-        var tokenResponse = AuthService.GetSpotifyToken(_Client, spotifyAuth);
+        _Logger = logger;
+        
+        _SpotifyFileWriter = spotifyFileWriter;
+        SpotifyAuth spotifyAuth = authService.GetSpotifyAuth();
+        var tokenResponse = authService.GetSpotifyToken(_Client, spotifyAuth);
         _Client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", tokenResponse.AccessToken);
     }
@@ -34,7 +44,7 @@ public class SpotifyService : BackgroundService
             GetCurrentPlayable();
             _CurrentSong = GetCurrentSong(_CurrentPlayable);
             UpdateSongImg(_CurrentPlayable);
-            FileHandler.WriteSongFile(GetNowPlaying());
+            _SpotifyFileWriter.WriteSongFile(GetNowPlaying());
 
             int durationLeft = _CurrentSong?.DurationMs - _CurrentPlayable?.ProgressMs ?? 10000;
             await Task.Delay(TimeSpan.FromMilliseconds(durationLeft), stoppingToken);
@@ -76,7 +86,7 @@ public class SpotifyService : BackgroundService
         if (response.IsSuccessStatusCode)
             return true;
         
-        Logger.LogError($"Error pausing the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        _Logger.LogError($"Error pausing the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return false;    
     }
 
@@ -87,7 +97,7 @@ public class SpotifyService : BackgroundService
         if (response.IsSuccessStatusCode)
             return true;
         
-        Logger.LogError($"Error resuming the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        _Logger.LogError($"Error resuming the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return false;
     }
 
@@ -98,7 +108,7 @@ public class SpotifyService : BackgroundService
         if (response.IsSuccessStatusCode)
             return true;
         
-        Logger.LogError($"Error skipping to the next song: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        _Logger.LogError($"Error skipping to the next song: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return false;    
     }    
     
@@ -108,7 +118,7 @@ public class SpotifyService : BackgroundService
         if (response.IsSuccessStatusCode)
             return true;
         
-        Logger.LogError($"Error skipping to the previous song: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        _Logger.LogError($"Error skipping to the previous song: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return false;
     }
 
@@ -125,7 +135,7 @@ public class SpotifyService : BackgroundService
         if (response.IsSuccessStatusCode)
             return true;
         
-        Logger.LogError($"Error adding the requested song to the queue: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        _Logger.LogError($"Error adding the requested song to the queue: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return false;
     }
 
@@ -135,7 +145,7 @@ public class SpotifyService : BackgroundService
         if (currentSong == null) return;
         string url = $"{currentSong.Album.Images.First().Url}";
         var imageBytes = _Client.GetByteArrayAsync(url).Result;
-        FileHandler.WriteCurrentSongImage(imageBytes);
+        _SpotifyFileWriter.WriteCurrentSongImage(imageBytes);
     }
     
     public string GetCurrentlyPlayingPlaylist()

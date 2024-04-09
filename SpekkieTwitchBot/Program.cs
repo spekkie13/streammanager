@@ -2,13 +2,20 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OBSWebsocketDotNet;
+using SpekkieTwitchBot.Auth;
+using SpekkieTwitchBot.FileHandling;
+using SpekkieTwitchBot.FileHandling.General;
+using SpekkieTwitchBot.FileHandling.Spotify;
+using SpekkieTwitchBot.FileHandling.Timer;
+using SpekkieTwitchBot.FileHandling.Twitch;
+using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models;
 using SpekkieTwitchBot.Models.Twitch;
 using SpekkieTwitchBot.Spotify;
-using SpekkieTwitchBot.Twitch;
 using SpekkieTwitchBot.Twitch.Client;
 using SpekkieTwitchBot.Twitch.Commands;
 using SpekkieTwitchBot.Twitch.Events;
+using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.EventSub.Websockets.Extensions;
 using SpekkieTwitchBot.Web;
 
@@ -30,6 +37,23 @@ public static class Program
             {
                 services.AddLogging();
                 services.AddTwitchLibEventSubWebsockets();
+                services.AddSingleton<FileReader>();
+                services.AddSingleton<FileWriter>();
+                services.AddSingleton<FileSetup>();
+                services.AddSingleton<Logger>();
+                services.AddSingleton<SpotifyFileReader>();
+                services.AddSingleton<SpotifyFileWriter>();
+                services.AddSingleton<SpotifyFileSetup>();                
+                services.AddSingleton<TwitchFileReader>();
+                services.AddSingleton<TwitchFileWriter>();
+                services.AddSingleton<TwitchFileSetup>();                
+                services.AddSingleton<TimerFileReader>();
+                services.AddSingleton<TimerFileWriter>();
+                services.AddSingleton<TimerFileSetup>();                
+                services.AddSingleton<GeneralFileReader>();
+                services.AddSingleton<GeneralFileWriter>();
+                services.AddSingleton<GeneralFileSetup>();
+                services.AddSingleton<AuthService>();
                 services.AddSingleton<OBSWebsocket>();
                 services.AddSingleton<IrcClient>();
                 services.AddSingleton<SpotifyService>();

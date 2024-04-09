@@ -1,18 +1,28 @@
-﻿using SpekkieTwitchBot.General;
-using SpekkieTwitchBot.Spotify;
+﻿using SpekkieTwitchBot.Spotify;
 using System.Media;
 using System.Runtime.InteropServices;
+using SpekkieTwitchBot.FileHandling;
+using SpekkieTwitchBot.FileHandling.Spotify;
+using SpekkieTwitchBot.Twitch.General;
 
 namespace SpekkieTwitchBot.Twitch.Commands;
 
 public class SpotifyCommandHandler
 {
     private readonly SpotifyService _SpotifyService;
+    private readonly SpotifyFileReader _SpotifyFileReader;
+    private readonly SpotifyFileWriter _SpotifyFileWriter;
     private readonly IrcClient _IrcClient;
 
-    public SpotifyCommandHandler(SpotifyService spotifyService, IrcClient ircClient)
+    public SpotifyCommandHandler(
+        SpotifyService spotifyService, 
+        SpotifyFileReader spotifyFileReader, 
+        SpotifyFileWriter spotifyFileWriter, 
+        IrcClient ircClient)
     {
         _SpotifyService = spotifyService;
+        _SpotifyFileReader = spotifyFileReader;
+        _SpotifyFileWriter = spotifyFileWriter;
         _IrcClient = ircClient;
     }
     
@@ -46,7 +56,7 @@ public class SpotifyCommandHandler
     {
         bool success = _SpotifyService.SkipNextSong().Result;
         string currentSong = _SpotifyService.GetNowPlaying();
-        FileHandler.WriteSongFile(currentSong);
+        _SpotifyFileWriter.WriteSongFile(currentSong);
 
         _IrcClient.SendPublicChatMessage(success
             ? "Skipped to the next song..."
@@ -57,7 +67,7 @@ public class SpotifyCommandHandler
     {
         bool success = _SpotifyService.SkipPrevSong().Result;
         string currentSong = _SpotifyService.GetNowPlaying();
-        FileHandler.WriteSongFile(currentSong);
+        _SpotifyFileWriter.WriteSongFile(currentSong);
 
         _IrcClient.SendPublicChatMessage(success
             ? "Skipped to the previous song..."

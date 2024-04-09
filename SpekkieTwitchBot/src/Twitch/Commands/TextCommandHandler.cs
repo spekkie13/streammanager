@@ -1,4 +1,6 @@
-﻿namespace SpekkieTwitchBot.Twitch.Commands;
+﻿using SpekkieTwitchBot.Twitch.General;
+
+namespace SpekkieTwitchBot.Twitch.Commands;
 
 public class TextCommandHandler
 {

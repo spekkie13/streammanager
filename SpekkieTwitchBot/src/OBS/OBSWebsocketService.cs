@@ -6,6 +6,7 @@ using OBSWebsocketDotNet;
 using OBSWebsocketDotNet.Communication;
 using OBSWebsocketDotNet.Types;
 using OBSWebsocketDotNet.Types.Events;
+using SpekkieTwitchBot.FileHandling.Twitch;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Twitch;
 
@@ -15,15 +16,20 @@ public class ObsWebsocketService : IHostedService
 {
     private readonly IConfiguration _Configuration;
     private readonly ILogger<ObsWebsocketService> _Logger;
+    private readonly Logger _GeneralLogger;
     private readonly OBSWebsocket _Socket;
     private readonly CancellationTokenSource _KeepAliveTokenSource;
     private const int KeepAliveInterval = 500;
     private readonly string _Url;
     private readonly string _Password;
 
-    public ObsWebsocketService(IConfiguration configuration, ILogger<ObsWebsocketService> logger, OBSWebsocket socket)
+    public ObsWebsocketService(
+        IConfiguration configuration, 
+        ILogger<ObsWebsocketService> logger, 
+        Logger generalLogger,
+        OBSWebsocket socket)
     {
-        string jsonData = FileHandler.ReadTwitchAuthFile();
+        string jsonData = TwitchFileReader.ReadTwitchAuthFile();
         TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);
         _Url = auth?.Obs_Url ?? "";
         _Password = auth?.Password ?? "";
@@ -38,6 +44,8 @@ public class ObsWebsocketService : IHostedService
         _Socket.StreamStateChanged += OnStreamStateChanged;
         _Socket.RecordStateChanged += OnRecordStateChanged;
         _Socket.VirtualcamStateChanged += OnVirtualCamStateChanged;
+
+        _GeneralLogger = generalLogger;
     }
     
     private void OnConnect(object? sender, EventArgs e)
@@ -85,24 +93,24 @@ public class ObsWebsocketService : IHostedService
 
         if(e.ObsCloseCode == ObsCloseCodes.AuthenticationFailed)
         {
-            Logger.LogError("Authentication Failed");
+            _GeneralLogger.LogError("Authentication Failed");
         }
         else if(e.WebsocketDisconnectionInfo != null)
             if (e.WebsocketDisconnectionInfo.Exception != null)
-                Logger.LogError($@"Connection failed: 
+                _GeneralLogger.LogError($@"Connection failed: 
                                      CloseCode: {e.ObsCloseCode} 
                                      Desc: {e.WebsocketDisconnectionInfo?.CloseStatusDescription} 
                                      Exception:{e.WebsocketDisconnectionInfo?.Exception?.Message}\n
                                      Type: {e.WebsocketDisconnectionInfo?.Type}");
             else
-                Logger.LogError($@"Connection failed: 
+                _GeneralLogger.LogError($@"Connection failed: 
                                      CloseCode: {e.ObsCloseCode} 
                                      Desc: {e.WebsocketDisconnectionInfo?.CloseStatusDescription} 
                                      Exception:{e.WebsocketDisconnectionInfo?.Exception?.Message}\n
                                      Type: {e.WebsocketDisconnectionInfo?.Type}");
         else
         {
-            Logger.LogError($"Connection failed: CloseCode: {e.ObsCloseCode}");
+            _GeneralLogger.LogError($"Connection failed: CloseCode: {e.ObsCloseCode}");
         }
     }
 
@@ -116,7 +124,7 @@ public class ObsWebsocketService : IHostedService
             OutputState.OBS_WEBSOCKET_OUTPUT_STOPPED => "Stream stopped...",
             _ => "State unknown...",
         };
-        Logger.LogInfo($"Stream state changed to: {state}");
+        _GeneralLogger.LogInfo($"Stream state changed to: {state}");
     }
 
     private void OnRecordStateChanged(object? sender, RecordStateChangedEventArgs args)
@@ -130,7 +138,7 @@ public class ObsWebsocketService : IHostedService
             OutputState.OBS_WEBSOCKET_OUTPUT_PAUSED => "Recording paused...",
             _ => "State unknown...",
         };
-        Logger.LogInfo($"Recording state changed to: {state}");
+        _GeneralLogger.LogInfo($"Recording state changed to: {state}");
     }
 
     private void OnVirtualCamStateChanged(object? sender, VirtualcamStateChangedEventArgs args)
@@ -143,7 +151,7 @@ public class ObsWebsocketService : IHostedService
             OutputState.OBS_WEBSOCKET_OUTPUT_STOPPED => "VirtualCam Stopped",
             _ => "State unknown",
         };
-        _Logger.LogInformation($"Virtual Cam state changed to: {state}");
+        _GeneralLogger.LogInfo($"Virtual Cam state changed to: {state}");
     }
 
     public Task StartAsync(CancellationToken cancellationToken)

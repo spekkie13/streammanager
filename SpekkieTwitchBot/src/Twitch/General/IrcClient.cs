@@ -1,9 +1,9 @@
 using System.Net.Sockets;
 using Newtonsoft.Json;
-using SpekkieTwitchBot.General;
+using SpekkieTwitchBot.FileHandling.Twitch;
 using SpekkieTwitchBot.Models.Twitch;
 
-namespace SpekkieTwitchBot.Twitch;
+namespace SpekkieTwitchBot.Twitch.General;
 
 public class IrcClient
 {
@@ -14,13 +14,15 @@ public class IrcClient
     private readonly TcpClient _TcpClient;
     private readonly StreamReader _InputStream;
     private readonly StreamWriter _OutputStream;
-
-    public IrcClient()
+    private readonly TwitchFileReader _TwitchFileReader;
+    
+    public IrcClient(TwitchFileReader twitchFileReader)
     {
         _Username = string.Empty;
         _Channel = string.Empty;
         _OAuth = string.Empty;
-        
+        _TwitchFileReader = twitchFileReader;
+
         FillAuthorizationInfo();
 
         _TcpClient = new TcpClient("irc.twitch.tv", 6667);
@@ -41,7 +43,7 @@ public class IrcClient
 
     private void FillAuthorizationInfo()
     {
-        string jsonData = FileHandler.ReadTwitchAuthFile();
+        string jsonData = TwitchFileReader.ReadTwitchAuthFile();
         TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);
         _Username = auth?.BotName ?? "";
         _Channel = $"#{auth?.BroadcasterName}";

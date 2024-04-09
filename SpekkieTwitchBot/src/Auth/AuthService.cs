@@ -1,25 +1,39 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
 using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.General;
+using SpekkieTwitchBot.FileHandling.Spotify;
+using SpekkieTwitchBot.FileHandling.Twitch;
 using SpekkieTwitchBot.Models.Spotify;
 using SpekkieTwitchBot.Models.Twitch;
 using SpotifyAPI.Web;
 
 namespace SpekkieTwitchBot.Auth;
 
-public static class AuthService
+public class AuthService
 {
     private static SpotifyAuth? _SpotifyAuth;
-
-    public static SpotifyAuth GetSpotifyAuth()
+    private readonly SpotifyFileReader _SpotifyFileReader;
+    private readonly TwitchFileReader _TwitchFileReader;
+    private readonly TwitchFileWriter _TwitchFileWriter;
+    
+    public AuthService(
+        SpotifyFileReader spotifyFileReader,
+        TwitchFileReader twitchFileReader,
+        TwitchFileWriter twitchFileWriter)
     {
-        string jsonData = FileHandler.ReadSpotifyAuthFile();
+        _SpotifyFileReader = spotifyFileReader;
+        _TwitchFileReader = twitchFileReader;
+        _TwitchFileWriter = twitchFileWriter;
+    }
+    
+    public SpotifyAuth GetSpotifyAuth()
+    {
+        string jsonData = _SpotifyFileReader.ReadSpotifyAuthFile();
         _SpotifyAuth = JsonConvert.DeserializeObject<SpotifyAuth>(jsonData) ?? new SpotifyAuth();
         return _SpotifyAuth;
     }
 
-    public static AuthorizationCodeTokenResponse GetSpotifyToken(HttpClient client, SpotifyAuth auth)
+    public AuthorizationCodeTokenResponse GetSpotifyToken(HttpClient client, SpotifyAuth auth)
     {
         var accessToken = RefreshSpotifyAccessToken(auth.client_id, auth.client_secret, auth.refresh_token, client).Result;
         AuthorizationCodeTokenResponse tokenResponse = new ()
@@ -33,7 +47,7 @@ public static class AuthService
         return tokenResponse;
     }
     
-    private static async Task<TokenResponse?> RefreshSpotifyAccessToken(string clientId, string clientSecret, string refreshToken, HttpClient client)
+    private async Task<TokenResponse?> RefreshSpotifyAccessToken(string clientId, string clientSecret, string refreshToken, HttpClient client)
     {
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -56,15 +70,8 @@ public static class AuthService
         Console.WriteLine($"Error refreshing access token: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         return null;
     }
-    
-    private static TwitchAuth GetTwitchAuth()
-    {
-        string jsonData = FileHandler.ReadTwitchAuthFile();
-        TwitchAuth auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData) ?? new TwitchAuth();
-        return auth;
-    }
 
-    private static async Task<ClientCredentials?> GetClientCredentials(TwitchAuth twitchAuth)
+    private async Task<ClientCredentials?> GetClientCredentials(TwitchAuth twitchAuth)
     {
         using HttpClient client = new HttpClient();
         var parameters = new FormUrlEncodedContent(new[]
@@ -89,7 +96,7 @@ public static class AuthService
         return null;
     }
 
-    private static async Task<AuthorizationCredentials?> GetAuthorizationCredentials(TwitchAuth twitchAuth)
+    private async Task<AuthorizationCredentials?> GetAuthorizationCredentials(TwitchAuth twitchAuth)
     {
         using HttpClient client = new HttpClient();
         var parameters = new FormUrlEncodedContent(new[]
@@ -121,7 +128,7 @@ public static class AuthService
         }
     }
     
-    private static async Task<AuthorizationCredentials?> RefreshTokenAsync(string clientId, string clientSecret, string refreshToken)
+    private async Task<AuthorizationCredentials?> RefreshTokenAsync(string clientId, string clientSecret, string refreshToken)
     {
         using HttpClient client = new HttpClient();
         var parameters = new FormUrlEncodedContent(new[]
@@ -144,18 +151,22 @@ public static class AuthService
         return null;
     }
 
-    public static TwitchAuth SetupAuth()
+    public TwitchAuth SetupAuth()
     {
-        TwitchAuth twitchAuth = AuthService.GetTwitchAuth();
-        AuthorizationCredentials authCred = AuthService.GetAuthorizationCredentials(twitchAuth).Result ?? new AuthorizationCredentials();
-        ClientCredentials clientCred = AuthService.GetClientCredentials(twitchAuth).Result ?? new ClientCredentials();
-        twitchAuth.AppToken = authCred.access_token;
-        twitchAuth.UserToken = clientCred.access_token;
+        string jsonData = TwitchFileReader.ReadTwitchAuthFile();
+        TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);        
+        AuthorizationCredentials authCred = GetAuthorizationCredentials(auth).Result ?? new AuthorizationCredentials();
+        ClientCredentials clientCred = GetClientCredentials(auth).Result ?? new ClientCredentials();
+        auth.AppToken = authCred.access_token;
+        auth.UserToken = clientCred.access_token;
 
-        return twitchAuth;
+        return auth;
     }
     
-    private static void UpdateTwitchSettings(TwitchAuth twitchAuth, AuthorizationCredentials? authCred = null, ClientCredentials? clientCredentials = null)
+    private void UpdateTwitchSettings(
+        TwitchAuth twitchAuth, 
+        AuthorizationCredentials? authCred = null, 
+        ClientCredentials? clientCredentials = null)
     {
         if (authCred == null && clientCredentials != null)
         {
@@ -169,6 +180,6 @@ public static class AuthService
         }
         
         string json = JsonConvert.SerializeObject(twitchAuth);
-        FileHandler.WriteTwitchAuthFile(json);
+        _TwitchFileWriter.WriteTwitchAuthFile(json);
     }
 }

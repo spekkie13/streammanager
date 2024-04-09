@@ -21,6 +21,7 @@ public class TwitchWebsocketService : IHostedService
 {
     private readonly IConfiguration _Configuration;
     private readonly ILogger<TwitchWebsocketService> _Logger;
+    private readonly Logger _GeneralLogger;
     private readonly CustomTwitchClient _TwitchClient;
     private readonly CustomPubsub _TwitchPubSub;
     private readonly SpotifyCommandHandler _SpotifyCommandHandler;
@@ -30,12 +31,15 @@ public class TwitchWebsocketService : IHostedService
     public TwitchWebsocketService(
         IConfiguration configuration, 
         ILogger<TwitchWebsocketService> logger,
+        Logger generalLogger,
+        AuthService authService, 
         CustomTwitchClient twitchClient, 
         CustomPubsub twitchPubSub,
         SpotifyCommandHandler spotifyCommandHandler, 
         GeneralCommandHandler generalCommandHandler)
     {
         _Configuration = configuration;
+        _GeneralLogger = generalLogger;
         _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         _SpotifyCommandHandler = spotifyCommandHandler;
@@ -44,7 +48,7 @@ public class TwitchWebsocketService : IHostedService
         _TwitchClient = twitchClient ?? throw new ArgumentNullException(nameof(twitchClient));
         _TwitchPubSub = twitchPubSub ?? throw new ArgumentNullException(nameof(twitchPubSub));
 
-        _TwitchAuth = AuthService.SetupAuth();
+        _TwitchAuth = authService.SetupAuth();
         SetupTwitchClient();
         SetupPubSub();
     }
@@ -80,9 +84,9 @@ public class TwitchWebsocketService : IHostedService
         _Logger.LogInformation("Pubsub Service Connected");
     }
     
-    private static void OnListenResponse(object? sender, OnListenResponseArgs e)
+    private void OnListenResponse(object? sender, OnListenResponseArgs e)
     {
-        Logger.LogInfo(e.Successful
+        _GeneralLogger.LogInfo(e.Successful
             ? $"Successfully listening to: {e.Topic}"
             : $"Failed to listen! Error: {e.Response.Error}");
     }
@@ -101,7 +105,7 @@ public class TwitchWebsocketService : IHostedService
                               status: status);
                 break;
         }
-        Logger.LogInfo($"Redeemed: {e.RewardRedeemed.Redemption.Reward.Title}");
+        _GeneralLogger.LogInfo($"Redeemed: {e.RewardRedeemed.Redemption.Reward.Title}");
     }
     
     private void OnChatCommandReceived(object? sender, OnChatCommandReceivedArgs e)
@@ -123,7 +127,7 @@ public class TwitchWebsocketService : IHostedService
         
         HttpResponseMessage message = await client.PatchAsync(requestUrl, requestContent);
             
-        Logger.LogInfo(message.ToString());
+        _GeneralLogger.LogInfo(message.ToString());
     }
     
     public async Task StartAsync(CancellationToken cancellationToken)

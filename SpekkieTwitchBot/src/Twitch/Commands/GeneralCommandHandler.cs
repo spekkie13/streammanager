@@ -1,5 +1,7 @@
 ﻿using SpekkieTwitchBot.Constants;
+using SpekkieTwitchBot.FileHandling.General;
 using SpekkieTwitchBot.General;
+using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.Client.Models;
 
 namespace SpekkieTwitchBot.Twitch.Commands;
@@ -12,10 +14,20 @@ public class GeneralCommandHandler
     private readonly TextCommandHandler _TextCommandHandler;
     private readonly TimerCommandHandler _TimerCommandHandler;
     private readonly SpotifyCommandHandler _SpotifyCommandHandler;
+    private readonly GeneralFileReader _GeneralFileReader;
+    private readonly GeneralFileWriter _GeneralFileWriter;
     
-    public GeneralCommandHandler(IrcClient ircClient, TextCommandHandler textCommandHandler, TimerCommandHandler timerCommandHandler, SpotifyCommandHandler spotifyCommandHandler)
+    public GeneralCommandHandler(
+        IrcClient ircClient, 
+        GeneralFileReader generalFileReader,
+        GeneralFileWriter generalFileWriter,
+        TextCommandHandler textCommandHandler, 
+        TimerCommandHandler timerCommandHandler, 
+        SpotifyCommandHandler spotifyCommandHandler)
     {
         _IrcClient = ircClient;
+        _GeneralFileReader = generalFileReader;
+        _GeneralFileWriter = generalFileWriter;
         _TextCommandHandler = textCommandHandler;
         _TimerCommandHandler = timerCommandHandler;
         _SpotifyCommandHandler = spotifyCommandHandler;
@@ -89,10 +101,10 @@ public class GeneralCommandHandler
 
     private void HandleAfgeleidCommand()
     {
-        string afgeleidtext = FileHandler.ReadAfgeleidCounter();
+        string afgeleidtext = _GeneralFileReader.ReadAfgeleidCounter();
         int afgeleid = Convert.ToInt32(afgeleidtext);
         afgeleid++;
         _IrcClient.SendPublicChatMessage($"Spekkie is {afgeleid}x afgeleid geweest");
-        FileHandler.WriteAfgeleidCounter(afgeleid.ToString());
+        _GeneralFileWriter.WriteAfgeleidCounter(afgeleid.ToString());
     }
 }
