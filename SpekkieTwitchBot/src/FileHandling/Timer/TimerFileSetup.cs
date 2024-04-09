@@ -4,6 +4,7 @@ public class TimerFileSetup
 {
     private readonly FileSetup _fileSetup;
     private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private const string OutputDir = "/Output/Timer";
 
     public TimerFileSetup(FileSetup fileSetup)
     {
@@ -13,7 +14,7 @@ public class TimerFileSetup
     
     private void SetupTimerFile()
     {
-        string dir = BaseDir + $"{Path.DirectorySeparatorChar}Timer";
+        string dir = $"{BaseDir}{OutputDir}";
         if (!_fileSetup.DirExists(dir))
             _fileSetup.CreateDir(dir);
 

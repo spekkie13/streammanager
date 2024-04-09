@@ -1,6 +1,4 @@
-﻿using SpekkieTwitchBot.Interfaces;
-
-namespace SpekkieTwitchBot.FileHandling.Spotify;
+﻿namespace SpekkieTwitchBot.FileHandling.Spotify;
 
 public class SpotifyFileReader
 {

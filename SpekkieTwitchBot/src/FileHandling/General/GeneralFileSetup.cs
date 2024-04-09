@@ -4,6 +4,7 @@ public class GeneralFileSetup
 {
     private readonly FileSetup _fileSetup;
     private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private const string OutputDir = "/Output/General";
 
     public GeneralFileSetup(FileSetup fileSetup)
     {
@@ -14,7 +15,7 @@ public class GeneralFileSetup
     
     private void SetupCounterFiles()
     {
-        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Counters";
+        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Counters";
         if (!_fileSetup.DirExists(dir))
             _fileSetup.CreateDir(dir);
 
@@ -25,7 +26,7 @@ public class GeneralFileSetup
 
     private void SetupLogFile()
     {
-        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Log";
+        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Log";
         string file = $"{dir}/log.txt";
         
         if (!_fileSetup.DirExists(dir))

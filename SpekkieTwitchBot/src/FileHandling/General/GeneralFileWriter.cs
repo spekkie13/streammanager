@@ -4,6 +4,7 @@ public class GeneralFileWriter
 {
     private readonly FileWriter _fileWriter;
     private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private const string OutputDir = "/Output/General";
 
     public GeneralFileWriter(FileWriter fileWriter)
     {
@@ -12,7 +13,7 @@ public class GeneralFileWriter
     
     public void WriteLogText(string text)
     {
-        string dir = BaseDir + $"{Path.DirectorySeparatorChar}Log{Path.DirectorySeparatorChar}Log.txt";
+        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Log{Path.DirectorySeparatorChar}Log.txt";  
         try
         {
             using StreamWriter writer = File.AppendText(dir);
@@ -26,7 +27,7 @@ public class GeneralFileWriter
     
     public void WriteAfgeleidCounter(string text)
     {
-        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Counters";
+        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Counters";
         _fileWriter.Write(dir + "/afgeleid.txt", text);
     }
 }
