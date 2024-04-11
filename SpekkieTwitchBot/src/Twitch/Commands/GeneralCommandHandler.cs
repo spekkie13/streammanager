@@ -1,6 +1,6 @@
 ﻿using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.FileHandling.General;
 using SpekkieTwitchBot.General;
+using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.Client.Models;
 

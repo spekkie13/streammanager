@@ -1,6 +1,7 @@
 ﻿using System.Text;
+using SpekkieTwitchBot.FileHandling;
 
-namespace SpekkieTwitchBot.FileHandling.Spotify;
+namespace SpekkieTwitchBot.Spotify.FileHandling;
 
 public class SpotifyFileWriter
 {

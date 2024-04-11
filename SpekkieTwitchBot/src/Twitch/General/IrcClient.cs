@@ -1,7 +1,7 @@
 using System.Net.Sockets;
 using Newtonsoft.Json;
-using SpekkieTwitchBot.FileHandling.Twitch;
 using SpekkieTwitchBot.Models.Twitch;
+using SpekkieTwitchBot.Twitch.FileHandling;
 
 namespace SpekkieTwitchBot.Twitch.General;
 

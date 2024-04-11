@@ -1,4 +1,6 @@
-﻿namespace SpekkieTwitchBot.FileHandling.Twitch;
+﻿using SpekkieTwitchBot.FileHandling;
+
+namespace SpekkieTwitchBot.Twitch.FileHandling;
 
 public class TwitchFileSetup
 {

@@ -1,4 +1,4 @@
-﻿using SpekkieTwitchBot.FileHandling.Twitch;
+﻿using SpekkieTwitchBot.Twitch.FileHandling;
 using TwitchLib.PubSub.Events;
 
 namespace SpekkieTwitchBot.Twitch.Events.Handlers;

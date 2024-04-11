@@ -2,7 +2,7 @@
 using System.Media;
 using System.Runtime.InteropServices;
 using SpekkieTwitchBot.FileHandling;
-using SpekkieTwitchBot.FileHandling.Spotify;
+using SpekkieTwitchBot.Spotify.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
 
 namespace SpekkieTwitchBot.Twitch.Commands;

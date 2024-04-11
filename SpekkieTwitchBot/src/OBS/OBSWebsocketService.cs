@@ -6,9 +6,9 @@ using OBSWebsocketDotNet;
 using OBSWebsocketDotNet.Communication;
 using OBSWebsocketDotNet.Types;
 using OBSWebsocketDotNet.Types.Events;
-using SpekkieTwitchBot.FileHandling.Twitch;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Twitch;
+using SpekkieTwitchBot.Twitch.FileHandling;
 
 namespace SpekkieTwitchBot.Web;
 

@@ -1,11 +1,11 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
 using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.FileHandling.Spotify;
-using SpekkieTwitchBot.FileHandling.Twitch;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Spotify;
 using SpekkieTwitchBot.Models.Twitch;
+using SpekkieTwitchBot.Spotify.FileHandling;
+using SpekkieTwitchBot.Twitch.FileHandling;
 using SpotifyAPI.Web;
 
 namespace SpekkieTwitchBot.Auth;

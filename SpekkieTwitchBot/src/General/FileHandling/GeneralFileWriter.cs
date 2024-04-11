@@ -1,4 +1,6 @@
-﻿namespace SpekkieTwitchBot.FileHandling.General;
+﻿using SpekkieTwitchBot.FileHandling;
+
+namespace SpekkieTwitchBot.General.FileHandling;
 
 public class GeneralFileWriter
 {

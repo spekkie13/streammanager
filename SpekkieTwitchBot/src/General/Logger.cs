@@ -1,4 +1,4 @@
-﻿using SpekkieTwitchBot.FileHandling.General;
+﻿using SpekkieTwitchBot.General.FileHandling;
 
 namespace SpekkieTwitchBot.General;
 

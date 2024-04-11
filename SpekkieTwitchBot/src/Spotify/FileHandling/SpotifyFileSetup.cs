@@ -1,4 +1,6 @@
-﻿namespace SpekkieTwitchBot.FileHandling.Spotify;
+﻿using SpekkieTwitchBot.FileHandling;
+
+namespace SpekkieTwitchBot.Spotify.FileHandling;
 
 public class SpotifyFileSetup
 {

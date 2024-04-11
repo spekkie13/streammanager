@@ -4,9 +4,9 @@ using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.FileHandling.Spotify;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Spotify;
+using SpekkieTwitchBot.Spotify.FileHandling;
 using SpotifyAPI.Web;
 
 namespace SpekkieTwitchBot.Spotify;
