@@ -13,16 +13,16 @@ public class Logger
     
     public void LogInfo(string text)
     {
-        _generalFileWriter.WriteLogText($"INFO: {text}");
+        _generalFileWriter.WriteLogText($"{DateTime.Now.TimeOfDay.ToString()} - INFO: {text}");
     }
 
     public void LogWarning(string text)
     {
-        _generalFileWriter.WriteLogText($"WARN: {text}");
+        _generalFileWriter.WriteLogText($"{DateTime.Now.TimeOfDay.ToString()} - WARN: {text}");
     }
 
     public void LogError(string text)
     {
-        _generalFileWriter.WriteLogText($"ERROR: {text}");
+        _generalFileWriter.WriteLogText($"{DateTime.Now.TimeOfDay.ToString()} - ERROR: {text}");
     }
 }

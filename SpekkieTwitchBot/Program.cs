@@ -55,6 +55,7 @@ public static class Program
                 services.AddSingleton<GeneralFileWriter>();
                 services.AddSingleton<GeneralFileSetup>();
 
+                services.AddSingleton<CustomClient>();
                 services.AddSingleton<SubEventHandler>();
                 services.AddSingleton<FollowEventHandler>();
                 services.AddSingleton<ChannelPointHandler>();

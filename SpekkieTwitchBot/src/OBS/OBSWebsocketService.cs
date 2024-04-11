@@ -94,7 +94,7 @@ public class ObsWebsocketService : IHostedService
 
         if(e.ObsCloseCode == ObsCloseCodes.AuthenticationFailed)
         {
-            _GeneralLogger.LogError("Authentication Failed");
+            _GeneralLogger.LogError($"Authentication Failed");
         }
         else if(e.WebsocketDisconnectionInfo != null)
             if (e.WebsocketDisconnectionInfo.Exception != null)

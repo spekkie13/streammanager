@@ -11,16 +11,14 @@ using TwitchLib.Client.Exceptions;
 using TwitchLib.Client.Internal;
 using TwitchLib.Client.Models;
 using TwitchLib.Client.Models.Internal;
-using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Events;
-using TwitchLib.Communication.Interfaces;
 using Timer = System.Timers.Timer;
 
 namespace SpekkieTwitchBot.Twitch.Events
 {
     public class CustomTwitchClient : ICustomTwitchClient
     {
-        private IClient _client;
+        private CustomClient _client;
         private readonly Logger _GeneralLogger;
         private MessageEmoteCollection _channelEmotes = new ();
         private readonly ICollection<char> _chatCommandIdentifiers = new HashSet<char>();
@@ -116,7 +114,7 @@ namespace SpekkieTwitchBot.Twitch.Events
 
         public CustomTwitchClient(
             Logger generalLogger,
-            IClient client,
+            CustomClient client,
             ClientProtocol protocol = ClientProtocol.WebSocket
             )
         {
@@ -189,18 +187,7 @@ namespace SpekkieTwitchBot.Twitch.Events
 
         private void InitializeClient()
         {
-            switch (_protocol)
-            {
-                case ClientProtocol.TCP:
-                    _client = new TcpClient();
-                    break;
-                case ClientProtocol.WebSocket:
-                    _client = new WebSocketClient();
-                    break;
-                default:
-                    _client = new WebSocketClient();
-                    break;
-            }
+            _client = new CustomClient();
             
             _client.OnConnected += _client_OnConnected;
             _client.OnMessage += _client_OnMessage;
@@ -388,7 +375,7 @@ namespace SpekkieTwitchBot.Twitch.Events
             channel = channel.ToLower();
             if (channel[0] == '#')
                 channel = channel[1..];
-            _GeneralLogger.LogInfo("Leaving channel: " + channel);
+            _GeneralLogger.LogInfo($"Leaving channel: {channel}");
             if (_joinedChannelManager.GetJoinedChannel(channel) == null)
                 return;
             _client.Send(Rfc2812.Part("#" + channel));
@@ -479,7 +466,7 @@ namespace SpekkieTwitchBot.Twitch.Events
             {
                 _currentlyJoiningChannels = true;
                 JoinedChannel joinedChannel = _joinChannelQueue.Dequeue();
-                _GeneralLogger.LogInfo("Joining channel: " + joinedChannel.Channel);
+                _GeneralLogger.LogInfo($"Joining channel: {joinedChannel.Channel}");
                 _client.Send(Rfc2812.Join("#" + joinedChannel.Channel.ToLower()));
                 _joinedChannelManager.AddJoinedChannel(new JoinedChannel(joinedChannel.Channel));
                 StartJoinedChannelTimer(joinedChannel.Channel);
@@ -500,22 +487,19 @@ namespace SpekkieTwitchBot.Twitch.Events
             _joinTimer.Start();
         }
 
-        private void JoinChannelTimeout(object? sender, ElapsedEventArgs e)
+        private void JoinChannelTimeout(object sender, ElapsedEventArgs e)
         {
             if (_awaitingJoins.Any())
             {
-                List<KeyValuePair<string, DateTime>> list = _awaitingJoins
-                    .Where(
-                        (Func<KeyValuePair<string, DateTime>, bool>)(x => (DateTime.Now - x.Value).TotalSeconds > 5.0))
-                    .ToList();
+                List<KeyValuePair<string, DateTime>> list = _awaitingJoins.Where((Func<KeyValuePair<string, DateTime>, bool>) (x => (DateTime.Now - x.Value).TotalSeconds > 5.0)).ToList();
                 if (!list.Any())
                     return;
-                _awaitingJoins.RemoveAll(
-                    (Predicate<KeyValuePair<string, DateTime>>)(x => (DateTime.Now - x.Value).TotalSeconds > 5.0));
+                _awaitingJoins.RemoveAll((Predicate<KeyValuePair<string, DateTime>>) (x => (DateTime.Now - x.Value).TotalSeconds > 5.0));
                 foreach (KeyValuePair<string, DateTime> keyValuePair in list)
                 {
                     _joinedChannelManager.RemoveJoinedChannel(keyValuePair.Key.ToLowerInvariant());
-                    OnFailureToReceiveJoinConfirmation(this, new OnFailureToReceiveJoinConfirmationArgs
+                    EventHandler<OnFailureToReceiveJoinConfirmationArgs> joinConfirmation = OnFailureToReceiveJoinConfirmation;
+                    joinConfirmation(this, new OnFailureToReceiveJoinConfirmationArgs
                     {
                         Exception = new FailureToReceiveJoinConfirmationException(keyValuePair.Key)
                     });
@@ -1114,12 +1098,12 @@ namespace SpekkieTwitchBot.Twitch.Events
 
         private void HandleCap(IrcMessage ircMessage)
         {
-            _GeneralLogger.LogInfo(ircMessage.Message);
+            _GeneralLogger.LogInfo($"{ircMessage.Message}");
         }
 
         private void UnaccountedFor(string ircString)
         {
-            _GeneralLogger.LogWarning("Unaccounted for: " + ircString + " (please create a TwitchLib GitHub issue :P)");
+            _GeneralLogger.LogWarning($"Unaccounted for: {ircString} (please create a TwitchLib GitHub issue :P)");
         }
 
         public void SendQueuedItem(string message)

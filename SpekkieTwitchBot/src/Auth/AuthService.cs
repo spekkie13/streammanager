@@ -89,7 +89,7 @@ public class AuthService
         if (response.IsSuccessStatusCode)
         {
             var responseContent = await response.Content.ReadAsStringAsync();
-            _Logger.LogInfo(responseContent);
+            _Logger.LogInfo($"{responseContent}");
             ClientCredentials? cred = JsonConvert.DeserializeObject<ClientCredentials>(responseContent);
             UpdateTwitchSettings(twitchAuth, clientCredentials: cred);
             return cred;
