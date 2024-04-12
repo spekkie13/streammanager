@@ -8,6 +8,7 @@ using OBSWebsocketDotNet.Types;
 using OBSWebsocketDotNet.Types.Events;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Twitch;
+using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;
 
 namespace SpekkieTwitchBot.Web;
@@ -30,7 +31,7 @@ public class ObsWebsocketService : IHostedService
         OBSWebsocket socket,
         TwitchFileReader twitchFileReader)
     {
-        string jsonData = twitchFileReader.ReadTwitchAuthFile();
+        string jsonData = twitchFileReader.ReadTwitchAppAuthFile();
         TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);
         _Url = auth?.Obs_Url ?? "";
         _Password = auth?.Password ?? "";

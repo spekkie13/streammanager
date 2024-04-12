@@ -44,6 +44,8 @@ public class GeneralCommandHandler
             { "commands", HandleCommandsCommand },
             { "exitbot", () => HandleExitBotCommand(username) },
             { "afgeleid", HandleAfgeleidCommand},
+            { "refund", () => HandleRefundCommand(username) },
+            
             { "hello", _TextCommandHandler.HandleHelloCommand },
             { "twitter", _TextCommandHandler.HandleGetTwitterCommand },
             { "youtube", _TextCommandHandler.HandleGetYouTubeCommand },
@@ -106,5 +108,10 @@ public class GeneralCommandHandler
         afgeleid++;
         _IrcClient.SendPublicChatMessage($"Spekkie is {afgeleid}x afgeleid geweest");
         _GeneralFileWriter.WriteAfgeleidCounter(afgeleid.ToString());
+    }
+
+    private void HandleRefundCommand(string username)
+    {
+        if (string.IsNullOrEmpty(username)) return;
     }
 }

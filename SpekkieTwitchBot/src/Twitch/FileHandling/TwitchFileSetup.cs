@@ -30,6 +30,8 @@ public class TwitchFileSetup
         bool fileExists = _fileSetup.FileExists(file);
         if(!fileExists)
             _fileSetup.CreateFile(file);
+        
+        File.WriteAllText(file, "");
     }
     
     private void SetupRecentSubFile()
@@ -44,6 +46,8 @@ public class TwitchFileSetup
         bool fileExists = _fileSetup.FileExists(file);
         if(!fileExists)
             _fileSetup.CreateFile(file);
+        
+        File.WriteAllText(file, "");
     }
     
     private void SetupFollowerGoalFile()
@@ -58,6 +62,8 @@ public class TwitchFileSetup
         bool fileExists = _fileSetup.FileExists(file);
         if(!fileExists)
             _fileSetup.CreateFile(file);
+        
+        File.WriteAllText(file, "");
     }
     
     private void SetupSubGoalFile()
@@ -72,5 +78,7 @@ public class TwitchFileSetup
         bool fileExists = _fileSetup.FileExists(file);
         if(!fileExists)
             _fileSetup.CreateFile(file);
+        
+        File.WriteAllText(file, "");
     }
 }

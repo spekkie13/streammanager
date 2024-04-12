@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using Newtonsoft.Json;
 using SpekkieTwitchBot.Models.Twitch;
+using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;
 
 namespace SpekkieTwitchBot.Twitch.General;
@@ -43,7 +44,7 @@ public class IrcClient
 
     private void FillAuthorizationInfo()
     {
-        string jsonData = _TwitchFileReader.ReadTwitchAuthFile();
+        string jsonData = _TwitchFileReader.ReadTwitchAppAuthFile();
         TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);
         _Username = auth?.BotName ?? "";
         _Channel = $"#{auth?.BroadcasterName}";

@@ -13,9 +13,15 @@ public class TwitchFileWriter
         _fileWriter = fileWriter;
     }
     
-    public void WriteTwitchAuthFile(string text)
+    public void WriteTwitchAppAuthFile(string text)
     {
-        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch.json";
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-App.json";
+        _fileWriter.Write(dir, text);
+    }
+    
+    public void WriteTwitchUserAuthFile(string text)
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-User.json";
         _fileWriter.Write(dir, text);
     }
 

@@ -196,6 +196,7 @@ namespace SpekkieTwitchBot.Twitch.Events
             _client.OnMessageThrottled += _client_OnMessageThrottled;
             _client.OnWhisperThrottled += _client_OnWhisperThrottled;
             _client.OnReconnected += _client_OnReconnected;
+            
         }
 
         internal void RaiseEvent(string eventName, object? args = null)

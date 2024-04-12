@@ -22,7 +22,7 @@ public class SpotifyService : BackgroundService
 
     public SpotifyService(
         SpotifyFileWriter spotifyFileWriter, 
-        AuthService authService,
+        SpotifyAuthService authService,
         Logger logger)
     {
         _Client = new HttpClient();

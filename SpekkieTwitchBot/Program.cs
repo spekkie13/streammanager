@@ -39,9 +39,9 @@ public static class Program
                 services.AddLogging();
                 services.AddTwitchLibEventSubWebsockets();
                 services.AddSingleton<Logger>();
+                services.AddSingleton<FileSetup>();
                 services.AddSingleton<FileReader>();
                 services.AddSingleton<FileWriter>();
-                services.AddSingleton<FileSetup>();
                 services.AddSingleton<SpotifyFileReader>();
                 services.AddSingleton<SpotifyFileWriter>();
                 services.AddSingleton<SpotifyFileSetup>();                
@@ -60,7 +60,8 @@ public static class Program
                 services.AddSingleton<FollowEventHandler>();
                 services.AddSingleton<ChannelPointHandler>();
                 
-                services.AddSingleton<AuthService>();
+                services.AddSingleton<TwitchAuthService>();
+                services.AddSingleton<SpotifyAuthService>();
                 services.AddSingleton<OBSWebsocket>();
                 services.AddSingleton<IrcClient>();
                 services.AddSingleton<SpotifyService>();

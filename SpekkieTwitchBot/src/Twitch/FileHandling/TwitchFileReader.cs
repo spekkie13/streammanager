@@ -13,9 +13,17 @@ public class TwitchFileReader
         _fileReader = fileReader;
     }
     
-    public string ReadTwitchAuthFile()
+    public string ReadTwitchAppAuthFile()
     {
-        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch.json";
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-App.json";
+        string jsonData = _fileReader.Read(dir);
+
+        return jsonData;
+    }    
+    
+    public string ReadTwitchUserAuthFile()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-User.json";
         string jsonData = _fileReader.Read(dir);
 
         return jsonData;
