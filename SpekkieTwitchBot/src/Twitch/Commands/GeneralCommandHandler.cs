@@ -125,20 +125,26 @@ public class GeneralCommandHandler
 
     private void HandleCreateRedemptionCommand(string commandArgs)
     {
-        string title = commandArgs.Split(" ")[0];
-        int cost = Convert.ToInt32(commandArgs.Split(" ")[1]);
+        string title = commandArgs.Split("|")[0];
+        int cost = Convert.ToInt32(commandArgs.Split("|")[1]);
+        bool isUserInputRequired = true;
+        string prompt = "provide a valid spotify link";
         const string Url = "https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=30731359";
         using HttpClient client = new HttpClient();
         TwitchUserAuth auth = _TwitchAuthService.GetTwitchUserAuth();
+        GeneralTwitchAuth genAuth = _TwitchAuthService.GetGeneralTwitchAuth();
         
         client.DefaultRequestHeaders.Add("client-id", auth.ClientId);
+        client.DefaultRequestHeaders.Add("broadcaster_id", genAuth.ChannelId);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.UserToken);
         
-        var requestContent = new StringContent($"{{\"title\":\"{title}\"\"cost\":{cost}}}", 
-            Encoding.UTF8, 
-            "application/json");
+        string rewardInfo = $"{{\"title\":\"{title}\",\"cost\":{cost},\"is_user_input_required\":{isUserInputRequired.ToString().ToLower()},\"prompt\":\"{prompt.Substring(0, Math.Min(prompt.Length, 200))}\"}}";
+        var content = new StringContent(rewardInfo, Encoding.UTF8, "application/json");
 
-        var message = client.PostAsync(Url, requestContent).Result;
-        var responseContent = message.Content.ReadAsStreamAsync().Result;
+        var response = client.PostAsync(Url, content).Result;
+
+        Console.WriteLine(response.IsSuccessStatusCode
+            ? "Custom reward created successfully!"
+            : $"Failed to create custom reward. Status code: {response.StatusCode}");
     }
 }
