@@ -1,6 +1,10 @@
-﻿using SpekkieTwitchBot.Constants;
+﻿using System.Net.Http.Headers;
+using System.Text;
+using SpekkieTwitchBot.Auth;
+using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.General.FileHandling;
+using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.Client.Models;
 
@@ -16,9 +20,11 @@ public class GeneralCommandHandler
     private readonly SpotifyCommandHandler _SpotifyCommandHandler;
     private readonly GeneralFileReader _GeneralFileReader;
     private readonly GeneralFileWriter _GeneralFileWriter;
+    private readonly TwitchAuthService _TwitchAuthService;
     
     public GeneralCommandHandler(
         IrcClient ircClient, 
+        TwitchAuthService twitchAuthService,
         GeneralFileReader generalFileReader,
         GeneralFileWriter generalFileWriter,
         TextCommandHandler textCommandHandler, 
@@ -31,6 +37,7 @@ public class GeneralCommandHandler
         _TextCommandHandler = textCommandHandler;
         _TimerCommandHandler = timerCommandHandler;
         _SpotifyCommandHandler = spotifyCommandHandler;
+        _TwitchAuthService = twitchAuthService;
     }
     
     public void HandleCommand(ChatCommand command)
@@ -68,6 +75,7 @@ public class GeneralCommandHandler
             { "addsong", () => _SpotifyCommandHandler.HandleAddSongToQueueCommand(commandArgs) },
             { "playsong", () => _SpotifyCommandHandler.HandlePlaySpecificSongCommand(commandArgs, username) },
             { "playsound", () => _SpotifyCommandHandler.PlaySound() },
+            { "createredemption", () => HandleCreateRedemptionCommand(commandArgs) }
         };
 
         if (_CommandHandlers.TryGetValue(commandText, out Action? handler))
@@ -113,5 +121,24 @@ public class GeneralCommandHandler
     private void HandleRefundCommand(string username)
     {
         if (string.IsNullOrEmpty(username)) return;
+    }
+
+    private void HandleCreateRedemptionCommand(string commandArgs)
+    {
+        string title = commandArgs.Split(" ")[0];
+        int cost = Convert.ToInt32(commandArgs.Split(" ")[1]);
+        const string Url = "https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=30731359";
+        using HttpClient client = new HttpClient();
+        TwitchUserAuth auth = _TwitchAuthService.GetTwitchUserAuth();
+        
+        client.DefaultRequestHeaders.Add("client-id", auth.ClientId);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.UserToken);
+        
+        var requestContent = new StringContent($"{{\"title\":\"{title}\"\"cost\":{cost}}}", 
+            Encoding.UTF8, 
+            "application/json");
+
+        var message = client.PostAsync(Url, requestContent).Result;
+        var responseContent = message.Content.ReadAsStreamAsync().Result;
     }
 }

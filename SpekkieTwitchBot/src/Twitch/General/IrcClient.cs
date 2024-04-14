@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using Newtonsoft.Json;
+using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Twitch;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;
@@ -16,13 +17,15 @@ public class IrcClient
     private readonly StreamReader _InputStream;
     private readonly StreamWriter _OutputStream;
     private readonly TwitchFileReader _TwitchFileReader;
+    private readonly Logger _Logger;
     
-    public IrcClient(TwitchFileReader twitchFileReader)
+    public IrcClient(TwitchFileReader twitchFileReader, Logger logger)
     {
         _Username = string.Empty;
         _Channel = string.Empty;
         _OAuth = string.Empty;
         _TwitchFileReader = twitchFileReader;
+        _Logger = logger;
 
         FillAuthorizationInfo();
 
@@ -44,11 +47,11 @@ public class IrcClient
 
     private void FillAuthorizationInfo()
     {
-        string jsonData = _TwitchFileReader.ReadTwitchAppAuthFile();
-        TwitchAuth? auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData);
-        _Username = auth?.BotName ?? "";
-        _Channel = $"#{auth?.BroadcasterName}";
-        _OAuth = auth?.Implicit_OAuth ?? "";
+        string jsonData = _TwitchFileReader.ReadTwitchGeneralAuthFile();
+        GeneralTwitchAuth auth = JsonConvert.DeserializeObject<GeneralTwitchAuth>(jsonData) ?? new GeneralTwitchAuth();
+        _Username = auth.BotName;
+        _Channel = $"#{auth.BroadcasterName}";
+        _OAuth = auth.Implicit_OAuth;
     }
     
     public void SendIrcMessage(string message)
@@ -60,7 +63,7 @@ public class IrcClient
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _Logger.LogError(ex.Message);
         }
     }
 
@@ -76,11 +79,11 @@ public class IrcClient
         }
     }
 
-    public string ReadMessage()
+    public string? ReadMessage()
     {
         try
         {
-            string message = _InputStream.ReadLine() ?? "";
+            string? message = _InputStream.ReadLine();
             return message;
         }
         catch (Exception ex)

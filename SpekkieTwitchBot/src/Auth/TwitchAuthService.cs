@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
 using SpekkieTwitchBot.General;
-using SpekkieTwitchBot.Models.Twitch;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;
 
@@ -9,6 +8,10 @@ namespace SpekkieTwitchBot.Auth;
 
 public class TwitchAuthService
 {
+    private TwitchAppAuth _twitchAppAuth;
+    private TwitchUserAuth _twitchUserAuth;
+    private GeneralTwitchAuth _twitchGeneralAuth;
+    
     private readonly TwitchFileReader _TwitchFileReader;
     private readonly TwitchFileWriter _TwitchFileWriter;
     private readonly Logger _Logger;
@@ -22,62 +25,67 @@ public class TwitchAuthService
         _TwitchFileWriter = twitchFileWriter;
         _Logger = logger;
     }
-    
-    public async Task<TwitchAuth> SetupAuth()
+
+    public TwitchUserAuth GetTwitchUserAuth()
+    {
+        string jsonData = _TwitchFileReader.ReadTwitchUserAuthFile();
+        _twitchUserAuth = JsonConvert.DeserializeObject<TwitchUserAuth>(jsonData) ?? new TwitchUserAuth();        
+        AuthorizationCredentials authCred = GetUserAccessAuthCredentials(_twitchUserAuth).Result ?? new AuthorizationCredentials();
+        
+        UpdateTwitchSettings(_twitchUserAuth, authCred);
+        
+        return _twitchUserAuth;
+    }
+
+    public TwitchAppAuth GetTwitchAppAuth()
     {
         string jsonData = _TwitchFileReader.ReadTwitchAppAuthFile();
-        TwitchAuth auth = JsonConvert.DeserializeObject<TwitchAuth>(jsonData) ?? new TwitchAuth();        
-        AuthorizationCredentials authCred = await GetAppAccessAuthCredentials(auth) ?? new AuthorizationCredentials();
+        _twitchAppAuth = JsonConvert.DeserializeObject<TwitchAppAuth>(jsonData) ?? new TwitchAppAuth();
+        ClientCredentials authCred = GetClientCredentials(_twitchUserAuth).Result ?? new ClientCredentials();
+        _twitchAppAuth.AppToken = authCred.access_token;
+        return _twitchAppAuth;
+    }
 
-        string jsonData2 = _TwitchFileReader.ReadTwitchUserAuthFile();
-        TwitchAuth auth2 = JsonConvert.DeserializeObject<TwitchAuth>(jsonData2) ?? new TwitchAuth();
-        AuthorizationCredentials authCred2 = await GetUserAccessAuthCredentials(auth2) ?? new AuthorizationCredentials();
-
-        UpdateTwitchSettings(auth, authCred.access_token, authCred2.access_token, authCred.refresh_token, authCred2.refresh_token);
-        auth.UserToken = authCred2.access_token;
-        auth.AppToken = authCred.access_token;
-        return auth;
+    public GeneralTwitchAuth GetGeneralTwitchAuth()
+    {
+        string jsonData = _TwitchFileReader.ReadTwitchGeneralAuthFile();
+        _twitchGeneralAuth = JsonConvert.DeserializeObject<GeneralTwitchAuth>(jsonData) ?? new GeneralTwitchAuth();
+        return _twitchGeneralAuth;
     }
     
-    private async Task<AuthorizationCredentials?> GetAppAccessAuthCredentials(TwitchAuth twitchAuth)
+    private async Task<ClientCredentials?> GetClientCredentials(TwitchUserAuth auth)
     {
         using HttpClient client = new HttpClient();
         var parameters = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("client_id", twitchAuth.ClientId),
-            new KeyValuePair<string, string>("client_secret", twitchAuth.ClientSecret),
-            new KeyValuePair<string, string>("code", twitchAuth.Code),
-            new KeyValuePair<string, string>("grant_type", "authorization_code"),
-            new KeyValuePair<string, string>("redirect_uri", "http://localhost:3000/")
+            new KeyValuePair<string, string>("client_id", auth.ClientId),
+            new KeyValuePair<string, string>("client_secret", auth.ClientSecret),
+            new KeyValuePair<string, string>("grant_type","client_credentials")
         });
 
         var response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
-
-        switch (response.StatusCode)
+        if (response.IsSuccessStatusCode)
         {
-            case HttpStatusCode.OK:
-                var responseContent = await response.Content.ReadAsStringAsync();
-                _Logger.LogInfo(responseContent);
-                Console.WriteLine($"{responseContent}");
-                AuthorizationCredentials? cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent);
-                return cred;
-            case HttpStatusCode.BadRequest:
-                cred = await RefreshAppAccessTokenAsync(twitchAuth.ClientId, twitchAuth.ClientSecret, twitchAuth.AppRefreshToken);
-                return cred;
-            default:
-                _Logger.LogError($"Failed to get tokens. Status code: {response.StatusCode}");
-                return null;
+            var responseContent = await response.Content.ReadAsStringAsync();
+            _Logger.LogInfo($"Client credentials acquired: {responseContent}");
+            Console.WriteLine(responseContent);
+
+            ClientCredentials? cred = JsonConvert.DeserializeObject<ClientCredentials>(responseContent);
+            return cred;
         }
+
+        _Logger.LogError("Error acquiring client credentials");
+        return null;
     }
     
-    private async Task<AuthorizationCredentials?> GetUserAccessAuthCredentials(TwitchAuth twitchAuth)
+    private async Task<AuthorizationCredentials?> GetUserAccessAuthCredentials(TwitchUserAuth twitchUserAuth)
     {
         using HttpClient client = new HttpClient();
         var parameters = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("client_id", twitchAuth.ClientId),
-            new KeyValuePair<string, string>("client_secret", twitchAuth.ClientSecret),
-            new KeyValuePair<string, string>("code", twitchAuth.Code),
+            new KeyValuePair<string, string>("client_id", twitchUserAuth.ClientId),
+            new KeyValuePair<string, string>("client_secret", twitchUserAuth.ClientSecret),
+            new KeyValuePair<string, string>("code", twitchUserAuth.UserRefreshToken),
             new KeyValuePair<string, string>("grant_type", "authorization_code"),
             new KeyValuePair<string, string>("redirect_uri", "http://localhost:3000/")
         });
@@ -93,7 +101,7 @@ public class TwitchAuthService
                 AuthorizationCredentials? cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent);
                 return cred;
             case HttpStatusCode.BadRequest:
-                cred = await RefreshAppAccessTokenAsync(twitchAuth.ClientId, twitchAuth.ClientSecret, twitchAuth.UserRefreshToken);
+                cred = await RefreshAppAccessTokenAsync(_twitchUserAuth.ClientId, _twitchUserAuth.ClientSecret, _twitchUserAuth.UserRefreshToken);
                 return cred;
             default:
                 _Logger.LogError($"Failed to get tokens. Status code: {response.StatusCode}");
@@ -125,18 +133,13 @@ public class TwitchAuthService
         _Logger.LogError($"Error refreshing token: {response.StatusCode}");
         return null;
     }
-
-    private void UpdateTwitchSettings(TwitchAuth twitchAuth, string appToken, string userToken, string appRefreshToken, string userRefreshToken)
+    
+    private void UpdateTwitchSettings(TwitchUserAuth twitchUserAuth, AuthorizationCredentials authCred)
     {
-        twitchAuth.AppToken = appToken;
-        twitchAuth.UserToken = userToken;
-        twitchAuth.AppRefreshToken = appRefreshToken;
-        twitchAuth.UserRefreshToken = userRefreshToken;
+        twitchUserAuth.UserToken = authCred.access_token;
+        twitchUserAuth.UserRefreshToken = authCred.refresh_token;
         
-        string json = JsonConvert.SerializeObject(twitchAuth);
-        string json2 = JsonConvert.SerializeObject(twitchAuth);
-        
+        string json = JsonConvert.SerializeObject(twitchUserAuth);
         _TwitchFileWriter.WriteTwitchUserAuthFile(json);
-        _TwitchFileWriter.WriteTwitchAppAuthFile(json2);
     }
 }

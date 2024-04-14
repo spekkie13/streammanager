@@ -26,7 +26,9 @@ public class TwitchWebsocketService : IHostedService
     private readonly CustomPubsub _TwitchPubSub;
     private readonly SpotifyCommandHandler _SpotifyCommandHandler;
     private readonly GeneralCommandHandler _GeneralCommandHandler;
-    private readonly TwitchAuth _TwitchAuth;
+    private readonly TwitchAppAuth _twitchAppAuth;
+    private readonly TwitchUserAuth _twitchUserAuth;
+    private readonly GeneralTwitchAuth _generalTwitchAuth;
 
     private readonly SubEventHandler _SubEventHandler;
     private readonly FollowEventHandler _FollowEventHandler;
@@ -52,12 +54,14 @@ public class TwitchWebsocketService : IHostedService
 
         _SpotifyCommandHandler = spotifyCommandHandler;
         _GeneralCommandHandler = generalCommandHandler;
-
+        
+        _twitchUserAuth = twitchAuthService.GetTwitchUserAuth();
+        _twitchAppAuth = twitchAuthService.GetTwitchAppAuth();
+        _generalTwitchAuth = twitchAuthService.GetGeneralTwitchAuth();
+        
         _TwitchClient = twitchClient ?? throw new ArgumentNullException(nameof(twitchClient));
         _TwitchPubSub = twitchPubSub ?? throw new ArgumentNullException(nameof(twitchPubSub));
-
-        _TwitchAuth = twitchAuthService.SetupAuth().Result;
-
+        
         _SubEventHandler = subEventHandler;
         _FollowEventHandler = followEventHandler;
         _ChannelPointHandler = channelPointHandler;
@@ -68,8 +72,8 @@ public class TwitchWebsocketService : IHostedService
 
     private void SetupTwitchClient()
     {
-        ConnectionCredentials cred = new ConnectionCredentials(TwitchConstants.ChannelName, _TwitchAuth.Implicit_OAuth);
-        _TwitchClient.Initialize(cred, _TwitchAuth.BroadcasterName);
+        ConnectionCredentials cred = new ConnectionCredentials(TwitchConstants.ChannelName, _generalTwitchAuth.Implicit_OAuth);
+        _TwitchClient.Initialize(cred, _generalTwitchAuth.BroadcasterName);
         _TwitchPubSub.OnChannelSubscription += _SubEventHandler.HandleSub;
         _TwitchPubSub.OnFollow += _FollowEventHandler.HandleFollow;
     }
@@ -80,18 +84,23 @@ public class TwitchWebsocketService : IHostedService
         _TwitchPubSub.OnListenResponse += OnListenResponse;
         _TwitchPubSub.OnChannelPointsRewardRedeemed += OnChannelPointsRewardRedeemed;
         _TwitchClient.OnChatCommandReceived += OnChatCommandReceived;
-        _TwitchClient.OnFailureToReceiveJoinConfirmation += FailureToJoin;     
-        _TwitchPubSub.ListenToVideoPlayback(_TwitchAuth.ChannelId);
-        _TwitchPubSub.ListenToFollows(_TwitchAuth.ChannelId);
-        _TwitchPubSub.ListenToSubscriptions(_TwitchAuth.ChannelId);
-        _TwitchPubSub.ListenToLeaderboards(_TwitchAuth.ChannelId);
-        _TwitchPubSub.ListenToPredictions(_TwitchAuth.ChannelId);
-        _TwitchPubSub.ListenToRaid(_TwitchAuth.ChannelId);
-        _TwitchPubSub.ListenToChannelPoints(_TwitchAuth.ChannelId);
-        _TwitchPubSub.ListenToBitsEventsV2(_TwitchAuth.ChannelId);
+        _TwitchClient.OnFailureToReceiveJoinConfirmation += FailureToJoin;
+        _TwitchClient.OnMessageReceived += OnMessageReceived;
+        _TwitchPubSub.ListenToVideoPlayback(_generalTwitchAuth.ChannelId);
+        _TwitchPubSub.ListenToFollows(_generalTwitchAuth.ChannelId);
+        _TwitchPubSub.ListenToSubscriptions(_generalTwitchAuth.ChannelId);
+        _TwitchPubSub.ListenToLeaderboards(_generalTwitchAuth.ChannelId);
+        _TwitchPubSub.ListenToPredictions(_generalTwitchAuth.ChannelId);
+        _TwitchPubSub.ListenToRaid(_generalTwitchAuth.ChannelId);
+        _TwitchPubSub.ListenToChannelPoints(_generalTwitchAuth.ChannelId);
+        _TwitchPubSub.ListenToBitsEventsV2(_generalTwitchAuth.ChannelId);
         
     }
 
+    private void OnMessageReceived(object? sender, OnMessageReceivedArgs e)
+    {
+        _GeneralLogger.LogInfo(e.ChatMessage.Message);
+    }
     private void FailureToJoin(object? sender, OnFailureToReceiveJoinConfirmationArgs e)
     {
         _GeneralLogger.LogInfo($"{e.Exception.Channel} - {e.Exception.Details}");
@@ -99,7 +108,7 @@ public class TwitchWebsocketService : IHostedService
     
     private void OnPubSubConnected(object? sender, EventArgs e)
     {
-        _TwitchPubSub.SendTopics(_TwitchAuth.AppToken);
+        _TwitchPubSub.SendTopics(_twitchUserAuth.UserToken);
         _Logger.LogInformation("Pubsub Service Connected");
     }
     
@@ -119,7 +128,7 @@ public class TwitchWebsocketService : IHostedService
                 bool success = _SpotifyCommandHandler.HandleAddSongToQueueCommand(reward.UserInput);
                 string status = success ? "FULFILLED" : "REJECTED";
                  UpdateRedemption(id: e.RewardRedeemed.Redemption.Id, 
-                       broadcasterId: _TwitchAuth.ChannelId,
+                       broadcasterId: _generalTwitchAuth.ChannelId,
                             rewardId: e.RewardRedeemed.Redemption.Reward.Id, 
                               status: status);
                 break;
@@ -135,8 +144,8 @@ public class TwitchWebsocketService : IHostedService
     private async void UpdateRedemption(string id, string broadcasterId, string rewardId, string status)
     {
         using HttpClient client = new HttpClient(); 
-        client.DefaultRequestHeaders.Add("Client-Id", _TwitchAuth.ClientId);
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", $"{_TwitchAuth.UserToken}");
+        client.DefaultRequestHeaders.Add("client-id", _twitchUserAuth.ClientId);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", $"{_twitchUserAuth.UserToken}");
             
         var requestContent = new StringContent($"{{\"status\":\"{status}\"}}", 
             Encoding.UTF8, 

@@ -5,6 +5,7 @@ namespace SpekkieTwitchBot.General.FileHandling;
 public class GeneralFileWriter
 {
     private readonly FileWriter _fileWriter;
+    
     private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
     private const string OutputDir = "/Output/General";
 
@@ -23,7 +24,7 @@ public class GeneralFileWriter
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"an error occured: {ex.Message}");
+            Console.WriteLine($"an error occured writing log text: {ex.Message}");
         }
     }
     

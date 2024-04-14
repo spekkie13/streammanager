@@ -28,6 +28,14 @@ public class TwitchFileReader
 
         return jsonData;
     }
+    
+    public string ReadTwitchGeneralAuthFile()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-General.json";
+        string jsonData = _fileReader.Read(dir);
+
+        return jsonData;
+    }
 
     public string ReadMostRecentFollowerFile()
     {

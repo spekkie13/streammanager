@@ -1,7 +1,7 @@
 ﻿using TwitchLib.Client.Enums.Internal;
 using TwitchLib.Client.Models.Internal;
 
-namespace SpekkieTwitchBot.Twitch.Client;
+namespace SpekkieTwitchBot.Twitch.General;
 
 public class IrcParser
 {
