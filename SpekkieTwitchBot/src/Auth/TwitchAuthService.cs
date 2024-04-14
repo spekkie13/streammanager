@@ -8,9 +8,8 @@ namespace SpekkieTwitchBot.Auth;
 
 public class TwitchAuthService
 {
-    private TwitchAppAuth _twitchAppAuth;
-    private TwitchUserAuth _twitchUserAuth;
-    private GeneralTwitchAuth _twitchGeneralAuth;
+    private TwitchUserAuth? _twitchUserAuth;
+    private GeneralTwitchAuth? _twitchGeneralAuth;
     
     private readonly TwitchFileReader _TwitchFileReader;
     private readonly TwitchFileWriter _TwitchFileWriter;
@@ -37,45 +36,11 @@ public class TwitchAuthService
         return _twitchUserAuth;
     }
 
-    public TwitchAppAuth GetTwitchAppAuth()
-    {
-        string jsonData = _TwitchFileReader.ReadTwitchAppAuthFile();
-        _twitchAppAuth = JsonConvert.DeserializeObject<TwitchAppAuth>(jsonData) ?? new TwitchAppAuth();
-        ClientCredentials authCred = GetClientCredentials(_twitchUserAuth).Result ?? new ClientCredentials();
-        _twitchAppAuth.AppToken = authCred.access_token;
-        return _twitchAppAuth;
-    }
-
     public GeneralTwitchAuth GetGeneralTwitchAuth()
     {
         string jsonData = _TwitchFileReader.ReadTwitchGeneralAuthFile();
         _twitchGeneralAuth = JsonConvert.DeserializeObject<GeneralTwitchAuth>(jsonData) ?? new GeneralTwitchAuth();
         return _twitchGeneralAuth;
-    }
-    
-    private async Task<ClientCredentials?> GetClientCredentials(TwitchUserAuth auth)
-    {
-        using HttpClient client = new HttpClient();
-        var parameters = new FormUrlEncodedContent(new[]
-        {
-            new KeyValuePair<string, string>("client_id", auth.ClientId),
-            new KeyValuePair<string, string>("client_secret", auth.ClientSecret),
-            new KeyValuePair<string, string>("grant_type","client_credentials")
-        });
-
-        var response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
-        if (response.IsSuccessStatusCode)
-        {
-            var responseContent = await response.Content.ReadAsStringAsync();
-            _Logger.LogInfo($"Client credentials acquired: {responseContent}");
-            Console.WriteLine(responseContent);
-
-            ClientCredentials? cred = JsonConvert.DeserializeObject<ClientCredentials>(responseContent);
-            return cred;
-        }
-
-        _Logger.LogError("Error acquiring client credentials");
-        return null;
     }
     
     private async Task<AuthorizationCredentials?> GetUserAccessAuthCredentials(TwitchUserAuth twitchUserAuth)
@@ -97,16 +62,23 @@ public class TwitchAuthService
             case HttpStatusCode.OK:
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _Logger.LogInfo(responseContent);
-                Console.WriteLine($"{responseContent}");
                 AuthorizationCredentials? cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent);
                 return cred;
             case HttpStatusCode.BadRequest:
-                cred = await RefreshAppAccessTokenAsync(_twitchUserAuth.ClientId, _twitchUserAuth.ClientSecret, _twitchUserAuth.UserRefreshToken);
-                return cred;
+                if (!string.IsNullOrEmpty(_twitchUserAuth?.ClientId) &&
+                    !string.IsNullOrEmpty(_twitchUserAuth.ClientSecret) &&
+                    !string.IsNullOrEmpty(_twitchUserAuth.UserRefreshToken))
+                {
+                    cred = await RefreshAppAccessTokenAsync(_twitchUserAuth.ClientId, _twitchUserAuth.ClientSecret, _twitchUserAuth.UserRefreshToken);
+                    return cred;
+                }
+                break;
             default:
                 _Logger.LogError($"Failed to get tokens. Status code: {response.StatusCode}");
                 return null;
         }
+
+        return null;
     }
     
     private async Task<AuthorizationCredentials?> RefreshAppAccessTokenAsync(string clientId, string clientSecret, string refreshToken)
@@ -126,7 +98,6 @@ public class TwitchAuthService
         {
             var responseContent = await response.Content.ReadAsStringAsync();
             _Logger.LogInfo($"Refreshed token successfully: {responseContent}");
-            Console.WriteLine($"{responseContent}");
             return JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent);
         }
 

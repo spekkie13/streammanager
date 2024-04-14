@@ -1,10 +1,7 @@
-﻿using System.Net.Http.Headers;
-using System.Text;
-using SpekkieTwitchBot.Auth;
+﻿using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.Models.Twitch.Auth;
+using SpekkieTwitchBot.Twitch.Events.Handlers;
 using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.Client.Models;
 
@@ -20,16 +17,16 @@ public class GeneralCommandHandler
     private readonly SpotifyCommandHandler _SpotifyCommandHandler;
     private readonly GeneralFileReader _GeneralFileReader;
     private readonly GeneralFileWriter _GeneralFileWriter;
-    private readonly TwitchAuthService _TwitchAuthService;
+    private readonly ChannelPointHandler _ChannelPointHandler;
     
     public GeneralCommandHandler(
         IrcClient ircClient, 
-        TwitchAuthService twitchAuthService,
         GeneralFileReader generalFileReader,
         GeneralFileWriter generalFileWriter,
         TextCommandHandler textCommandHandler, 
         TimerCommandHandler timerCommandHandler, 
-        SpotifyCommandHandler spotifyCommandHandler)
+        SpotifyCommandHandler spotifyCommandHandler,
+        ChannelPointHandler channelPointHandler)
     {
         _IrcClient = ircClient;
         _GeneralFileReader = generalFileReader;
@@ -37,7 +34,7 @@ public class GeneralCommandHandler
         _TextCommandHandler = textCommandHandler;
         _TimerCommandHandler = timerCommandHandler;
         _SpotifyCommandHandler = spotifyCommandHandler;
-        _TwitchAuthService = twitchAuthService;
+        _ChannelPointHandler = channelPointHandler;
     }
     
     public void HandleCommand(ChatCommand command)
@@ -74,7 +71,7 @@ public class GeneralCommandHandler
             { "queue", _SpotifyCommandHandler.HandleGetQueueCommand },
             { "addsong", () => _SpotifyCommandHandler.HandleAddSongToQueueCommand(commandArgs) },
             { "playsong", () => _SpotifyCommandHandler.HandlePlaySpecificSongCommand(commandArgs, username) },
-            { "playsound", () => _SpotifyCommandHandler.PlaySound() },
+            { "playsound", SpotifyCommandHandler.PlaySound },
             { "createredemption", () => HandleCreateRedemptionCommand(commandArgs) }
         };
 
@@ -125,26 +122,6 @@ public class GeneralCommandHandler
 
     private void HandleCreateRedemptionCommand(string commandArgs)
     {
-        string title = commandArgs.Split("|")[0];
-        int cost = Convert.ToInt32(commandArgs.Split("|")[1]);
-        bool isUserInputRequired = true;
-        string prompt = "provide a valid spotify link";
-        const string Url = "https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=30731359";
-        using HttpClient client = new HttpClient();
-        TwitchUserAuth auth = _TwitchAuthService.GetTwitchUserAuth();
-        GeneralTwitchAuth genAuth = _TwitchAuthService.GetGeneralTwitchAuth();
-        
-        client.DefaultRequestHeaders.Add("client-id", auth.ClientId);
-        client.DefaultRequestHeaders.Add("broadcaster_id", genAuth.ChannelId);
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.UserToken);
-        
-        string rewardInfo = $"{{\"title\":\"{title}\",\"cost\":{cost},\"is_user_input_required\":{isUserInputRequired.ToString().ToLower()},\"prompt\":\"{prompt.Substring(0, Math.Min(prompt.Length, 200))}\"}}";
-        var content = new StringContent(rewardInfo, Encoding.UTF8, "application/json");
-
-        var response = client.PostAsync(Url, content).Result;
-
-        Console.WriteLine(response.IsSuccessStatusCode
-            ? "Custom reward created successfully!"
-            : $"Failed to create custom reward. Status code: {response.StatusCode}");
+        _ChannelPointHandler.CreateRedemption(commandArgs);
     }
 }

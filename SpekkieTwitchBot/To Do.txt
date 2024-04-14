@@ -1,5 +1,4 @@
 ﻿CHANNEL POINTS
--> Search for a way to mark redemptions as completed
 -> Refund last redemption for a user with command
 
 FOLLOWERS
@@ -9,6 +8,3 @@ FOLLOWERS
 SUBS
 -> Implement Sub Count & Sub Goal
 -> Implement Most Recent Sub & Most Recent Sub Gift
-
-COMMANDS
--> Create a command to add a new command => impossible...

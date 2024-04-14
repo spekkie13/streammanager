@@ -9,6 +9,7 @@ using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Models;
 using SpekkieTwitchBot.Models.Twitch;
+using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Spotify;
 using SpekkieTwitchBot.Spotify.FileHandling;
 using SpekkieTwitchBot.Twitch.Commands;
@@ -18,7 +19,6 @@ using SpekkieTwitchBot.Twitch.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.EventSub.Websockets.Extensions;
 using SpekkieTwitchBot.Web;
-using TwitchLib.PubSub;
 
 namespace SpekkieTwitchBot;
 public static class Program
@@ -38,6 +38,7 @@ public static class Program
             {
                 services.AddLogging();
                 services.AddTwitchLibEventSubWebsockets();
+                services.AddSingleton<HttpClient>();
                 services.AddSingleton<Logger>();
                 services.AddSingleton<FileSetup>();
                 services.AddSingleton<FileReader>();
@@ -54,21 +55,22 @@ public static class Program
                 services.AddSingleton<GeneralFileReader>();
                 services.AddSingleton<GeneralFileWriter>();
                 services.AddSingleton<GeneralFileSetup>();
-
+                services.AddSingleton<TwitchUserAuth>();
+                
                 services.AddSingleton<CustomClient>();
+                services.AddSingleton<TwitchAuthService>();
+                services.AddSingleton<SpotifyAuthService>();
+                services.AddSingleton<CustomTwitchHttpClient>();
                 services.AddSingleton<SubEventHandler>();
                 services.AddSingleton<FollowEventHandler>();
                 services.AddSingleton<ChannelPointHandler>();
                 
-                services.AddSingleton<TwitchAuthService>();
-                services.AddSingleton<SpotifyAuthService>();
                 services.AddSingleton<OBSWebsocket>();
                 services.AddSingleton<IrcClient>();
                 services.AddSingleton<SpotifyService>();
-                //services.AddSingleton<TwitchClient>();
+
                 services.AddSingleton<CustomTwitchClient>();
                 services.AddSingleton<CustomPubsub>();
-                services.AddSingleton<TwitchPubSub>();
                 services.AddSingleton<EventTimer>();
                 services.AddSingleton<EventTimerService>();
                 services.AddSingleton<SpotifyCommandHandler>();

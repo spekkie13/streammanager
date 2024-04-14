@@ -1,7 +1,6 @@
 ﻿using SpekkieTwitchBot.Spotify;
 using System.Media;
 using System.Runtime.InteropServices;
-using SpekkieTwitchBot.FileHandling;
 using SpekkieTwitchBot.Spotify.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
 
@@ -101,7 +100,7 @@ public class SpotifyCommandHandler
         _IrcClient.SendPublicChatMessage($"current queue: {queue}");
     }
 
-    public void PlaySound()
+    public static void PlaySound()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         const string Path = @"C:\Users\tomsp\OneDrive\Bureaublad\Muziek\Gerenderde Projecten\Future Bounce WIP.wav";

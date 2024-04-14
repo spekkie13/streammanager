@@ -22,4 +22,9 @@ public class FollowEventHandler
 
         _TwitchFileWriter.WriteMostRecentFollowerFile(followerName);
     }
+
+    private async void GetTotalFollowers()
+    {
+        
+    }
 }
