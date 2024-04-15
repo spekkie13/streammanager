@@ -30,7 +30,7 @@ public class SpotifyService : BackgroundService
         
         _SpotifyFileWriter = spotifyFileWriter;
         SpotifyAuth spotifyAuth = authService.GetSpotifyAuth();
-        var tokenResponse = authService.GetSpotifyToken(_Client, spotifyAuth);
+        var tokenResponse = authService.GetSpotifyToken(spotifyAuth);
         _Client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", tokenResponse.AccessToken);
     }
