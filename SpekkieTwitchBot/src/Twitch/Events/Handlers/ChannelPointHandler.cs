@@ -1,24 +1,20 @@
-﻿using System.Net.Http.Headers;
-using System.Text;
+﻿using System.Text;
 using Newtonsoft.Json;
 using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.Models.Twitch.Auth;
-using SpekkieTwitchBot.Web;
-using TwitchLib.PubSub.Models.Responses.Messages.Redemption;
+using SpekkieTwitchBot.Models.Twitch.Events.ChannelPoint;
+using SpekkieTwitchBot.Twitch.General;
 
 namespace SpekkieTwitchBot.Twitch.Events.Handlers;
 
 public class ChannelPointHandler
 {
-    private readonly TwitchUserAuth _TwitchUserAuth;
     private readonly CustomTwitchHttpClient _TwitchHttpClient;
     
     public ChannelPointHandler(
-        TwitchUserAuth twitchUserAuth,
         CustomTwitchHttpClient client)
     {
-        _TwitchUserAuth = twitchUserAuth;
         _TwitchHttpClient = client;
+        var response = GetCustomRedemptions().Result;
     }
     
     public void CreateRedemption(string commandArgs)
@@ -41,18 +37,14 @@ public class ChannelPointHandler
             : $"Failed to create custom reward. Status code: {response.StatusCode}");
     }
 
-    public async Task<List<Redemption>?> GetCustomRedemptions()
+    public async Task<ChannelPointRequest?> GetCustomRedemptions()
     {
-        string url = TwitchConstants.TwitchChannelRedemptionsUrl;
-
-        using HttpClient client = new HttpClient();
-        client.DefaultRequestHeaders.Add("client-id", _TwitchUserAuth.ClientId);
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _TwitchUserAuth.UserToken);
-
-        HttpResponseMessage message = await client.GetAsync(url);
+        string url = $"{TwitchConstants.TwitchChannelRewardsUrl}{TwitchConstants.BroadcasterId}";
+        
+        HttpResponseMessage message = await _TwitchHttpClient.GetAsync(url);
         if (!message.IsSuccessStatusCode) return null;
         string response = await message.Content.ReadAsStringAsync();
-        List<Redemption>? redemptions = JsonConvert.DeserializeObject<List<Redemption>?>(response);
+        ChannelPointRequest? redemptions = JsonConvert.DeserializeObject<ChannelPointRequest?>(response);
         return redemptions;
 
     }

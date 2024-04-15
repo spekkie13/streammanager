@@ -29,8 +29,8 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
     private readonly List<PreviousRequest> _previousRequests = new List<PreviousRequest>();
     private readonly Semaphore _previousRequestsSemaphore = new Semaphore(1, 1);
     private readonly ILogger<CustomPubsub> _logger;
-    private readonly Timer _pingTimer = new Timer();
-    private readonly Timer _pongTimer = new Timer();
+    private readonly System.Timers.Timer _pingTimer = new System.Timers.Timer();
+    private readonly System.Timers.Timer _pongTimer = new System.Timers.Timer();
     private bool _pongReceived;
     private readonly List<string> _topicList = new List<string>();
     private readonly Dictionary<string, string> _topicToChannelId = new Dictionary<string, string>();

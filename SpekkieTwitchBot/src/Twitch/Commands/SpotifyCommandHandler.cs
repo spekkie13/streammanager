@@ -9,18 +9,15 @@ namespace SpekkieTwitchBot.Twitch.Commands;
 public class SpotifyCommandHandler
 {
     private readonly SpotifyService _SpotifyService;
-    private readonly SpotifyFileReader _SpotifyFileReader;
     private readonly SpotifyFileWriter _SpotifyFileWriter;
     private readonly IrcClient _IrcClient;
 
     public SpotifyCommandHandler(
         SpotifyService spotifyService, 
-        SpotifyFileReader spotifyFileReader, 
         SpotifyFileWriter spotifyFileWriter, 
         IrcClient ircClient)
     {
         _SpotifyService = spotifyService;
-        _SpotifyFileReader = spotifyFileReader;
         _SpotifyFileWriter = spotifyFileWriter;
         _IrcClient = ircClient;
     }

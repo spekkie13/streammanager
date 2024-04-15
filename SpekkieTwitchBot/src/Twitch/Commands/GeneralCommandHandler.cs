@@ -1,5 +1,4 @@
-﻿using SpekkieTwitchBot.Auth;
-using SpekkieTwitchBot.Constants;
+﻿using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Twitch.Events.Handlers;
 using SpekkieTwitchBot.Twitch.General;

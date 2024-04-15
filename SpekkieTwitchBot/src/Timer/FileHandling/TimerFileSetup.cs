@@ -1,4 +1,6 @@
-﻿namespace SpekkieTwitchBot.FileHandling.Timer;
+﻿using SpekkieTwitchBot.FileHandling;
+
+namespace SpekkieTwitchBot.Timer.FileHandling;
 
 public class TimerFileSetup
 {

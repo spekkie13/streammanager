@@ -2,9 +2,8 @@
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.Models.Twitch.Events.Subscription;
 using SpekkieTwitchBot.Twitch.FileHandling;
-using SpekkieTwitchBot.Web;
+using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.PubSub.Events;
-using TwitchLib.PubSub.Models.Responses.Messages;
 
 namespace SpekkieTwitchBot.Twitch.Events.Handlers;
 

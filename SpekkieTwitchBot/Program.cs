@@ -4,21 +4,22 @@ using Microsoft.Extensions.Hosting;
 using OBSWebsocketDotNet;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.FileHandling;
-using SpekkieTwitchBot.FileHandling.Timer;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Models;
 using SpekkieTwitchBot.Models.Twitch;
 using SpekkieTwitchBot.Models.Twitch.Auth;
+using SpekkieTwitchBot.OBS;
 using SpekkieTwitchBot.Spotify;
 using SpekkieTwitchBot.Spotify.FileHandling;
+using SpekkieTwitchBot.Timer.FileHandling;
+using SpekkieTwitchBot.Twitch;
 using SpekkieTwitchBot.Twitch.Commands;
 using SpekkieTwitchBot.Twitch.Events;
 using SpekkieTwitchBot.Twitch.Events.Handlers;
 using SpekkieTwitchBot.Twitch.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.EventSub.Websockets.Extensions;
-using SpekkieTwitchBot.Web;
 
 namespace SpekkieTwitchBot;
 public static class Program

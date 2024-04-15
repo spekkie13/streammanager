@@ -1,7 +1,6 @@
-﻿using System.Text;
-using SpekkieTwitchBot.Interfaces;
+﻿using SpekkieTwitchBot.FileHandling;
 
-namespace SpekkieTwitchBot.FileHandling.Timer;
+namespace SpekkieTwitchBot.Timer.FileHandling;
 
 public class TimerFileWriter
 {

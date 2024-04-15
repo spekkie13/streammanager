@@ -1,7 +1,6 @@
 using System.Net.Sockets;
 using Newtonsoft.Json;
 using SpekkieTwitchBot.General;
-using SpekkieTwitchBot.Models.Twitch;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;
 
@@ -13,7 +12,6 @@ public class IrcClient
     private string _Channel;
     private string _OAuth;
 
-    private readonly TcpClient _TcpClient;
     private readonly StreamReader _InputStream;
     private readonly StreamWriter _OutputStream;
     private readonly TwitchFileReader _TwitchFileReader;
@@ -29,9 +27,9 @@ public class IrcClient
 
         FillAuthorizationInfo();
 
-        _TcpClient = new TcpClient("irc.twitch.tv", 6667);
-        _InputStream = new StreamReader(_TcpClient.GetStream());
-        _OutputStream = new StreamWriter(_TcpClient.GetStream());
+        var tcpClient = new TcpClient("irc.twitch.tv", 6667);
+        _InputStream = new StreamReader(tcpClient.GetStream());
+        _OutputStream = new StreamWriter(tcpClient.GetStream());
         
         Setup();
     }
@@ -54,7 +52,7 @@ public class IrcClient
         _OAuth = auth.Implicit_OAuth;
     }
     
-    public void SendIrcMessage(string message)
+    private void SendIrcMessage(string message)
     {
         try
         {

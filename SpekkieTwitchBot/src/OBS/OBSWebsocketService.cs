@@ -7,11 +7,10 @@ using OBSWebsocketDotNet.Communication;
 using OBSWebsocketDotNet.Types;
 using OBSWebsocketDotNet.Types.Events;
 using SpekkieTwitchBot.General;
-using SpekkieTwitchBot.Models.Twitch;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;
 
-namespace SpekkieTwitchBot.Web;
+namespace SpekkieTwitchBot.OBS;
 
 public class ObsWebsocketService : IHostedService
 {

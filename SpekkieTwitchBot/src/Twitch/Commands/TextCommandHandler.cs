@@ -4,7 +4,7 @@ namespace SpekkieTwitchBot.Twitch.Commands;
 
 public class TextCommandHandler
 {
-    private IrcClient _IrcClient;
+    private readonly IrcClient _IrcClient;
 
     public TextCommandHandler(IrcClient ircClient)
     {

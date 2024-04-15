@@ -2,7 +2,7 @@
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 
-namespace SpekkieTwitchBot.Web;
+namespace SpekkieTwitchBot.Twitch.General;
 
 public class CustomTwitchHttpClient
 {

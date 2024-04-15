@@ -1,4 +1,4 @@
-﻿namespace SpekkieTwitchBot.Models.Twitch;
+﻿namespace SpekkieTwitchBot.Models.Twitch.Events.Follower;
 
 public class FollowerData
 {

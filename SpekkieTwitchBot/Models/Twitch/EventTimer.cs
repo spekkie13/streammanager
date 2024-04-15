@@ -1,10 +1,10 @@
-﻿using SpekkieTwitchBot.FileHandling.Timer;
+﻿using SpekkieTwitchBot.Timer.FileHandling;
 
 namespace SpekkieTwitchBot.Models.Twitch;
 
 public class EventTimer
 {
-    public readonly Timer Timer;
+    public readonly System.Threading.Timer Timer;
     private readonly TimerFileWriter _timerFileWriter;
     private TimeSpan _RemainingTime;
 
@@ -12,7 +12,7 @@ public class EventTimer
     {
         _timerFileWriter = timerFileWriter;
         _RemainingTime = new TimeSpan(1,15,15);
-        Timer = new Timer(CountDownTick, null, 1000, 1000);
+        Timer = new System.Threading.Timer(CountDownTick, null, 1000, 1000);
     }
 
     private void CountDownTick(object? state)
