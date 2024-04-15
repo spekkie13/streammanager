@@ -1,10 +1,2 @@
 ﻿CHANNEL POINTS
 -> Refund last redemption for a user with command
-
-FOLLOWERS
--> Implement Follower Count & Follower Goal
--> Implement Most Recent Follower
-
-SUBS
--> Implement Sub Count & Sub Goal
--> Implement Most Recent Sub & Most Recent Sub Gift

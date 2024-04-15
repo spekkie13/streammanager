@@ -9,4 +9,5 @@ public static class TwitchConstants
         "https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions";
 
     public static string TwitchFollowersUrl => "https://api.twitch.tv/helix/channels/followers";
+    public static string TwitchSubscribersUrl => "https://api.twitch.tv/helix/subscriptions";
 }

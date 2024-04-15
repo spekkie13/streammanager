@@ -5,6 +5,7 @@ namespace SpekkieTwitchBot.Twitch.FileHandling;
 public class TwitchFileWriter
 {
     private readonly FileWriter _fileWriter;
+    
     private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
     private const string OutputDir = "/Output/Twitch";
 
@@ -23,6 +24,25 @@ public class TwitchFileWriter
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentFollower.txt";
         
+        _fileWriter.Write(dir, text);
+    }
+
+    public void WriteTotalFollowersFile(string text)
+    {
+        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalFollowers.txt";
+        _fileWriter.Write(dir, text);
+    }
+    
+    public void WriteMostRecentSubscriberFile(string text)
+    {
+        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentSubscriber.txt";
+        
+        _fileWriter.Write(dir, text);
+    }
+
+    public void WriteTotalSubscribersFile(string text)
+    {
+        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalSubscribers.txt";
         _fileWriter.Write(dir, text);
     }
 }

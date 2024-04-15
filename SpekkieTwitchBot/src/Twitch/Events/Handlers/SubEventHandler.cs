@@ -1,33 +1,38 @@
-﻿using TwitchLib.PubSub.Events;
+﻿using Newtonsoft.Json;
+using SpekkieTwitchBot.Constants;
+using SpekkieTwitchBot.Models.Twitch.Events.Subscription;
+using SpekkieTwitchBot.Twitch.FileHandling;
+using SpekkieTwitchBot.Web;
+using TwitchLib.PubSub.Events;
 using TwitchLib.PubSub.Models.Responses.Messages;
 
 namespace SpekkieTwitchBot.Twitch.Events.Handlers;
 
 public class SubEventHandler
 {
+    private readonly TwitchFileWriter _TwitchFileWriter;
+    private readonly CustomTwitchHttpClient _TwitchHttpClient;
+
+    public SubEventHandler(TwitchFileWriter twitchFileWriter, CustomTwitchHttpClient client)
+    {
+        _TwitchHttpClient = client;
+        _TwitchFileWriter = twitchFileWriter;
+        UpdateSubscriberInfo();
+    }
+
     public void HandleSub(object? sender, OnChannelSubscriptionArgs e)
     {
-        ChannelSubscription subscription = e.Subscription;
-        if(!string.IsNullOrEmpty(subscription.RecipientName))
-            HandleGiftedSub(e.Subscription);
-        else
-            HandleSelfSub(e.Subscription);
+        UpdateSubscriberInfo();
     }
-
-    private void HandleSelfSub(ChannelSubscription subscription)
+    
+    private async void UpdateSubscriberInfo()
     {
-        /* sub name => sub file
-         * sub counter++
-         * 
-         */
-    }
+        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
+        HttpResponseMessage message = await _TwitchHttpClient.GetAsync(url);
 
-    private void HandleGiftedSub(ChannelSubscription subscription)
-    {
-        /* sub name => sub file
-         * sub gifter name => gifter file
-         * sub counter ++
-         * 
-         */
+        string response = await message.Content.ReadAsStringAsync();
+        SubscriptionRequest? req = JsonConvert.DeserializeObject<SubscriptionRequest>(response);
+        _TwitchFileWriter.WriteTotalSubscribersFile(req?.total.ToString() ?? "0");
+        _TwitchFileWriter.WriteMostRecentSubscriberFile(req?.data[0].user_name ?? "N/A");
     }
 }
