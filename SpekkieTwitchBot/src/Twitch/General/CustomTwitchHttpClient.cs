@@ -26,7 +26,6 @@ public class CustomTwitchHttpClient
         _Client.DefaultRequestHeaders.Add("client-id", auth.ClientId);
         _Client.DefaultRequestHeaders.Add("broadcaster_id", genAuth.ChannelId);
         _Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.UserToken);
-
     }
 
     public async Task<HttpResponseMessage> GetAsync(string url)

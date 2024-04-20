@@ -39,4 +39,10 @@ public class SpotifyFileWriter
             Console.WriteLine($"Error writing to the file: {ex.Message}");
         }
     }
+    
+    public void WriteSpotifyAuthFile(string text)
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Spotify.json";
+        _fileWriter.Write(dir, text);
+    }
 }

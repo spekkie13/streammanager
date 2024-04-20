@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using SpekkieTwitchBot.Models.Twitch;
 
-namespace SpekkieTwitchBot.Models;
+namespace SpekkieTwitchBot.Timer;
 
 public sealed class EventTimerService : IHostedService
 {

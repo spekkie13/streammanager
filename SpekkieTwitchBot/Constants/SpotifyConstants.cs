@@ -10,4 +10,5 @@ public static class SpotifyConstants
     public static string AddToQueueUrl => "https://api.spotify.com/v1/me/player/queue?uri=";
     public static string GetQueueUrl => "https://api.spotify.com/v1/me/player/queue";
     public static string TokenUrl => "https://accounts.spotify.com/api/token";
+    public static string SpotifySearchUrl => "https://api.spotify.com/v1/search?q=";
 }

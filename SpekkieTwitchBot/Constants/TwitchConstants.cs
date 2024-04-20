@@ -6,7 +6,7 @@ public static class TwitchConstants
     public static string ChannelName => "spekkie1313";
     public static string BroadcasterId => "30731359";
     public static string TwitchChannelRedemptionsUrl =>
-        "https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions";
+        "https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=";
 
     public static string TwitchChannelRewardsUrl => "https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=";
     public static string TwitchFollowersUrl => "https://api.twitch.tv/helix/channels/followers";

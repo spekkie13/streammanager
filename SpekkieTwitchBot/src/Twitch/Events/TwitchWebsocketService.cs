@@ -105,7 +105,7 @@ public class TwitchWebsocketService : IHostedService
     
     private void FailureToJoin(object? sender, OnFailureToReceiveJoinConfirmationArgs e)
     {
-        _GeneralLogger.LogInfo($"{e.Exception.Channel} - {e.Exception.Details}");
+        _GeneralLogger.LogInfo($"Failed to join: {e.Exception.Channel} - {e.Exception.Details}");
     }
     
     private void OnPubSubConnected(object? sender, EventArgs e)
@@ -118,7 +118,7 @@ public class TwitchWebsocketService : IHostedService
     {
         _GeneralLogger.LogInfo(e.Successful
             ? $"Successfully listening to: {e.Topic}"
-            : $"Failed to listen! Error: {e.Response.Error}");
+            : $"Failed to listen to {e.Topic}! Error: {e.Response.Error}");
     }
     
     private void OnChannelPointsRewardRedeemed(object? sender, OnChannelPointsRewardRedeemedArgs e)
@@ -128,13 +128,10 @@ public class TwitchWebsocketService : IHostedService
         {
             case "Song Request":
                 bool success = _SpotifyCommandHandler.HandleAddSongToQueueCommand(reward.UserInput);
-                string status = success ? "FULFILLED" : "REJECTED";
-                HttpResponseMessage message = 
-                    _ChannelPointHandler.UpdateRedemptionStatus(
-                               id: e.RewardRedeemed.Redemption.Id, 
-                    broadcasterId: _generalTwitchAuth.ChannelId, 
-                         rewardId: e.RewardRedeemed.Redemption.Reward.Id, 
-                           status: status).Result;
+                HttpResponseMessage message = _ChannelPointHandler.HandleSongRedemption(
+                         success: success, 
+                    redemptionId: e.RewardRedeemed.Redemption.Id, 
+                        rewardId: e.RewardRedeemed.Redemption.Reward.Id);
                 _GeneralLogger.LogInfo(message.ToString());
                 break;
         }

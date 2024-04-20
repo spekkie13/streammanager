@@ -6,6 +6,7 @@ using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Spotify;
+using SpekkieTwitchBot.Models.Spotify.Song;
 using SpekkieTwitchBot.Spotify.FileHandling;
 using SpotifyAPI.Web;
 
@@ -30,7 +31,7 @@ public class SpotifyService : BackgroundService
         
         _SpotifyFileWriter = spotifyFileWriter;
         SpotifyAuth spotifyAuth = authService.GetSpotifyAuth();
-        var tokenResponse = authService.GetSpotifyToken(spotifyAuth);
+        var tokenResponse = authService.GetSpotifyToken(_Client, spotifyAuth);
         _Client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", tokenResponse.AccessToken);
     }
@@ -124,12 +125,18 @@ public class SpotifyService : BackgroundService
 
     public async Task<bool> AddSongToQueue(string songUri)
     {
-        string[] songParts = songUri.Split('/');
-        int lastIndex = songParts.Last().IndexOf("?", StringComparison.Ordinal);
-        string songId = $"spotify:track:{songParts.Last()[..lastIndex]}";
-
+        string songId;
+        if (!songUri.StartsWith("spotify:track:"))
+        {
+            string[] songParts = songUri.Split('/');
+            int lastIndex = songParts.Last().IndexOf("?", StringComparison.Ordinal);
+            songId = $"spotify:track:{songParts.Last()[..lastIndex]}";
+        }
+        else
+            songId = songUri;
+        
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{SpotifyConstants.AddToQueueUrl}{songId}");
-
+        
         var response = await _Client.SendAsync(request);
 
         if (response.IsSuccessStatusCode)
@@ -203,5 +210,17 @@ public class SpotifyService : BackgroundService
         var json = myStreamReader.ReadToEnd();
 
         return json;
+    }
+    
+    public Tracks? GetSongsByName(string songName, string artist = "")
+    {
+        string url = string.IsNullOrEmpty(artist) ? 
+            $"{SpotifyConstants.SpotifySearchUrl}remaster%2520track%3A{songName}&type=track" : 
+            $"{SpotifyConstants.SpotifySearchUrl}remaster%2520track%3A{songName}%2520artist%3A{artist}&type=track";
+        
+        string result = GetData(url);
+        SongResponse? response = JsonConvert.DeserializeObject<SongResponse>(result);
+        
+        return response?.tracks;
     }
 }

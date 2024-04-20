@@ -6,14 +6,13 @@ using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.FileHandling;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.Models;
 using SpekkieTwitchBot.Models.Twitch;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.OBS;
 using SpekkieTwitchBot.Spotify;
 using SpekkieTwitchBot.Spotify.FileHandling;
+using SpekkieTwitchBot.Timer;
 using SpekkieTwitchBot.Timer.FileHandling;
-using SpekkieTwitchBot.Twitch;
 using SpekkieTwitchBot.Twitch.Commands;
 using SpekkieTwitchBot.Twitch.Events;
 using SpekkieTwitchBot.Twitch.Events.Handlers;
@@ -59,13 +58,14 @@ public static class Program
                 services.AddSingleton<TwitchUserAuth>();
                 
                 services.AddSingleton<CustomClient>();
+
                 services.AddSingleton<TwitchAuthService>();
                 services.AddSingleton<SpotifyAuthService>();
                 services.AddSingleton<CustomTwitchHttpClient>();
                 services.AddSingleton<SubEventHandler>();
                 services.AddSingleton<FollowEventHandler>();
                 services.AddSingleton<ChannelPointHandler>();
-                
+                services.AddSingleton<SpotifySearchService>();
                 services.AddSingleton<OBSWebsocket>();
                 services.AddSingleton<IrcClient>();
                 services.AddSingleton<SpotifyService>();

@@ -9,16 +9,19 @@ namespace SpekkieTwitchBot.Twitch.Commands;
 public class SpotifyCommandHandler
 {
     private readonly SpotifyService _SpotifyService;
+    private readonly SpotifySearchService _SpotifySearchService;
     private readonly SpotifyFileWriter _SpotifyFileWriter;
     private readonly IrcClient _IrcClient;
 
     public SpotifyCommandHandler(
         SpotifyService spotifyService, 
         SpotifyFileWriter spotifyFileWriter, 
+        SpotifySearchService spotifySearchService, 
         IrcClient ircClient)
     {
         _SpotifyService = spotifyService;
         _SpotifyFileWriter = spotifyFileWriter;
+        _SpotifySearchService = spotifySearchService;
         _IrcClient = ircClient;
     }
     
@@ -70,11 +73,24 @@ public class SpotifyCommandHandler
             : "Failed to skip to the previous song...");
     }
 
-    public bool HandleAddSongToQueueCommand(string song)
+    public bool HandleAddSongToQueueCommand(string songData)
     {
-        if (song.Contains("open.spotify.com"))
+        bool success;
+        if (songData.Split(" ").Length == 2)
         {
-            bool success = _SpotifyService.AddSongToQueue(song).Result;
+            var song = _SpotifySearchService.GetSongsByName(songData.Split(" ")[0], songData.Split(" ")[1]).Result;
+            if (song?.items.Count > 0)
+            {
+                string uri = song.items[0].uri;
+                success = _SpotifyService.AddSongToQueue(uri).Result;
+                string message = success ? "Added song to the queue..." : "Could not add song to the queue...";
+                _IrcClient.SendPublicChatMessage(message);
+                return success;
+            }
+        }
+        else if (songData.Contains("open.spotify.com"))
+        {
+            success = _SpotifyService.AddSongToQueue(songData).Result;
             string message = success ? "Added song to the queue..." : "Could not add song to the queue...";
             _IrcClient.SendPublicChatMessage(message);
             return success;

@@ -1,2 +1,7 @@
 ﻿CHANNEL POINTS
 -> Refund last redemption for a user with command
+-> Auto refund song request when not provided with a valid spotify link
+-> Expand song request to support search by name & artist
+
+SPOTIFY
+-> Use /search endpoint to check song request input to determine artist & song name so order of submitting does not matter
