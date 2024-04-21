@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.Models.Spotify;
+using SpekkieTwitchBot.Models.Spotify.Auth;
 using SpekkieTwitchBot.Models.Spotify.Song;
 
 namespace SpekkieTwitchBot.Spotify;

@@ -133,7 +133,6 @@ C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\S
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Debug\net6.0\SpotifyAPI.Web.Auth.xml
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Debug\net6.0\SpotifyAPI.Web.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Debug\net6.0\SpotifyAPI.Web.xml
-C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Debug\net6.0\obs-websocket-dotnet.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Debug\net6.0\System.Reactive.xml
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\obj\Debug\net6.0\SpekkieTwitchBot.csproj.AssemblyReference.cache
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\obj\Debug\net6.0\SpekkieTwitchBot.GeneratedMSBuildEditorConfig.editorconfig

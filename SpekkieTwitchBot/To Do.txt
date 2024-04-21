@@ -5,3 +5,8 @@
 
 SPOTIFY
 -> Use /search endpoint to check song request input to determine artist & song name so order of submitting does not matter
+
+text commands in db?
+text commands for scene switching OBS
+remove dependencies on external projects
+expand song request to incorporate YT & Soundcloud

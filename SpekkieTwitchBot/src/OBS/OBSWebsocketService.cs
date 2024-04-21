@@ -2,11 +2,11 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using OBSWebsocketDotNet;
-using OBSWebsocketDotNet.Communication;
-using OBSWebsocketDotNet.Types;
-using OBSWebsocketDotNet.Types.Events;
+using SpekkieTwitchBot.Models.OBS.Types;
 using SpekkieTwitchBot.General;
+using SpekkieTwitchBot.Models.OBS.Communication;
+using SpekkieTwitchBot.Models.OBS.Enum;
+using SpekkieTwitchBot.Models.OBS.Events;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;
 
@@ -17,7 +17,7 @@ public class ObsWebsocketService : IHostedService
     private readonly IConfiguration _Configuration;
     private readonly ILogger<ObsWebsocketService> _Logger;
     private readonly Logger _GeneralLogger;
-    private readonly OBSWebsocket _Socket;
+    private readonly CustomObsWebsocket _Socket;
     private readonly CancellationTokenSource _KeepAliveTokenSource;
     private const int KeepAliveInterval = 500;
     private readonly string _Url;
@@ -27,7 +27,7 @@ public class ObsWebsocketService : IHostedService
         IConfiguration configuration, 
         ILogger<ObsWebsocketService> logger, 
         Logger generalLogger,
-        OBSWebsocket socket,
+        CustomObsWebsocket socket,
         TwitchFileReader twitchFileReader)
     {
         string jsonData = twitchFileReader.ReadTwitchGeneralAuthFile();
@@ -54,7 +54,7 @@ public class ObsWebsocketService : IHostedService
         OutputStatus streamStatus = _Socket.GetStreamStatus();
         OnStreamStateChanged(_Socket,
             streamStatus.IsActive
-                ? new StreamStateChangedEventArgs(new OutputStateChanged()
+                ? new StreamStateChangedEventArgs(new OutputStateChanged
                     { IsActive = true, StateStr = nameof(OutputState.OBS_WEBSOCKET_OUTPUT_STARTED) })
                 : new StreamStateChangedEventArgs(new OutputStateChanged()
                     { IsActive = true, StateStr = nameof(OutputState.OBS_WEBSOCKET_OUTPUT_STOPPED) }));

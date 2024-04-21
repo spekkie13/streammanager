@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using OBSWebsocketDotNet;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.FileHandling;
 using SpekkieTwitchBot.General;
@@ -66,7 +65,7 @@ public static class Program
                 services.AddSingleton<FollowEventHandler>();
                 services.AddSingleton<ChannelPointHandler>();
                 services.AddSingleton<SpotifySearchService>();
-                services.AddSingleton<OBSWebsocket>();
+                services.AddSingleton<CustomObsWebsocket>();
                 services.AddSingleton<IrcClient>();
                 services.AddSingleton<SpotifyService>();
 

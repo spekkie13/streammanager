@@ -20,10 +20,4 @@
     <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\..\source\repos\SpotifyAPI-NET\SpotifyAPI.Web.Auth\SpotifyAPI.Web.Auth.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\..\source\repos\SpotifyAPI-NET\SpotifyAPI.Web\SpotifyAPI.Web.csproj" />
-    <ProjectReference Include="..\..\..\OBS-websocket-test\obs-websocket-dotnet\obs-websocket-dotnet.csproj" />
-  </ItemGroup>
-
 </Project>

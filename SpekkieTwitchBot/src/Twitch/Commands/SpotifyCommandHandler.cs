@@ -76,9 +76,11 @@ public class SpotifyCommandHandler
     public bool HandleAddSongToQueueCommand(string songData)
     {
         bool success;
-        if (songData.Split(" ").Length == 2)
+        if (songData.Split("|").Length == 2)
         {
-            var song = _SpotifySearchService.GetSongsByName(songData.Split(" ")[0], songData.Split(" ")[1]).Result;
+            string title = songData.Split("|")[0];
+            string artist = songData.Split("|")[1];
+            var song = _SpotifySearchService.GetSongsByName(title, artist).Result;
             if (song?.items.Count > 0)
             {
                 string uri = song.items[0].uri;

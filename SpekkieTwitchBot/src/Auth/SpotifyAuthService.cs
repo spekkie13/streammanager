@@ -2,8 +2,9 @@
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Spotify;
+using SpekkieTwitchBot.Models.Spotify.Auth;
 using SpekkieTwitchBot.Spotify.FileHandling;
-using SpotifyAPI.Web;
+using AuthorizationCodeTokenResponse = SpekkieTwitchBot.Models.Spotify.Auth.AuthorizationCodeTokenReponse;
 
 namespace SpekkieTwitchBot.Auth;
 
@@ -11,15 +12,12 @@ public class SpotifyAuthService
 {
     private static SpotifyAuth? _SpotifyAuth;
     private readonly SpotifyFileReader _SpotifyFileReader;
-    private readonly SpotifyFileWriter _SpotifyFileWriter;
     private readonly Logger _Logger;
     
     public SpotifyAuthService(
-        SpotifyFileWriter spotifyFileWriter,
         SpotifyFileReader spotifyFileReader,
         Logger logger)
     {
-        _SpotifyFileWriter = spotifyFileWriter;
         _SpotifyFileReader = spotifyFileReader;
         _Logger = logger;
     }

@@ -6,9 +6,9 @@ using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Spotify;
+using SpekkieTwitchBot.Models.Spotify.Auth;
 using SpekkieTwitchBot.Models.Spotify.Song;
 using SpekkieTwitchBot.Spotify.FileHandling;
-using SpotifyAPI.Web;
 
 namespace SpekkieTwitchBot.Spotify;
 
@@ -148,9 +148,9 @@ public class SpotifyService : BackgroundService
 
     private void UpdateSongImg(CurrentlyPlaying? currentlyPlaying)
     {
-        FullTrack? currentSong = (FullTrack?) currentlyPlaying?.Item;
-        if (currentSong == null) return;
-        string url = $"{currentSong.Album.Images.First().Url}";
+        if (currentlyPlaying == null) return;
+        FullTrack currentSong = (FullTrack) currentlyPlaying.Item;
+        string url = $"{currentSong.Album.Images.First().url}";
         var imageBytes = _Client.GetByteArrayAsync(url).Result;
         _SpotifyFileWriter.WriteCurrentSongImage(imageBytes);
     }
