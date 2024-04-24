@@ -1893,6 +1893,20 @@
             "related": ".xml"
           }
         }
+      },
+      "SpekkieClassLibrary/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v6.0",
+        "dependencies": {
+          "TwitchLib": "3.5.3",
+          "Websocket.Client": "4.4.43"
+        },
+        "compile": {
+          "bin/placeholder/SpekkieClassLibrary.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SpekkieClassLibrary.dll": {}
+        }
       }
     }
   },
@@ -6739,6 +6753,11 @@
         "websocketsharp-netstandard.1.0.1.nupkg.sha512",
         "websocketsharp-netstandard.nuspec"
       ]
+    },
+    "SpekkieClassLibrary/1.0.0": {
+      "type": "project",
+      "path": "../SpekkieClassLibrary/SpekkieClassLibrary.csproj",
+      "msbuildProject": "../SpekkieClassLibrary/SpekkieClassLibrary.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -6746,6 +6765,7 @@
       "Microsoft.Extensions.Configuration >= 8.0.0",
       "Microsoft.Extensions.Hosting >= 8.0.0",
       "SharpPcap >= 6.3.0",
+      "SpekkieClassLibrary >= 1.0.0",
       "System.Windows.Extensions >= 8.0.0",
       "TwitchLib >= 3.5.3",
       "TwitchLib.Client >= 3.3.1",
@@ -6787,7 +6807,11 @@
       "frameworks": {
         "net6.0": {
           "targetAlias": "net6.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieClassLibrary\\SpekkieClassLibrary.csproj": {
+              "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieClassLibrary\\SpekkieClassLibrary.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

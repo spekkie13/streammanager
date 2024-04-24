@@ -1,0 +1,79 @@
+﻿using Newtonsoft.Json.Linq;
+using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
+using SpekkieClassLibrary.Twitch.Pubsub.Enums;
+using TwitchLib.PubSub.Common;
+
+namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
+
+public class ChannelSubscription : MessageData
+{
+    public string Username { get; }
+    public string DisplayName { get; }
+    public string RecipientName { get; }
+    public string RecipientDisplayName { get; }
+    public string ChannelName { get; }
+    public string UserId { get; }
+    public string ChannelId { get; }
+    public string RecipientId { get; }
+    public DateTime Time { get; }
+    public SubscriptionPlan SubscriptionPlan { get; }
+    public string SubscriptionPlanName { get; }
+    public int? Months { get; }
+    public int? CumulativeMonths { get; }
+    public int? StreakMonths { get; }
+    public string Context { get; }
+    public SubMessage SubMessage { get; }
+    public bool? IsGift { get; }
+    public int? MultiMonthDuration { get; }
+
+    public ChannelSubscription(string jsonStr)
+    {
+        JObject jobject = JObject.Parse(jsonStr);
+        Username = ((object)jobject.SelectToken("user_name"))?.ToString();
+        DisplayName = ((object)jobject.SelectToken("display_name"))?.ToString();
+        RecipientName = ((object)jobject.SelectToken("recipient_user_name"))?.ToString();
+        RecipientDisplayName = ((object)jobject.SelectToken("recipient_display_name"))?.ToString();
+        ChannelName = ((object)jobject.SelectToken("channel_name"))?.ToString();
+        UserId = ((object)jobject.SelectToken("user_id"))?.ToString();
+        RecipientId = ((object)jobject.SelectToken("recipient_id"))?.ToString();
+        ChannelId = ((object)jobject.SelectToken("channel_id"))?.ToString();
+        Time = Helpers.DateTimeStringToObject(((object)jobject.SelectToken("time"))?.ToString());
+        switch (((object)jobject.SelectToken("sub_plan")).ToString().ToLower())
+        {
+            case "prime":
+                SubscriptionPlan = SubscriptionPlan.Prime;
+                break;
+            case "1000":
+                SubscriptionPlan = SubscriptionPlan.Tier1;
+                break;
+            case "2000":
+                SubscriptionPlan = SubscriptionPlan.Tier2;
+                break;
+            case "3000":
+                SubscriptionPlan = SubscriptionPlan.Tier3;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        SubscriptionPlanName = ((object)jobject.SelectToken("sub_plan_name"))?.ToString();
+        SubMessage = new SubMessage(jobject.SelectToken("sub_message"));
+        string str1 = ((object)jobject.SelectToken("is_gift"))?.ToString();
+        if (str1 != null)
+            IsGift = Convert.ToBoolean(str1);
+        string str2 = ((object)jobject.SelectToken("multi_month_duration"))?.ToString();
+        if (str2 != null)
+            MultiMonthDuration = int.Parse(str2);
+        Context = ((object)jobject.SelectToken("context"))?.ToString();
+        JToken jtoken1 = jobject.SelectToken("months");
+        if (jtoken1 != null)
+            Months = int.Parse(jtoken1.ToString());
+        JToken jtoken2 = jobject.SelectToken("cumulative_months");
+        if (jtoken2 != null)
+            CumulativeMonths = int.Parse(jtoken2.ToString());
+        JToken jtoken3 = jobject.SelectToken("streak_months");
+        if (jtoken3 == null)
+            return;
+        StreakMonths = int.Parse(jtoken3.ToString());
+    }
+}

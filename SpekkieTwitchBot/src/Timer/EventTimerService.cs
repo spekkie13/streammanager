@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Hosting;
-using SpekkieTwitchBot.Models.Twitch;
 
 namespace SpekkieTwitchBot.Timer;
 

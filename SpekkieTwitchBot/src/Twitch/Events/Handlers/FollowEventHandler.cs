@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
+using SpekkieClassLibrary.Twitch.Events.Follower;
 using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.Models.Twitch;
-using SpekkieTwitchBot.Models.Twitch.Events.Follower;
 using SpekkieTwitchBot.Twitch.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.PubSub.Events;
@@ -42,6 +41,6 @@ public class FollowEventHandler
         string response = await message.Content.ReadAsStringAsync();
         FollowerRequest? req = JsonConvert.DeserializeObject<FollowerRequest>(response);
         _TwitchFileWriter.WriteTotalFollowersFile(req?.Total.ToString() ?? "0");
-        _TwitchFileWriter.WriteMostRecentFollowerFile(req?.Data[0].user_name ?? "N/A");
+        _TwitchFileWriter.WriteMostRecentFollowerFile(req?.Data[0].UserName ?? "N/A");
     }
 }

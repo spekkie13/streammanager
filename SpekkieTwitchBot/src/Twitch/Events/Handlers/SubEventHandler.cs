@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json;
+using SpekkieClassLibrary.Twitch.Events.Subscription;
 using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.Models.Twitch.Events.Subscription;
 using SpekkieTwitchBot.Twitch.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
-using TwitchLib.PubSub.Events;
+using OnChannelSubscriptionArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnChannelSubscriptionArgs;
 
 namespace SpekkieTwitchBot.Twitch.Events.Handlers;
 
@@ -31,7 +31,7 @@ public class SubEventHandler
 
         string response = await message.Content.ReadAsStringAsync();
         SubscriptionRequest? req = JsonConvert.DeserializeObject<SubscriptionRequest>(response);
-        _TwitchFileWriter.WriteTotalSubscribersFile(req?.total.ToString() ?? "0");
-        _TwitchFileWriter.WriteMostRecentSubscriberFile(req?.data[0].user_name ?? "N/A");
+        _TwitchFileWriter.WriteTotalSubscribersFile(req?.Total.ToString() ?? "0");
+        _TwitchFileWriter.WriteMostRecentSubscriberFile(req?.Data?[0].UserName ?? "N/A");
     }
 }

@@ -1,0 +1,23 @@
+﻿using Newtonsoft.Json.Linq;
+using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
+
+namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
+
+public class Following : MessageData
+{
+    public string? DisplayName { get; }
+
+    public string? Username { get; }
+
+    public string? UserId { get; }
+
+    public string? FollowedChannelId { get; set; }
+
+    public Following(string jsonStr)
+    {
+        JObject jobject = JObject.Parse(jsonStr);
+        DisplayName = jobject["display_name"]?.ToString();
+        Username = jobject["username"]?.ToString();
+        UserId = jobject["user_id"]?.ToString();
+    }
+}

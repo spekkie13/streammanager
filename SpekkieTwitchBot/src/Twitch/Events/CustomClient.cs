@@ -1,5 +1,6 @@
 ﻿#nullable disable
 using System.Net.Security;
+using System.Net.Sockets;
 using TwitchLib.Communication.Events;
 using TwitchLib.Communication.Interfaces;
 using TwitchLib.Communication.Models;
@@ -30,7 +31,7 @@ public class CustomClient : IClient
     {
         get
         {
-            System.Net.Sockets.TcpClient client = Client;
+            TcpClient client = Client;
             return client is { Connected: true };
         }
     }
@@ -69,7 +70,7 @@ public class CustomClient : IClient
         }
     }
 
-    private System.Net.Sockets.TcpClient Client { get; set; }
+    private TcpClient Client { get; set; }
 
     public CustomClient(IClientOptions options = null)
     {
@@ -83,7 +84,7 @@ public class CustomClient : IClient
 
     private void InitializeClient()
     {
-        Client = new System.Net.Sockets.TcpClient();
+        Client = new TcpClient();
         if (_monitorTask == null)
         {
             _monitorTask = StartMonitorTask();

@@ -2,13 +2,14 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using SpekkieTwitchBot.Models.OBS.Types;
-using SpekkieTwitchBot.General;
-using SpekkieTwitchBot.Models.OBS.Communication;
-using SpekkieTwitchBot.Models.OBS.Enum;
-using SpekkieTwitchBot.Models.OBS.Events;
+using SpekkieClassLibrary.OBS.Communication;
+using SpekkieClassLibrary.OBS.Enum;
+using SpekkieClassLibrary.OBS.Events;
+using SpekkieClassLibrary.OBS.Types;
+using SpekkieClassLibrary.Twitch.Auth;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;
+using Logger = SpekkieTwitchBot.General.Logger;
 
 namespace SpekkieTwitchBot.OBS;
 
@@ -55,25 +56,20 @@ public class ObsWebsocketService : IHostedService
         OnStreamStateChanged(_Socket,
             streamStatus.IsActive
                 ? new StreamStateChangedEventArgs(new OutputStateChanged
-                    { IsActive = true, StateStr = nameof(OutputState.OBS_WEBSOCKET_OUTPUT_STARTED) })
-                : new StreamStateChangedEventArgs(new OutputStateChanged()
-                    { IsActive = true, StateStr = nameof(OutputState.OBS_WEBSOCKET_OUTPUT_STOPPED) }));
+                    { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStarted) })
+                : new StreamStateChangedEventArgs(new OutputStateChanged { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStopped) }));
 
         RecordingStatus recordStatus = _Socket.GetRecordStatus();
         OnRecordStateChanged(_Socket,
             streamStatus.IsActive
-                ? new RecordStateChangedEventArgs(new RecordStateChanged()
-                    { IsActive = true, StateStr = nameof(OutputState.OBS_WEBSOCKET_OUTPUT_STARTED) })
-                : new RecordStateChangedEventArgs(new RecordStateChanged()
-                    { IsActive = true, StateStr = nameof(OutputState.OBS_WEBSOCKET_OUTPUT_STOPPED) }));
+                ? new RecordStateChangedEventArgs(new RecordStateChanged { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStarted) })
+                : new RecordStateChangedEventArgs(new RecordStateChanged { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStopped) }));
 
         VirtualCamStatus camStatus = _Socket.GetVirtualCamStatus();
         OnVirtualCamStateChanged(_Socket,
             streamStatus.IsActive
-                ? new VirtualcamStateChangedEventArgs(new OutputStateChanged()
-                    { IsActive = true, StateStr = nameof(OutputState.OBS_WEBSOCKET_OUTPUT_STARTED) })
-                : new VirtualcamStateChangedEventArgs(new OutputStateChanged()
-                    { IsActive = true, StateStr = nameof(OutputState.OBS_WEBSOCKET_OUTPUT_STOPPED) }));
+                ? new VirtualcamStateChangedEventArgs(new OutputStateChanged { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStarted) })
+                : new VirtualcamStateChangedEventArgs(new OutputStateChanged { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStopped) }));
 
         CancellationToken keepAliveToken = _KeepAliveTokenSource.Token;
         Task statPollKeepAlive = Task.Factory.StartNew(() =>
@@ -94,7 +90,7 @@ public class ObsWebsocketService : IHostedService
 
         if(e.ObsCloseCode == ObsCloseCodes.AuthenticationFailed)
         {
-            _GeneralLogger.LogError($"Authentication Failed");
+            _GeneralLogger.LogError("Authentication Failed");
         }
         else if(e.WebsocketDisconnectionInfo != null)
             if (e.WebsocketDisconnectionInfo.Exception != null)
@@ -119,10 +115,10 @@ public class ObsWebsocketService : IHostedService
     {
         string state = args.OutputState.State switch
         {
-            OutputState.OBS_WEBSOCKET_OUTPUT_STARTING => "Stream starting...",
-            OutputState.OBS_WEBSOCKET_OUTPUT_STARTED => "Stream started...",
-            OutputState.OBS_WEBSOCKET_OUTPUT_STOPPING => "Stream stopping...",
-            OutputState.OBS_WEBSOCKET_OUTPUT_STOPPED => "Stream stopped...",
+            OutputState.ObsWebsocketOutputStarting => "Stream starting...",
+            OutputState.ObsWebsocketOutputStarted => "Stream started...",
+            OutputState.ObsWebsocketOutputStopping => "Stream stopping...",
+            OutputState.ObsWebsocketOutputStopped => "Stream stopped...",
             _ => "State unknown...",
         };
         _GeneralLogger.LogInfo($"Stream state changed to: {state}");
@@ -132,11 +128,11 @@ public class ObsWebsocketService : IHostedService
     {
         string state = args.OutputState.State switch
         {
-            OutputState.OBS_WEBSOCKET_OUTPUT_STARTING => "Recording starting...",
-            OutputState.OBS_WEBSOCKET_OUTPUT_STARTED or OutputState.OBS_WEBSOCKET_OUTPUT_RESUMED => "Recording started...",
-            OutputState.OBS_WEBSOCKET_OUTPUT_STOPPING => "Recording stopping...",
-            OutputState.OBS_WEBSOCKET_OUTPUT_STOPPED => "Recording stopped...",
-            OutputState.OBS_WEBSOCKET_OUTPUT_PAUSED => "Recording paused...",
+            OutputState.ObsWebsocketOutputStarting => "Recording starting...",
+            OutputState.ObsWebsocketOutputStarted or OutputState.ObsWebsocketOutputResumed => "Recording started...",
+            OutputState.ObsWebsocketOutputStopping => "Recording stopping...",
+            OutputState.ObsWebsocketOutputStopped => "Recording stopped...",
+            OutputState.ObsWebsocketOutputPaused => "Recording paused...",
             _ => "State unknown...",
         };
         _GeneralLogger.LogInfo($"Recording state changed to: {state}");
@@ -146,10 +142,10 @@ public class ObsWebsocketService : IHostedService
     {
         string state = args.OutputState.State switch
         {
-            OutputState.OBS_WEBSOCKET_OUTPUT_STARTING => "VirtualCam starting...",
-            OutputState.OBS_WEBSOCKET_OUTPUT_STARTED => "VirtualCam Started",
-            OutputState.OBS_WEBSOCKET_OUTPUT_STOPPING => "VirtualCam stopping...",
-            OutputState.OBS_WEBSOCKET_OUTPUT_STOPPED => "VirtualCam Stopped",
+            OutputState.ObsWebsocketOutputStarting => "VirtualCam starting...",
+            OutputState.ObsWebsocketOutputStarted => "VirtualCam Started",
+            OutputState.ObsWebsocketOutputStopping => "VirtualCam stopping...",
+            OutputState.ObsWebsocketOutputStopped => "VirtualCam Stopped",
             _ => "State unknown",
         };
         _GeneralLogger.LogInfo($"Virtual Cam state changed to: {state}");

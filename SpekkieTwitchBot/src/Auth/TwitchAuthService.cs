@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
+using SpekkieClassLibrary.Twitch.Auth;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;
@@ -107,8 +108,8 @@ public class TwitchAuthService
     
     private void UpdateTwitchSettings(TwitchUserAuth twitchUserAuth, AuthorizationCredentials authCred)
     {
-        twitchUserAuth.UserToken = authCred.access_token;
-        twitchUserAuth.UserRefreshToken = authCred.refresh_token;
+        twitchUserAuth.UserToken = authCred.AccessToken;
+        twitchUserAuth.UserRefreshToken = authCred.RefreshToken;
         
         string json = JsonConvert.SerializeObject(twitchUserAuth);
         _TwitchFileWriter.WriteTwitchUserAuthFile(json);

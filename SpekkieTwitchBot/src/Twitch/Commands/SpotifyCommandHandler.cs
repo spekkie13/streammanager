@@ -1,6 +1,6 @@
-﻿using SpekkieTwitchBot.Spotify;
-using System.Media;
+﻿using System.Media;
 using System.Runtime.InteropServices;
+using SpekkieTwitchBot.Spotify;
 using SpekkieTwitchBot.Spotify.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
 
@@ -81,9 +81,9 @@ public class SpotifyCommandHandler
             string title = songData.Split("|")[0];
             string artist = songData.Split("|")[1];
             var song = _SpotifySearchService.GetSongsByName(title, artist).Result;
-            if (song?.items.Count > 0)
+            if (song?.Items?.Count > 0)
             {
-                string uri = song.items[0].uri;
+                string uri = song.Items[0].Uri;
                 success = _SpotifyService.AddSongToQueue(uri).Result;
                 string message = success ? "Added song to the queue..." : "Could not add song to the queue...";
                 _IrcClient.SendPublicChatMessage(message);

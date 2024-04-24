@@ -47,7 +47,7 @@ public class GeneralCommandHandler
             { "commands", HandleCommandsCommand },
             { "exitbot", () => HandleExitBotCommand(username) },
             { "afgeleid", HandleAfgeleidCommand},
-            { "refund", () => HandleRefundCommand(username) },
+            //{ "refund", () => HandleRefundCommand(username) },
             
             { "hello", _TextCommandHandler.HandleHelloCommand },
             { "twitter", _TextCommandHandler.HandleGetTwitterCommand },
@@ -114,10 +114,10 @@ public class GeneralCommandHandler
         _GeneralFileWriter.WriteAfgeleidCounter(afgeleid.ToString());
     }
 
-    private void HandleRefundCommand(string username)
-    {
-        if (string.IsNullOrEmpty(username)) return;
-    }
+    // private void HandleRefundCommand(string username)
+    // {
+    //     if (string.IsNullOrEmpty(username)) return;
+    // }
 
     private void HandleCreateRedemptionCommand(string commandArgs)
     {

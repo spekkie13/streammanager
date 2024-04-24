@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Timers;
 using Microsoft.Extensions.Logging;
+using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Enums.Internal;
 using TwitchLib.Client.Events;
@@ -13,15 +14,15 @@ using TwitchLib.Client.Models.Internal;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Events;
 using TwitchLib.Communication.Interfaces;
-using SpekkieTwitchBot.Twitch.General;
+
 namespace SpekkieTwitchBot.Twitch.Events;
 
 public class CustomTwitchClient : ITwitchClient
 {
     private IClient _client;
     private MessageEmoteCollection _channelEmotes = new MessageEmoteCollection();
-    private readonly ICollection<char> _chatCommandIdentifiers = (ICollection<char>)new HashSet<char>();
-    private readonly ICollection<char> _whisperCommandIdentifiers = (ICollection<char>)new HashSet<char>();
+    private readonly ICollection<char> _chatCommandIdentifiers = new HashSet<char>();
+    private readonly ICollection<char> _whisperCommandIdentifiers = new HashSet<char>();
     private readonly Queue<JoinedChannel> _joinChannelQueue = new Queue<JoinedChannel>();
     private readonly ILogger<CustomTwitchClient> _logger;
     private readonly ClientProtocol _protocol;
@@ -33,18 +34,18 @@ public class CustomTwitchClient : ITwitchClient
     private readonly List<string> _hasSeenJoinedChannels = new List<string>();
     private string _lastMessageSent;
     public Version Version => Assembly.GetEntryAssembly().GetName().Version;
-    public bool IsInitialized => this._client != null;
+    public bool IsInitialized => _client != null;
     public IReadOnlyList<JoinedChannel> JoinedChannels
     {
-        get => this._joinedChannelManager.GetJoinedChannels();
+        get => _joinedChannelManager.GetJoinedChannels();
     }
     public string TwitchUsername { get; private set; }
     public WhisperMessage PreviousWhisper { get; private set; }
     public bool IsConnected
     {
-        get => this.IsInitialized && this._client != null && this._client.IsConnected;
+        get => IsInitialized && _client != null && _client.IsConnected;
     }
-    public MessageEmoteCollection ChannelEmotes => this._channelEmotes;
+    public MessageEmoteCollection ChannelEmotes => _channelEmotes;
     public bool DisableAutoPong { get; set; }
     public bool WillReplaceEmotes { get; set; }
     public ConnectionCredentials ConnectionCredentials { get; private set; }
@@ -112,11 +113,11 @@ public class CustomTwitchClient : ITwitchClient
     public CustomTwitchClient(IClient client = null, ClientProtocol protocol = ClientProtocol.WebSocket,
         ILogger<CustomTwitchClient> logger = null)
     {
-        this._logger = logger;
-        this._client = client;
-        this._protocol = protocol;
-        this._joinedChannelManager = new JoinedChannelManager();
-        this._ircParser = new IrcParser();
+        _logger = logger;
+        _client = client;
+        _protocol = protocol;
+        _joinedChannelManager = new JoinedChannelManager();
+        _ircParser = new IrcParser();
     }
 
     public void Initialize(
@@ -131,10 +132,10 @@ public class CustomTwitchClient : ITwitchClient
         ConnectionCredentials credentials1 = credentials;
         List<string> channels = new List<string>();
         channels.Add(channel);
-        int chatCommandIdentifier1 = (int)chatCommandIdentifier;
-        int whisperCommandIdentifier1 = (int)whisperCommandIdentifier;
+        int chatCommandIdentifier1 = chatCommandIdentifier;
+        int whisperCommandIdentifier1 = whisperCommandIdentifier;
         int num = autoReListenOnExceptions ? 1 : 0;
-        this.initializeHelper(credentials1, channels, (char)chatCommandIdentifier1, (char)whisperCommandIdentifier1,
+        initializeHelper(credentials1, channels, (char)chatCommandIdentifier1, (char)whisperCommandIdentifier1,
             num != 0);
     }
 
@@ -145,9 +146,9 @@ public class CustomTwitchClient : ITwitchClient
         char whisperCommandIdentifier = '!',
         bool autoReListenOnExceptions = true)
     {
-        channels = channels.Select<string, string>((Func<string, string>)(x => x[0] != '#' ? x : x.Substring(1)))
-            .ToList<string>();
-        this.initializeHelper(credentials, channels, chatCommandIdentifier, whisperCommandIdentifier,
+        channels = channels.Select((Func<string, string>)(x => x[0] != '#' ? x : x.Substring(1)))
+            .ToList();
+        initializeHelper(credentials, channels, chatCommandIdentifier, whisperCommandIdentifier,
             autoReListenOnExceptions);
     }
 
@@ -158,74 +159,71 @@ public class CustomTwitchClient : ITwitchClient
         char whisperCommandIdentifier = '!',
         bool autoReListenOnExceptions = true)
     {
-        this.Log(string.Format("TwitchLib-TwitchClient initialized, assembly version: {0}",
-            (object)Assembly.GetExecutingAssembly().GetName().Version));
-        this.ConnectionCredentials = credentials;
-        this.TwitchUsername = this.ConnectionCredentials.TwitchUsername;
+        Log($"CustomTwitchClient initialized, assembly version: {Assembly.GetExecutingAssembly().GetName().Version}");
+        ConnectionCredentials = credentials;
+        TwitchUsername = ConnectionCredentials.TwitchUsername;
         if (chatCommandIdentifier != char.MinValue)
-            this._chatCommandIdentifiers.Add(chatCommandIdentifier);
+            _chatCommandIdentifiers.Add(chatCommandIdentifier);
         if (whisperCommandIdentifier != char.MinValue)
-            this._whisperCommandIdentifiers.Add(whisperCommandIdentifier);
-        this.AutoReListenOnException = autoReListenOnExceptions;
-        if (channels != null && channels.Count > 0)
+            _whisperCommandIdentifiers.Add(whisperCommandIdentifier);
+        AutoReListenOnException = autoReListenOnExceptions;
+        if (channels is { Count: > 0 })
         {
             for (int i = 0; i < channels.Count; i++)
             {
                 if (!string.IsNullOrEmpty(channels[i]))
                 {
-                    if (this.JoinedChannels.FirstOrDefault<JoinedChannel>(
+                    if (JoinedChannels.FirstOrDefault(
                             (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channels[i])) != null)
                         return;
-                    this._joinChannelQueue.Enqueue(new JoinedChannel(channels[i]));
+                    _joinChannelQueue.Enqueue(new JoinedChannel(channels[i]));
                 }
             }
         }
 
-        this.InitializeClient();
+        InitializeClient();
     }
 
     private void InitializeClient()
     {
-        if (this._client == null)
+        if (_client == null)
         {
-            switch (this._protocol)
+            switch (_protocol)
             {
                 case ClientProtocol.TCP:
-                    this._client = (IClient)new TcpClient();
+                    _client = new TcpClient();
                     break;
                 case ClientProtocol.WebSocket:
-                    this._client = (IClient)new WebSocketClient();
+                    _client = new WebSocketClient();
                     break;
             }
         }
 
-        this._client.OnConnected += new EventHandler<OnConnectedEventArgs>(this._client_OnConnected);
-        this._client.OnMessage += new EventHandler<OnMessageEventArgs>(this._client_OnMessage);
-        this._client.OnDisconnected += new EventHandler<OnDisconnectedEventArgs>(this._client_OnDisconnected);
-        this._client.OnFatality += new EventHandler<OnFatalErrorEventArgs>(this._client_OnFatality);
-        this._client.OnMessageThrottled +=
-            new EventHandler<OnMessageThrottledEventArgs>(this._client_OnMessageThrottled);
-        this._client.OnWhisperThrottled +=
-            new EventHandler<OnWhisperThrottledEventArgs>(this._client_OnWhisperThrottled);
-        this._client.OnReconnected += new EventHandler<OnReconnectedEventArgs>(this._client_OnReconnected);
+        _client.OnConnected += _client_OnConnected;
+        _client.OnMessage += _client_OnMessage;
+        _client.OnDisconnected += _client_OnDisconnected;
+        _client.OnFatality += _client_OnFatality;
+        _client.OnMessageThrottled += _client_OnMessageThrottled;
+        _client.OnWhisperThrottled += _client_OnWhisperThrottled;
+        _client.OnReconnected += _client_OnReconnected;
     }
 
     internal void RaiseEvent(string eventName, object args = null)
     {
-        foreach (Delegate invocation in (this.GetType()
+        foreach (Delegate invocation in (GetType()
                      .GetField(eventName, BindingFlags.Instance | BindingFlags.NonPublic)
-                     .GetValue((object)this) as MulticastDelegate).GetInvocationList())
+                     .GetValue(this) as MulticastDelegate).GetInvocationList())
         {
             MethodInfo method = invocation.Method;
             object target = invocation.Target;
             object[] parameters;
             if (args != null)
-                parameters = new object[2] { (object)this, args };
+                parameters = new[] { this, args };
             else
-                parameters = new object[2]
+                parameters = new object[]
                 {
-                    (object)this,
-                    (object)new EventArgs()
+                    this,
+                    EventArgs.Empty
                 };
             method.Invoke(target, parameters);
         }
@@ -233,14 +231,14 @@ public class CustomTwitchClient : ITwitchClient
 
     public void SendRaw(string message)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this.Log("Writing: " + message);
-        this._client.Send(message);
-        EventHandler<OnSendReceiveDataArgs> onSendReceiveData = this.OnSendReceiveData;
+        if (!IsInitialized)
+            HandleNotInitialized();
+        Log("Writing: " + message);
+        _client.Send(message);
+        EventHandler<OnSendReceiveDataArgs> onSendReceiveData = OnSendReceiveData;
         if (onSendReceiveData == null)
             return;
-        onSendReceiveData((object)this, new OnSendReceiveDataArgs()
+        onSendReceiveData(this, new OnSendReceiveDataArgs
         {
             Direction = SendReceiveDirection.Sent,
             Data = message
@@ -253,65 +251,65 @@ public class CustomTwitchClient : ITwitchClient
         string replyToId = null,
         bool dryRun = false)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
+        if (!IsInitialized)
+            HandleNotInitialized();
         if (((channel == null ? 1 : (message == null ? 1 : 0)) | (dryRun ? 1 : 0)) != 0)
             return;
         if (message.Length > 500)
         {
-            this.LogError("Message length has exceeded the maximum character count. (500)");
+            LogError("Message length has exceeded the maximum character count. (500)");
         }
         else
         {
-            OutboundChatMessage outboundChatMessage = new OutboundChatMessage()
+            OutboundChatMessage outboundChatMessage = new OutboundChatMessage
             {
                 Channel = channel.Channel,
-                Username = this.ConnectionCredentials.TwitchUsername,
+                Username = ConnectionCredentials.TwitchUsername,
                 Message = message
             };
             if (replyToId != null)
                 outboundChatMessage.ReplyToId = replyToId;
-            this._lastMessageSent = message;
-            this._client.Send(outboundChatMessage.ToString());
+            _lastMessageSent = message;
+            _client.Send(outboundChatMessage.ToString());
         }
     }
 
     public void SendMessage(JoinedChannel channel, string message, bool dryRun = false)
     {
-        this.SendTwitchMessage(channel, message, dryRun: dryRun);
+        SendTwitchMessage(channel, message, dryRun: dryRun);
     }
 
     public void SendMessage(string channel, string message, bool dryRun = false)
     {
-        this.SendMessage(this.GetJoinedChannel(channel), message, dryRun);
+        SendMessage(GetJoinedChannel(channel), message, dryRun);
     }
 
     public void SendReply(JoinedChannel channel, string replyToId, string message, bool dryRun = false)
     {
-        this.SendTwitchMessage(channel, message, replyToId, dryRun);
+        SendTwitchMessage(channel, message, replyToId, dryRun);
     }
 
     public void SendReply(string channel, string replyToId, string message, bool dryRun = false)
     {
-        this.SendReply(this.GetJoinedChannel(channel), replyToId, message, dryRun);
+        SendReply(GetJoinedChannel(channel), replyToId, message, dryRun);
     }
 
     public void SendWhisper(string receiver, string message, bool dryRun = false)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
+        if (!IsInitialized)
+            HandleNotInitialized();
         if (dryRun)
             return;
-        this._client.SendWhisper(new OutboundWhisperMessage()
+        _client.SendWhisper(new OutboundWhisperMessage
         {
             Receiver = receiver,
-            Username = this.ConnectionCredentials.TwitchUsername,
+            Username = ConnectionCredentials.TwitchUsername,
             Message = message
         }.ToString());
-        EventHandler<OnWhisperSentArgs> onWhisperSent = this.OnWhisperSent;
+        EventHandler<OnWhisperSentArgs> onWhisperSent = OnWhisperSent;
         if (onWhisperSent == null)
             return;
-        onWhisperSent((object)this, new OnWhisperSentArgs()
+        onWhisperSent(this, new OnWhisperSentArgs
         {
             Receiver = receiver,
             Message = message
@@ -320,130 +318,130 @@ public class CustomTwitchClient : ITwitchClient
 
     public bool Connect()
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this.Log("Connecting to: " + this.ConnectionCredentials.TwitchWebsocketURI);
-        this._joinedChannelManager.Clear();
-        if (!this._client.Open())
+        if (!IsInitialized)
+            HandleNotInitialized();
+        Log("Connecting to: " + ConnectionCredentials.TwitchWebsocketURI);
+        _joinedChannelManager.Clear();
+        if (!_client.Open())
             return false;
-        this.Log("Should be connected!");
+        Log("Should be connected!");
         return true;
     }
 
     public void Disconnect()
     {
-        this.Log("Disconnect Twitch Chat Client...");
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this._client.Close();
-        this._joinedChannelManager.Clear();
-        this.PreviousWhisper = (WhisperMessage)null;
+        Log("Disconnect Twitch Chat Client...");
+        if (!IsInitialized)
+            HandleNotInitialized();
+        _client.Close();
+        _joinedChannelManager.Clear();
+        PreviousWhisper = null;
     }
 
     public void Reconnect()
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this.Log("Reconnecting to Twitch");
-        this._client.Reconnect();
+        if (!IsInitialized)
+            HandleNotInitialized();
+        Log("Reconnecting to Twitch");
+        _client.Reconnect();
     }
 
     public void AddChatCommandIdentifier(char identifier)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this._chatCommandIdentifiers.Add(identifier);
+        if (!IsInitialized)
+            HandleNotInitialized();
+        _chatCommandIdentifiers.Add(identifier);
     }
 
     public void RemoveChatCommandIdentifier(char identifier)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this._chatCommandIdentifiers.Remove(identifier);
+        if (!IsInitialized)
+            HandleNotInitialized();
+        _chatCommandIdentifiers.Remove(identifier);
     }
 
     public void AddWhisperCommandIdentifier(char identifier)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this._whisperCommandIdentifiers.Add(identifier);
+        if (!IsInitialized)
+            HandleNotInitialized();
+        _whisperCommandIdentifiers.Add(identifier);
     }
 
     public void RemoveWhisperCommandIdentifier(char identifier)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this._whisperCommandIdentifiers.Remove(identifier);
+        if (!IsInitialized)
+            HandleNotInitialized();
+        _whisperCommandIdentifiers.Remove(identifier);
     }
 
     public void SetConnectionCredentials(ConnectionCredentials credentials)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        if (this.IsConnected)
+        if (!IsInitialized)
+            HandleNotInitialized();
+        if (IsConnected)
             throw new IllegalAssignmentException(
                 "While the client is connected, you are unable to change the connection credentials. Please disconnect first and then change them.");
-        this.ConnectionCredentials = credentials;
+        ConnectionCredentials = credentials;
     }
 
     public void JoinChannel(string channel, bool overrideCheck = false)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        if (!this.IsConnected)
-            CustomTwitchClient.HandleNotConnected();
-        if (this.JoinedChannels.FirstOrDefault<JoinedChannel>(
+        if (!IsInitialized)
+            HandleNotInitialized();
+        if (!IsConnected)
+            HandleNotConnected();
+        if (JoinedChannels.FirstOrDefault(
                 (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channel && !overrideCheck)) != null)
             return;
         if (channel[0] == '#')
             channel = channel.Substring(1);
-        this._joinChannelQueue.Enqueue(new JoinedChannel(channel));
-        if (this._currentlyJoiningChannels)
+        _joinChannelQueue.Enqueue(new JoinedChannel(channel));
+        if (_currentlyJoiningChannels)
             return;
-        this.QueueingJoinCheck();
+        QueueingJoinCheck();
     }
 
     public JoinedChannel GetJoinedChannel(string channel)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        if (this.JoinedChannels.Count == 0)
+        if (!IsInitialized)
+            HandleNotInitialized();
+        if (JoinedChannels.Count == 0)
             throw new BadStateException("Must be connected to at least one channel.");
         if (channel[0] == '#')
             channel = channel.Substring(1);
-        return this._joinedChannelManager.GetJoinedChannel(channel);
+        return _joinedChannelManager.GetJoinedChannel(channel);
     }
 
     public void LeaveChannel(string channel)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
+        if (!IsInitialized)
+            HandleNotInitialized();
         channel = channel.ToLower();
         if (channel[0] == '#')
             channel = channel.Substring(1);
-        this.Log("Leaving channel: " + channel);
-        if (this._joinedChannelManager.GetJoinedChannel(channel) == null)
+        Log("Leaving channel: " + channel);
+        if (_joinedChannelManager.GetJoinedChannel(channel) == null)
             return;
-        this._client.Send(Rfc2812.Part("#" + channel));
+        _client.Send(Rfc2812.Part("#" + channel));
     }
 
     public void LeaveChannel(JoinedChannel channel)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this.LeaveChannel(channel.Channel);
+        if (!IsInitialized)
+            HandleNotInitialized();
+        LeaveChannel(channel.Channel);
     }
 
     public void OnReadLineTest(string rawIrc)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this.HandleIrcMessage(this._ircParser.ParseIrcMessage(rawIrc));
+        if (!IsInitialized)
+            HandleNotInitialized();
+        HandleIrcMessage(_ircParser.ParseIrcMessage(rawIrc));
     }
 
     private void _client_OnWhisperThrottled(object sender, OnWhisperThrottledEventArgs e)
     {
-        EventHandler<OnWhisperThrottledEventArgs> whisperThrottled = this.OnWhisperThrottled;
+        EventHandler<OnWhisperThrottledEventArgs> whisperThrottled = OnWhisperThrottled;
         if (whisperThrottled == null)
             return;
         whisperThrottled(sender, e);
@@ -451,7 +449,7 @@ public class CustomTwitchClient : ITwitchClient
 
     private void _client_OnMessageThrottled(object sender, OnMessageThrottledEventArgs e)
     {
-        EventHandler<OnMessageThrottledEventArgs> messageThrottled = this.OnMessageThrottled;
+        EventHandler<OnMessageThrottledEventArgs> messageThrottled = OnMessageThrottled;
         if (messageThrottled == null)
             return;
         messageThrottled(sender, e);
@@ -459,19 +457,19 @@ public class CustomTwitchClient : ITwitchClient
 
     private void _client_OnFatality(object sender, OnFatalErrorEventArgs e)
     {
-        EventHandler<OnConnectionErrorArgs> onConnectionError = this.OnConnectionError;
+        EventHandler<OnConnectionErrorArgs> onConnectionError = OnConnectionError;
         if (onConnectionError == null)
             return;
-        onConnectionError((object)this, new OnConnectionErrorArgs()
+        onConnectionError(this, new OnConnectionErrorArgs
         {
-            BotUsername = this.TwitchUsername,
-            Error = new ErrorEvent() { Message = e.Reason }
+            BotUsername = TwitchUsername,
+            Error = new ErrorEvent { Message = e.Reason }
         });
     }
 
     private void _client_OnDisconnected(object sender, OnDisconnectedEventArgs e)
     {
-        EventHandler<OnDisconnectedEventArgs> onDisconnected = this.OnDisconnected;
+        EventHandler<OnDisconnectedEventArgs> onDisconnected = OnDisconnected;
         if (onDisconnected == null)
             return;
         onDisconnected(sender, e);
@@ -479,16 +477,16 @@ public class CustomTwitchClient : ITwitchClient
 
     private void _client_OnReconnected(object sender, OnReconnectedEventArgs e)
     {
-        foreach (JoinedChannel joinedChannel in (IEnumerable<JoinedChannel>)this._joinedChannelManager
+        foreach (JoinedChannel joinedChannel in (IEnumerable<JoinedChannel>)_joinedChannelManager
                      .GetJoinedChannels())
         {
-            if (!string.Equals(joinedChannel.Channel, this.TwitchUsername,
+            if (!string.Equals(joinedChannel.Channel, TwitchUsername,
                     StringComparison.CurrentCultureIgnoreCase))
-                this._joinChannelQueue.Enqueue(joinedChannel);
+                _joinChannelQueue.Enqueue(joinedChannel);
         }
 
-        this._joinedChannelManager.Clear();
-        EventHandler<OnReconnectedEventArgs> onReconnected = this.OnReconnected;
+        _joinedChannelManager.Clear();
+        EventHandler<OnReconnectedEventArgs> onReconnected = OnReconnected;
         if (onReconnected == null)
             return;
         onReconnected(sender, e);
@@ -501,85 +499,85 @@ public class CustomTwitchClient : ITwitchClient
         {
             if (raw.Length > 1)
             {
-                this.Log("Received: " + raw);
-                EventHandler<OnSendReceiveDataArgs> onSendReceiveData = this.OnSendReceiveData;
+                Log("Received: " + raw);
+                EventHandler<OnSendReceiveDataArgs> onSendReceiveData = OnSendReceiveData;
                 if (onSendReceiveData != null)
-                    onSendReceiveData((object)this, new OnSendReceiveDataArgs()
+                    onSendReceiveData(this, new OnSendReceiveDataArgs
                     {
                         Direction = SendReceiveDirection.Received,
                         Data = raw
                     });
-                this.HandleIrcMessage(this._ircParser.ParseIrcMessage(raw));
+                HandleIrcMessage(_ircParser.ParseIrcMessage(raw));
             }
         }
     }
 
     private void _client_OnConnected(object sender, object e)
     {
-        this._client.Send(Rfc2812.Pass(this.ConnectionCredentials.TwitchOAuth));
-        this._client.Send(Rfc2812.Nick(this.ConnectionCredentials.TwitchUsername));
-        this._client.Send(Rfc2812.User(this.ConnectionCredentials.TwitchUsername, 0,
-            this.ConnectionCredentials.TwitchUsername));
-        if (this.ConnectionCredentials.Capabilities.Membership)
-            this._client.Send("CAP REQ twitch.tv/membership");
-        if (this.ConnectionCredentials.Capabilities.Commands)
-            this._client.Send("CAP REQ twitch.tv/commands");
-        if (this.ConnectionCredentials.Capabilities.Tags)
-            this._client.Send("CAP REQ twitch.tv/tags");
-        if (this._joinChannelQueue == null || this._joinChannelQueue.Count <= 0)
+        _client.Send(Rfc2812.Pass(ConnectionCredentials.TwitchOAuth));
+        _client.Send(Rfc2812.Nick(ConnectionCredentials.TwitchUsername));
+        _client.Send(Rfc2812.User(ConnectionCredentials.TwitchUsername, 0,
+            ConnectionCredentials.TwitchUsername));
+        if (ConnectionCredentials.Capabilities.Membership)
+            _client.Send("CAP REQ twitch.tv/membership");
+        if (ConnectionCredentials.Capabilities.Commands)
+            _client.Send("CAP REQ twitch.tv/commands");
+        if (ConnectionCredentials.Capabilities.Tags)
+            _client.Send("CAP REQ twitch.tv/tags");
+        if (_joinChannelQueue == null || _joinChannelQueue.Count <= 0)
             return;
-        this.QueueingJoinCheck();
+        QueueingJoinCheck();
     }
 
     private void QueueingJoinCheck()
     {
-        if (this._joinChannelQueue.Count > 0)
+        if (_joinChannelQueue.Count > 0)
         {
-            this._currentlyJoiningChannels = true;
-            JoinedChannel joinedChannel = this._joinChannelQueue.Dequeue();
-            this.Log("Joining channel: " + joinedChannel.Channel);
-            this._client.Send(Rfc2812.Join("#" + joinedChannel.Channel.ToLower()));
-            this._joinedChannelManager.AddJoinedChannel(new JoinedChannel(joinedChannel.Channel));
-            this.StartJoinedChannelTimer(joinedChannel.Channel);
+            _currentlyJoiningChannels = true;
+            JoinedChannel joinedChannel = _joinChannelQueue.Dequeue();
+            Log("Joining channel: " + joinedChannel.Channel);
+            _client.Send(Rfc2812.Join("#" + joinedChannel.Channel.ToLower()));
+            _joinedChannelManager.AddJoinedChannel(new JoinedChannel(joinedChannel.Channel));
+            StartJoinedChannelTimer(joinedChannel.Channel);
         }
         else
-            this.Log("Finished channel joining queue.");
+            Log("Finished channel joining queue.");
     }
     
     private void StartJoinedChannelTimer(string channel)
     {
-        if (this._joinTimer == null)
+        if (_joinTimer == null)
         {
-            this._joinTimer = new System.Timers.Timer(1000.0);
-            this._joinTimer.Elapsed += new ElapsedEventHandler(this.JoinChannelTimeout);
-            this._awaitingJoins = new List<KeyValuePair<string, DateTime>>();
+            _joinTimer = new System.Timers.Timer(1000.0);
+            _joinTimer.Elapsed += JoinChannelTimeout;
+            _awaitingJoins = new List<KeyValuePair<string, DateTime>>();
         }
 
-        this._awaitingJoins.Add(new KeyValuePair<string, DateTime>(channel.ToLower(), DateTime.Now));
-        if (this._joinTimer.Enabled)
+        _awaitingJoins.Add(new KeyValuePair<string, DateTime>(channel.ToLower(), DateTime.Now));
+        if (_joinTimer.Enabled)
             return;
-        this._joinTimer.Start();
+        _joinTimer.Start();
     }
 
     private void JoinChannelTimeout(object sender, ElapsedEventArgs e)
     {
-        if (this._awaitingJoins.Any<KeyValuePair<string, DateTime>>())
+        if (_awaitingJoins.Any())
         {
-            List<KeyValuePair<string, DateTime>> list = this._awaitingJoins
-                .Where<KeyValuePair<string, DateTime>>(
+            List<KeyValuePair<string, DateTime>> list = _awaitingJoins
+                .Where(
                     (Func<KeyValuePair<string, DateTime>, bool>)(x => (DateTime.Now - x.Value).TotalSeconds > 5.0))
-                .ToList<KeyValuePair<string, DateTime>>();
-            if (!list.Any<KeyValuePair<string, DateTime>>())
+                .ToList();
+            if (!list.Any())
                 return;
-            this._awaitingJoins.RemoveAll(
+            _awaitingJoins.RemoveAll(
                 (Predicate<KeyValuePair<string, DateTime>>)(x => (DateTime.Now - x.Value).TotalSeconds > 5.0));
             foreach (KeyValuePair<string, DateTime> keyValuePair in list)
             {
-                this._joinedChannelManager.RemoveJoinedChannel(keyValuePair.Key.ToLowerInvariant());
+                _joinedChannelManager.RemoveJoinedChannel(keyValuePair.Key.ToLowerInvariant());
                 EventHandler<OnFailureToReceiveJoinConfirmationArgs> joinConfirmation =
-                    this.OnFailureToReceiveJoinConfirmation;
+                    OnFailureToReceiveJoinConfirmation;
                 if (joinConfirmation != null)
-                    joinConfirmation((object)this, new OnFailureToReceiveJoinConfirmationArgs()
+                    joinConfirmation(this, new OnFailureToReceiveJoinConfirmationArgs
                     {
                         Exception = new FailureToReceiveJoinConfirmationException(keyValuePair.Key)
                     });
@@ -587,9 +585,9 @@ public class CustomTwitchClient : ITwitchClient
         }
         else
         {
-            this._joinTimer.Stop();
-            this._currentlyJoiningChannels = false;
-            this.QueueingJoinCheck();
+            _joinTimer.Stop();
+            _currentlyJoiningChannels = false;
+            QueueingJoinCheck();
         }
     }
 
@@ -597,12 +595,12 @@ public class CustomTwitchClient : ITwitchClient
     {
         if (ircMessage.Message.Contains("Login authentication failed"))
         {
-            EventHandler<OnIncorrectLoginArgs> onIncorrectLogin = this.OnIncorrectLogin;
+            EventHandler<OnIncorrectLoginArgs> onIncorrectLogin = OnIncorrectLogin;
             if (onIncorrectLogin == null)
                 return;
-            onIncorrectLogin((object)this, new OnIncorrectLoginArgs()
+            onIncorrectLogin(this, new OnIncorrectLoginArgs
             {
-                Exception = new ErrorLoggingInException(ircMessage.ToString(), this.TwitchUsername)
+                Exception = new ErrorLoggingInException(ircMessage.ToString(), TwitchUsername)
             });
         }
         else
@@ -610,37 +608,37 @@ public class CustomTwitchClient : ITwitchClient
             switch (ircMessage.Command)
             {
                 case IrcCommand.PrivMsg:
-                    this.HandlePrivMsg(ircMessage);
+                    HandlePrivMsg(ircMessage);
                     break;
                 case IrcCommand.Notice:
-                    this.HandleNotice(ircMessage);
+                    HandleNotice(ircMessage);
                     break;
                 case IrcCommand.Ping:
-                    if (this.DisableAutoPong)
+                    if (DisableAutoPong)
                         break;
-                    this.SendRaw("PONG");
+                    SendRaw("PONG");
                     break;
                 case IrcCommand.Pong:
                     break;
                 case IrcCommand.Join:
-                    this.HandleJoin(ircMessage);
+                    HandleJoin(ircMessage);
                     break;
                 case IrcCommand.Part:
-                    this.HandlePart(ircMessage);
+                    HandlePart(ircMessage);
                     break;
                 case IrcCommand.ClearChat:
-                    this.HandleClearChat(ircMessage);
+                    HandleClearChat(ircMessage);
                     break;
                 case IrcCommand.ClearMsg:
-                    this.HandleClearMsg(ircMessage);
+                    HandleClearMsg(ircMessage);
                     break;
                 case IrcCommand.UserState:
-                    this.HandleUserState(ircMessage);
+                    HandleUserState(ircMessage);
                     break;
                 case IrcCommand.GlobalUserState:
                     break;
                 case IrcCommand.Cap:
-                    this.HandleCap(ircMessage);
+                    HandleCap(ircMessage);
                     break;
                 case IrcCommand.RPL_001:
                     break;
@@ -649,13 +647,13 @@ public class CustomTwitchClient : ITwitchClient
                 case IrcCommand.RPL_003:
                     break;
                 case IrcCommand.RPL_004:
-                    this.Handle004();
+                    Handle004();
                     break;
                 case IrcCommand.RPL_353:
-                    this.Handle353(ircMessage);
+                    Handle353(ircMessage);
                     break;
                 case IrcCommand.RPL_366:
-                    this.Handle366();
+                    Handle366();
                     break;
                 case IrcCommand.RPL_372:
                     break;
@@ -664,31 +662,31 @@ public class CustomTwitchClient : ITwitchClient
                 case IrcCommand.RPL_376:
                     break;
                 case IrcCommand.Whisper:
-                    this.HandleWhisper(ircMessage);
+                    HandleWhisper(ircMessage);
                     break;
                 case IrcCommand.RoomState:
-                    this.HandleRoomState(ircMessage);
+                    HandleRoomState(ircMessage);
                     break;
                 case IrcCommand.Reconnect:
-                    this.Reconnect();
+                    Reconnect();
                     break;
                 case IrcCommand.UserNotice:
-                    this.HandleUserNotice(ircMessage);
+                    HandleUserNotice(ircMessage);
                     break;
                 case IrcCommand.Mode:
-                    this.HandleMode(ircMessage);
+                    HandleMode(ircMessage);
                     break;
                 default:
-                    EventHandler<OnUnaccountedForArgs> onUnaccountedFor = this.OnUnaccountedFor;
+                    EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
                     if (onUnaccountedFor != null)
-                        onUnaccountedFor((object)this, new OnUnaccountedForArgs()
+                        onUnaccountedFor(this, new OnUnaccountedForArgs
                         {
-                            BotUsername = this.TwitchUsername,
-                            Channel = (string)null,
+                            BotUsername = TwitchUsername,
+                            Channel = null,
                             Location = nameof(HandleIrcMessage),
                             RawIRC = ircMessage.ToString()
                         });
-                    this.UnaccountedFor(ircMessage.ToString());
+                    UnaccountedFor(ircMessage.ToString());
                     break;
             }
         }
@@ -696,38 +694,37 @@ public class CustomTwitchClient : ITwitchClient
 
     private void HandlePrivMsg(IrcMessage ircMessage)
     {
-        ChatMessage chatMessage = new ChatMessage(this.TwitchUsername, ircMessage, ref this._channelEmotes,
-            this.WillReplaceEmotes);
-        foreach (JoinedChannel joinedChannel in this.JoinedChannels.Where<JoinedChannel>(
+        ChatMessage chatMessage = new ChatMessage(TwitchUsername, ircMessage, ref _channelEmotes,
+            WillReplaceEmotes);
+        foreach (JoinedChannel joinedChannel in JoinedChannels.Where(
                      (Func<JoinedChannel, bool>)(x => string.Equals(x.Channel, ircMessage.Channel,
                          StringComparison.InvariantCultureIgnoreCase))))
             joinedChannel.HandleMessage(chatMessage);
-        EventHandler<OnMessageReceivedArgs> onMessageReceived = this.OnMessageReceived;
+        EventHandler<OnMessageReceivedArgs> onMessageReceived = OnMessageReceived;
         if (onMessageReceived != null)
-            onMessageReceived((object)this, new OnMessageReceivedArgs()
+            onMessageReceived(this, new OnMessageReceivedArgs
             {
                 ChatMessage = chatMessage
             });
-        string str;
-        if (ircMessage.Tags.TryGetValue("msg-id", out str) && str == "user-intro")
+        if (ircMessage.Tags.TryGetValue("msg-id", out var str) && str == "user-intro")
         {
-            EventHandler<OnUserIntroArgs> onUserIntro = this.OnUserIntro;
+            EventHandler<OnUserIntroArgs> onUserIntro = OnUserIntro;
             if (onUserIntro != null)
-                onUserIntro((object)this, new OnUserIntroArgs()
+                onUserIntro(this, new OnUserIntroArgs
                 {
                     ChatMessage = chatMessage
                 });
         }
 
-        if (this._chatCommandIdentifiers == null || this._chatCommandIdentifiers.Count == 0 ||
+        if (_chatCommandIdentifiers == null || _chatCommandIdentifiers.Count == 0 ||
             string.IsNullOrEmpty(chatMessage.Message) ||
-            !this._chatCommandIdentifiers.Contains(chatMessage.Message[0]))
+            !_chatCommandIdentifiers.Contains(chatMessage.Message[0]))
             return;
         ChatCommand chatCommand = new ChatCommand(chatMessage);
-        EventHandler<OnChatCommandReceivedArgs> chatCommandReceived = this.OnChatCommandReceived;
+        EventHandler<OnChatCommandReceivedArgs> chatCommandReceived = OnChatCommandReceived;
         if (chatCommandReceived == null)
             return;
-        chatCommandReceived((object)this, new OnChatCommandReceivedArgs()
+        chatCommandReceived(this, new OnChatCommandReceivedArgs
         {
             Command = chatCommand
         });
@@ -737,122 +734,121 @@ public class CustomTwitchClient : ITwitchClient
     {
         if (ircMessage.Message.Contains("Improperly formatted auth"))
         {
-            EventHandler<OnIncorrectLoginArgs> onIncorrectLogin = this.OnIncorrectLogin;
+            EventHandler<OnIncorrectLoginArgs> onIncorrectLogin = OnIncorrectLogin;
             if (onIncorrectLogin == null)
                 return;
-            onIncorrectLogin((object)this, new OnIncorrectLoginArgs()
+            onIncorrectLogin(this, new OnIncorrectLoginArgs
             {
-                Exception = new ErrorLoggingInException(ircMessage.ToString(), this.TwitchUsername)
+                Exception = new ErrorLoggingInException(ircMessage.ToString(), TwitchUsername)
             });
         }
         else
         {
-            string str;
-            if (!ircMessage.Tags.TryGetValue("msg-id", out str))
+            if (!ircMessage.Tags.TryGetValue("msg-id", out var str))
             {
-                EventHandler<OnUnaccountedForArgs> onUnaccountedFor = this.OnUnaccountedFor;
+                EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
                 if (onUnaccountedFor != null)
-                    onUnaccountedFor((object)this, new OnUnaccountedForArgs()
+                    onUnaccountedFor(this, new OnUnaccountedForArgs
                     {
-                        BotUsername = this.TwitchUsername,
+                        BotUsername = TwitchUsername,
                         Channel = ircMessage.Channel,
                         Location = "NoticeHandling",
                         RawIRC = ircMessage.ToString()
                     });
-                this.UnaccountedFor(ircMessage.ToString());
+                UnaccountedFor(ircMessage.ToString());
             }
 
             switch (str)
             {
                 case "color_changed":
-                    EventHandler<OnChatColorChangedArgs> chatColorChanged = this.OnChatColorChanged;
+                    EventHandler<OnChatColorChangedArgs> chatColorChanged = OnChatColorChanged;
                     if (chatColorChanged == null)
                         break;
-                    chatColorChanged((object)this, new OnChatColorChangedArgs()
+                    chatColorChanged(this, new OnChatColorChangedArgs
                     {
                         Channel = ircMessage.Channel
                     });
                     break;
                 case "msg_banned":
-                    EventHandler<OnBannedArgs> onBanned = this.OnBanned;
+                    EventHandler<OnBannedArgs> onBanned = OnBanned;
                     if (onBanned == null)
                         break;
-                    onBanned((object)this, new OnBannedArgs()
+                    onBanned(this, new OnBannedArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "msg_banned_email_alias":
-                    EventHandler<OnBannedEmailAliasArgs> bannedEmailAlias = this.OnBannedEmailAlias;
+                    EventHandler<OnBannedEmailAliasArgs> bannedEmailAlias = OnBannedEmailAlias;
                     if (bannedEmailAlias == null)
                         break;
-                    bannedEmailAlias((object)this, new OnBannedEmailAliasArgs()
+                    bannedEmailAlias(this, new OnBannedEmailAliasArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "msg_channel_suspended":
-                    this._awaitingJoins.RemoveAll(
+                    _awaitingJoins.RemoveAll(
                         (Predicate<KeyValuePair<string, DateTime>>)(x => x.Key.ToLower() == ircMessage.Channel));
-                    this._joinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
-                    this.QueueingJoinCheck();
+                    _joinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
+                    QueueingJoinCheck();
                     EventHandler<OnFailureToReceiveJoinConfirmationArgs> joinConfirmation =
-                        this.OnFailureToReceiveJoinConfirmation;
+                        OnFailureToReceiveJoinConfirmation;
                     if (joinConfirmation == null)
                         break;
-                    joinConfirmation((object)this, new OnFailureToReceiveJoinConfirmationArgs()
+                    joinConfirmation(this, new OnFailureToReceiveJoinConfirmationArgs
                     {
                         Exception = new FailureToReceiveJoinConfirmationException(ircMessage.Channel,
                             ircMessage.Message)
                     });
                     break;
                 case "msg_duplicate":
-                    EventHandler<OnDuplicateArgs> onDuplicate = this.OnDuplicate;
+                    EventHandler<OnDuplicateArgs> onDuplicate = OnDuplicate;
                     if (onDuplicate == null)
                         break;
-                    onDuplicate((object)this, new OnDuplicateArgs()
+                    onDuplicate(this, new OnDuplicateArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "msg_emoteonly":
-                    EventHandler<OnEmoteOnlyArgs> onEmoteOnly = this.OnEmoteOnly;
+                    EventHandler<OnEmoteOnlyArgs> onEmoteOnly = OnEmoteOnly;
                     if (onEmoteOnly == null)
                         break;
-                    onEmoteOnly((object)this, new OnEmoteOnlyArgs()
+                    onEmoteOnly(this, new OnEmoteOnlyArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "msg_followersonly":
-                    EventHandler<OnFollowersOnlyArgs> onFollowersOnly = this.OnFollowersOnly;
+                    EventHandler<OnFollowersOnlyArgs> onFollowersOnly = OnFollowersOnly;
                     if (onFollowersOnly == null)
                         break;
-                    onFollowersOnly((object)this, new OnFollowersOnlyArgs()
+                    onFollowersOnly(this, new OnFollowersOnlyArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "msg_r9k":
-                    EventHandler<OnR9kModeArgs> onR9kMode = this.OnR9kMode;
+                    EventHandler<OnR9kModeArgs> onR9kMode = OnR9kMode;
                     if (onR9kMode == null)
                         break;
-                    onR9kMode((object)this, new OnR9kModeArgs()
+                    onR9kMode(this, new OnR9kModeArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "msg_ratelimit":
-                    EventHandler<OnRateLimitArgs> onRateLimit = this.OnRateLimit;
+                    EventHandler<OnRateLimitArgs> onRateLimit = OnRateLimit;
                     if (onRateLimit == null)
                         break;
-                    onRateLimit((object)this, new OnRateLimitArgs()
+                    onRateLimit(this, new OnRateLimitArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
@@ -860,128 +856,128 @@ public class CustomTwitchClient : ITwitchClient
                     break;
                 case "msg_requires_verified_phone_number":
                     EventHandler<OnRequiresVerifiedPhoneNumberArgs> verifiedPhoneNumber =
-                        this.OnRequiresVerifiedPhoneNumber;
+                        OnRequiresVerifiedPhoneNumber;
                     if (verifiedPhoneNumber == null)
                         break;
-                    verifiedPhoneNumber((object)this, new OnRequiresVerifiedPhoneNumberArgs()
+                    verifiedPhoneNumber(this, new OnRequiresVerifiedPhoneNumberArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "msg_slowmode":
-                    EventHandler<OnSlowModeArgs> onSlowMode = this.OnSlowMode;
+                    EventHandler<OnSlowModeArgs> onSlowMode = OnSlowMode;
                     if (onSlowMode == null)
                         break;
-                    onSlowMode((object)this, new OnSlowModeArgs()
+                    onSlowMode(this, new OnSlowModeArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "msg_subsonly":
-                    EventHandler<OnSubsOnlyArgs> onSubsOnly = this.OnSubsOnly;
+                    EventHandler<OnSubsOnlyArgs> onSubsOnly = OnSubsOnly;
                     if (onSubsOnly == null)
                         break;
-                    onSubsOnly((object)this, new OnSubsOnlyArgs()
+                    onSubsOnly(this, new OnSubsOnlyArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "msg_suspended":
-                    EventHandler<OnSuspendedArgs> onSuspended = this.OnSuspended;
+                    EventHandler<OnSuspendedArgs> onSuspended = OnSuspended;
                     if (onSuspended == null)
                         break;
-                    onSuspended((object)this, new OnSuspendedArgs()
+                    onSuspended(this, new OnSuspendedArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "msg_verified_email":
-                    EventHandler<OnRequiresVerifiedEmailArgs> requiresVerifiedEmail = this.OnRequiresVerifiedEmail;
+                    EventHandler<OnRequiresVerifiedEmailArgs> requiresVerifiedEmail = OnRequiresVerifiedEmail;
                     if (requiresVerifiedEmail == null)
                         break;
-                    requiresVerifiedEmail((object)this, new OnRequiresVerifiedEmailArgs()
+                    requiresVerifiedEmail(this, new OnRequiresVerifiedEmailArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message
                     });
                     break;
                 case "no_mods":
-                    EventHandler<OnModeratorsReceivedArgs> moderatorsReceived1 = this.OnModeratorsReceived;
+                    EventHandler<OnModeratorsReceivedArgs> moderatorsReceived1 = OnModeratorsReceived;
                     if (moderatorsReceived1 == null)
                         break;
-                    moderatorsReceived1((object)this, new OnModeratorsReceivedArgs()
+                    moderatorsReceived1(this, new OnModeratorsReceivedArgs
                     {
                         Channel = ircMessage.Channel,
                         Moderators = new List<string>()
                     });
                     break;
                 case "no_permission":
-                    EventHandler noPermissionError = this.OnNoPermissionError;
+                    EventHandler noPermissionError = OnNoPermissionError;
                     if (noPermissionError == null)
                         break;
-                    noPermissionError((object)this, (EventArgs)null);
+                    noPermissionError(this, null);
                     break;
                 case "no_vips":
-                    EventHandler<OnVIPsReceivedArgs> onViPsReceived1 = this.OnVIPsReceived;
+                    EventHandler<OnVIPsReceivedArgs> onViPsReceived1 = OnVIPsReceived;
                     if (onViPsReceived1 == null)
                         break;
-                    onViPsReceived1((object)this, new OnVIPsReceivedArgs()
+                    onViPsReceived1(this, new OnVIPsReceivedArgs
                     {
                         Channel = ircMessage.Channel,
                         VIPs = new List<string>()
                     });
                     break;
                 case "raid_error_self":
-                    EventHandler onSelfRaidError = this.OnSelfRaidError;
+                    EventHandler onSelfRaidError = OnSelfRaidError;
                     if (onSelfRaidError == null)
                         break;
-                    onSelfRaidError((object)this, (EventArgs)null);
+                    onSelfRaidError(this, null);
                     break;
                 case "raid_notice_mature":
-                    EventHandler isMatureAudience = this.OnRaidedChannelIsMatureAudience;
+                    EventHandler isMatureAudience = OnRaidedChannelIsMatureAudience;
                     if (isMatureAudience == null)
                         break;
-                    isMatureAudience((object)this, (EventArgs)null);
+                    isMatureAudience(this, null);
                     break;
                 case "room_mods":
-                    EventHandler<OnModeratorsReceivedArgs> moderatorsReceived2 = this.OnModeratorsReceived;
+                    EventHandler<OnModeratorsReceivedArgs> moderatorsReceived2 = OnModeratorsReceived;
                     if (moderatorsReceived2 == null)
                         break;
-                    moderatorsReceived2((object)this, new OnModeratorsReceivedArgs()
+                    moderatorsReceived2(this, new OnModeratorsReceivedArgs
                     {
                         Channel = ircMessage.Channel,
                         Moderators =
-                            ((IEnumerable<string>)ircMessage.Message.Replace(" ", "").Split(':')[1].Split(','))
-                            .ToList<string>()
+                            ircMessage.Message.Replace(" ", "").Split(':')[1].Split(',')
+                            .ToList()
                     });
                     break;
                 case "vips_success":
-                    EventHandler<OnVIPsReceivedArgs> onViPsReceived2 = this.OnVIPsReceived;
+                    EventHandler<OnVIPsReceivedArgs> onViPsReceived2 = OnVIPsReceived;
                     if (onViPsReceived2 == null)
                         break;
-                    onViPsReceived2((object)this, new OnVIPsReceivedArgs()
+                    onViPsReceived2(this, new OnVIPsReceivedArgs
                     {
                         Channel = ircMessage.Channel,
                         VIPs =
-                            ((IEnumerable<string>)ircMessage.Message.Replace(" ", "").Replace(".", "").Split(':')[1]
-                                .Split(',')).ToList<string>()
+                            ircMessage.Message.Replace(" ", "").Replace(".", "").Split(':')[1]
+                                .Split(',').ToList()
                     });
                     break;
                 default:
-                    EventHandler<OnUnaccountedForArgs> onUnaccountedFor1 = this.OnUnaccountedFor;
+                    EventHandler<OnUnaccountedForArgs> onUnaccountedFor1 = OnUnaccountedFor;
                     if (onUnaccountedFor1 != null)
-                        onUnaccountedFor1((object)this, new OnUnaccountedForArgs()
+                        onUnaccountedFor1(this, new OnUnaccountedForArgs
                         {
-                            BotUsername = this.TwitchUsername,
+                            BotUsername = TwitchUsername,
                             Channel = ircMessage.Channel,
                             Location = "NoticeHandling",
                             RawIRC = ircMessage.ToString()
                         });
-                    this.UnaccountedFor(ircMessage.ToString());
+                    UnaccountedFor(ircMessage.ToString());
                     break;
             }
         }
@@ -989,10 +985,10 @@ public class CustomTwitchClient : ITwitchClient
 
     private void HandleJoin(IrcMessage ircMessage)
     {
-        EventHandler<OnUserJoinedArgs> onUserJoined = this.OnUserJoined;
+        EventHandler<OnUserJoinedArgs> onUserJoined = OnUserJoined;
         if (onUserJoined == null)
             return;
-        onUserJoined((object)this, new OnUserJoinedArgs()
+        onUserJoined(this, new OnUserJoinedArgs
         {
             Channel = ircMessage.Channel,
             Username = ircMessage.User
@@ -1001,25 +997,25 @@ public class CustomTwitchClient : ITwitchClient
 
     private void HandlePart(IrcMessage ircMessage)
     {
-        if (string.Equals(this.TwitchUsername, ircMessage.User, StringComparison.InvariantCultureIgnoreCase))
+        if (string.Equals(TwitchUsername, ircMessage.User, StringComparison.InvariantCultureIgnoreCase))
         {
-            this._joinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
-            this._hasSeenJoinedChannels.Remove(ircMessage.Channel);
-            EventHandler<OnLeftChannelArgs> onLeftChannel = this.OnLeftChannel;
+            _joinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
+            _hasSeenJoinedChannels.Remove(ircMessage.Channel);
+            EventHandler<OnLeftChannelArgs> onLeftChannel = OnLeftChannel;
             if (onLeftChannel == null)
                 return;
-            onLeftChannel((object)this, new OnLeftChannelArgs()
+            onLeftChannel(this, new OnLeftChannelArgs
             {
-                BotUsername = this.TwitchUsername,
+                BotUsername = TwitchUsername,
                 Channel = ircMessage.Channel
             });
         }
         else
         {
-            EventHandler<OnUserLeftArgs> onUserLeft = this.OnUserLeft;
+            EventHandler<OnUserLeftArgs> onUserLeft = OnUserLeft;
             if (onUserLeft == null)
                 return;
-            onUserLeft((object)this, new OnUserLeftArgs()
+            onUserLeft(this, new OnUserLeftArgs
             {
                 Channel = ircMessage.Channel,
                 Username = ircMessage.User
@@ -1031,10 +1027,10 @@ public class CustomTwitchClient : ITwitchClient
     {
         if (string.IsNullOrWhiteSpace(ircMessage.Message))
         {
-            EventHandler<OnChatClearedArgs> onChatCleared = this.OnChatCleared;
+            EventHandler<OnChatClearedArgs> onChatCleared = OnChatCleared;
             if (onChatCleared == null)
                 return;
-            onChatCleared((object)this, new OnChatClearedArgs()
+            onChatCleared(this, new OnChatClearedArgs
             {
                 Channel = ircMessage.Channel
             });
@@ -1042,10 +1038,10 @@ public class CustomTwitchClient : ITwitchClient
         else if (ircMessage.Tags.TryGetValue("ban-duration", out string _))
         {
             UserTimeout userTimeout = new UserTimeout(ircMessage);
-            EventHandler<OnUserTimedoutArgs> onUserTimedout = this.OnUserTimedout;
+            EventHandler<OnUserTimedoutArgs> onUserTimedout = OnUserTimedout;
             if (onUserTimedout == null)
                 return;
-            onUserTimedout((object)this, new OnUserTimedoutArgs()
+            onUserTimedout(this, new OnUserTimedoutArgs
             {
                 UserTimeout = userTimeout
             });
@@ -1053,10 +1049,10 @@ public class CustomTwitchClient : ITwitchClient
         else
         {
             UserBan userBan = new UserBan(ircMessage);
-            EventHandler<OnUserBannedArgs> onUserBanned = this.OnUserBanned;
+            EventHandler<OnUserBannedArgs> onUserBanned = OnUserBanned;
             if (onUserBanned == null)
                 return;
-            onUserBanned((object)this, new OnUserBannedArgs()
+            onUserBanned(this, new OnUserBannedArgs
             {
                 UserBan = userBan
             });
@@ -1065,10 +1061,10 @@ public class CustomTwitchClient : ITwitchClient
 
     private void HandleClearMsg(IrcMessage ircMessage)
     {
-        EventHandler<OnMessageClearedArgs> onMessageCleared = this.OnMessageCleared;
+        EventHandler<OnMessageClearedArgs> onMessageCleared = OnMessageCleared;
         if (onMessageCleared == null)
             return;
-        onMessageCleared((object)this, new OnMessageClearedArgs()
+        onMessageCleared(this, new OnMessageClearedArgs
         {
             Channel = ircMessage.Channel,
             Message = ircMessage.Message,
@@ -1080,93 +1076,93 @@ public class CustomTwitchClient : ITwitchClient
     private void HandleUserState(IrcMessage ircMessage)
     {
         UserState state = new UserState(ircMessage);
-        if (!this._hasSeenJoinedChannels.Contains(state.Channel.ToLowerInvariant()))
+        if (!_hasSeenJoinedChannels.Contains(state.Channel.ToLowerInvariant()))
         {
-            this._hasSeenJoinedChannels.Add(state.Channel.ToLowerInvariant());
-            EventHandler<OnUserStateChangedArgs> userStateChanged = this.OnUserStateChanged;
+            _hasSeenJoinedChannels.Add(state.Channel.ToLowerInvariant());
+            EventHandler<OnUserStateChangedArgs> userStateChanged = OnUserStateChanged;
             if (userStateChanged == null)
                 return;
-            userStateChanged((object)this, new OnUserStateChangedArgs()
+            userStateChanged(this, new OnUserStateChangedArgs
             {
                 UserState = state
             });
         }
         else
         {
-            EventHandler<OnMessageSentArgs> onMessageSent = this.OnMessageSent;
+            EventHandler<OnMessageSentArgs> onMessageSent = OnMessageSent;
             if (onMessageSent == null)
                 return;
-            onMessageSent((object)this, new OnMessageSentArgs()
+            onMessageSent(this, new OnMessageSentArgs
             {
-                SentMessage = new SentMessage(state, this._lastMessageSent)
+                SentMessage = new SentMessage(state, _lastMessageSent)
             });
         }
     }
 
     private void Handle004()
     {
-        EventHandler<OnConnectedArgs> onConnected = this.OnConnected;
+        EventHandler<OnConnectedArgs> onConnected = OnConnected;
         if (onConnected == null)
             return;
-        onConnected((object)this, new OnConnectedArgs()
+        onConnected(this, new OnConnectedArgs
         {
-            BotUsername = this.TwitchUsername
+            BotUsername = TwitchUsername
         });
     }
     
     private void Handle353(IrcMessage ircMessage)
     {
-        EventHandler<OnExistingUsersDetectedArgs> existingUsersDetected = this.OnExistingUsersDetected;
+        EventHandler<OnExistingUsersDetectedArgs> existingUsersDetected = OnExistingUsersDetected;
         if (existingUsersDetected == null)
             return;
-        existingUsersDetected((object)this, new OnExistingUsersDetectedArgs()
+        existingUsersDetected(this, new OnExistingUsersDetectedArgs
         {
             Channel = ircMessage.Channel,
-            Users = ((IEnumerable<string>)ircMessage.Message.Split(' ')).ToList<string>()
+            Users = ircMessage.Message.Split(' ').ToList()
         });
     }
 
     private void Handle366()
     {
-        this._currentlyJoiningChannels = false;
-        this.QueueingJoinCheck();
+        _currentlyJoiningChannels = false;
+        QueueingJoinCheck();
     }
     
     private void HandleWhisper(IrcMessage ircMessage)
     {
-        WhisperMessage whisperMessage = new WhisperMessage(ircMessage, this.TwitchUsername);
-        this.PreviousWhisper = whisperMessage;
-        EventHandler<OnWhisperReceivedArgs> onWhisperReceived = this.OnWhisperReceived;
+        WhisperMessage whisperMessage = new WhisperMessage(ircMessage, TwitchUsername);
+        PreviousWhisper = whisperMessage;
+        EventHandler<OnWhisperReceivedArgs> onWhisperReceived = OnWhisperReceived;
         if (onWhisperReceived != null)
-            onWhisperReceived((object)this, new OnWhisperReceivedArgs()
+            onWhisperReceived(this, new OnWhisperReceivedArgs
             {
                 WhisperMessage = whisperMessage
             });
-        if (this._whisperCommandIdentifiers != null && this._whisperCommandIdentifiers.Count != 0 &&
+        if (_whisperCommandIdentifiers != null && _whisperCommandIdentifiers.Count != 0 &&
             !string.IsNullOrEmpty(whisperMessage.Message) &&
-            this._whisperCommandIdentifiers.Contains(whisperMessage.Message[0]))
+            _whisperCommandIdentifiers.Contains(whisperMessage.Message[0]))
         {
             WhisperCommand whisperCommand = new WhisperCommand(whisperMessage);
-            EventHandler<OnWhisperCommandReceivedArgs> whisperCommandReceived = this.OnWhisperCommandReceived;
+            EventHandler<OnWhisperCommandReceivedArgs> whisperCommandReceived = OnWhisperCommandReceived;
             if (whisperCommandReceived == null)
                 return;
-            whisperCommandReceived((object)this, new OnWhisperCommandReceivedArgs()
+            whisperCommandReceived(this, new OnWhisperCommandReceivedArgs
             {
                 Command = whisperCommand
             });
         }
         else
         {
-            EventHandler<OnUnaccountedForArgs> onUnaccountedFor = this.OnUnaccountedFor;
+            EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
             if (onUnaccountedFor != null)
-                onUnaccountedFor((object)this, new OnUnaccountedForArgs()
+                onUnaccountedFor(this, new OnUnaccountedForArgs
                 {
-                    BotUsername = this.TwitchUsername,
+                    BotUsername = TwitchUsername,
                     Channel = ircMessage.Channel,
                     Location = "WhispergHandling",
                     RawIRC = ircMessage.ToString()
                 });
-            this.UnaccountedFor(ircMessage.ToString());
+            UnaccountedFor(ircMessage.ToString());
         }
     }
     
@@ -1174,22 +1170,22 @@ public class CustomTwitchClient : ITwitchClient
     {
         if (ircMessage.Tags.Count > 2)
         {
-            this._awaitingJoins.Remove(
-                this._awaitingJoins.FirstOrDefault<KeyValuePair<string, DateTime>>(
+            _awaitingJoins.Remove(
+                _awaitingJoins.FirstOrDefault(
                     (Func<KeyValuePair<string, DateTime>, bool>)(x => x.Key == ircMessage.Channel)));
-            EventHandler<OnJoinedChannelArgs> onJoinedChannel = this.OnJoinedChannel;
+            EventHandler<OnJoinedChannelArgs> onJoinedChannel = OnJoinedChannel;
             if (onJoinedChannel != null)
-                onJoinedChannel((object)this, new OnJoinedChannelArgs()
+                onJoinedChannel(this, new OnJoinedChannelArgs
                 {
-                    BotUsername = this.TwitchUsername,
+                    BotUsername = TwitchUsername,
                     Channel = ircMessage.Channel
                 });
         }
 
-        EventHandler<OnChannelStateChangedArgs> channelStateChanged = this.OnChannelStateChanged;
+        EventHandler<OnChannelStateChangedArgs> channelStateChanged = OnChannelStateChanged;
         if (channelStateChanged == null)
             return;
-        channelStateChanged((object)this, new OnChannelStateChangedArgs()
+        channelStateChanged(this, new OnChannelStateChangedArgs
         {
             ChannelState = new ChannelState(ircMessage),
             Channel = ircMessage.Channel
@@ -1198,19 +1194,18 @@ public class CustomTwitchClient : ITwitchClient
     
     private void HandleUserNotice(IrcMessage ircMessage)
     {
-        string str;
-        if (!ircMessage.Tags.TryGetValue("msg-id", out str))
+        if (!ircMessage.Tags.TryGetValue("msg-id", out var str))
         {
-            EventHandler<OnUnaccountedForArgs> onUnaccountedFor = this.OnUnaccountedFor;
+            EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
             if (onUnaccountedFor != null)
-                onUnaccountedFor((object)this, new OnUnaccountedForArgs()
+                onUnaccountedFor(this, new OnUnaccountedForArgs
                 {
-                    BotUsername = this.TwitchUsername,
+                    BotUsername = TwitchUsername,
                     Channel = ircMessage.Channel,
                     Location = "UserNoticeHandling",
                     RawIRC = ircMessage.ToString()
                 });
-            this.UnaccountedFor(ircMessage.ToString());
+            UnaccountedFor(ircMessage.ToString());
         }
         else
         {
@@ -1218,10 +1213,10 @@ public class CustomTwitchClient : ITwitchClient
             {
                 case "announcement":
                     Announcement announcement = new Announcement(ircMessage);
-                    EventHandler<OnAnnouncementArgs> onAnnouncement = this.OnAnnouncement;
+                    EventHandler<OnAnnouncementArgs> onAnnouncement = OnAnnouncement;
                     if (onAnnouncement == null)
                         break;
-                    onAnnouncement((object)this, new OnAnnouncementArgs()
+                    onAnnouncement(this, new OnAnnouncementArgs
                     {
                         Announcement = announcement,
                         Channel = ircMessage.Channel
@@ -1230,10 +1225,10 @@ public class CustomTwitchClient : ITwitchClient
                 case "giftpaidupgrade":
                     ContinuedGiftedSubscription giftedSubscription1 = new ContinuedGiftedSubscription(ircMessage);
                     EventHandler<OnContinuedGiftedSubscriptionArgs> giftedSubscription2 =
-                        this.OnContinuedGiftedSubscription;
+                        OnContinuedGiftedSubscription;
                     if (giftedSubscription2 == null)
                         break;
-                    giftedSubscription2((object)this, new OnContinuedGiftedSubscriptionArgs()
+                    giftedSubscription2(this, new OnContinuedGiftedSubscriptionArgs
                     {
                         ContinuedGiftedSubscription = giftedSubscription1,
                         Channel = ircMessage.Channel
@@ -1241,10 +1236,10 @@ public class CustomTwitchClient : ITwitchClient
                     break;
                 case "primepaidupgrade":
                     PrimePaidSubscriber primePaidSubscriber1 = new PrimePaidSubscriber(ircMessage);
-                    EventHandler<OnPrimePaidSubscriberArgs> primePaidSubscriber2 = this.OnPrimePaidSubscriber;
+                    EventHandler<OnPrimePaidSubscriberArgs> primePaidSubscriber2 = OnPrimePaidSubscriber;
                     if (primePaidSubscriber2 == null)
                         break;
-                    primePaidSubscriber2((object)this, new OnPrimePaidSubscriberArgs()
+                    primePaidSubscriber2(this, new OnPrimePaidSubscriberArgs
                     {
                         PrimePaidSubscriber = primePaidSubscriber1,
                         Channel = ircMessage.Channel
@@ -1252,10 +1247,10 @@ public class CustomTwitchClient : ITwitchClient
                     break;
                 case "raid":
                     RaidNotification raidNotification1 = new RaidNotification(ircMessage);
-                    EventHandler<OnRaidNotificationArgs> raidNotification2 = this.OnRaidNotification;
+                    EventHandler<OnRaidNotificationArgs> raidNotification2 = OnRaidNotification;
                     if (raidNotification2 == null)
                         break;
-                    raidNotification2((object)this, new OnRaidNotificationArgs()
+                    raidNotification2(this, new OnRaidNotificationArgs
                     {
                         Channel = ircMessage.Channel,
                         RaidNotification = raidNotification1
@@ -1263,10 +1258,10 @@ public class CustomTwitchClient : ITwitchClient
                     break;
                 case "resub":
                     ReSubscriber reSubscriber = new ReSubscriber(ircMessage);
-                    EventHandler<OnReSubscriberArgs> onReSubscriber = this.OnReSubscriber;
+                    EventHandler<OnReSubscriberArgs> onReSubscriber = OnReSubscriber;
                     if (onReSubscriber == null)
                         break;
-                    onReSubscriber((object)this, new OnReSubscriberArgs()
+                    onReSubscriber(this, new OnReSubscriberArgs
                     {
                         ReSubscriber = reSubscriber,
                         Channel = ircMessage.Channel
@@ -1274,10 +1269,10 @@ public class CustomTwitchClient : ITwitchClient
                     break;
                 case "sub":
                     Subscriber subscriber = new Subscriber(ircMessage);
-                    EventHandler<OnNewSubscriberArgs> onNewSubscriber = this.OnNewSubscriber;
+                    EventHandler<OnNewSubscriberArgs> onNewSubscriber = OnNewSubscriber;
                     if (onNewSubscriber == null)
                         break;
-                    onNewSubscriber((object)this, new OnNewSubscriberArgs()
+                    onNewSubscriber(this, new OnNewSubscriberArgs
                     {
                         Subscriber = subscriber,
                         Channel = ircMessage.Channel
@@ -1285,10 +1280,10 @@ public class CustomTwitchClient : ITwitchClient
                     break;
                 case "subgift":
                     GiftedSubscription giftedSubscription3 = new GiftedSubscription(ircMessage);
-                    EventHandler<OnGiftedSubscriptionArgs> giftedSubscription4 = this.OnGiftedSubscription;
+                    EventHandler<OnGiftedSubscriptionArgs> giftedSubscription4 = OnGiftedSubscription;
                     if (giftedSubscription4 == null)
                         break;
-                    giftedSubscription4((object)this, new OnGiftedSubscriptionArgs()
+                    giftedSubscription4(this, new OnGiftedSubscriptionArgs
                     {
                         GiftedSubscription = giftedSubscription3,
                         Channel = ircMessage.Channel
@@ -1296,26 +1291,26 @@ public class CustomTwitchClient : ITwitchClient
                     break;
                 case "submysterygift":
                     CommunitySubscription communitySubscription1 = new CommunitySubscription(ircMessage);
-                    EventHandler<OnCommunitySubscriptionArgs> communitySubscription2 = this.OnCommunitySubscription;
+                    EventHandler<OnCommunitySubscriptionArgs> communitySubscription2 = OnCommunitySubscription;
                     if (communitySubscription2 == null)
                         break;
-                    communitySubscription2((object)this, new OnCommunitySubscriptionArgs()
+                    communitySubscription2(this, new OnCommunitySubscriptionArgs
                     {
                         GiftedSubscription = communitySubscription1,
                         Channel = ircMessage.Channel
                     });
                     break;
                 default:
-                    EventHandler<OnUnaccountedForArgs> onUnaccountedFor1 = this.OnUnaccountedFor;
+                    EventHandler<OnUnaccountedForArgs> onUnaccountedFor1 = OnUnaccountedFor;
                     if (onUnaccountedFor1 != null)
-                        onUnaccountedFor1((object)this, new OnUnaccountedForArgs()
+                        onUnaccountedFor1(this, new OnUnaccountedForArgs
                         {
-                            BotUsername = this.TwitchUsername,
+                            BotUsername = TwitchUsername,
                             Channel = ircMessage.Channel,
                             Location = "UserNoticeHandling",
                             RawIRC = ircMessage.ToString()
                         });
-                    this.UnaccountedFor(ircMessage.ToString());
+                    UnaccountedFor(ircMessage.ToString());
                     break;
             }
         }
@@ -1325,10 +1320,10 @@ public class CustomTwitchClient : ITwitchClient
     {
         if (ircMessage.Message.StartsWith("+o"))
         {
-            EventHandler<OnModeratorJoinedArgs> onModeratorJoined = this.OnModeratorJoined;
+            EventHandler<OnModeratorJoinedArgs> onModeratorJoined = OnModeratorJoined;
             if (onModeratorJoined == null)
                 return;
-            onModeratorJoined((object)this, new OnModeratorJoinedArgs()
+            onModeratorJoined(this, new OnModeratorJoinedArgs
             {
                 Channel = ircMessage.Channel,
                 Username = ircMessage.Message.Split(' ')[1]
@@ -1338,10 +1333,10 @@ public class CustomTwitchClient : ITwitchClient
         {
             if (!ircMessage.Message.StartsWith("-o"))
                 return;
-            EventHandler<OnModeratorLeftArgs> onModeratorLeft = this.OnModeratorLeft;
+            EventHandler<OnModeratorLeftArgs> onModeratorLeft = OnModeratorLeft;
             if (onModeratorLeft == null)
                 return;
-            onModeratorLeft((object)this, new OnModeratorLeftArgs()
+            onModeratorLeft(this, new OnModeratorLeftArgs
             {
                 Channel = ircMessage.Channel,
                 Username = ircMessage.Message.Split(' ')[1]
@@ -1351,39 +1346,40 @@ public class CustomTwitchClient : ITwitchClient
     
     private void HandleCap(IrcMessage ircMessage)
     {
+        Log(ircMessage.Message);
     }
 
     private void UnaccountedFor(string ircString)
     {
-        this.Log("Unaccounted for: " + ircString + " (please create a TwitchLib GitHub issue :P)");
+        Log("Unaccounted for: " + ircString + " (please create a TwitchLib GitHub issue :P)");
     }
     
     private void Log(string message, bool includeDate = false, bool includeTime = false)
     {
         string str = !(includeDate & includeTime)
-            ? (!includeDate ? DateTime.UtcNow.ToShortTimeString() ?? "" : DateTime.UtcNow.ToShortDateString() ?? "")
-            : string.Format("{0}", (object)DateTime.UtcNow);
+            ? !includeDate ? DateTime.UtcNow.ToShortTimeString() : DateTime.UtcNow.ToShortDateString()
+            : $"{DateTime.UtcNow}";
         if (includeDate | includeTime)
         {
-            ILogger<CustomTwitchClient> logger = this._logger;
+            ILogger<CustomTwitchClient> logger = _logger;
             if (logger != null)
-                logger.LogInformation(string.Format("[TwitchLib, {0} - {1}] {2}",
-                    (object)Assembly.GetExecutingAssembly().GetName().Version, (object)str, (object)message));
+                logger.LogInformation(
+                    $"[CustomTwitchClient, {Assembly.GetExecutingAssembly().GetName().Version} - {str}] {message}");
         }
         else
         {
-            ILogger<CustomTwitchClient> logger = this._logger;
+            ILogger<CustomTwitchClient> logger = _logger;
             if (logger != null)
-                logger.LogInformation(string.Format("[TwitchLib, {0}] {1}",
-                    (object)Assembly.GetExecutingAssembly().GetName().Version, (object)message));
+                logger.LogInformation(
+                    $"[CustomTwitchClient, {Assembly.GetExecutingAssembly().GetName().Version}] {message}");
         }
 
-        EventHandler<OnLogArgs> onLog = this.OnLog;
+        EventHandler<OnLogArgs> onLog = OnLog;
         if (onLog == null)
             return;
-        onLog((object)this, new OnLogArgs()
+        onLog(this, new OnLogArgs
         {
-            BotUsername = this.ConnectionCredentials?.TwitchUsername,
+            BotUsername = ConnectionCredentials?.TwitchUsername,
             Data = message,
             DateTime = DateTime.UtcNow
         });
@@ -1392,29 +1388,28 @@ public class CustomTwitchClient : ITwitchClient
     private void LogError(string message, bool includeDate = false, bool includeTime = false)
     {
         string str = !(includeDate & includeTime)
-            ? (!includeDate ? DateTime.UtcNow.ToShortTimeString() ?? "" : DateTime.UtcNow.ToShortDateString() ?? "")
-            : string.Format("{0}", (object)DateTime.UtcNow);
+            ? !includeDate ? DateTime.UtcNow.ToShortTimeString() : DateTime.UtcNow.ToShortDateString()
+            : $"{DateTime.UtcNow}";
         if (includeDate | includeTime)
         {
-            ILogger<CustomTwitchClient> logger = this._logger;
+            ILogger<CustomTwitchClient> logger = _logger;
             if (logger != null)
-                logger.LogError(string.Format("[TwitchLib, {0} - {1}] {2}",
-                    (object)Assembly.GetExecutingAssembly().GetName().Version, (object)str, (object)message));
+                logger.LogError($"[CustomTwitchClient, {Assembly.GetExecutingAssembly().GetName().Version} - {str}] {message}");
         }
         else
         {
-            ILogger<CustomTwitchClient> logger = this._logger;
+            ILogger<CustomTwitchClient> logger = _logger;
             if (logger != null)
-                logger.LogError(string.Format("[TwitchLib, {0}] {1}",
-                    (object)Assembly.GetExecutingAssembly().GetName().Version, (object)message));
+                logger.LogError(string.Format("[CustomTwitchClient, {0}] {1}",
+                    Assembly.GetExecutingAssembly().GetName().Version, message));
         }
 
-        EventHandler<OnLogArgs> onLog = this.OnLog;
+        EventHandler<OnLogArgs> onLog = OnLog;
         if (onLog == null)
             return;
-        onLog((object)this, new OnLogArgs()
+        onLog(this, new OnLogArgs
         {
-            BotUsername = this.ConnectionCredentials?.TwitchUsername,
+            BotUsername = ConnectionCredentials?.TwitchUsername,
             Data = message,
             DateTime = DateTime.UtcNow
         });
@@ -1422,9 +1417,9 @@ public class CustomTwitchClient : ITwitchClient
     
     public void SendQueuedItem(string message)
     {
-        if (!this.IsInitialized)
-            CustomTwitchClient.HandleNotInitialized();
-        this._client.Send(message);
+        if (!IsInitialized)
+            HandleNotInitialized();
+        _client.Send(message);
     }
 
     protected static void HandleNotInitialized()

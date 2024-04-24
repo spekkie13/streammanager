@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
+using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.Models.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.Twitch.General;
-using Reward = SpekkieTwitchBot.Models.Twitch.Events.ChannelPoint.Reward;
+using Reward = SpekkieClassLibrary.Twitch.Events.ChannelPoint.Reward;
 
 namespace SpekkieTwitchBot.Twitch.Events.Handlers;
 
@@ -71,8 +71,10 @@ public class ChannelPointHandler
         if (!message.IsSuccessStatusCode) return new List<string>();
         string response = await message.Content.ReadAsStringAsync();
         ChannelPointRequest redemptions = JsonConvert.DeserializeObject<ChannelPointRequest?>(response) ?? new ChannelPointRequest();
-        List<string> rewardIds = redemptions.data.Select(x => x.id).ToList();
+        if (redemptions.Data == null) return new List<string>();
+        List<string> rewardIds = redemptions.Data.Select(x => x.Id).ToList();
         return rewardIds;
+
     }
     
     private async Task<List<Reward>> GetFulfilledRedemptionsByStatus(string status, string rewardId)
@@ -84,8 +86,8 @@ public class ChannelPointHandler
 
         string response = await message.Content.ReadAsStringAsync();
         var unfulfilled = JsonConvert.DeserializeObject<ChannelPointRewardRequest>(response) ?? new ChannelPointRewardRequest();
-        var redemptions = unfulfilled.data;
-        return redemptions.Select(x => x.reward).ToList();
+        var redemptions = unfulfilled.Data;
+        return redemptions.Select(x => x.Reward).ToList();
     }
     
     private async Task<HttpResponseMessage> UpdateRedemptionStatus(

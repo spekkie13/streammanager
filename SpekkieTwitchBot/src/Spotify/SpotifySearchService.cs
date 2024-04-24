@@ -1,9 +1,9 @@
 ﻿using System.Net.Http.Headers;
 using Newtonsoft.Json;
+using SpekkieClassLibrary.Spotify.Auth;
+using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
-using SpekkieTwitchBot.Models.Spotify.Auth;
-using SpekkieTwitchBot.Models.Spotify.Song;
 
 namespace SpekkieTwitchBot.Spotify;
 
@@ -31,6 +31,6 @@ public class SpotifySearchService
         string result = await message.Content.ReadAsStringAsync();
         SongResponse? response = JsonConvert.DeserializeObject<SongResponse>(result);
         
-        return response?.tracks;
+        return response?.Tracks;
     }
 }

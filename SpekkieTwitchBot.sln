@@ -5,6 +5,10 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpekkieTwitchBot", "SpekkieTwitchBot\SpekkieTwitchBot.csproj", "{1C50416A-E914-42E5-A1C5-0B8051CCF34F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTests", "SpekkieTests\SpekkieTests.csproj", "{C68D7E0D-389A-4FB8-987D-E4C332364380}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieClassLibrary", "SpekkieClassLibrary\SpekkieClassLibrary.csproj", "{C7871EC4-355E-41A8-BC4A-ECE5D94F6FC7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{1C50416A-E914-42E5-A1C5-0B8051CCF34F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C50416A-E914-42E5-A1C5-0B8051CCF34F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C50416A-E914-42E5-A1C5-0B8051CCF34F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C68D7E0D-389A-4FB8-987D-E4C332364380}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C68D7E0D-389A-4FB8-987D-E4C332364380}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C68D7E0D-389A-4FB8-987D-E4C332364380}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C68D7E0D-389A-4FB8-987D-E4C332364380}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7871EC4-355E-41A8-BC4A-ECE5D94F6FC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7871EC4-355E-41A8-BC4A-ECE5D94F6FC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7871EC4-355E-41A8-BC4A-ECE5D94F6FC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7871EC4-355E-41A8-BC4A-ECE5D94F6FC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

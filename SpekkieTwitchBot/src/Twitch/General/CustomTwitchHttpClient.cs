@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using SpekkieClassLibrary.Twitch.Auth;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 

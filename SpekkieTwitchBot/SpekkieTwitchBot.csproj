@@ -20,4 +20,8 @@
     <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SpekkieClassLibrary\SpekkieClassLibrary.csproj" />
+  </ItemGroup>
+
 </Project>

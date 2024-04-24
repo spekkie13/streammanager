@@ -1,10 +1,9 @@
 ﻿using Newtonsoft.Json;
+using SpekkieClassLibrary.Spotify;
+using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
-using SpekkieTwitchBot.Models.Spotify;
-using SpekkieTwitchBot.Models.Spotify.Auth;
 using SpekkieTwitchBot.Spotify.FileHandling;
-using AuthorizationCodeTokenResponse = SpekkieTwitchBot.Models.Spotify.Auth.AuthorizationCodeTokenReponse;
 
 namespace SpekkieTwitchBot.Auth;
 
@@ -31,7 +30,7 @@ public class SpotifyAuthService
 
     public AuthorizationCodeTokenResponse GetSpotifyToken(HttpClient client, SpotifyAuth auth)
     {
-        var accessToken = RefreshSpotifyAccessToken(auth.client_id, auth.client_secret, auth.refresh_token, client).Result;
+        var accessToken = RefreshSpotifyAccessToken(auth.ClientId, auth.ClientSecret, auth.RefreshToken, client).Result;
         AuthorizationCodeTokenResponse tokenResponse = new ()
         {
             RefreshToken = accessToken?.RefreshToken ?? "",

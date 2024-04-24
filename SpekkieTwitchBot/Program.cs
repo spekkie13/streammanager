@@ -1,12 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SpekkieClassLibrary.Twitch.Auth;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.FileHandling;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.Models.Twitch;
-using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.OBS;
 using SpekkieTwitchBot.Spotify;
 using SpekkieTwitchBot.Spotify.FileHandling;

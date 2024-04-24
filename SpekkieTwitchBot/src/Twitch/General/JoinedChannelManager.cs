@@ -17,7 +17,7 @@ public class JoinedChannelManager
         _JoinedChannels.TryAdd(channel.Channel, channel);
     }
 
-    public JoinedChannel? GetJoinedChannel(string? channel)
+    public JoinedChannel? GetJoinedChannel(string channel)
     {
         _JoinedChannels.TryGetValue(channel, out var joinedChannel);
         return joinedChannel;

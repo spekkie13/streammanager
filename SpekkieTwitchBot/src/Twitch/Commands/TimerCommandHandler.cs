@@ -1,5 +1,4 @@
-﻿using SpekkieTwitchBot.Models;
-using SpekkieTwitchBot.Timer;
+﻿using SpekkieTwitchBot.Timer;
 using SpekkieTwitchBot.Twitch.General;
 
 namespace SpekkieTwitchBot.Twitch.Commands;

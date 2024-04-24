@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using Newtonsoft.Json;
+using SpekkieClassLibrary.Twitch.Auth;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;

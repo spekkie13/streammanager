@@ -1,7 +1,10 @@
-﻿#nullable disable
-using System.Timers;
+﻿using System.Timers;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SpekkieClassLibrary.Twitch.Pubsub.Args;
+using SpekkieClassLibrary.Twitch.Pubsub.Interfaces;
+using SpekkieClassLibrary.Twitch.Pubsub.Types;
+
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Enums;
 using TwitchLib.Communication.Events;
@@ -9,21 +12,41 @@ using TwitchLib.Communication.Models;
 using TwitchLib.PubSub.Enums;
 using TwitchLib.PubSub.Events;
 using TwitchLib.PubSub.Models;
-using TwitchLib.PubSub.Models.Responses;
-using TwitchLib.PubSub.Models.Responses.Messages;
-using TwitchLib.PubSub.Models.Responses.Messages.AutomodCaughtMessage;
-using TwitchLib.PubSub.Models.Responses.Messages.Redemption;
-using TwitchLib.PubSub.Models.Responses.Messages.UserModerationNotifications;
-using Message = TwitchLib.PubSub.Models.Responses.Message;
-using Timer = System.Timers.Timer;
-using Following = SpekkieTwitchBot.Models.Twitch.Pubsub.Following;
-using Interfaces_ITwitchPubSub = SpekkieTwitchBot.Models.Twitch.Pubsub.Interfaces.ITwitchPubSub;
-using OnChannelPointsRewardRedeemedArgs = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnChannelPointsRewardRedeemedArgs;
-using OnBitsReceivedV2Args = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnBitsReceivedV2Args;
+
+using AutomodCaughtMessage = SpekkieClassLibrary.Twitch.Pubsub.Types.AutomodCaughtMessage;
+using AutomodQueue = SpekkieClassLibrary.Twitch.Pubsub.Types.AutomodQueue;
+using AutomodQueueType = SpekkieClassLibrary.Twitch.Pubsub.Enums.AutomodQueueType;
+using ChannelBitsEvents = SpekkieClassLibrary.Twitch.Pubsub.EventData.ChannelBitsEvents;
+using ChannelBitsEventsV2 = SpekkieClassLibrary.Twitch.Pubsub.EventData.ChannelBitsEventsV2;
+using ChannelExtensionBroadcast = SpekkieClassLibrary.Twitch.Pubsub.EventData.ChannelExtensionBroadcast;
+using ChannelPointsChannel = SpekkieClassLibrary.Twitch.Pubsub.Types.ChannelPointsChannel;
+using ChannelPointsChannelType = SpekkieClassLibrary.Twitch.Pubsub.Enums.ChannelPointsChannelType;
+using ChannelSubscription = SpekkieClassLibrary.Twitch.Pubsub.Types.ChannelSubscription;
+using ChatModeratorActions = SpekkieClassLibrary.Twitch.Pubsub.EventData.ChatModeratorActions;
+using CommunityPointsChannel = SpekkieClassLibrary.Twitch.Pubsub.Types.CommunityPointsChannel;
+using CommunityPointsChannelType = SpekkieClassLibrary.Twitch.Pubsub.Enums.CommunityPointsChannelType;
+using Following = SpekkieClassLibrary.Twitch.Pubsub.Types.Following;
+using LeaderboardEvents = SpekkieClassLibrary.Twitch.Pubsub.EventData.LeaderboardEvents;
+using LeaderBoardType = SpekkieClassLibrary.Twitch.Pubsub.Enums.LeaderBoardType;
+using RewardRedeemed = SpekkieClassLibrary.Twitch.Pubsub.Types.RewardRedeemed;
+using OnListenResponseArgs = SpekkieClassLibrary.Twitch.Pubsub.Args.OnListenResponseArgs;
+using PredictionEvents = SpekkieClassLibrary.Twitch.Pubsub.EventData.PredictionEvents;
+using PredictionType = SpekkieClassLibrary.Twitch.Pubsub.Enums.PredictionType;
+using RaidEvents = SpekkieClassLibrary.Twitch.Pubsub.EventData.RaidEvents;
+using RaidType = SpekkieClassLibrary.Twitch.Pubsub.Enums.RaidType;
+using UserModerationNotifications = SpekkieClassLibrary.Twitch.Pubsub.EventData.UserModerationNotifications;
+using VideoPlayback = SpekkieClassLibrary.Twitch.Pubsub.Types.VideoPlayback;
+using VideoPlaybackType = SpekkieClassLibrary.Twitch.Pubsub.Enums.VideoPlaybackType;
+using Whisper = SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper;
+using OnWhisperArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnWhisperArgs;
+using OnAutomodCaughtMessageArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnAutomodCaughtMessageArgs;
+using OnAutomodCaughtUserMessage = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnAutomodCaughtUserMessage;
+using OnChannelSubscriptionArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnChannelSubscriptionArgs;
+using OnPredictionArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnPredictionArgs;
 
 namespace SpekkieTwitchBot.Twitch.Events;
 
-public class CustomPubsub : Interfaces_ITwitchPubSub
+public class CustomPubsub : ITwitchPubSub
 {
     private readonly WebSocketClient _socket;
     private readonly List<PreviousRequest> _previousRequests = new List<PreviousRequest>();
@@ -54,7 +77,7 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
     public event EventHandler<OnR9kBetaArgs> OnR9kBeta;
     public event EventHandler<OnR9kBetaOffArgs> OnR9kBetaOff;
     public event EventHandler<OnBitsReceivedArgs> OnBitsReceived;
-    public event EventHandler<OnBitsReceivedV2Args> OnBitsReceivedV2;
+    public event EventHandler<BitsReceivedV2Args> OnBitsReceivedV2;
     public event EventHandler<OnStreamUpArgs> OnStreamUp;
     public event EventHandler<OnStreamDownArgs> OnStreamDown;
     public event EventHandler<OnViewCountArgs> OnViewCount;
@@ -72,7 +95,7 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
         "This event fires on an undocumented/retired/obsolete topic. Consider using OnChannelPointsRewardRedeemed",
         false)]
     public event EventHandler<OnRewardRedeemedArgs> OnRewardRedeemed;
-    public event EventHandler<OnChannelPointsRewardRedeemedArgs> OnChannelPointsRewardRedeemed;
+    public event EventHandler<ChannelPointsRewardRedeemedArgs> OnChannelPointsRewardRedeemed;
     public event EventHandler<OnLeaderboardEventArgs> OnLeaderboardSubs;
     public event EventHandler<OnLeaderboardEventArgs> OnLeaderboardBits;
     public event EventHandler<OnRaidUpdateArgs> OnRaidUpdate;
@@ -99,7 +122,7 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
         _pongTimer.Elapsed += PongTimerTick;
     }
 
-    private void OnError(object sender, OnErrorEventArgs e)
+    private void OnError(object? sender, OnErrorEventArgs e)
     {
         ILogger<CustomPubsub> logger = _logger;
         if (logger != null)
@@ -113,7 +136,7 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
         });
     }
 
-    private void OnMessage(object sender, OnMessageEventArgs e)
+    private void OnMessage(object? sender, OnMessageEventArgs e)
     {
         ILogger<CustomPubsub> logger = _logger;
         if (logger != null)
@@ -127,7 +150,7 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
         ParseMessage(e.Message);
     }
 
-    private void Socket_OnDisconnected(object sender, EventArgs e)
+    private void Socket_OnDisconnected(object? sender, EventArgs e)
     {
         ILogger<CustomPubsub> logger = _logger;
         if (logger != null)
@@ -140,7 +163,7 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
         subServiceClosed(this, null);
     }
 
-    private void Socket_OnConnected(object sender, EventArgs e)
+    private void Socket_OnConnected(object? sender, EventArgs e)
     {
         ILogger<CustomPubsub> logger = _logger;
         if (logger != null)
@@ -154,14 +177,14 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
         serviceConnected(this, null);
     }
 
-    private void PingTimerTick(object sender, ElapsedEventArgs e)
+    private void PingTimerTick(object? sender, ElapsedEventArgs e)
     {
         _pongReceived = false;
         _socket.Send(new JObject(new JProperty("type", "PING")).ToString());
         _pongTimer.Start();
     }
 
-    private void PongTimerTick(object sender, ElapsedEventArgs e)
+    private void PongTimerTick(object? sender, ElapsedEventArgs e)
     {
         _pongTimer.Stop();
         if (_pongReceived)
@@ -270,10 +293,10 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
                     case "channel-bits-events-v2":
                         if (message1.MessageData is ChannelBitsEventsV2 messageData3)
                         {
-                            EventHandler<OnBitsReceivedV2Args> onBitsReceivedV2 = OnBitsReceivedV2;
+                            EventHandler<BitsReceivedV2Args> onBitsReceivedV2 = OnBitsReceivedV2;
                             if (onBitsReceivedV2 == null)
                                 return;
-                            onBitsReceivedV2(this, new OnBitsReceivedV2Args
+                            onBitsReceivedV2(this, new BitsReceivedV2Args
                             {
                                 IsAnonymous = messageData3.IsAnonymous,
                                 BitsUsed = messageData3.BitsUsed,
@@ -308,11 +331,11 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
                         {
                             case ChannelPointsChannelType.RewardRedeemed:
                                 RewardRedeemed data2 = messageData5.Data as RewardRedeemed;
-                                EventHandler<OnChannelPointsRewardRedeemedArgs> pointsRewardRedeemed =
+                                EventHandler<ChannelPointsRewardRedeemedArgs> pointsRewardRedeemed =
                                     OnChannelPointsRewardRedeemed;
                                 if (pointsRewardRedeemed == null)
                                     return;
-                                pointsRewardRedeemed(this, new OnChannelPointsRewardRedeemedArgs
+                                pointsRewardRedeemed(this, new ChannelPointsRewardRedeemedArgs
                                 {
                                     ChannelId = data2.Redemption.ChannelId,
                                     RewardRedeemed = data2
@@ -570,7 +593,7 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
                                 return;
                         }
                     case "following":
-                        Following messageData9 = (Following)message1.MessageData;
+                        Following messageData9 = message1.MessageData as Following;
                         messageData9.FollowedChannelId = message1.Topic.Split('.')[1];
                         EventHandler<OnFollowArgs> onFollow = OnFollow;
                         if (onFollow == null)
@@ -724,9 +747,7 @@ public class CustomPubsub : Interfaces_ITwitchPubSub
                                 message1.MessageData as UserModerationNotifications;
                         if (messageData13.Type != UserModerationNotificationsType.AutomodCaughtMessage)
                             return;
-                        TwitchLib.PubSub.Models.Responses.Messages.UserModerationNotificationsTypes.AutomodCaughtMessage
-                            data3 =
-                                messageData13.Data as TwitchLib.PubSub.Models.Responses.Messages.UserModerationNotificationsTypes.AutomodCaughtMessage;
+                        AutomodCaughtResponseMessage data3 = messageData13.Data as AutomodCaughtResponseMessage;
                         EventHandler<OnAutomodCaughtUserMessage> caughtUserMessage =
                             OnAutomodCaughtUserMessage;
                         if (caughtUserMessage == null)

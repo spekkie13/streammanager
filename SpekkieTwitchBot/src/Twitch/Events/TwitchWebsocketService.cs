@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SpekkieClassLibrary.Twitch.Auth;
+using SpekkieClassLibrary.Twitch.Pubsub.Args;
+using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
@@ -9,15 +11,12 @@ using SpekkieTwitchBot.Twitch.Commands;
 using SpekkieTwitchBot.Twitch.Events.Handlers;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
-using TwitchLib.PubSub.Events;
-using TwitchLib.PubSub.Models.Responses.Messages.Redemption;
-using OnChannelPointsRewardRedeemedArgs = SpekkieTwitchBot.Models.Twitch.Pubsub.Args.OnChannelPointsRewardRedeemedArgs;
+using OnListenResponseArgs = SpekkieClassLibrary.Twitch.Pubsub.Args.OnListenResponseArgs;
 
 namespace SpekkieTwitchBot.Twitch.Events;
 
 public class TwitchWebsocketService : IHostedService
 {
-    private readonly IConfiguration _Configuration;
     private readonly ILogger<TwitchWebsocketService> _Logger;
     private readonly Logger _GeneralLogger;
     private readonly CustomTwitchClient _TwitchClient;
@@ -32,7 +31,6 @@ public class TwitchWebsocketService : IHostedService
     private readonly ChannelPointHandler _ChannelPointHandler;
 
     public TwitchWebsocketService(
-        IConfiguration configuration, 
         ILogger<TwitchWebsocketService> logger,
         Logger generalLogger,
         TwitchAuthService twitchAuthService, 
@@ -45,7 +43,6 @@ public class TwitchWebsocketService : IHostedService
         ChannelPointHandler channelPointHandler
         )
     {
-        _Configuration = configuration;
         _GeneralLogger = generalLogger;
         _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -121,21 +118,21 @@ public class TwitchWebsocketService : IHostedService
             : $"Failed to listen to {e.Topic}! Error: {e.Response.Error}");
     }
     
-    private void OnChannelPointsRewardRedeemed(object? sender, OnChannelPointsRewardRedeemedArgs e)
+    private void OnChannelPointsRewardRedeemed(object? sender, ChannelPointsRewardRedeemedArgs e)
     {
         Redemption reward = e.RewardRedeemed.Redemption;
-        switch (e.RewardRedeemed.Redemption.Reward.Title)
+        switch (reward.Reward.Title)
         {
             case "Song Request":
                 bool success = _SpotifyCommandHandler.HandleAddSongToQueueCommand(reward.UserInput);
                 HttpResponseMessage message = _ChannelPointHandler.HandleSongRedemption(
                          success: success, 
-                    redemptionId: e.RewardRedeemed.Redemption.Id, 
-                        rewardId: e.RewardRedeemed.Redemption.Reward.Id);
+                    redemptionId: reward.Id, 
+                        rewardId: reward.Reward.Id);
                 _GeneralLogger.LogInfo(message.ToString());
                 break;
         }
-        _GeneralLogger.LogInfo($"Redeemed: {e.RewardRedeemed.Redemption.Reward.Title}");
+        _GeneralLogger.LogInfo($"Redeemed: {reward.Reward.Title}");
     }
     
     private void OnChatCommandReceived(object? sender, OnChatCommandReceivedArgs e)

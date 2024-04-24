@@ -2,12 +2,12 @@
 using System.Text;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using SpekkieClassLibrary.Spotify;
+using SpekkieClassLibrary.Spotify.Auth;
+using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
-using SpekkieTwitchBot.Models.Spotify;
-using SpekkieTwitchBot.Models.Spotify.Auth;
-using SpekkieTwitchBot.Models.Spotify.Song;
 using SpekkieTwitchBot.Spotify.FileHandling;
 
 namespace SpekkieTwitchBot.Spotify;
@@ -150,7 +150,7 @@ public class SpotifyService : BackgroundService
     {
         if (currentlyPlaying == null) return;
         FullTrack currentSong = (FullTrack) currentlyPlaying.Item;
-        string url = $"{currentSong.Album.Images.First().url}";
+        string url = $"{currentSong.Album.Images.First().Url}";
         var imageBytes = _Client.GetByteArrayAsync(url).Result;
         _SpotifyFileWriter.WriteCurrentSongImage(imageBytes);
     }
@@ -210,17 +210,5 @@ public class SpotifyService : BackgroundService
         var json = myStreamReader.ReadToEnd();
 
         return json;
-    }
-    
-    public Tracks? GetSongsByName(string songName, string artist = "")
-    {
-        string url = string.IsNullOrEmpty(artist) ? 
-            $"{SpotifyConstants.SpotifySearchUrl}remaster%2520track%3A{songName}&type=track" : 
-            $"{SpotifyConstants.SpotifySearchUrl}remaster%2520track%3A{songName}%2520artist%3A{artist}&type=track";
-        
-        string result = GetData(url);
-        SongResponse? response = JsonConvert.DeserializeObject<SongResponse>(result);
-        
-        return response?.tracks;
-    }
+    } 
 }

@@ -50,7 +50,7 @@ namespace SpekkieTwitchBot.Twitch.Events.Interfaces
     event EventHandler<OnWhisperThrottledEventArgs> OnWhisperThrottled;
     event EventHandler<OnErrorEventArgs> OnError;
     event EventHandler<OnReconnectedEventArgs> OnReconnected;
-    event EventHandler<OnVIPsReceivedArgs> OnVIPsReceived;
+    event EventHandler<OnVIPsReceivedArgs> OnVipsReceived;
     event EventHandler<OnCommunitySubscriptionArgs> OnCommunitySubscription;
     event EventHandler<OnMessageClearedArgs> OnMessageCleared;
     event EventHandler<OnRequiresVerifiedEmailArgs> OnRequiresVerifiedEmail;

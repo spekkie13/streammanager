@@ -8,15 +8,15 @@ public class IrcParser
     public IrcMessage ParseIrcMessage(string raw)
     {
         Dictionary<string, string> tags = new Dictionary<string, string>();
-        ParserState index1 = ParserState.STATE_NONE;
+        ParserState index1 = ParserState.StateNone;
         int[] numArray1 = new int[6];
         int[] numArray2 = new int[6];
         for (int index2 = 0; index2 < raw.Length; ++index2)
         {
             numArray2[(int)index1] = index2 - numArray1[(int)index1] - 1;
-            if (index1 == ParserState.STATE_NONE && raw[index2] == '@')
+            if (index1 == ParserState.StateNone && raw[index2] == '@')
             {
-                index1 = ParserState.STATE_V3;
+                index1 = ParserState.StateV3;
                 numArray1[(int)index1] = ++index2;
                 int startIndex = index2;
                 string key = "";
@@ -48,40 +48,39 @@ public class IrcParser
                     }
                 }
             }
-            else if (index1 < ParserState.STATE_PREFIX && raw[index2] == ':')
+            else if (index1 < ParserState.StatePrefix && raw[index2] == ':')
             {
-                index1 = ParserState.STATE_PREFIX;
+                index1 = ParserState.StatePrefix;
                 numArray1[(int)index1] = ++index2;
             }
-            else if (index1 < ParserState.STATE_COMMAND)
+            else if (index1 < ParserState.StateCommand)
             {
-                index1 = ParserState.STATE_COMMAND;
+                index1 = ParserState.StateCommand;
                 numArray1[(int)index1] = index2;
             }
             else
             {
-                if (index1 < ParserState.STATE_TRAILING &&
+                if (index1 < ParserState.StateTrailing &&
                     raw[index2] == ':')
                 {
-                    index1 = ParserState.STATE_TRAILING;
-                    int num;
-                    numArray1[(int)index1] = num = index2 + 1;
+                    index1 = ParserState.StateTrailing;
+                    numArray1[(int)index1] = index2 + 1;
                     break;
                 }
 
-                if (index1 < ParserState.STATE_TRAILING &&
+                if (index1 < ParserState.StateTrailing &&
                     raw[index2] == '+' ||
-                    index1 < ParserState.STATE_TRAILING &&
+                    index1 < ParserState.StateTrailing &&
                     raw[index2] == '-')
                 {
-                    index1 = ParserState.STATE_TRAILING;
+                    index1 = ParserState.StateTrailing;
                     numArray1[(int)index1] = index2;
                     break;
                 }
 
-                if (index1 == ParserState.STATE_COMMAND)
+                if (index1 == ParserState.StateCommand)
                 {
-                    index1 = ParserState.STATE_PARAM;
+                    index1 = ParserState.StateParam;
                     numArray1[(int)index1] = index2;
                 }
             }
@@ -184,7 +183,7 @@ public class IrcParser
         string str2 = raw.Substring(numArray1[4], numArray2[4]);
         string str3 = raw.Substring(numArray1[5], numArray2[5]);
         string hostmask = raw.Substring(numArray1[2], numArray2[2]);
-        return new IrcMessage(command, new string[2]
+        return new IrcMessage(command, new[]
         {
             str2,
             str3
@@ -193,11 +192,11 @@ public class IrcParser
 
     private enum ParserState
     {
-        STATE_NONE,
-        STATE_V3,
-        STATE_PREFIX,
-        STATE_COMMAND,
-        STATE_PARAM,
-        STATE_TRAILING,
+        StateNone,
+        StateV3,
+        StatePrefix,
+        StateCommand,
+        StateParam,
+        StateTrailing,
     }
 }
