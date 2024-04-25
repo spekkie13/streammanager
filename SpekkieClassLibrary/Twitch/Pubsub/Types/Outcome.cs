@@ -1,4 +1,5 @@
-﻿namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
+﻿#nullable disable
+namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class Outcome
 {

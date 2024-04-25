@@ -18,37 +18,40 @@ namespace SpekkieTwitchBot.OBS;
 
 public class CustomObsWebsocket : IObsWebsocket
 {
-    private const string WEBSOCKET_URL_PREFIX = "ws://";
-    private const int SUPPORTED_RPC_VERSION = 1;
-    private TimeSpan wsTimeout = TimeSpan.FromSeconds(10);
-    private string connectionPassword;
-    private WebsocketClient wsConnection;
+    private const string WebsocketUrlPrefix = "ws://";
+    private const int SupportedRpcVersion = 1;
+    private TimeSpan _wsTimeout = TimeSpan.FromSeconds(10);
+    private string _connectionPassword;
+    private WebsocketClient _wsConnection;
+
     private delegate void RequestCallback(CustomObsWebsocket sender, JObject body);
-    private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> responseHandlers;
-    private static readonly Random random = new Random();
-    
+
+    private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> _responseHandlers;
+    private static readonly Random Random = new Random();
+
     public TimeSpan WsTimeout
     {
-        get { return wsConnection.ReconnectTimeout ?? wsTimeout; }
+        get { return _wsConnection.ReconnectTimeout ?? _wsTimeout; }
         set
         {
-            wsTimeout = value;
+            _wsTimeout = value;
 
-            if (wsConnection != null)
+            if (_wsConnection != null)
             {
-                wsConnection.ReconnectTimeout = wsTimeout;
+                _wsConnection.ReconnectTimeout = _wsTimeout;
             }
         }
     }
 
     public bool IsConnected
     {
-        get { return (wsConnection != null && wsConnection.IsRunning); }
+        get { return (_wsConnection != null && _wsConnection.IsRunning); }
     }
 
-    public CustomObsWebsocket()
+    public CustomObsWebsocket(WebsocketClient wsConnection)
     {
-        responseHandlers = new ConcurrentDictionary<string, TaskCompletionSource<JObject>>();
+        _wsConnection = wsConnection;
+        _responseHandlers = new ConcurrentDictionary<string, TaskCompletionSource<JObject>>();
     }
 
     List<Monitor> IObsWebsocket.GetMonitorList()
@@ -61,50 +64,50 @@ public class CustomObsWebsocket : IObsWebsocket
     {
         ConnectAsync(url, password);
     }
-    
+
     public void ConnectAsync(string url, string password)
     {
         Console.WriteLine($"url: {url}");
-        if (!url.ToLower().StartsWith(WEBSOCKET_URL_PREFIX))
+        if (!url.ToLower().StartsWith(WebsocketUrlPrefix))
         {
-            throw new ArgumentException($"Invalid url, must start with '{WEBSOCKET_URL_PREFIX}'");
+            throw new ArgumentException($"Invalid url, must start with '{WebsocketUrlPrefix}'");
         }
 
-        if (wsConnection != null && wsConnection.IsRunning)
+        if (_wsConnection != null && _wsConnection.IsRunning)
         {
             Disconnect();
         }
 
-        wsConnection = new WebsocketClient(new Uri(url));
-        wsConnection.IsReconnectionEnabled = false;
-        wsConnection.ReconnectTimeout = null;
-        wsConnection.ErrorReconnectTimeout = null;
-        wsConnection.MessageReceived.Subscribe(m => Task.Run(() => WebsocketMessageHandler(this, m)));
-        wsConnection.DisconnectionHappened.Subscribe(d => Task.Run(() => OnWebsocketDisconnect(this, d)));
+        _wsConnection = new WebsocketClient(new Uri(url));
+        _wsConnection.IsReconnectionEnabled = false;
+        _wsConnection.ReconnectTimeout = null;
+        _wsConnection.ErrorReconnectTimeout = null;
+        _wsConnection.MessageReceived.Subscribe(m => Task.Run(() => WebsocketMessageHandler(this, m)));
+        _wsConnection.DisconnectionHappened.Subscribe(d => Task.Run(() => OnWebsocketDisconnect(this, d)));
 
-        connectionPassword = password;
-        wsConnection.StartOrFail();
+        _connectionPassword = password;
+        _wsConnection.StartOrFail();
     }
 
     public void Disconnect()
     {
-        connectionPassword = null;
-        if (wsConnection != null)
+        _connectionPassword = null;
+        if (_wsConnection != null)
         {
             try
             {
-                wsConnection.Stop(WebSocketCloseStatus.NormalClosure, "User requested disconnect");
-                ((IDisposable)wsConnection).Dispose();
+                _wsConnection.Stop(WebSocketCloseStatus.NormalClosure, "User requested disconnect");
+                ((IDisposable)_wsConnection).Dispose();
             }
             catch
             {
             }
 
-            wsConnection = null;
+            _wsConnection = null;
         }
 
-        var unusedHandlers = responseHandlers.ToArray();
-        responseHandlers.Clear();
+        var unusedHandlers = _responseHandlers.ToArray();
+        _responseHandlers.Clear();
         foreach (var cb in unusedHandlers)
         {
             var tcs = cb.Value;
@@ -149,7 +152,7 @@ public class CustomObsWebsocket : IObsWebsocket
                 {
                     string msgID = (string)body["requestId"];
 
-                    if (responseHandlers.TryRemove(msgID, out TaskCompletionSource<JObject> handler))
+                    if (_responseHandlers.TryRemove(msgID, out TaskCompletionSource<JObject> handler))
                     {
                         handler.SetResult(body);
                     }
@@ -171,7 +174,7 @@ public class CustomObsWebsocket : IObsWebsocket
     internal JObject SendRequest(MessageTypes operationCode, string requestType, JObject additionalFields = null,
         bool waitForReply = true)
     {
-        if (wsConnection == null)
+        if (_wsConnection == null)
         {
             throw new NullReferenceException("Websocket is not initialized");
         }
@@ -181,19 +184,19 @@ public class CustomObsWebsocket : IObsWebsocket
         do
         {
             message = MessageFactory.BuildMessage(operationCode, requestType, additionalFields, out string messageId);
-            if (!waitForReply || responseHandlers.TryAdd(messageId, tcs))
+            if (!waitForReply || _responseHandlers.TryAdd(messageId, tcs))
             {
                 break;
             }
         } while (true);
 
-        wsConnection.Send(message.ToString());
+        _wsConnection.Send(message.ToString());
         if (!waitForReply)
         {
             return null;
         }
 
-        tcs.Task.Wait(wsTimeout.Milliseconds);
+        tcs.Task.Wait(_wsTimeout.Milliseconds);
 
         if (tcs.Task.IsCanceled)
             throw new ErrorResponseException("Request canceled", 0);
@@ -279,7 +282,7 @@ public class CustomObsWebsocket : IObsWebsocket
     {
         var requestFields = new JObject
         {
-            { "rpcVersion", SUPPORTED_RPC_VERSION }
+            { "rpcVersion", SupportedRpcVersion }
         };
 
         if (authInfo != null)
@@ -304,13 +307,13 @@ public class CustomObsWebsocket : IObsWebsocket
 
     protected string NewMessageID(int length = 16)
     {
-        const string pool = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string Pool = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
         string result = "";
         for (int i = 0; i < length; i++)
         {
-            int index = random.Next(0, pool.Length - 1);
-            result += pool[index];
+            int index = Random.Next(0, Pool.Length - 1);
+            result += Pool[index];
         }
 
         return result;
@@ -318,30 +321,31 @@ public class CustomObsWebsocket : IObsWebsocket
 
     private void HandleHello(JObject payload)
     {
-        if (!wsConnection.IsStarted)
+        if (!_wsConnection.IsStarted)
         {
             return;
         }
 
-        ObsAuthInfo authInfo = null;
-        if (payload.ContainsKey("authentication"))
+        ObsAuthInfo authInfo = new ObsAuthInfo();
+        if (payload.TryGetValue("authentication", out var value))
         {
-            authInfo = new ObsAuthInfo((JObject)payload["authentication"]);
+            authInfo = new ObsAuthInfo((JObject)value);
         }
 
-        SendIdentify(connectionPassword, authInfo);
+        SendIdentify(_connectionPassword, authInfo);
 
-        connectionPassword = null;
+        _connectionPassword = "";
     }
-    
+
     private const string REQUEST_FIELD_VOLUME_DB = "inputVolumeDb";
     private const string REQUEST_FIELD_VOLUME_MUL = "inputVolumeMul";
     private const string RESPONSE_FIELD_IMAGE_DATA = "imageData";
-    
+
     public ObsVideoSettings GetVideoSettings()
     {
         JObject response = SendRequest(nameof(GetVideoSettings));
-        return JsonConvert.DeserializeObject<ObsVideoSettings>(response.ToString());
+        ObsVideoSettings settings = JsonConvert.DeserializeObject<ObsVideoSettings>(response.ToString()) ?? new ObsVideoSettings();
+        return settings;
     }
 
     ObsVideoSettings IObsWebsocket.GetVideoSettings()
@@ -375,14 +379,15 @@ public class CustomObsWebsocket : IObsWebsocket
         }
 
         var response = SendRequest(nameof(SaveSourceScreenshot), request);
-        return (string)response["imageData"];
+        string imageData = response["imageData"]?.ToString() ?? "";
+        return imageData;
     }
 
     public string SaveSourceScreenshot(string sourceName, string imageFormat, string imageFilePath)
     {
         return SaveSourceScreenshot(sourceName, imageFormat, imageFilePath, -1);
     }
-    
+
     public void TriggerHotkeyByName(string hotkeyName)
     {
         var request = new JObject
@@ -415,7 +420,8 @@ public class CustomObsWebsocket : IObsWebsocket
     public string GetCurrentProgramScene()
     {
         JObject response = SendRequest(nameof(GetCurrentProgramScene));
-        return (string)response["currentProgramSceneName"];
+        string currentProgramSceneName = response["currentProgramSceneName"]?.ToString() ?? "";
+        return currentProgramSceneName;
     }
 
     public void SetCurrentProgramScene(string sceneName)
@@ -451,19 +457,23 @@ public class CustomObsWebsocket : IObsWebsocket
     public ObsStats GetStats()
     {
         JObject response = SendRequest(nameof(GetStats));
-        return JsonConvert.DeserializeObject<ObsStats>(response.ToString());
+        ObsStats stats = JsonConvert.DeserializeObject<ObsStats>(response.ToString()) ?? new ObsStats();
+        return stats;
     }
 
-    public List<SceneBasicInfo> ListScenes()
+    private List<SceneBasicInfo> ListScenes()
     {
         var response = GetSceneList();
-        return response.Scenes;
+        List<SceneBasicInfo> info = response.Scenes ?? new List<SceneBasicInfo>();
+        return info;
     }
 
     public GetSceneListInfo GetSceneList()
     {
         JObject response = SendRequest(nameof(GetSceneList));
-        return JsonConvert.DeserializeObject<GetSceneListInfo>(response.ToString());
+        GetSceneListInfo info = JsonConvert.DeserializeObject<GetSceneListInfo>(response.ToString()) ??
+                                new GetSceneListInfo();
+        return info;
     }
 
     public TransitionOverrideInfo GetSceneSceneTransitionOverride(string sceneName)
@@ -474,7 +484,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         JObject response = SendRequest(nameof(GetSceneSceneTransitionOverride), request);
-        return response.ToObject<TransitionOverrideInfo>();
+        TransitionOverrideInfo info = response.ToObject<TransitionOverrideInfo>() ?? new TransitionOverrideInfo();
+        return info;
     }
 
     public void SetSceneSceneTransitionOverride(string sceneName, string transitionName, int transitionDuration = -1)
@@ -571,7 +582,9 @@ public class CustomObsWebsocket : IObsWebsocket
             return new List<FilterSettings>();
         }
 
-        return JsonConvert.DeserializeObject<List<FilterSettings>>(response["filters"].ToString());
+        string filter = response["filters"]?.ToString() ?? "";
+        List<FilterSettings> settings = JsonConvert.DeserializeObject<List<FilterSettings>>(filter) ?? new List<FilterSettings>();
+        return settings;
     }
 
     public FilterSettings GetSourceFilter(string sourceName, string filterName)
@@ -583,7 +596,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         JObject response = SendRequest(nameof(GetSourceFilter), request);
-        return JsonConvert.DeserializeObject<FilterSettings>(response.ToString());
+        FilterSettings settings = JsonConvert.DeserializeObject<FilterSettings>(response.ToString()) ?? new FilterSettings();
+        return settings;
     }
 
     public bool RemoveSourceFilter(string sourceName, string filterName)
@@ -634,7 +648,8 @@ public class CustomObsWebsocket : IObsWebsocket
     public bool ToggleStream()
     {
         var response = SendRequest(nameof(ToggleStream));
-        return (bool)response["outputActive"];
+        bool outputActive = Convert.ToBoolean(response["outputActive"]);
+        return outputActive;
     }
 
     public void ToggleRecord()
@@ -693,7 +708,7 @@ public class CustomObsWebsocket : IObsWebsocket
             { nameof(overlay), overlay }
         };
 
-        var response = SendRequest(nameof(SetCurrentSceneTransitionSettings), requestFields);
+        SendRequest(nameof(SetCurrentSceneTransitionSettings), requestFields);
     }
 
     public void SetInputVolume(string inputName, float inputVolume, bool inputVolumeDb = false)
@@ -703,14 +718,7 @@ public class CustomObsWebsocket : IObsWebsocket
             { nameof(inputName), inputName }
         };
 
-        if (inputVolumeDb)
-        {
-            requestFields.Add(REQUEST_FIELD_VOLUME_DB, inputVolume);
-        }
-        else
-        {
-            requestFields.Add(REQUEST_FIELD_VOLUME_MUL, inputVolume);
-        }
+        requestFields.Add(inputVolumeDb ? REQUEST_FIELD_VOLUME_DB : REQUEST_FIELD_VOLUME_MUL, inputVolume);
 
         SendRequest(nameof(SetInputVolume), requestFields);
     }
@@ -739,7 +747,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetInputMute), requestFields);
-        return (bool)response["inputMuted"];
+        bool inputMuted = Convert.ToBoolean(response["inputMuted"]);
+        return inputMuted;
     }
 
     public void SetInputMute(string inputName, bool inputMuted)
@@ -800,13 +809,16 @@ public class CustomObsWebsocket : IObsWebsocket
     {
         var response = SendRequest(nameof(GetSceneCollectionList));
         var currentCollectionName = response["currentSceneCollectionName"];
-        return (string)currentCollectionName;
+        string name = currentCollectionName?.ToString() ?? "";
+        return name;
     }
 
     public List<string> GetSceneCollectionList()
     {
         var response = SendRequest(nameof(GetSceneCollectionList));
-        return JsonConvert.DeserializeObject<List<string>>(response["sceneCollections"].ToString());
+        string collection = response["sceneCollections"]?.ToString() ?? "";
+        List<string> sceneCollections = JsonConvert.DeserializeObject<List<string>>(collection) ?? new List<string>();
+        return sceneCollections;
     }
 
     public void SetCurrentProfile(string profileName)
@@ -827,7 +839,8 @@ public class CustomObsWebsocket : IObsWebsocket
     public GetProfileListInfo GetProfileList()
     {
         var response = SendRequest(nameof(GetProfileList));
-        return JsonConvert.DeserializeObject<GetProfileListInfo>(response.ToString());
+        GetProfileListInfo info = JsonConvert.DeserializeObject<GetProfileListInfo>(response.ToString()) ?? new GetProfileListInfo();
+        return info;
     }
 
     public void StartStream()
@@ -848,7 +861,8 @@ public class CustomObsWebsocket : IObsWebsocket
     public string StopRecord()
     {
         var response = SendRequest(nameof(StopRecord));
-        return (string)response["outputPath"];
+        string outputPath = response["outputPath"]?.ToString() ?? "";
+        return outputPath;
     }
 
     public void PauseRecord()
@@ -864,7 +878,8 @@ public class CustomObsWebsocket : IObsWebsocket
     public string GetRecordDirectory()
     {
         var response = SendRequest(nameof(GetRecordDirectory));
-        return (string)response["recordDirectory"];
+        string recordDirectory = response["recordDirectory"]?.ToString() ?? "";
+        return recordDirectory;
     }
 
     RecordingStatus IObsWebsocket.GetRecordStatus()
@@ -875,13 +890,16 @@ public class CustomObsWebsocket : IObsWebsocket
     public RecordingStatus GetRecordStatus()
     {
         var response = SendRequest(nameof(GetRecordStatus));
-        return JsonConvert.DeserializeObject<RecordingStatus>(response.ToString());
+        RecordingStatus status = JsonConvert.DeserializeObject<RecordingStatus>(response.ToString()) ??
+                                 new RecordingStatus();
+        return status;
     }
 
     public bool GetReplayBufferStatus()
     {
         var response = SendRequest(nameof(GetReplayBufferStatus));
-        return (bool)response["outputActive"];
+        bool outputActive = Convert.ToBoolean(response["outputActive"]);
+        return outputActive;
     }
 
     GetTransitionListInfo IObsWebsocket.GetSceneTransitionList()
@@ -892,14 +910,15 @@ public class CustomObsWebsocket : IObsWebsocket
     public GetTransitionListInfo GetSceneTransitionList()
     {
         var response = SendRequest(nameof(GetSceneTransitionList));
-
-        return JsonConvert.DeserializeObject<GetTransitionListInfo>(response.ToString());
+        GetTransitionListInfo info = JsonConvert.DeserializeObject<GetTransitionListInfo>(response.ToString()) ?? new GetTransitionListInfo();
+        return info;
     }
 
     public bool GetStudioModeEnabled()
     {
         var response = SendRequest(nameof(GetStudioModeEnabled));
-        return (bool)response["studioModeEnabled"];
+        bool studioModeEnabled = Convert.ToBoolean(response["studioModeEnabled"]);
+        return studioModeEnabled;
     }
 
     public void SetStudioModeEnabled(bool studioModeEnabled)
@@ -915,7 +934,8 @@ public class CustomObsWebsocket : IObsWebsocket
     public string GetCurrentPreviewScene()
     {
         var response = SendRequest(nameof(GetCurrentPreviewScene));
-        return (string)response["currentPreviewSceneName"];
+        string currentPreviewSceneName = response["currentPreviewSceneName"]?.ToString() ?? "";
+        return currentPreviewSceneName;
     }
 
     public void SetCurrentPreviewScene(string sceneName)
@@ -935,6 +955,7 @@ public class CustomObsWebsocket : IObsWebsocket
 
     public void SetCurrentPreviewScene(ObsScene previewScene)
     {
+        if (string.IsNullOrEmpty(previewScene.Name)) return;
         SetCurrentPreviewScene(previewScene.Name);
     }
 
@@ -981,7 +1002,8 @@ public class CustomObsWebsocket : IObsWebsocket
             { nameof(inputName), inputName }
         };
         var response = SendRequest(nameof(GetInputAudioSyncOffset), requestFields);
-        return (int)response["inputAudioSyncOffset"];
+        int inputAudioSyncOffset = Convert.ToInt32(response["inputAudioSyncOffset"]);
+        return inputAudioSyncOffset;
     }
 
     public void RemoveSceneItem(string sceneName, int sceneItemId)
@@ -1005,7 +1027,7 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(SendStreamCaption), requestFields);
     }
 
-    public void DuplicateSceneItem(string sceneName, int sceneItemId, string destinationSceneName = null)
+    public void DuplicateSceneItem(string sceneName, int sceneItemId, string destinationSceneName = "")
     {
         var requestFields = new JObject
         {
@@ -1013,7 +1035,7 @@ public class CustomObsWebsocket : IObsWebsocket
             { nameof(sceneItemId), sceneItemId }
         };
 
-        if (!String.IsNullOrEmpty(destinationSceneName))
+        if (!string.IsNullOrEmpty(destinationSceneName))
         {
             requestFields.Add(nameof(destinationSceneName), destinationSceneName);
         }
@@ -1025,10 +1047,9 @@ public class CustomObsWebsocket : IObsWebsocket
     {
         var response = SendRequest(nameof(GetSpecialInputs));
         var sources = new Dictionary<string, string>();
-        foreach (KeyValuePair<string, JToken> kvp in response)
+        foreach (var (key, jToken) in response)
         {
-            string key = kvp.Key;
-            string value = (string)kvp.Value;
+            string value = (string?)jToken ?? "";
             if (key != "requestType")
             {
                 sources.Add(key, value);
@@ -1050,6 +1071,7 @@ public class CustomObsWebsocket : IObsWebsocket
 
     public void SetStreamServiceSettings(StreamingService service)
     {
+        if(service.Settings == null) return;
         var requestFields = new JObject
         {
             { "streamServiceType", service.Type },
@@ -1058,27 +1080,15 @@ public class CustomObsWebsocket : IObsWebsocket
 
         SendRequest(nameof(SetStreamServiceSettings), requestFields);
     }
-
-    /// <summary>
-    /// Gets the current stream service settings (stream destination).
-    /// </summary>
-    /// <returns>Stream service type and settings objects</returns>
+    
     public StreamingService GetStreamServiceSettings()
     {
         var response = SendRequest(nameof(GetStreamServiceSettings));
-
-        return JsonConvert.DeserializeObject<StreamingService>(response.ToString());
+        StreamingService service = JsonConvert.DeserializeObject<StreamingService>(response.ToString()) ??
+                                   new StreamingService();
+        return service;
     }
 
-    /// <summary>
-    /// Gets the audio monitor type of an input.
-    /// The available audio monitor types are:
-    /// - `OBS_MONITORING_TYPE_NONE`
-    /// - `OBS_MONITORING_TYPE_MONITOR_ONLY`
-    /// - `OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT`
-    /// </summary>
-    /// <param name="inputName">Source name</param>
-    /// <returns>The monitor type in use</returns>
     public string GetInputAudioMonitorType(string inputName)
     {
         var request = new JObject
@@ -1087,14 +1097,10 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetInputAudioMonitorType), request);
-        return (string)response["monitorType"];
+        string monitorType = response["monitorType"]?.ToString() ?? "";
+        return monitorType;
     }
 
-    /// <summary>
-    /// Sets the audio monitor type of an input.
-    /// </summary>
-    /// <param name="inputName">Name of the input to set the audio monitor type of</param>
-    /// <param name="monitorType">Audio monitor type. See `GetInputAudioMonitorType for possible types.</param>
     public void SetInputAudioMonitorType(string inputName, string monitorType)
     {
         var request = new JObject
@@ -1106,10 +1112,6 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(SetInputAudioMonitorType), request);
     }
 
-    /// <summary>
-    /// Broadcasts a `CustomEvent` to all WebSocket clients. Receivers are clients which are identified and subscribed.
-    /// </summary>
-    /// <param name="eventData">Data payload to emit to all receivers</param>
     public void BroadcastCustomEvent(JObject eventData)
     {
         var request = new JObject
@@ -1120,12 +1122,6 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(BroadcastCustomEvent), request);
     }
 
-    /// <summary>
-    /// Sets the cursor position of a media input.
-    /// This request does not perform bounds checking of the cursor position.
-    /// </summary>
-    /// <param name="inputName">Name of the media input</param>
-    /// <param name="mediaCursor">New cursor position to set (milliseconds).</param>
     public void SetMediaInputCursor(string inputName, int mediaCursor)
     {
         var request = new JObject
@@ -1137,12 +1133,6 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(SetMediaInputCursor), request);
     }
 
-    /// <summary>
-    /// Offsets the current cursor position of a media input by the specified value.
-    /// This request does not perform bounds checking of the cursor position.
-    /// </summary>
-    /// <param name="inputName">Name of the media input</param>
-    /// <param name="mediaCursorOffset">Value to offset the current cursor position by (milliseconds +/-)</param>
     public void OffsetMediaInputCursor(string inputName, int mediaCursorOffset)
     {
         var request = new JObject
@@ -1153,17 +1143,8 @@ public class CustomObsWebsocket : IObsWebsocket
 
         SendRequest(nameof(OffsetMediaInputCursor), request);
     }
-
-    /// <summary>
-    /// Creates a new input, adding it as a scene item to the specified scene.
-    /// </summary>
-    /// <param name="sceneName">Name of the scene to add the input to as a scene item</param>
-    /// <param name="inputName">Name of the new input to created</param>
-    /// <param name="inputKind">The kind of input to be created</param>
-    /// <param name="inputSettings">Jobject holding the settings object to initialize the input with</param>
-    /// <param name="sceneItemEnabled">Whether to set the created scene item to enabled or disabled</param>
-    /// <returns>ID of the SceneItem in the scene.</returns>
-    public int CreateInput(string sceneName, string inputName, string inputKind, JObject inputSettings,
+    
+    public int CreateInput(string sceneName, string inputName, string inputKind, JObject? inputSettings,
         bool? sceneItemEnabled)
     {
         var request = new JObject
@@ -1184,14 +1165,10 @@ public class CustomObsWebsocket : IObsWebsocket
         }
 
         var response = SendRequest(nameof(CreateInput), request);
-        return (int)response["sceneItemId"];
+        int sceneItemId = Convert.ToInt32(response["sceneItemId"]);
+        return sceneItemId;
     }
-
-    /// <summary>
-    /// Gets the default settings for an input kind.
-    /// </summary>
-    /// <param name="inputKind">Input kind to get the default settings for</param>
-    /// <returns>Object of default settings for the input kind</returns>
+    
     public JObject GetInputDefaultSettings(string inputKind)
     {
         var request = new JObject
@@ -1200,17 +1177,18 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetInputDefaultSettings), request);
-        return (JObject)response["defaultInputSettings"];
+        JObject defaultInputSettings = (JObject?)response["defaultInputSettings"] ?? new JObject();
+        return defaultInputSettings;
     }
 
     List<SceneItemDetails> IObsWebsocket.GetSceneItemList(string sceneName)
     {
         return GetSceneItemList(sceneName);
     }
-    
+
     public List<SceneItemDetails> GetSceneItemList(string sceneName)
     {
-        JObject request = null;
+        JObject? request = null;
         if (!string.IsNullOrEmpty(sceneName))
         {
             request = new JObject
@@ -1219,8 +1197,11 @@ public class CustomObsWebsocket : IObsWebsocket
             };
         }
 
+        if (request == null)
+            return new List<SceneItemDetails>();
+        
         var response = SendRequest(nameof(GetSceneItemList), request);
-        return response["sceneItems"].Select(m => new SceneItemDetails((JObject)m)).ToList();
+        return response["sceneItems"]?.Select(m => new SceneItemDetails((JObject)m)).ToList() ?? new List<SceneItemDetails>();
     }
 
     public int CreateSceneItem(string sceneName, string sourceName, bool sceneItemEnabled = true)
@@ -1233,7 +1214,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(CreateSceneItem), request);
-        return (int)response["sceneItemId"];
+        int sceneItemId = Convert.ToInt32(response["sceneItemId"]);
+        return sceneItemId;
     }
 
     public void CreateScene(string sceneName)
@@ -1464,7 +1446,7 @@ public class CustomObsWebsocket : IObsWebsocket
         return new ObsVersion(response);
     }
 
-    public JObject CallVendorRequest(string vendorName, string requestType, JObject requestData = null)
+    public JObject CallVendorRequest(string vendorName, string requestType, JObject? requestData = null)
     {
         var request = new JObject
         {
@@ -1479,7 +1461,9 @@ public class CustomObsWebsocket : IObsWebsocket
     public List<string> GetHotkeyList()
     {
         var response = SendRequest(nameof(GetHotkeyList));
-        return JsonConvert.DeserializeObject<List<string>>(response["hotkeys"].ToString());
+        string hotkeys = response["hotkeys"]?.ToString() ?? "";
+        List<string> hotkeysList = JsonConvert.DeserializeObject<List<string>>(hotkeys) ?? new List<string>();
+        return hotkeysList;
     }
 
     public void Sleep(int sleepMillis, int sleepFrames)
@@ -1498,21 +1482,22 @@ public class CustomObsWebsocket : IObsWebsocket
         return GetInputList(inputKind);
     }
 
-    public List<InputBasicInfo> GetInputList(string inputKind = null)
+    public List<InputBasicInfo> GetInputList(string inputKind = "")
     {
         var request = new JObject
         {
             { nameof(inputKind), inputKind }
         };
 
-        var response = inputKind is null
-            ? SendRequest(nameof(GetInputList))
-            : SendRequest(nameof(GetInputList), request);
+        var response = SendRequest(nameof(GetInputList), request);
 
+        JToken? inputs = response["inputs"];
+        if (inputs == null) return new List<InputBasicInfo>();
+        
         var returnList = new List<InputBasicInfo>();
-        foreach (var input in response["inputs"])
+        foreach (var input in inputs)
         {
-            returnList.Add(new InputBasicInfo(input as JObject));
+            returnList.Add(new InputBasicInfo((JObject)input));
         }
 
         return returnList;
@@ -1529,7 +1514,9 @@ public class CustomObsWebsocket : IObsWebsocket
             ? SendRequest(nameof(GetInputKindList))
             : SendRequest(nameof(GetInputKindList), request);
 
-        return JsonConvert.DeserializeObject<List<string>>(response["inputKinds"].ToString());
+        string inputKinds = response["inputKinds"]?.ToString() ?? "";
+        List<string> inputKindList = JsonConvert.DeserializeObject<List<string>>(inputKinds) ?? new List<string>();
+        return inputKindList;
     }
 
     public void RemoveInput(string inputName)
@@ -1577,6 +1564,7 @@ public class CustomObsWebsocket : IObsWebsocket
 
     public void SetInputSettings(InputSettings inputSettings, bool overlay = true)
     {
+        if (string.IsNullOrEmpty(inputSettings.InputName) || inputSettings.Settings == null) return;
         SetInputSettings(inputSettings.InputName, inputSettings.Settings, overlay);
     }
 
@@ -1600,7 +1588,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetInputAudioBalance), request);
-        return (double)response["inputAudioBalance"];
+        double inputAudioBalance = Convert.ToDouble(response["inputAudioBalance"]);
+        return inputAudioBalance;
     }
 
     public void SetInputAudioBalance(string inputName, double inputAudioBalance)
@@ -1623,7 +1612,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetInputPropertiesListPropertyItems), request);
-        return response["propertyItems"].Value<List<JObject>>();
+        List<JObject> propertyItems = response["propertyItems"]?.Value<List<JObject>>() ?? new List<JObject>();
+        return propertyItems;
     }
 
     public void PressInputPropertiesButton(string inputName, string propertyName)
@@ -1666,7 +1656,8 @@ public class CustomObsWebsocket : IObsWebsocket
     public string GetLastReplayBufferReplay()
     {
         var response = SendRequest(nameof(GetLastReplayBufferReplay));
-        return (string)response["savedReplayPath"];
+        string savedReplayPath = response["savedReplayPath"]?.ToString() ?? "";
+        return savedReplayPath;
     }
 
     public void ToggleRecordPause()
@@ -1682,7 +1673,9 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetGroupSceneItemList), request);
-        return JsonConvert.DeserializeObject<List<JObject>>((string)response["sceneItems"]);
+        string sceneItems = response["sceneItems"]?.ToString() ?? "";
+        List<JObject> sceneItemObjects = JsonConvert.DeserializeObject<List<JObject>>(sceneItems) ?? new List<JObject>();
+        return sceneItemObjects;
     }
 
     public int GetSceneItemId(string sceneName, string sourceName, int searchOffset)
@@ -1695,7 +1688,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetSceneItemId), request);
-        return (int)response["sceneItemId"];
+        int sceneItemId = Convert.ToInt32(response["sceneItemId"]);
+        return sceneItemId;
     }
 
     SceneItemTransformInfo IObsWebsocket.GetSceneItemTransform(string sceneName, int sceneItemId)
@@ -1706,7 +1700,9 @@ public class CustomObsWebsocket : IObsWebsocket
     public SceneItemTransformInfo GetSceneItemTransform(string sceneName, int sceneItemId)
     {
         var response = GetSceneItemTransformRaw(sceneName, sceneItemId);
-        return JsonConvert.DeserializeObject<SceneItemTransformInfo>(response["sceneItemTransform"].ToString());
+        string sceneItemTransform = response["sceneItemTransform"]?.ToString() ?? "";
+        SceneItemTransformInfo info = JsonConvert.DeserializeObject<SceneItemTransformInfo>(sceneItemTransform) ?? new SceneItemTransformInfo();
+        return info;
     }
 
     public JObject GetSceneItemTransformRaw(string sceneName, int sceneItemId)
@@ -1729,7 +1725,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetSceneItemEnabled), request);
-        return (bool)response["sceneItemEnabled"];
+        bool sceneItemEnabled = Convert.ToBoolean(response["sceneItemEnabled"]);
+        return sceneItemEnabled;
     }
 
     public void SetSceneItemEnabled(string sceneName, int sceneItemId, bool sceneItemEnabled)
@@ -1753,7 +1750,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetSceneItemLocked), request);
-        return (bool)response["sceneItemLocked"];
+        bool sceneItemLocked = Convert.ToBoolean(response["sceneItemLocked"]);
+        return sceneItemLocked;
     }
 
     public void SetSceneItemLocked(string sceneName, int sceneItemId, bool sceneItemLocked)
@@ -1777,7 +1775,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetSceneItemIndex), request);
-        return (int)response["sceneItemIndex"];
+        int sceneItemIndex = Convert.ToInt32(response["sceneItemIndex"]);
+        return sceneItemIndex;
     }
 
     public void SetSceneItemIndex(string sceneName, int sceneItemId, int sceneItemIndex)
@@ -1801,7 +1800,8 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         var response = SendRequest(nameof(GetSceneItemBlendMode), request);
-        return (string)response["sceneItemBlendMode"];
+        string sceneItemBlendMode = response["sceneItemBlendMode"]?.ToString() ?? "";
+        return sceneItemBlendMode;
     }
 
     public void SetSceneItemBlendMode(string sceneName, int sceneItemId, string sceneItemBlendMode)
@@ -1819,7 +1819,9 @@ public class CustomObsWebsocket : IObsWebsocket
     public List<string> GetGroupList()
     {
         var response = SendRequest(nameof(GetGroupList));
-        return JsonConvert.DeserializeObject<List<string>>(response["groups"].ToString());
+        string groupName = response["groups"]?.ToString() ?? "";
+        List<string> groups = JsonConvert.DeserializeObject<List<string>>(groupName) ?? new List<string>();
+        return groups;
     }
 
     public void RemoveScene(string sceneName)
@@ -1868,19 +1870,23 @@ public class CustomObsWebsocket : IObsWebsocket
         }
 
         var response = SendRequest(nameof(GetSourceScreenshot), request);
-        return (string)response["imageData"];
+        string imageData = response["imageData"]?.ToString() ?? "";
+        return imageData;
     }
 
     public List<string> GetTransitionKindList()
     {
         var response = SendRequest(nameof(GetTransitionKindList));
-        return JsonConvert.DeserializeObject<List<string>>(response["transitionKinds"].ToString());
+        string transitionKinds = response["transitionKinds"]?.ToString() ?? "";
+        List<string> transitionKindList = JsonConvert.DeserializeObject<List<string>>(transitionKinds) ?? new List<string>();
+        return transitionKindList;
     }
 
     public double GetCurrentSceneTransitionCursor()
     {
         var response = SendRequest(nameof(GetCurrentSceneTransitionCursor));
-        return (double)response["transitionCursor"];
+        double transitionCursor = Convert.ToDouble(response["transitionCursor"]);
+        return transitionCursor;
     }
 
     public void OpenInputPropertiesDialog(string inputName)
@@ -1917,8 +1923,10 @@ public class CustomObsWebsocket : IObsWebsocket
     {
         var response = SendRequest(nameof(GetMonitorList));
         var monitors = new List<Monitor>();
-
-        foreach (var monitor in response["monitors"])
+        var monitorObj = response["monitors"];
+        if (monitorObj == null) return new List<Monitor>();
+        
+        foreach (var monitor in monitorObj)
         {
             monitors.Add(new Monitor((JObject)monitor));
         }
@@ -1950,283 +1958,346 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(OpenVideoMixProjector), request);
     }
 
-    protected void ProcessEventType(string eventType, JObject body)
+    private void ProcessEventType(string eventType, JObject body)
     {
-        body = (JObject)body["eventData"];
+        JObject? bodyObj = (JObject?)body["eventData"];
+        if (bodyObj == null) return;
 
+        string profileName;
+        string profiles;
+        string sceneName;
+        string sceneItems;
+        string scenes;
+        string sceneCollectionName;
+        string sceneItemIdx;
+        string sceneCollections;
+        string sourceName;
+        string transitionName;
+        string inputName;
+        string inputKind;
+        string filterName;
+        string filterKind;
+        string filterObj;
+        string mediaAction;
+        string monitorType;
+        
+        int filterIndex;
+        int sceneItemId;
+        int sceneItemIndex;
+        int transitionDuration;
+        int inputAudioSyncOffset;
+
+        bool sceneItemEnabled;
+        bool studioModeEnabled;
+        bool inputMuted;
+        bool filterEnabled;
+        bool isGroup;
+        
         switch (eventType)
         {
             case nameof(CurrentProgramSceneChanged):
-                CurrentProgramSceneChanged?.Invoke(this, new ProgramSceneChangedEventArgs((string)body["sceneName"]));
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                CurrentProgramSceneChanged?.Invoke(this, new ProgramSceneChangedEventArgs(sceneName));
                 break;
-
             case nameof(SceneListChanged):
+                scenes = bodyObj["scenes"]?.ToString() ?? "";
+                List<JObject> sceneList = JsonConvert.DeserializeObject<List<JObject>>(scenes) ?? new List<JObject>();
                 SceneListChanged?.Invoke(this,
-                    new SceneListChangedEventArgs(
-                        JsonConvert.DeserializeObject<List<JObject>>((string)body["scenes"])));
+                    new SceneListChangedEventArgs(sceneList));
                 break;
-
             case nameof(SceneItemListReindexed):
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                sceneItems = bodyObj["sceneItems"]?.ToString() ?? "";
+                List<JObject> sceneItemsList =
+                    JsonConvert.DeserializeObject<List<JObject>>(sceneItems) ?? new List<JObject>();
                 SceneItemListReindexed?.Invoke(this,
-                    new SceneItemListReindexedEventArgs((string)body["sceneName"],
-                        JsonConvert.DeserializeObject<List<JObject>>((string)body["sceneItems"])));
+                    new SceneItemListReindexedEventArgs(sceneName, sceneItemsList));
                 break;
-
             case nameof(SceneItemCreated):
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                sourceName = bodyObj["sourceName"]?.ToString() ?? "";
+                sceneItemId = Convert.ToInt32(bodyObj["sceneItemId"]);
+                sceneItemIndex = Convert.ToInt32(bodyObj["sceneItemIndex"]);
                 SceneItemCreated?.Invoke(this,
-                    new SceneItemCreatedEventArgs((string)body["sceneName"], (string)body["sourceName"],
-                        (int)body["sceneItemId"], (int)body["sceneItemIndex"]));
+                    new SceneItemCreatedEventArgs(sceneName, sourceName, sceneItemId, sceneItemIndex));
                 break;
-
             case nameof(SceneItemRemoved):
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                sourceName = bodyObj["sourceName"]?.ToString() ?? "";
+                sceneItemId = Convert.ToInt32(bodyObj["sceneItemId"]);
+
                 SceneItemRemoved?.Invoke(this,
-                    new SceneItemRemovedEventArgs((string)body["sceneName"], (string)body["sourceName"],
-                        (int)body["sceneItemId"]));
+                    new SceneItemRemovedEventArgs(sceneName, sourceName, sceneItemId));
                 break;
-
             case nameof(SceneItemEnableStateChanged):
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                sceneItemId = Convert.ToInt32(bodyObj["sceneItemId"]);
+                sceneItemEnabled = Convert.ToBoolean(bodyObj["sceneItemEnabled"]);
+
                 SceneItemEnableStateChanged?.Invoke(this,
-                    new SceneItemEnableStateChangedEventArgs((string)body["sceneName"], (int)body["sceneItemId"],
-                        (bool)body["sceneItemEnabled"]));
+                    new SceneItemEnableStateChangedEventArgs(sceneName, sceneItemId, sceneItemEnabled));
                 break;
-
             case nameof(SceneItemLockStateChanged):
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                sceneItemId = Convert.ToInt32(bodyObj["sceneItemId"]);
+                sceneItemEnabled = Convert.ToBoolean(bodyObj["sceneItemEnabled"]);
+
                 SceneItemLockStateChanged?.Invoke(this,
-                    new SceneItemLockStateChangedEventArgs((string)body["sceneName"], (int)body["sceneItemId"],
-                        (bool)body["sceneItemLocked"]));
+                    new SceneItemLockStateChangedEventArgs(sceneName, sceneItemId, sceneItemEnabled));
                 break;
-
             case nameof(CurrentSceneCollectionChanged):
+                sceneCollectionName = bodyObj["sceneCollectionName"]?.ToString() ?? "";
                 CurrentSceneCollectionChanged?.Invoke(this,
-                    new CurrentSceneCollectionChangedEventArgs((string)body["sceneCollectionName"]));
+                    new CurrentSceneCollectionChangedEventArgs(sceneCollectionName));
                 break;
-
             case nameof(SceneCollectionListChanged):
+                sceneCollections = bodyObj["sceneCollections"]?.ToString() ?? "";
+                List<string> sceneCollectionsList = JsonConvert.DeserializeObject<List<string>>(sceneCollections) ?? new List<string>();
+
                 SceneCollectionListChanged?.Invoke(this,
-                    new SceneCollectionListChangedEventArgs(
-                        JsonConvert.DeserializeObject<List<string>>((string)body["sceneCollections"])));
+                    new SceneCollectionListChangedEventArgs(sceneCollectionsList));
                 break;
-
             case nameof(CurrentSceneTransitionChanged):
+                transitionName = bodyObj["transitionName"]?.ToString() ?? "";
                 CurrentSceneTransitionChanged?.Invoke(this,
-                    new CurrentSceneTransitionChangedEventArgs((string)body["transitionName"]));
+                    new CurrentSceneTransitionChangedEventArgs(transitionName));
                 break;
-
             case nameof(CurrentSceneTransitionDurationChanged):
+                transitionDuration = Convert.ToInt32(bodyObj["transitionDuration"]);
                 CurrentSceneTransitionDurationChanged?.Invoke(this,
-                    new CurrentSceneTransitionDurationChangedEventArgs((int)body["transitionDuration"]));
+                    new CurrentSceneTransitionDurationChangedEventArgs(transitionDuration));
                 break;
-
             case nameof(SceneTransitionStarted):
+                transitionName = bodyObj["transitionName"]?.ToString() ?? "";
                 SceneTransitionStarted?.Invoke(this,
-                    new SceneTransitionStartedEventArgs((string)body["transitionName"]));
+                    new SceneTransitionStartedEventArgs(transitionName));
                 break;
-
             case nameof(SceneTransitionEnded):
-                SceneTransitionEnded?.Invoke(this, new SceneTransitionEndedEventArgs((string)body["transitionName"]));
+                transitionName = bodyObj["transitionName"]?.ToString() ?? "";
+                SceneTransitionEnded?.Invoke(this, new SceneTransitionEndedEventArgs(transitionName));
                 break;
-
             case nameof(SceneTransitionVideoEnded):
+                transitionName = bodyObj["transitionName"]?.ToString() ?? "";
                 SceneTransitionVideoEnded?.Invoke(this,
-                    new SceneTransitionVideoEndedEventArgs((string)body["transitionName"]));
+                    new SceneTransitionVideoEndedEventArgs(transitionName));
                 break;
-
             case nameof(CurrentProfileChanged):
-                CurrentProfileChanged?.Invoke(this, new CurrentProfileChangedEventArgs((string)body["profileName"]));
+                profileName = bodyObj["profileName"]?.ToString() ?? "";
+                CurrentProfileChanged?.Invoke(this, new CurrentProfileChangedEventArgs(profileName));
                 break;
-
             case nameof(ProfileListChanged):
-                ProfileListChanged?.Invoke(this,
-                    new ProfileListChangedEventArgs(
-                        JsonConvert.DeserializeObject<List<string>>((string)body["profiles"])));
+                profiles = bodyObj["profiles"]?.ToString() ?? "";
+                List<string> profileList = JsonConvert.DeserializeObject<List<string>>(profiles) ?? new List<string>();
+                ProfileListChanged?.Invoke(this, new ProfileListChangedEventArgs(profileList));
                 break;
-
             case nameof(StreamStateChanged):
                 StreamStateChanged?.Invoke(this, new StreamStateChangedEventArgs(new OutputStateChanged(body)));
                 break;
-
             case nameof(RecordStateChanged):
                 RecordStateChanged?.Invoke(this, new RecordStateChangedEventArgs(new RecordStateChanged(body)));
                 break;
-
             case nameof(CurrentPreviewSceneChanged):
-                CurrentPreviewSceneChanged?.Invoke(this,
-                    new CurrentPreviewSceneChangedEventArgs((string)body["sceneName"]));
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                
+                CurrentPreviewSceneChanged?.Invoke(this, new CurrentPreviewSceneChangedEventArgs(sceneName));
                 break;
-
             case nameof(StudioModeStateChanged):
+                studioModeEnabled = Convert.ToBoolean(bodyObj["studioModeEnabled"]);
                 StudioModeStateChanged?.Invoke(this,
-                    new StudioModeStateChangedEventArgs((bool)body["studioModeEnabled"]));
+                    new StudioModeStateChangedEventArgs(studioModeEnabled));
                 break;
-
             case nameof(ReplayBufferStateChanged):
                 ReplayBufferStateChanged?.Invoke(this,
                     new ReplayBufferStateChangedEventArgs(new OutputStateChanged(body)));
                 break;
-
             case nameof(ExitStarted):
                 ExitStarted?.Invoke(this, EventArgs.Empty);
                 break;
-
             case nameof(SceneItemSelected):
-                SceneItemSelected?.Invoke(this,
-                    new SceneItemSelectedEventArgs((string)body["sceneName"], (string)body["sceneItemId"]));
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                sceneItemIdx = bodyObj["sceneItemId"]?.ToString() ?? "";
+                SceneItemSelected?.Invoke(this, new SceneItemSelectedEventArgs(sceneName, sceneItemIdx));
                 break;
-
             case nameof(SceneItemTransformChanged):
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                sceneItemIdx = bodyObj["sceneItemId"]?.ToString() ?? "";
+                JObject sceneItemTransform = (JObject?)bodyObj["sceneItemTransform"] ?? new JObject();
                 SceneItemTransformChanged?.Invoke(this,
-                    new SceneItemTransformEventArgs((string)body["sceneName"], (string)body["sceneItemId"],
-                        new SceneItemTransformInfo((JObject)body["sceneItemTransform"])));
+                    new SceneItemTransformEventArgs(sceneName, sceneItemIdx,
+                        new SceneItemTransformInfo(sceneItemTransform)));
                 break;
-
             case nameof(InputAudioSyncOffsetChanged):
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                inputAudioSyncOffset = Convert.ToInt32(bodyObj["inputAudioSyncOffset"]);
                 InputAudioSyncOffsetChanged?.Invoke(this,
-                    new InputAudioSyncOffsetChangedEventArgs((string)body["inputName"],
-                        (int)body["inputAudioSyncOffset"]));
+                    new InputAudioSyncOffsetChangedEventArgs(inputName, inputAudioSyncOffset));
                 break;
-
             case nameof(InputMuteStateChanged):
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                inputMuted = Convert.ToBoolean(bodyObj["inputMuted"]);
                 InputMuteStateChanged?.Invoke(this,
-                    new InputMuteStateChangedEventArgs((string)body["inputName"], (bool)body["inputMuted"]));
+                    new InputMuteStateChangedEventArgs(inputName, inputMuted));
                 break;
-
             case nameof(InputVolumeChanged):
                 InputVolumeChanged?.Invoke(this, new InputVolumeChangedEventArgs(new InputVolume(body)));
                 break;
-
             case nameof(SourceFilterCreated):
+                sourceName = bodyObj["sourceName"]?.ToString() ?? "";
+                filterName = bodyObj["filterName"]?.ToString() ?? "";
+                filterKind = bodyObj["filterKind"]?.ToString() ?? "";
+                filterIndex = Convert.ToInt32(bodyObj["filterIndex"]);
+                JObject filterSettings = (JObject?)bodyObj["filterSettings"] ?? new JObject();
+                JObject defaultFilterSettings = (JObject?)bodyObj["defaultFilterSettings"] ?? new JObject();
                 SourceFilterCreated?.Invoke(this,
-                    new SourceFilterCreatedEventArgs((string)body["sourceName"], (string)body["filterName"],
-                        (string)body["filterKind"], (int)body["filterIndex"], (JObject)body["filterSettings"],
-                        (JObject)body["defaultFilterSettings"]));
+                    new SourceFilterCreatedEventArgs(sourceName, filterName,
+                        filterKind, filterIndex, filterSettings, defaultFilterSettings));
                 break;
-
             case nameof(SourceFilterRemoved):
+                sourceName = bodyObj["sourceName"]?.ToString() ?? "";
+                filterName = bodyObj["filterName"]?.ToString() ?? "";
+                
                 SourceFilterRemoved?.Invoke(this,
-                    new SourceFilterRemovedEventArgs((string)body["sourceName"], (string)body["filterName"]));
+                    new SourceFilterRemovedEventArgs(sourceName, filterName));
                 break;
-
             case nameof(SourceFilterListReindexed):
+                sourceName = bodyObj["sourceName"]?.ToString() ?? "";
+                filterObj = bodyObj["filters"]?.ToString() ?? "";
                 if (SourceFilterListReindexed != null)
                 {
                     List<FilterReorderItem> filters = new List<FilterReorderItem>();
-                    JsonConvert.PopulateObject(body["filters"].ToString(), filters);
+                    JsonConvert.PopulateObject(filterObj, filters);
 
                     SourceFilterListReindexed?.Invoke(this,
-                        new SourceFilterListReindexedEventArgs((string)body["sourceName"], filters));
+                        new SourceFilterListReindexedEventArgs(sourceName, filters));
                 }
 
                 break;
-
             case nameof(SourceFilterEnableStateChanged):
+                sourceName = bodyObj["sourceName"]?.ToString() ?? "";
+                filterName = bodyObj["filterName"]?.ToString() ?? "";
+                filterEnabled = Convert.ToBoolean(bodyObj["filterEnabled"]);
                 SourceFilterEnableStateChanged?.Invoke(this,
-                    new SourceFilterEnableStateChangedEventArgs((string)body["sourceName"], (string)body["filterName"],
-                        (bool)body["filterEnabled"]));
+                    new SourceFilterEnableStateChangedEventArgs(sourceName, filterName, filterEnabled));
                 break;
-
             case nameof(VendorEvent):
+                string vendorName = bodyObj["vendorName"]?.ToString() ?? "";
+                string @event = bodyObj["event"]?.ToString() ?? "";
                 VendorEvent?.Invoke(this,
-                    new VendorEventArgs((string)body["vendorName"], (string)body["eventType"], body));
+                    new VendorEventArgs(vendorName, @event, body));
                 break;
-
             case nameof(MediaInputPlaybackEnded):
-                MediaInputPlaybackEnded?.Invoke(this, new MediaInputPlaybackEndedEventArgs((string)body["inputName"]));
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                MediaInputPlaybackEnded?.Invoke(this, new MediaInputPlaybackEndedEventArgs(inputName));
                 break;
-
             case nameof(MediaInputPlaybackStarted):
+                sourceName = bodyObj["sourceName"]?.ToString() ?? "";
                 MediaInputPlaybackStarted?.Invoke(this,
-                    new MediaInputPlaybackStartedEventArgs((string)body["sourceName"]));
+                    new MediaInputPlaybackStartedEventArgs(sourceName));
                 break;
-
             case nameof(MediaInputActionTriggered):
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                mediaAction = bodyObj["mediaAction"]?.ToString() ?? "";
                 MediaInputActionTriggered?.Invoke(this,
-                    new MediaInputActionTriggeredEventArgs((string)body["inputName"], (string)body["mediaAction"]));
+                    new MediaInputActionTriggeredEventArgs(inputName, mediaAction));
                 break;
-
             case nameof(VirtualcamStateChanged):
                 VirtualcamStateChanged?.Invoke(this, new VirtualcamStateChangedEventArgs(new OutputStateChanged(body)));
                 break;
-
             case nameof(CurrentSceneCollectionChanging):
+                sceneCollectionName = bodyObj["sceneCollectionName"]?.ToString() ?? "";
                 CurrentSceneCollectionChanging?.Invoke(this,
-                    new CurrentSceneCollectionChangingEventArgs((string)body["sceneCollectionName"]));
+                    new CurrentSceneCollectionChangingEventArgs(sceneCollectionName));
                 break;
-
             case nameof(CurrentProfileChanging):
-                CurrentProfileChanging?.Invoke(this, new CurrentProfileChangingEventArgs((string)body["profileName"]));
+                profileName = bodyObj["profileName"]?.ToString() ?? "";
+                CurrentProfileChanging?.Invoke(this, new CurrentProfileChangingEventArgs(profileName));
                 break;
-
             case nameof(SourceFilterNameChanged):
+                sourceName = bodyObj["sourceName"]?.ToString() ?? "";
+                string oldFilterName = bodyObj["oldFilterName"]?.ToString() ?? "";
+                filterName = bodyObj["filterName"]?.ToString() ?? "";
                 SourceFilterNameChanged?.Invoke(this,
-                    new SourceFilterNameChangedEventArgs((string)body["sourceName"], (string)body["oldFilterName"],
-                        (string)body["filterName"]));
+                    new SourceFilterNameChangedEventArgs(sourceName, oldFilterName, filterName));
                 break;
-
             case nameof(InputCreated):
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                inputKind = bodyObj["inputKind"]?.ToString() ?? "";
+                string unversionedInputKind = bodyObj["unversionedInputKind"]?.ToString() ?? "";
+                JObject inputSettings = (JObject?)bodyObj["inputSettings"] ?? new JObject();
+                JObject defaultInputSettings = (JObject?)bodyObj["defaultInputSettings"] ?? new JObject();
                 InputCreated?.Invoke(this,
-                    new InputCreatedEventArgs((string)body["inputName"], (string)body["inputKind"],
-                        (string)body["unversionedInputKind"], (JObject)body["inputSettings"],
-                        (JObject)body["defaultInputSettings"]));
+                    new InputCreatedEventArgs(inputName, inputKind, unversionedInputKind, 
+                        inputSettings, defaultInputSettings));
                 break;
-
             case nameof(InputRemoved):
-                InputRemoved?.Invoke(this, new InputRemovedEventArgs((string)body["inputName"]));
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                InputRemoved?.Invoke(this, new InputRemovedEventArgs(inputName));
                 break;
-
             case nameof(InputNameChanged):
+                string oldInputName = bodyObj["oldInputName"]?.ToString() ?? "";
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
                 InputNameChanged?.Invoke(this,
-                    new InputNameChangedEventArgs((string)body["oldInputName"], (string)body["inputName"]));
+                    new InputNameChangedEventArgs(oldInputName, inputName));
                 break;
-
             case nameof(InputActiveStateChanged):
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                bool videoActive = Convert.ToBoolean(bodyObj["videoActive"]);
                 InputActiveStateChanged?.Invoke(this,
-                    new InputActiveStateChangedEventArgs((string)body["inputName"], (bool)body["videoActive"]));
+                    new InputActiveStateChangedEventArgs(inputName, videoActive));
                 break;
-
             case nameof(InputShowStateChanged):
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                bool videoShowing = Convert.ToBoolean(bodyObj["videoShowing"]);
+
                 InputShowStateChanged?.Invoke(this,
-                    new InputShowStateChangedEventArgs((string)body["inputName"], (bool)body["videoShowing"]));
+                    new InputShowStateChangedEventArgs(inputName, videoShowing));
                 break;
-
             case nameof(InputAudioBalanceChanged):
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                double inputAudioBalance = Convert.ToDouble(body["inputAudioBalance"]);
                 InputAudioBalanceChanged?.Invoke(this,
-                    new InputAudioBalanceChangedEventArgs((string)body["inputName"],
-                        (double)body["inputAudioBalance"]));
+                    new InputAudioBalanceChangedEventArgs(inputName, inputAudioBalance));
                 break;
-
             case nameof(InputAudioTracksChanged):
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                JObject inputAudioTrack = (JObject?)bodyObj["inputAudioTracks"] ?? new JObject();
                 InputAudioTracksChanged?.Invoke(this,
-                    new InputAudioTracksChangedEventArgs((string)body["inputName"], (JObject)body["inputAudioTracks"]));
+                    new InputAudioTracksChangedEventArgs(inputName, inputAudioTrack));
                 break;
-
             case nameof(InputAudioMonitorTypeChanged):
+                inputName = bodyObj["inputName"]?.ToString() ?? "";
+                monitorType = bodyObj["monitorType"]?.ToString() ?? "";
+                
                 InputAudioMonitorTypeChanged?.Invoke(this,
-                    new InputAudioMonitorTypeChangedEventArgs((string)body["inputName"], (string)body["monitorType"]));
+                    new InputAudioMonitorTypeChangedEventArgs(inputName, monitorType));
                 break;
-
             case nameof(InputVolumeMeters):
+                string inputs = bodyObj["inputs"]?.ToString() ?? "";
+                List<JObject> inputList = JsonConvert.DeserializeObject<List<JObject>>(inputs) ?? new List<JObject>();
                 InputVolumeMeters?.Invoke(this,
-                    new InputVolumeMetersEventArgs(
-                        JsonConvert.DeserializeObject<List<JObject>>((string)body["inputs"])));
+                    new InputVolumeMetersEventArgs(inputList));
                 break;
-
             case nameof(ReplayBufferSaved):
-                ReplayBufferSaved?.Invoke(this, new ReplayBufferSavedEventArgs((string)body["savedReplayPath"]));
+                string savedReplayPath = bodyObj["savedReplayPath"]?.ToString() ?? "";
+                ReplayBufferSaved?.Invoke(this, new ReplayBufferSavedEventArgs(savedReplayPath));
                 break;
-
             case nameof(SceneCreated):
-                SceneCreated?.Invoke(this, new SceneCreatedEventArgs((string)body["sceneName"], (bool)body["isGroup"]));
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                isGroup = Convert.ToBoolean(bodyObj["isGroup"]);
+                
+                SceneCreated?.Invoke(this, new SceneCreatedEventArgs(sceneName, isGroup));
                 break;
-
             case nameof(SceneRemoved):
-                SceneRemoved?.Invoke(this, new SceneRemovedEventArgs((string)body["sceneName"], (bool)body["isGroup"]));
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                isGroup = Convert.ToBoolean(bodyObj["isGroup"]);
+                SceneRemoved?.Invoke(this, new SceneRemovedEventArgs(sceneName, isGroup));
                 break;
-
             case nameof(SceneNameChanged):
+                sceneName = bodyObj["sceneName"]?.ToString() ?? "";
+                string oldSceneName = bodyObj["oldSceneName"]?.ToString() ?? "";
                 SceneNameChanged?.Invoke(this,
-                    new SceneNameChangedEventArgs((string)body["oldSceneName"], (string)body["sceneName"]));
+                    new SceneNameChangedEventArgs(oldSceneName, sceneName));
                 break;
-
             default:
                 var message = $"Unsupported Event: {eventType}\n{body}";
                 Console.WriteLine(message);

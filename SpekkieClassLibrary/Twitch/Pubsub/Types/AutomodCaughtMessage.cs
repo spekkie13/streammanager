@@ -2,6 +2,7 @@
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using TwitchLib.PubSub.Models.Responses.Messages.AutomodCaughtMessage;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class AutomodCaughtMessage : AutomodQueueData

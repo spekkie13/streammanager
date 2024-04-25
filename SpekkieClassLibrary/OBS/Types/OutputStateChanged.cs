@@ -23,22 +23,22 @@ public class OutputStateChanged
 
             switch (StateStr)
             {
-                case "OBS_WEBSOCKET_OUTPUT_STARTING":
+                case "ObsWebsocketOutputStarting":
                     _state = OutputState.ObsWebsocketOutputStarting;
                     break;
-                case "OBS_WEBSOCKET_OUTPUT_STARTED":
+                case "ObsWebsocketOutputStarted":
                     _state = OutputState.ObsWebsocketOutputStarted;
                     break;
-                case "OBS_WEBSOCKET_OUTPUT_STOPPING":
+                case "ObsWebsocketOutputStopping":
                     _state = OutputState.ObsWebsocketOutputStopping;
                     break;
-                case "OBS_WEBSOCKET_OUTPUT_STOPPED":
+                case "ObsWebsocketOutputStopped":
                     _state = OutputState.ObsWebsocketOutputStopped;
                     break;
-                case "OBS_WEBSOCKET_OUTPUT_PAUSED":
+                case "ObsWebsocketOutputPaused":
                     _state = OutputState.ObsWebsocketOutputPaused;
                     break;
-                case "OBS_WEBSOCKET_OUTPUT_RESUMED":
+                case "ObsWebsocketOutputResumed":
                     _state = OutputState.ObsWebsocketOutputResumed;
                     break;
                 default:

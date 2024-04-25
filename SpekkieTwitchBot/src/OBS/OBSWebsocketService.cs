@@ -1,13 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using SpekkieClassLibrary.OBS.Communication;
 using SpekkieClassLibrary.OBS.Enum;
 using SpekkieClassLibrary.OBS.Events;
 using SpekkieClassLibrary.OBS.Types;
 using SpekkieClassLibrary.Twitch.Auth;
-using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.FileHandling;
 using Logger = SpekkieTwitchBot.General.Logger;
 
@@ -15,8 +12,6 @@ namespace SpekkieTwitchBot.OBS;
 
 public class ObsWebsocketService : IHostedService
 {
-    private readonly IConfiguration _Configuration;
-    private readonly ILogger<ObsWebsocketService> _Logger;
     private readonly Logger _GeneralLogger;
     private readonly CustomObsWebsocket _Socket;
     private readonly CancellationTokenSource _KeepAliveTokenSource;
@@ -25,20 +20,16 @@ public class ObsWebsocketService : IHostedService
     private readonly string _Password;
 
     public ObsWebsocketService(
-        IConfiguration configuration, 
-        ILogger<ObsWebsocketService> logger, 
         Logger generalLogger,
         CustomObsWebsocket socket,
         TwitchFileReader twitchFileReader)
     {
         string jsonData = twitchFileReader.ReadTwitchGeneralAuthFile();
         GeneralTwitchAuth? auth = JsonConvert.DeserializeObject<GeneralTwitchAuth>(jsonData);
-        _Url = auth?.Obs_Url ?? "";
+        _Url = auth?.ObsUrl ?? "";
         _Password = auth?.Password ?? "";
         _KeepAliveTokenSource = new CancellationTokenSource();
         
-        _Configuration = configuration;
-        _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _Socket = socket ?? throw new ArgumentNullException(nameof(socket));
 
         _Socket.Connected += OnConnect;
@@ -53,6 +44,7 @@ public class ObsWebsocketService : IHostedService
     private void OnConnect(object? sender, EventArgs e)
     {      
         OutputStatus streamStatus = _Socket.GetStreamStatus();
+        _GeneralLogger.LogInfo($"Stream active: {streamStatus.IsActive.ToString()}");
         OnStreamStateChanged(_Socket,
             streamStatus.IsActive
                 ? new StreamStateChangedEventArgs(new OutputStateChanged
@@ -60,19 +52,21 @@ public class ObsWebsocketService : IHostedService
                 : new StreamStateChangedEventArgs(new OutputStateChanged { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStopped) }));
 
         RecordingStatus recordStatus = _Socket.GetRecordStatus();
+        _GeneralLogger.LogInfo($"Recording active: {recordStatus.IsRecording.ToString()}");
         OnRecordStateChanged(_Socket,
             streamStatus.IsActive
                 ? new RecordStateChangedEventArgs(new RecordStateChanged { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStarted) })
                 : new RecordStateChangedEventArgs(new RecordStateChanged { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStopped) }));
 
         VirtualCamStatus camStatus = _Socket.GetVirtualCamStatus();
+        _GeneralLogger.LogInfo($"Cam status active: {camStatus.IsActive.ToString()}");
         OnVirtualCamStateChanged(_Socket,
             streamStatus.IsActive
                 ? new VirtualcamStateChangedEventArgs(new OutputStateChanged { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStarted) })
                 : new VirtualcamStateChangedEventArgs(new OutputStateChanged { IsActive = true, StateStr = nameof(OutputState.ObsWebsocketOutputStopped) }));
 
         CancellationToken keepAliveToken = _KeepAliveTokenSource.Token;
-        Task statPollKeepAlive = Task.Factory.StartNew(() =>
+        Task.Factory.StartNew(() =>
         {
             while (true)
             {
@@ -92,23 +86,18 @@ public class ObsWebsocketService : IHostedService
         {
             _GeneralLogger.LogError("Authentication Failed");
         }
-        else if(e.WebsocketDisconnectionInfo != null)
-            if (e.WebsocketDisconnectionInfo.Exception != null)
-                _GeneralLogger.LogError($@"Connection failed: 
+        else if (e.WebsocketDisconnectionInfo.Exception != null)
+            _GeneralLogger.LogError($@"Connection failed: 
                                      CloseCode: {e.ObsCloseCode} 
-                                     Desc: {e.WebsocketDisconnectionInfo?.CloseStatusDescription} 
-                                     Exception:{e.WebsocketDisconnectionInfo?.Exception?.Message}\n
-                                     Type: {e.WebsocketDisconnectionInfo?.Type}");
-            else
-                _GeneralLogger.LogError($@"Connection failed: 
-                                     CloseCode: {e.ObsCloseCode} 
-                                     Desc: {e.WebsocketDisconnectionInfo?.CloseStatusDescription} 
-                                     Exception:{e.WebsocketDisconnectionInfo?.Exception?.Message}\n
-                                     Type: {e.WebsocketDisconnectionInfo?.Type}");
+                                     Desc: {e.WebsocketDisconnectionInfo.CloseStatusDescription} 
+                                     Exception:{e.WebsocketDisconnectionInfo.Exception?.Message}\n
+                                     Type: {e.WebsocketDisconnectionInfo.Type}");
         else
-        {
-            _GeneralLogger.LogError($"Connection failed: CloseCode: {e.ObsCloseCode}");
-        }
+            _GeneralLogger.LogError($@"Connection failed: 
+                                     CloseCode: {e.ObsCloseCode} 
+                                     Desc: {e.WebsocketDisconnectionInfo.CloseStatusDescription} 
+                                     Exception:{e.WebsocketDisconnectionInfo.Exception?.Message}\n
+                                     Type: {e.WebsocketDisconnectionInfo.Type}");
     }
 
     private void OnStreamStateChanged(object? sender, StreamStateChangedEventArgs args)

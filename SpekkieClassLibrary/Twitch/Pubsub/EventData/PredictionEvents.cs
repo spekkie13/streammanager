@@ -4,6 +4,7 @@ using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 using TwitchLib.PubSub.Extensions;
 using Outcome = SpekkieClassLibrary.Twitch.Pubsub.Types.Outcome;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;
 
 public class PredictionEvents : MessageData
@@ -24,44 +25,44 @@ public class PredictionEvents : MessageData
     {
         JObject jobject = JObject.Parse(jsonStr);
         Type = (PredictionType)Enum.Parse(typeof(PredictionType),
-            ((object)jobject.SelectToken("type")).ToString().Replace("-", ""), true);
+            jobject.SelectToken("type").ToString().Replace("-", ""), true);
         JToken jtoken1 = jobject.SelectToken("data.event");
-        Id = Guid.Parse(((object)jtoken1.SelectToken("id")).ToString());
-        ChannelId = ((object)jtoken1.SelectToken("channel_id")).ToString();
+        Id = Guid.Parse(jtoken1.SelectToken("id").ToString());
+        ChannelId = jtoken1.SelectToken("channel_id").ToString();
         CreatedAt = jtoken1.SelectToken("created_at").IsEmpty()
             ? new DateTime?()
-            : DateTime.Parse(((object)jtoken1.SelectToken("created_at")).ToString());
+            : DateTime.Parse(jtoken1.SelectToken("created_at").ToString());
         EndedAt = jtoken1.SelectToken("ended_at").IsEmpty()
             ? new DateTime?()
-            : DateTime.Parse(((object)jtoken1.SelectToken("ended_at")).ToString());
+            : DateTime.Parse(jtoken1.SelectToken("ended_at").ToString());
         LockedAt = jtoken1.SelectToken("locked_at").IsEmpty()
             ? new DateTime?()
-            : DateTime.Parse(((object)jtoken1.SelectToken("locked_at")).ToString());
+            : DateTime.Parse(jtoken1.SelectToken("locked_at").ToString());
         Status = (PredictionStatus)Enum.Parse(typeof(PredictionStatus),
-            ((object)jtoken1.SelectToken("status")).ToString().Replace("_", ""), true);
-        Title = ((object)jtoken1.SelectToken("title")).ToString();
+            jtoken1.SelectToken("status").ToString().Replace("_", ""), true);
+        Title = jtoken1.SelectToken("title").ToString();
         WinningOutcomeId = jtoken1.SelectToken("winning_outcome_id").IsEmpty()
             ? new Guid?()
-            : Guid.Parse(((object)jtoken1.SelectToken("winning_outcome_id")).ToString());
-        PredictionTime = int.Parse(((object)jtoken1.SelectToken("prediction_window_seconds")).ToString());
+            : Guid.Parse(jtoken1.SelectToken("winning_outcome_id").ToString());
+        PredictionTime = int.Parse(jtoken1.SelectToken("prediction_window_seconds").ToString());
         JEnumerable<JToken> jenumerable = jtoken1.SelectToken("outcomes").Children();
         foreach (JToken jtoken2 in jenumerable)
         {
             Outcome outcome = new Outcome
             {
-                Id = Guid.Parse(((object)jtoken2.SelectToken("id")).ToString()),
-                Color = ((object)jtoken2.SelectToken("color")).ToString(),
-                Title = ((object)jtoken2.SelectToken("title")).ToString(),
-                TotalPoints = long.Parse(((object)jtoken2.SelectToken("total_points")).ToString()),
-                TotalUsers = long.Parse(((object)jtoken2.SelectToken("total_users")).ToString())
+                Id = Guid.Parse(jtoken2.SelectToken("id").ToString()),
+                Color = jtoken2.SelectToken("color").ToString(),
+                Title = jtoken2.SelectToken("title").ToString(),
+                TotalPoints = long.Parse(jtoken2.SelectToken("total_points").ToString()),
+                TotalUsers = long.Parse(jtoken2.SelectToken("total_users").ToString())
             };
             jenumerable = jtoken2.SelectToken("top_predictors").Children();
             foreach (JToken jtoken3 in jenumerable)
                 outcome.TopPredictors.Add(new Outcome.Predictor
                 {
-                    DisplayName = ((object)jtoken3.SelectToken("user_display_name")).ToString(),
-                    Points = int.Parse(((object)jtoken3.SelectToken("points")).ToString()),
-                    UserId = ((object)jtoken3.SelectToken("user_id")).ToString()
+                    DisplayName = jtoken3.SelectToken("user_display_name").ToString(),
+                    Points = int.Parse(jtoken3.SelectToken("points").ToString()),
+                    UserId = jtoken3.SelectToken("user_id").ToString()
                 });
             Outcomes.Add(outcome);
         }

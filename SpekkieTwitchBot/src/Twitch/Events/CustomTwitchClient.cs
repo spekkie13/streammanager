@@ -198,6 +198,8 @@ public class CustomTwitchClient : ITwitchClient
                     break;
             }
         }
+        
+        if(_client == null) return;
 
         _client.OnConnected += _client_OnConnected;
         _client.OnMessage += _client_OnMessage;
@@ -494,7 +496,7 @@ public class CustomTwitchClient : ITwitchClient
 
     private void _client_OnMessage(object sender, OnMessageEventArgs e)
     {
-        string[] separator = new string[1] { "\r\n" };
+        string[] separator = { "\r\n" };
         foreach (string raw in e.Message.Split(separator, StringSplitOptions.None))
         {
             if (raw.Length > 1)
@@ -835,10 +837,10 @@ public class CustomTwitchClient : ITwitchClient
                     });
                     break;
                 case "msg_r9k":
-                    EventHandler<OnR9kModeArgs> onR9kMode = OnR9kMode;
-                    if (onR9kMode == null)
+                    EventHandler<OnR9kModeArgs> onR9KMode = OnR9kMode;
+                    if (onR9KMode == null)
                         break;
-                    onR9kMode(this, new OnR9kModeArgs
+                    onR9KMode(this, new OnR9kModeArgs
                     {
                         Channel = ircMessage.Channel,
                         Message = ircMessage.Message

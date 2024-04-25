@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿#nullable disable
+using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 
@@ -15,7 +16,7 @@ public class VideoPlayback : MessageData
     public VideoPlayback(string jsonStr)
     {
         JToken jtoken = JObject.Parse(jsonStr);
-        switch (((object)jtoken.SelectToken("type")).ToString())
+        switch (jtoken.SelectToken("type")?.ToString())
         {
             case "stream-up":
                 Type = VideoPlaybackType.StreamUp;
@@ -31,17 +32,20 @@ public class VideoPlayback : MessageData
                 break;
         }
 
-        ServerTime = ((object)jtoken.SelectToken("server_time"))?.ToString();
+        ServerTime = jtoken.SelectToken("server_time")?.ToString();
         switch (Type)
         {
             case VideoPlaybackType.StreamUp:
-                PlayDelay = int.Parse(((object)jtoken.SelectToken("play_delay")).ToString());
+                int delay = Convert.ToInt32(jtoken.SelectToken("play_delay"));
+                PlayDelay = delay;
                 break;
             case VideoPlaybackType.ViewCount:
-                Viewers = int.Parse(((object)jtoken.SelectToken("viewers")).ToString());
+                int viewCount = Convert.ToInt32(jtoken.SelectToken("viewers"));
+                Viewers = viewCount;
                 break;
             case VideoPlaybackType.Commercial:
-                Length = int.Parse(((object)jtoken.SelectToken("length")).ToString());
+                int length = Convert.ToInt32(jtoken.SelectToken("length"));
+                Length = length;
                 break;
         }
     }

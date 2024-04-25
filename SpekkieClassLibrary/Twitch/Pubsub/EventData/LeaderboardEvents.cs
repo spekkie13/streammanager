@@ -3,6 +3,7 @@ using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 using TwitchLib.PubSub.Models;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;
 
 public class LeaderboardEvents : MessageData
@@ -14,7 +15,7 @@ public class LeaderboardEvents : MessageData
     public LeaderboardEvents(string jsonStr)
     {
         JToken jtoken = JObject.Parse(jsonStr);
-        switch (((object)jtoken.SelectToken("identifier.domain")).ToString())
+        switch (jtoken.SelectToken("identifier.domain")?.ToString())
         {
             case "bits-usage-by-channel-v1":
                 Type = LeaderBoardType.BitsUsageByChannel;
@@ -27,7 +28,7 @@ public class LeaderboardEvents : MessageData
         switch (Type)
         {
             case LeaderBoardType.BitsUsageByChannel:
-                ChannelId = ((object)jtoken.SelectToken("identifier.grouping_key")).ToString();
+                ChannelId = jtoken.SelectToken("identifier.grouping_key").ToString();
                 using (IEnumerator<JToken> enumerator = jtoken["top"].Children().GetEnumerator())
                 {
                     while (enumerator.MoveNext())
@@ -35,16 +36,16 @@ public class LeaderboardEvents : MessageData
                         JToken current = enumerator.Current;
                         Top.Add(new LeaderBoard
                         {
-                            Place = int.Parse(((object)current.SelectToken("rank")).ToString()),
-                            Score = int.Parse(((object)current.SelectToken("score")).ToString()),
-                            UserId = ((object)current.SelectToken("entry_key")).ToString()
+                            Place = int.Parse(current.SelectToken("rank").ToString()),
+                            Score = int.Parse(current.SelectToken("score").ToString()),
+                            UserId = current.SelectToken("entry_key").ToString()
                         });
                     }
 
                     break;
                 }
             case LeaderBoardType.SubGiftSent:
-                ChannelId = ((object)jtoken.SelectToken("identifier.grouping_key")).ToString();
+                ChannelId = jtoken.SelectToken("identifier.grouping_key").ToString();
                 using (IEnumerator<JToken> enumerator = jtoken["top"].Children().GetEnumerator())
                 {
                     while (enumerator.MoveNext())
@@ -52,9 +53,9 @@ public class LeaderboardEvents : MessageData
                         JToken current = enumerator.Current;
                         Top.Add(new LeaderBoard
                         {
-                            Place = int.Parse(((object)current.SelectToken("rank")).ToString()),
-                            Score = int.Parse(((object)current.SelectToken("score")).ToString()),
-                            UserId = ((object)current.SelectToken("entry_key")).ToString()
+                            Place = int.Parse(current.SelectToken("rank").ToString()),
+                            Score = int.Parse(current.SelectToken("score").ToString()),
+                            UserId = current.SelectToken("entry_key").ToString()
                         });
                     }
 

@@ -2,11 +2,12 @@
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;
 
 public class Whisper : MessageData
 {
-    public string Type { get; }
+    private string Type { get; }
     public WhisperType TypeEnum { get; }
     public string Data { get; }
     public DataObjWhisperReceived DataObjectWhisperReceived { get; }
@@ -15,8 +16,8 @@ public class Whisper : MessageData
     public Whisper(string jsonStr)
     {
         JObject jobject = JObject.Parse(jsonStr);
-        Type = ((object)jobject.SelectToken("type")).ToString();
-        Data = ((object)jobject.SelectToken("data")).ToString();
+        Type = jobject.SelectToken("type")?.ToString();
+        Data = jobject.SelectToken("data")?.ToString();
         switch (Type)
         {
             case "whisper_received":
@@ -33,246 +34,98 @@ public class Whisper : MessageData
         }
     }
 
-    /// <summary>Class DataObjThread.</summary>
-    public class DataObjThread
+    public class DataObjThread(JToken json)
     {
-        /// <summary>Gets or sets the identifier.</summary>
-        /// <value>The identifier.</value>
-        public string Id { get; }
+        public string Id { get; } = json.SelectToken("id")?.ToString();
 
-        /// <summary>Gets or sets the last read.</summary>
-        /// <value>The last read.</value>
-        public long LastRead { get; }
+        public long LastRead { get; } = long.Parse(json.SelectToken("last_read")?.ToString() ?? "");
 
-        /// <summary>
-        /// Gets or sets a value indicating whether this <see cref="T:SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper.DataObjThread" /> is archived.
-        /// </summary>
-        /// <value><c>true</c> if archived; otherwise, <c>false</c>.</value>
-        public bool Archived { get; }
+        public bool Archived { get; } = bool.Parse(json.SelectToken("archived")?.ToString() ?? "");
 
-        /// <summary>
-        /// Gets or sets a value indicating whether this <see cref="T:SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper.DataObjThread" /> is muted.
-        /// </summary>
-        /// <value><c>true</c> if muted; otherwise, <c>false</c>.</value>
-        public bool Muted { get; }
+        public bool Muted { get; } = bool.Parse(json.SelectToken("muted")?.ToString() ?? "");
 
-        /// <summary>Gets or sets the spam information.</summary>
-        /// <value>The spam information.</value>
-        public SpamInfoObj SpamInfo { get; }
+        public SpamInfoObj SpamInfo { get; } = new(json.SelectToken("spam_info"));
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="T:SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper.DataObjThread" /> class.
-        /// </summary>
-        /// <param name="json">The json.</param>
-        public DataObjThread(JToken json)
+        public class SpamInfoObj(JToken json)
         {
-            Id = ((object)json.SelectToken("id")).ToString();
-            LastRead = long.Parse(((object)json.SelectToken("last_read")).ToString());
-            Archived = bool.Parse(((object)json.SelectToken("archived")).ToString());
-            Muted = bool.Parse(((object)json.SelectToken("muted")).ToString());
-            SpamInfo = new SpamInfoObj(json.SelectToken("spam_info"));
-        }
+            public string Likelihood { get; } = json.SelectToken("likelihood")?.ToString();
 
-        /// <summary>Class SpamInfoObj.</summary>
-        public class SpamInfoObj
-        {
-            /// <summary>Gets or sets the likelihood.</summary>
-            /// <value>The likelihood.</value>
-            public string Likelihood { get; }
-
-            /// <summary>Gets or sets the last marked not spam.</summary>
-            /// <value>The last marked not spam.</value>
-            public long LastMarkedNotSpam { get; }
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="T:SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper.DataObjThread.SpamInfoObj" /> class.
-            /// </summary>
-            /// <param name="json">The json.</param>
-            public SpamInfoObj(JToken json)
-            {
-                Likelihood = ((object)json.SelectToken("likelihood")).ToString();
-                LastMarkedNotSpam = long.Parse(((object)json.SelectToken("last_marked_not_spam")).ToString());
-            }
+            public long LastMarkedNotSpam { get; } = long.Parse(json.SelectToken("last_marked_not_spam")?.ToString() ?? "");
         }
     }
 
-    /// <summary>Class representing the data in the MessageData object.</summary>
-    public class DataObjWhisperReceived
+    public class DataObjWhisperReceived(JToken json)
     {
-        /// <summary>DataObject identifier</summary>
-        /// <value>The identifier.</value>
-        public string Id { get; protected set; }
+        public string Id { get; protected set; } = json.SelectToken("id")?.ToString();
 
-        /// <summary>Twitch assigned thread id</summary>
-        /// <value>The thread identifier.</value>
-        public string ThreadId { get; protected set; }
+        public string ThreadId { get; protected set; } = json.SelectToken("thread_id")?.ToString();
 
-        /// <summary>Body of data received from Twitch</summary>
-        /// <value>The body.</value>
-        public string Body { get; protected set; }
+        public string Body { get; protected set; } = json.SelectToken("body")?.ToString();
 
-        /// <summary>Timestamp generated by Twitc</summary>
-        /// <value>The sent ts.</value>
-        public long SentTs { get; protected set; }
+        public long SentTs { get; protected set; } = long.Parse(json.SelectToken("sent_ts")?.ToString() ?? "");
 
-        /// <summary>Id of user that sent whisper.</summary>
-        /// <value>From identifier.</value>
-        public string FromId { get; protected set; }
+        public string FromId { get; protected set; } = json.SelectToken("from_id")?.ToString();
 
-        /// <summary>Tags object housing associated tags.</summary>
-        /// <value>The tags.</value>
-        public TagsObj Tags { get; protected set; }
+        public TagsObj Tags { get; protected set; } = new(json.SelectToken("tags"));
 
-        /// <summary>
-        /// Receipient object housing various properties about user who received whisper.
-        /// </summary>
-        /// <value>The recipient.</value>
-        public RecipientObj Recipient { get; protected set; }
+        public RecipientObj Recipient { get; protected set; } = new(json.SelectToken("recipient"));
 
-        /// <summary>
-        /// Uniquely generated string used to identify response from request.
-        /// </summary>
-        /// <value>The nonce.</value>
-        public string Nonce { get; protected set; }
+        public string Nonce { get; protected set; } = json.SelectToken("nonce")?.ToString();
 
-        /// <summary>DataObj constructor.</summary>
-        /// <param name="json">The json.</param>
-        public DataObjWhisperReceived(JToken json)
-        {
-            Id = ((object)json.SelectToken("id")).ToString();
-            ThreadId = ((object)json.SelectToken("thread_id"))?.ToString();
-            Body = ((object)json.SelectToken("body"))?.ToString();
-            SentTs = long.Parse(((object)json.SelectToken("sent_ts")).ToString());
-            FromId = ((object)json.SelectToken("from_id")).ToString();
-            Tags = new TagsObj(json.SelectToken("tags"));
-            Recipient = new RecipientObj(json.SelectToken("recipient"));
-            Nonce = ((object)json.SelectToken("nonce"))?.ToString();
-        }
-
-        /// <summary>
-        /// Class representing the tags associated with the whisper.
-        /// </summary>
         public class TagsObj
         {
-            /// <summary>List of emotes found in whisper</summary>
-            public readonly List<EmoteObj> Emotes = new List<EmoteObj>();
+            private readonly List<EmoteObj> _emotes = new();
 
-            /// <summary>All badges associated with the whisperer</summary>
-            public readonly List<Badge> Badges = new List<Badge>();
+            private readonly List<Badge> _badges = new();
 
-            /// <summary>Login value associated.</summary>
-            /// <value>The login.</value>
             public string Login { get; protected set; }
 
-            /// <summary>Display name found in chat.</summary>
-            /// <value>The display name.</value>
             public string DisplayName { get; protected set; }
 
-            /// <summary>Color of whispers</summary>
-            /// <value>The color.</value>
             public string Color { get; protected set; }
 
-            /// <summary>User type of whisperer</summary>
-            /// <value>The type of the user.</value>
             public string UserType { get; protected set; }
 
-            /// <summary>
-            /// Initializes a new instance of the <see cref="T:SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper.DataObjWhisperReceived.TagsObj" /> class.
-            /// </summary>
-            /// <param name="json">The json.</param>
             public TagsObj(JToken json)
             {
-                Login = ((object)json.SelectToken("login"))?.ToString();
-                DisplayName = ((object)json.SelectToken("login"))?.ToString();
-                Color = ((object)json.SelectToken("color"))?.ToString();
-                UserType = ((object)json.SelectToken("user_type"))?.ToString();
-                foreach (JToken json1 in (IEnumerable<JToken>)json.SelectToken("emotes"))
-                    Emotes.Add(new EmoteObj(json1));
-                foreach (JToken json2 in (IEnumerable<JToken>)json.SelectToken("badges"))
-                    Badges.Add(new Badge(json2));
+                Login = json.SelectToken("login")?.ToString();
+                DisplayName = json.SelectToken("login")?.ToString();
+                Color = json.SelectToken("color")?.ToString();
+                UserType = json.SelectToken("user_type")?.ToString();
+                foreach (JToken json1 in json.SelectToken("emotes")!)
+                    _emotes.Add(new EmoteObj(json1));
+                foreach (JToken json2 in json.SelectToken("badges")!)
+                    _badges.Add(new Badge(json2));
             }
 
-            /// <summary>Class representing a single emote found in a whisper</summary>
-            public class EmoteObj
+            public class EmoteObj(JToken json)
             {
-                /// <summary>Emote ID</summary>
-                /// <value>The identifier.</value>
-                public string Id { get; protected set; }
+                public string Id { get; protected set; } = json.SelectToken("emote_id")?.ToString();
 
-                /// <summary>Starting character of emote</summary>
-                /// <value>The start.</value>
-                public int Start { get; protected set; }
+                public int Start { get; protected set; } = int.Parse(json.SelectToken("start")?.ToString() ?? "");
 
-                /// <summary>Ending character of emote</summary>
-                /// <value>The end.</value>
-                public int End { get; protected set; }
-
-                /// <summary>EmoteObj construcotr.</summary>
-                /// <param name="json">The json.</param>
-                public EmoteObj(JToken json)
-                {
-                    Id = ((object)json.SelectToken("emote_id")).ToString();
-                    Start = int.Parse(((object)json.SelectToken("start")).ToString());
-                    End = int.Parse(((object)json.SelectToken("end")).ToString());
-                }
+                public int End { get; protected set; } = int.Parse(json.SelectToken("end")?.ToString() ?? "");
             }
         }
 
-        /// <summary>Class representing the recipient of the whisper.</summary>
-        public class RecipientObj
+        public class RecipientObj(JToken json)
         {
-            /// <summary>Receiver id</summary>
-            /// <value>The identifier.</value>
-            public string Id { get; protected set; }
+            public string Id { get; protected set; } = json.SelectToken("id")?.ToString();
 
-            /// <summary>Receiver username</summary>
-            /// <value>The username.</value>
-            public string Username { get; protected set; }
+            public string Username { get; protected set; } = json.SelectToken("username")?.ToString();
 
-            /// <summary>Receiver display name.</summary>
-            /// <value>The display name.</value>
-            public string DisplayName { get; protected set; }
+            public string DisplayName { get; protected set; } = json.SelectToken("display_name")?.ToString();
 
-            /// <summary>Receiver color.</summary>
-            /// <value>The color.</value>
-            public string Color { get; protected set; }
+            public string Color { get; protected set; } = json.SelectToken("color")?.ToString();
 
-            /// <summary>User type of receiver.</summary>
-            /// <value>The type of the user.</value>
-            public string UserType { get; protected set; }
-
-            /// <summary>RecipientObj constructor.</summary>
-            /// <param name="json">The json.</param>
-            public RecipientObj(JToken json)
-            {
-                Id = ((object)json.SelectToken("id")).ToString();
-                Username = ((object)json.SelectToken("username"))?.ToString();
-                DisplayName = ((object)json.SelectToken("display_name"))?.ToString();
-                Color = ((object)json.SelectToken("color"))?.ToString();
-                UserType = ((object)json.SelectToken("user_type"))?.ToString();
-            }
+            public string UserType { get; protected set; } = json.SelectToken("user_type")?.ToString();
         }
 
-        /// <summary>Class representing a single badge.</summary>
-        public class Badge
+        public class Badge(JToken json)
         {
-            /// <summary>Id of the badge.</summary>
-            /// <value>The identifier.</value>
-            public string Id { get; protected set; }
+            public string Id { get; protected set; } = json.SelectToken("id")?.ToString();
 
-            /// <summary>Version of the badge.</summary>
-            /// <value>The version.</value>
-            public string Version { get; protected set; }
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="T:SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper.DataObjWhisperReceived.Badge" /> class.
-            /// </summary>
-            /// <param name="json">The json.</param>
-            public Badge(JToken json)
-            {
-                Id = ((object)json.SelectToken("id"))?.ToString();
-                Version = ((object)json.SelectToken("version"))?.ToString();
-            }
+            public string Version { get; protected set; } = json.SelectToken("version")?.ToString();
         }
     }
 }

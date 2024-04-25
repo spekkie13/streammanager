@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Events.Subscription;
+using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.Twitch.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
-using OnChannelSubscriptionArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnChannelSubscriptionArgs;
 
 namespace SpekkieTwitchBot.Twitch.Events.Handlers;
 
@@ -19,7 +19,7 @@ public class SubEventHandler
         UpdateSubscriberInfo();
     }
 
-    public void HandleSub(object? sender, OnChannelSubscriptionArgs e)
+    public void HandleSub(object? sender, ChannelSubscriptionArgs e)
     {
         UpdateSubscriberInfo();
     }

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;
 
 public class ChannelBitsEventsV2 : MessageData

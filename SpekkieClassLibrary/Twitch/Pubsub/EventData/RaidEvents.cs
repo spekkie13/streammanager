@@ -2,6 +2,7 @@
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;
 
 public class RaidEvents : MessageData

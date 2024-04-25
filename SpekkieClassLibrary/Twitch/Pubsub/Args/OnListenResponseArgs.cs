@@ -1,8 +1,9 @@
 ﻿using SpekkieClassLibrary.Twitch.Pubsub.Types;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Args;
 
-public class OnListenResponseArgs : EventArgs
+public class ListenResponseArgs : EventArgs
 {
     public string Topic;
     public Response Response;

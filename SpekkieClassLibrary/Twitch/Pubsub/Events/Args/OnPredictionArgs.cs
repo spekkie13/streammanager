@@ -1,9 +1,10 @@
 ﻿using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
 
-public class OnPredictionArgs : EventArgs
+public class PredictionArgs : EventArgs
 {
     public PredictionType Type;
     public Guid Id;

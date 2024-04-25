@@ -1,4 +1,5 @@
-﻿namespace SpekkieClassLibrary.Spotify.Auth;
+﻿#nullable disable
+namespace SpekkieClassLibrary.Spotify.Auth;
 
 public class AuthorizationCodeTokenResponse
 {

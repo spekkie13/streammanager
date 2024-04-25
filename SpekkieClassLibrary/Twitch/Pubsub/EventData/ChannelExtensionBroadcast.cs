@@ -1,15 +1,16 @@
 ﻿using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;
 
 public class ChannelExtensionBroadcast : MessageData
 {
-    public List<string> Messages { get; } = new List<string>();
+    public List<string> Messages { get; } = new();
 
     public ChannelExtensionBroadcast(string jsonStr)
     {
-        foreach (object obj in (IEnumerable<JToken>) JObject.Parse(jsonStr)["content"])
+        foreach (JToken obj in JObject.Parse(jsonStr)["content"]!)
             Messages.Add(obj.ToString());
     }
 }

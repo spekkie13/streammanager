@@ -11,6 +11,7 @@ using RaidEvents = SpekkieClassLibrary.Twitch.Pubsub.EventData.RaidEvents;
 using UserModerationNotifications = SpekkieClassLibrary.Twitch.Pubsub.EventData.UserModerationNotifications;
 using Whisper = SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class Message
@@ -21,8 +22,8 @@ public class Message
     public Message(string jsonStr)
     {
         JToken jtoken = JObject.Parse(jsonStr).SelectToken("data");
-        Topic = ((object)jtoken.SelectToken("topic"))?.ToString();
-        string jsonStr1 = ((object)jtoken.SelectToken("message")).ToString();
+        Topic = jtoken?.SelectToken("topic")?.ToString();
+        string jsonStr1 = jtoken?.SelectToken("message")?.ToString();
         string topic = Topic;
         string str;
         if (topic == null)
@@ -46,8 +47,8 @@ public class Message
                 if (s != "channel-bits-events-v2")
                     break;
                 MessageData =
-                    (MessageData)JsonConvert.DeserializeObject<ChannelBitsEventsV2>(
-                        ((object)JObject.Parse(jsonStr1.Replace("\\", ""))["data"]).ToString());
+                    JsonConvert.DeserializeObject<ChannelBitsEventsV2>(
+                        JObject.Parse(jsonStr1?.Replace("\\", ""))["data"]?.ToString() ?? "");
                 break;
             case 778451386:
                 if (s != "whispers")
@@ -114,13 +115,7 @@ public class Message
     
     internal static uint ComputeStringHash(string s)
     {
-        uint stringHash = new uint();
-        if (s != null)
-        {
-            stringHash = 2166136261U;
-            for (int index = 0; index < s.Length; ++index)
-                stringHash = (uint) ((s[index] ^ (int) stringHash) * 16777619);
-        }
-        return stringHash;
+        const uint StringHash = new();
+        return s?.Aggregate(2166136261U, (current, t) => (uint)((t ^ (int)current) * 16777619)) ?? StringHash;
     }
 }

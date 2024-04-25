@@ -2,6 +2,7 @@
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class CommunityPointsChannel : MessageData
@@ -22,7 +23,7 @@ public class CommunityPointsChannel : MessageData
     public CommunityPointsChannel(string jsonStr)
     {
         JToken jtoken = JObject.Parse(jsonStr);
-        switch (((object)jtoken.SelectToken("type")).ToString())
+        switch (jtoken.SelectToken("type")?.ToString())
         {
             case "reward-redeemed":
             case "redemption-status-update":
@@ -42,40 +43,40 @@ public class CommunityPointsChannel : MessageData
                 break;
         }
 
-        TimeStamp = DateTime.Parse(((object)jtoken.SelectToken("data.timestamp")).ToString());
+        TimeStamp = DateTime.Parse(jtoken.SelectToken("data.timestamp")?.ToString() ?? "");
         switch (Type)
         {
             case CommunityPointsChannelType.RewardRedeemed:
-                ChannelId = ((object)jtoken.SelectToken("data.redemption.channel_id")).ToString();
-                Login = ((object)jtoken.SelectToken("data.redemption.user.login")).ToString();
-                DisplayName = ((object)jtoken.SelectToken("data.redemption.user.display_name")).ToString();
-                RewardId = Guid.Parse(((object)jtoken.SelectToken("data.redemption.reward.id")).ToString());
-                RewardTitle = ((object)jtoken.SelectToken("data.redemption.reward.title")).ToString();
-                RewardPrompt = ((object)jtoken.SelectToken("data.redemption.reward.prompt")).ToString();
-                RewardCost = int.Parse(((object)jtoken.SelectToken("data.redemption.reward.cost")).ToString());
-                Message = ((object)jtoken.SelectToken("data.redemption.user_input"))?.ToString();
-                Status = ((object)jtoken.SelectToken("data.redemption.status")).ToString();
-                RedemptionId = Guid.Parse(((object)jtoken.SelectToken("data.redemption.id")).ToString());
+                ChannelId = jtoken.SelectToken("data.redemption.channel_id")?.ToString();
+                Login = jtoken.SelectToken("data.redemption.user.login")?.ToString();
+                DisplayName = jtoken.SelectToken("data.redemption.user.display_name")?.ToString();
+                RewardId = Guid.Parse(jtoken.SelectToken("data.redemption.reward.id")?.ToString() ?? "");
+                RewardTitle = jtoken.SelectToken("data.redemption.reward.title")?.ToString();
+                RewardPrompt = jtoken.SelectToken("data.redemption.reward.prompt")?.ToString();
+                RewardCost = int.Parse(jtoken.SelectToken("data.redemption.reward.cost")?.ToString() ?? "");
+                Message = jtoken.SelectToken("data.redemption.user_input")?.ToString();
+                Status = jtoken.SelectToken("data.redemption.status")?.ToString();
+                RedemptionId = Guid.Parse(jtoken.SelectToken("data.redemption.id")?.ToString() ?? "");
                 break;
             case CommunityPointsChannelType.CustomRewardUpdated:
-                ChannelId = ((object)jtoken.SelectToken("data.updated_reward.channel_id")).ToString();
-                RewardId = Guid.Parse(((object)jtoken.SelectToken("data.updated_reward.id")).ToString());
-                RewardTitle = ((object)jtoken.SelectToken("data.updated_reward.title")).ToString();
-                RewardPrompt = ((object)jtoken.SelectToken("data.updated_reward.prompt")).ToString();
-                RewardCost = int.Parse(((object)jtoken.SelectToken("data.updated_reward.cost")).ToString());
+                ChannelId = jtoken.SelectToken("data.updated_reward.channel_id")?.ToString();
+                RewardId = Guid.Parse(jtoken.SelectToken("data.updated_reward.id")?.ToString() ?? "");
+                RewardTitle = jtoken.SelectToken("data.updated_reward.title")?.ToString();
+                RewardPrompt = jtoken.SelectToken("data.updated_reward.prompt")?.ToString();
+                RewardCost = int.Parse(jtoken.SelectToken("data.updated_reward.cost")?.ToString() ?? "");
                 break;
             case CommunityPointsChannelType.CustomRewardCreated:
-                ChannelId = ((object)jtoken.SelectToken("data.new_reward.channel_id")).ToString();
-                RewardId = Guid.Parse(((object)jtoken.SelectToken("data.new_reward.id")).ToString());
-                RewardTitle = ((object)jtoken.SelectToken("data.new_reward.title")).ToString();
-                RewardPrompt = ((object)jtoken.SelectToken("data.new_reward.prompt")).ToString();
-                RewardCost = int.Parse(((object)jtoken.SelectToken("data.new_reward.cost")).ToString());
+                ChannelId = jtoken.SelectToken("data.new_reward.channel_id")?.ToString();
+                RewardId = Guid.Parse(jtoken.SelectToken("data.new_reward.id")?.ToString() ?? "");
+                RewardTitle = jtoken.SelectToken("data.new_reward.title")?.ToString();
+                RewardPrompt = jtoken.SelectToken("data.new_reward.prompt")?.ToString();
+                RewardCost = int.Parse(jtoken.SelectToken("data.new_reward.cost")?.ToString() ?? "");
                 break;
             case CommunityPointsChannelType.CustomRewardDeleted:
-                ChannelId = ((object)jtoken.SelectToken("data.deleted_reward.channel_id")).ToString();
-                RewardId = Guid.Parse(((object)jtoken.SelectToken("data.deleted_reward.id")).ToString());
-                RewardTitle = ((object)jtoken.SelectToken("data.deleted_reward.title")).ToString();
-                RewardPrompt = ((object)jtoken.SelectToken("data.deleted_reward.prompt")).ToString();
+                ChannelId = jtoken.SelectToken("data.deleted_reward.channel_id")?.ToString();
+                RewardId = Guid.Parse(jtoken.SelectToken("data.deleted_reward.id")?.ToString() ?? "");
+                RewardTitle = jtoken.SelectToken("data.deleted_reward.title")?.ToString();
+                RewardPrompt = jtoken.SelectToken("data.deleted_reward.prompt")?.ToString();
                 break;
         }
     }

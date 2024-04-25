@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class ChannelPointsChannel : MessageData
@@ -17,10 +18,10 @@ public class ChannelPointsChannel : MessageData
     {
         RawData = jsonStr;
         JToken jtoken = JObject.Parse(jsonStr);
-        if (((object) jtoken.SelectToken("type")).ToString() == "reward-redeemed")
+        if (jtoken.SelectToken("type")?.ToString() == "reward-redeemed")
         {
             Type = ChannelPointsChannelType.RewardRedeemed;
-            Data = (ChannelPointsData) JsonConvert.DeserializeObject<RewardRedeemed>(((object) jtoken.SelectToken("data")).ToString());
+            Data = JsonConvert.DeserializeObject<RewardRedeemed>(jtoken.SelectToken("data")?.ToString() ?? "");
         }
         else
             Type = ChannelPointsChannelType.Unknown;

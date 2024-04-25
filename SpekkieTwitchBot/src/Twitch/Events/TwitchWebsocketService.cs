@@ -6,12 +6,10 @@ using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
-using SpekkieTwitchBot.Models.Twitch.Auth;
 using SpekkieTwitchBot.Twitch.Commands;
 using SpekkieTwitchBot.Twitch.Events.Handlers;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
-using OnListenResponseArgs = SpekkieClassLibrary.Twitch.Pubsub.Args.OnListenResponseArgs;
 
 namespace SpekkieTwitchBot.Twitch.Events;
 
@@ -65,7 +63,7 @@ public class TwitchWebsocketService : IHostedService
 
     private void SetupTwitchClient()
     {
-        ConnectionCredentials cred = new ConnectionCredentials(TwitchConstants.ChannelName, _generalTwitchAuth.Implicit_OAuth);
+        ConnectionCredentials cred = new ConnectionCredentials(TwitchConstants.ChannelName, _generalTwitchAuth.ImplicitOAuth);
         _TwitchClient.Initialize(cred, _generalTwitchAuth.BroadcasterName);
     }
     
@@ -107,11 +105,16 @@ public class TwitchWebsocketService : IHostedService
     
     private void OnPubSubConnected(object? sender, EventArgs e)
     {
+        if (string.IsNullOrEmpty(_twitchUserAuth.UserToken))
+        {
+            _Logger.LogInformation("User token is empty");
+            return;
+        }
         _TwitchPubSub.SendTopics(_twitchUserAuth.UserToken);
         _Logger.LogInformation("Pubsub Service Connected");
     }
     
-    private void OnListenResponse(object? sender, OnListenResponseArgs e)
+    private void OnListenResponse(object? sender, ListenResponseArgs e)
     {
         _GeneralLogger.LogInfo(e.Successful
             ? $"Successfully listening to: {e.Topic}"
@@ -120,7 +123,11 @@ public class TwitchWebsocketService : IHostedService
     
     private void OnChannelPointsRewardRedeemed(object? sender, ChannelPointsRewardRedeemedArgs e)
     {
-        Redemption reward = e.RewardRedeemed.Redemption;
+        Redemption? reward = e.RewardRedeemed?.Redemption;
+        if (reward?.Reward == null || 
+            string.IsNullOrEmpty(reward.UserInput) || 
+            string.IsNullOrEmpty(reward.Reward.Id) || 
+            string.IsNullOrEmpty(reward.Id)) return;
         switch (reward.Reward.Title)
         {
             case "Song Request":

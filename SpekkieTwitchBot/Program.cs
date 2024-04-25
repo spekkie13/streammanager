@@ -17,6 +17,7 @@ using SpekkieTwitchBot.Twitch.Events.Handlers;
 using SpekkieTwitchBot.Twitch.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.EventSub.Websockets.Extensions;
+using Websocket.Client;
 
 namespace SpekkieTwitchBot;
 public static class Program
@@ -37,6 +38,7 @@ public static class Program
                 services.AddLogging();
                 services.AddTwitchLibEventSubWebsockets();
                 services.AddSingleton<HttpClient>();
+                services.AddSingleton<Websocket.Client.WebsocketClient>(provider => new WebsocketClient(new Uri("ws://localhost:4455")));
                 services.AddSingleton<Logger>();
                 services.AddSingleton<FileSetup>();
                 services.AddSingleton<FileReader>();
@@ -67,12 +69,13 @@ public static class Program
                 services.AddSingleton<CustomObsWebsocket>();
                 services.AddSingleton<IrcClient>();
                 services.AddSingleton<SpotifyService>();
-
+                services.AddSingleton<CustomObsWebsocket>();
                 services.AddSingleton<CustomTwitchClient>();
                 services.AddSingleton<CustomPubsub>();
                 services.AddSingleton<EventTimer>();
                 services.AddSingleton<EventTimerService>();
                 services.AddSingleton<SpotifyCommandHandler>();
+                services.AddSingleton<ObsCommandHandler>();
                 services.AddSingleton<TextCommandHandler>();
                 services.AddSingleton<TimerCommandHandler>();
                 services.AddSingleton<GeneralCommandHandler>();

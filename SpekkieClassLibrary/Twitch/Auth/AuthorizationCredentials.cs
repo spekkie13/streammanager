@@ -1,10 +1,22 @@
-﻿namespace SpekkieClassLibrary.Twitch.Auth;
+﻿#nullable disable
+using Newtonsoft.Json;
+
+namespace SpekkieClassLibrary.Twitch.Auth;
 
 public class AuthorizationCredentials
 {
-    public string? AccessToken { get; set; }
+    [JsonProperty(PropertyName = "access_token")]
+    public string AccessToken { get; set; }
+
+    [JsonProperty(PropertyName = "expires_in")]
     public int ExpiresIn { get; set; }
-    public string? RefreshToken { get; set; }
-    public List<string>? Scope { get; set; }
-    public string? TokenType { get; set; }
+
+    [JsonProperty(PropertyName = "refresh_token")]
+    public string RefreshToken { get; set; }
+    
+    [JsonProperty(PropertyName = "scope")]
+    public List<string> Scope { get; set; }
+
+    [JsonProperty(PropertyName = "token_type")]
+    public string TokenType { get; set; }
 }

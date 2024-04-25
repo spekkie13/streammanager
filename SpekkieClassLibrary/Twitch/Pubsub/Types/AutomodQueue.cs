@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class AutomodQueue : MessageData
@@ -15,10 +16,10 @@ public class AutomodQueue : MessageData
     {
         RawData = jsonStr;
         JToken jtoken = JObject.Parse(jsonStr);
-        if (((object) jtoken.SelectToken("type")).ToString() == "automod_caught_message")
+        if (jtoken.SelectToken("type")?.ToString() == "automod_caught_message")
         {
             Type = AutomodQueueType.CaughtMessage;
-            Data = (AutomodQueueData) JsonConvert.DeserializeObject<AutomodCaughtMessage>(((object) jtoken.SelectToken("data")).ToString());
+            Data = JsonConvert.DeserializeObject<AutomodCaughtMessage>(jtoken.SelectToken("data")?.ToString() ?? "");
         }
         else
             Type = AutomodQueueType.Unknown;

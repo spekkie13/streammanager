@@ -14,6 +14,7 @@ public class GeneralCommandHandler
     private readonly TextCommandHandler _TextCommandHandler;
     private readonly TimerCommandHandler _TimerCommandHandler;
     private readonly SpotifyCommandHandler _SpotifyCommandHandler;
+    private readonly ObsCommandHandler _ObsCommandHandler;
     private readonly GeneralFileReader _GeneralFileReader;
     private readonly GeneralFileWriter _GeneralFileWriter;
     private readonly ChannelPointHandler _ChannelPointHandler;
@@ -25,6 +26,7 @@ public class GeneralCommandHandler
         TextCommandHandler textCommandHandler, 
         TimerCommandHandler timerCommandHandler, 
         SpotifyCommandHandler spotifyCommandHandler,
+        ObsCommandHandler obsCommandHandler,
         ChannelPointHandler channelPointHandler)
     {
         _IrcClient = ircClient;
@@ -33,6 +35,7 @@ public class GeneralCommandHandler
         _TextCommandHandler = textCommandHandler;
         _TimerCommandHandler = timerCommandHandler;
         _SpotifyCommandHandler = spotifyCommandHandler;
+        _ObsCommandHandler = obsCommandHandler;
         _ChannelPointHandler = channelPointHandler;
     }
     
@@ -71,7 +74,9 @@ public class GeneralCommandHandler
             { "addsong", () => _SpotifyCommandHandler.HandleAddSongToQueueCommand(commandArgs) },
             { "playsong", () => _SpotifyCommandHandler.HandlePlaySpecificSongCommand(commandArgs, username) },
             { "playsound", SpotifyCommandHandler.PlaySound },
-            { "createredemption", () => HandleCreateRedemptionCommand(commandArgs) }
+            { "createredemption", () => HandleCreateRedemptionCommand(commandArgs) },
+            
+            { "setscene", () => _ObsCommandHandler.HandleSetSceneCommand(commandArgs) }
         };
 
         if (_CommandHandlers.TryGetValue(commandText, out Action? handler))

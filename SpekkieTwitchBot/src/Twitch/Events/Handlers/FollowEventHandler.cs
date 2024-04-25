@@ -41,6 +41,6 @@ public class FollowEventHandler
         string response = await message.Content.ReadAsStringAsync();
         FollowerRequest? req = JsonConvert.DeserializeObject<FollowerRequest>(response);
         _TwitchFileWriter.WriteTotalFollowersFile(req?.Total.ToString() ?? "0");
-        _TwitchFileWriter.WriteMostRecentFollowerFile(req?.Data[0].UserName ?? "N/A");
+        _TwitchFileWriter.WriteMostRecentFollowerFile(req?.Data?[0].UserName ?? "N/A");
     }
 }

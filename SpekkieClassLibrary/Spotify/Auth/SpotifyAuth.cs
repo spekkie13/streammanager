@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 
+#nullable disable
 namespace SpekkieClassLibrary.Spotify.Auth;
 
 public class SpotifyAuth

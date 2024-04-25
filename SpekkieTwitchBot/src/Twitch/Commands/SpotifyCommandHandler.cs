@@ -83,7 +83,7 @@ public class SpotifyCommandHandler
             var song = _SpotifySearchService.GetSongsByName(title, artist).Result;
             if (song?.Items?.Count > 0)
             {
-                string uri = song.Items[0].Uri;
+                string uri = song.Items[0].Uri ?? "";
                 success = _SpotifyService.AddSongToQueue(uri).Result;
                 string message = success ? "Added song to the queue..." : "Could not add song to the queue...";
                 _IrcClient.SendPublicChatMessage(message);

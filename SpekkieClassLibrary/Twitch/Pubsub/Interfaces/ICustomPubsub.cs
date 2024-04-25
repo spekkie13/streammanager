@@ -1,11 +1,8 @@
 ﻿#nullable disable
 using SpekkieClassLibrary.Twitch.Pubsub.Args;
+using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
 using TwitchLib.PubSub.Events;
-using OnChannelSubscriptionArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnChannelSubscriptionArgs;
-using OnListenResponseArgs = SpekkieClassLibrary.Twitch.Pubsub.Args.OnListenResponseArgs;
-using OnPredictionArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnPredictionArgs;
 using OnRewardRedeemedArgs = TwitchLib.PubSub.Events.OnRewardRedeemedArgs;
-using OnWhisperArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnWhisperArgs;
 
 namespace SpekkieClassLibrary.Twitch.Pubsub.Interfaces;
 
@@ -14,14 +11,14 @@ public interface ITwitchPubSub
     event EventHandler<OnBanArgs> OnBan;
     event EventHandler<OnBitsReceivedArgs> OnBitsReceived;
     event EventHandler<OnChannelExtensionBroadcastArgs> OnChannelExtensionBroadcast;
-    event EventHandler<OnChannelSubscriptionArgs> OnChannelSubscription;
+    event EventHandler<ChannelSubscriptionArgs> OnChannelSubscription;
     event EventHandler<OnClearArgs> OnClear;
     event EventHandler<OnEmoteOnlyArgs> OnEmoteOnly;
     event EventHandler<OnEmoteOnlyOffArgs> OnEmoteOnlyOff;
     event EventHandler<OnFollowArgs> OnFollow;
     event EventHandler<OnHostArgs> OnHost;
     event EventHandler<OnMessageDeletedArgs> OnMessageDeleted;
-    event EventHandler<OnListenResponseArgs> OnListenResponse;
+    event EventHandler<ListenResponseArgs> OnListenResponse;
     event EventHandler OnPubSubServiceClosed;
     event EventHandler OnPubSubServiceConnected;
     event EventHandler<OnPubSubServiceErrorArgs> OnPubSubServiceError;
@@ -33,7 +30,7 @@ public interface ITwitchPubSub
     event EventHandler<OnUnbanArgs> OnUnban;
     event EventHandler<OnUntimeoutArgs> OnUntimeout;
     event EventHandler<OnViewCountArgs> OnViewCount;
-    event EventHandler<OnWhisperArgs> OnWhisper;
+    event EventHandler<WhisperArgs> OnWhisper;
     [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
     event EventHandler<OnCustomRewardCreatedArgs> OnCustomRewardCreated;
     [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
@@ -50,7 +47,7 @@ public interface ITwitchPubSub
     event EventHandler<OnRaidGoArgs> OnRaidGo;
     event EventHandler<OnLogArgs> OnLog;
     event EventHandler<OnCommercialArgs> OnCommercial;
-    event EventHandler<OnPredictionArgs> OnPrediction;
+    event EventHandler<PredictionArgs> OnPrediction;
     
     void Connect();
     void Disconnect();

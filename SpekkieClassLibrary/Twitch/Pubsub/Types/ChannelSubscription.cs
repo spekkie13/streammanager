@@ -3,6 +3,7 @@ using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 using TwitchLib.PubSub.Common;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class ChannelSubscription : MessageData
@@ -29,16 +30,16 @@ public class ChannelSubscription : MessageData
     public ChannelSubscription(string jsonStr)
     {
         JObject jobject = JObject.Parse(jsonStr);
-        Username = ((object)jobject.SelectToken("user_name"))?.ToString();
-        DisplayName = ((object)jobject.SelectToken("display_name"))?.ToString();
-        RecipientName = ((object)jobject.SelectToken("recipient_user_name"))?.ToString();
-        RecipientDisplayName = ((object)jobject.SelectToken("recipient_display_name"))?.ToString();
-        ChannelName = ((object)jobject.SelectToken("channel_name"))?.ToString();
-        UserId = ((object)jobject.SelectToken("user_id"))?.ToString();
-        RecipientId = ((object)jobject.SelectToken("recipient_id"))?.ToString();
-        ChannelId = ((object)jobject.SelectToken("channel_id"))?.ToString();
-        Time = Helpers.DateTimeStringToObject(((object)jobject.SelectToken("time"))?.ToString());
-        switch (((object)jobject.SelectToken("sub_plan")).ToString().ToLower())
+        Username = jobject.SelectToken("user_name")?.ToString();
+        DisplayName = jobject.SelectToken("display_name")?.ToString();
+        RecipientName = jobject.SelectToken("recipient_user_name")?.ToString();
+        RecipientDisplayName = jobject.SelectToken("recipient_display_name")?.ToString();
+        ChannelName = jobject.SelectToken("channel_name")?.ToString();
+        UserId = jobject.SelectToken("user_id")?.ToString();
+        RecipientId = jobject.SelectToken("recipient_id")?.ToString();
+        ChannelId = jobject.SelectToken("channel_id")?.ToString();
+        Time = Helpers.DateTimeStringToObject(jobject.SelectToken("time")?.ToString());
+        switch (jobject.SelectToken("sub_plan")?.ToString().ToLower())
         {
             case "prime":
                 SubscriptionPlan = SubscriptionPlan.Prime;
@@ -56,15 +57,15 @@ public class ChannelSubscription : MessageData
                 throw new ArgumentOutOfRangeException();
         }
 
-        SubscriptionPlanName = ((object)jobject.SelectToken("sub_plan_name"))?.ToString();
+        SubscriptionPlanName = jobject.SelectToken("sub_plan_name")?.ToString();
         SubMessage = new SubMessage(jobject.SelectToken("sub_message"));
-        string str1 = ((object)jobject.SelectToken("is_gift"))?.ToString();
+        string str1 = jobject.SelectToken("is_gift")?.ToString();
         if (str1 != null)
             IsGift = Convert.ToBoolean(str1);
-        string str2 = ((object)jobject.SelectToken("multi_month_duration"))?.ToString();
+        string str2 = jobject.SelectToken("multi_month_duration")?.ToString();
         if (str2 != null)
             MultiMonthDuration = int.Parse(str2);
-        Context = ((object)jobject.SelectToken("context"))?.ToString();
+        Context = jobject.SelectToken("context")?.ToString();
         JToken jtoken1 = jobject.SelectToken("months");
         if (jtoken1 != null)
             Months = int.Parse(jtoken1.ToString());

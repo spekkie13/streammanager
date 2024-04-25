@@ -4,6 +4,7 @@ using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using TwitchLib.PubSub.Enums;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;
 
 public class UserModerationNotifications : MessageData
@@ -18,10 +19,10 @@ public class UserModerationNotifications : MessageData
     {
         RawData = jsonStr;
         JToken jtoken = JObject.Parse(jsonStr);
-        if (((object) jtoken.SelectToken("type")).ToString() == "automod_caught_message")
+        if (jtoken.SelectToken("type")?.ToString() == "automod_caught_message")
         {
             Type = UserModerationNotificationsType.AutomodCaughtMessage;
-            Data = (UserModerationNotificationsData) JsonConvert.DeserializeObject<AutomodCaughtResponseMessage>(((object) jtoken.SelectToken("data")).ToString());
+            Data = JsonConvert.DeserializeObject<AutomodCaughtResponseMessage>(jtoken.SelectToken("data")?.ToString() ?? "");
         }
         else
             Type = UserModerationNotificationsType.Unknown;

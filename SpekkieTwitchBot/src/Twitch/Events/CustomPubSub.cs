@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Args;
+using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Interfaces;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 
@@ -29,7 +30,6 @@ using Following = SpekkieClassLibrary.Twitch.Pubsub.Types.Following;
 using LeaderboardEvents = SpekkieClassLibrary.Twitch.Pubsub.EventData.LeaderboardEvents;
 using LeaderBoardType = SpekkieClassLibrary.Twitch.Pubsub.Enums.LeaderBoardType;
 using RewardRedeemed = SpekkieClassLibrary.Twitch.Pubsub.Types.RewardRedeemed;
-using OnListenResponseArgs = SpekkieClassLibrary.Twitch.Pubsub.Args.OnListenResponseArgs;
 using PredictionEvents = SpekkieClassLibrary.Twitch.Pubsub.EventData.PredictionEvents;
 using PredictionType = SpekkieClassLibrary.Twitch.Pubsub.Enums.PredictionType;
 using RaidEvents = SpekkieClassLibrary.Twitch.Pubsub.EventData.RaidEvents;
@@ -38,11 +38,6 @@ using UserModerationNotifications = SpekkieClassLibrary.Twitch.Pubsub.EventData.
 using VideoPlayback = SpekkieClassLibrary.Twitch.Pubsub.Types.VideoPlayback;
 using VideoPlaybackType = SpekkieClassLibrary.Twitch.Pubsub.Enums.VideoPlaybackType;
 using Whisper = SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper;
-using OnWhisperArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnWhisperArgs;
-using OnAutomodCaughtMessageArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnAutomodCaughtMessageArgs;
-using OnAutomodCaughtUserMessage = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnAutomodCaughtUserMessage;
-using OnChannelSubscriptionArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnChannelSubscriptionArgs;
-using OnPredictionArgs = SpekkieClassLibrary.Twitch.Pubsub.Events.Args.OnPredictionArgs;
 
 namespace SpekkieTwitchBot.Twitch.Events;
 
@@ -62,7 +57,7 @@ public class CustomPubsub : ITwitchPubSub
     public event EventHandler OnPubSubServiceConnected;
     public event EventHandler<OnPubSubServiceErrorArgs> OnPubSubServiceError;
     public event EventHandler OnPubSubServiceClosed;
-    public event EventHandler<OnListenResponseArgs> OnListenResponse;
+    public event EventHandler<ListenResponseArgs> OnListenResponse;
     public event EventHandler<OnTimeoutArgs> OnTimeout;
     public event EventHandler<OnBanArgs> OnBan;
     public event EventHandler<OnMessageDeletedArgs> OnMessageDeleted;
@@ -81,8 +76,8 @@ public class CustomPubsub : ITwitchPubSub
     public event EventHandler<OnStreamUpArgs> OnStreamUp;
     public event EventHandler<OnStreamDownArgs> OnStreamDown;
     public event EventHandler<OnViewCountArgs> OnViewCount;
-    public event EventHandler<OnWhisperArgs> OnWhisper;
-    public event EventHandler<OnChannelSubscriptionArgs> OnChannelSubscription;
+    public event EventHandler<WhisperArgs> OnWhisper;
+    public event EventHandler<ChannelSubscriptionArgs> OnChannelSubscription;
     public event EventHandler<OnChannelExtensionBroadcastArgs> OnChannelExtensionBroadcast;
     public event EventHandler<OnFollowArgs> OnFollow;
     [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
@@ -103,9 +98,9 @@ public class CustomPubsub : ITwitchPubSub
     public event EventHandler<OnRaidGoArgs> OnRaidGo;
     public event EventHandler<OnLogArgs> OnLog;
     public event EventHandler<OnCommercialArgs> OnCommercial;
-    public event EventHandler<OnPredictionArgs> OnPrediction;
-    public event EventHandler<OnAutomodCaughtMessageArgs> OnAutomodCaughtMessage;
-    public event EventHandler<OnAutomodCaughtUserMessage> OnAutomodCaughtUserMessage;
+    public event EventHandler<PredictionArgs> OnPrediction;
+    public event EventHandler<AutomodCaughtMessageArgs> OnAutomodCaughtMessage;
+    public event EventHandler<AutomodCaughtUserMessage> OnAutomodCaughtUserMessage;
 
     public CustomPubsub(ILogger<CustomPubsub> logger = null)
     {
@@ -195,7 +190,9 @@ public class CustomPubsub : ITwitchPubSub
 
     private void ParseMessage(string message)
     {
-        switch (JObject.Parse(message).SelectToken("type")?.ToString().ToLower())
+        string type = JObject.Parse(message).SelectToken("type")?.ToString().ToLower() ?? "";
+        if (string.IsNullOrEmpty(type)) return;
+        switch (type)
         {
             case "response":
                 Response response = new Response(message);
@@ -213,9 +210,9 @@ public class CustomPubsub : ITwitchPubSub
                             {
                                 _previousRequests.RemoveAt(index);
                                 _topicToChannelId.TryGetValue(previousRequest.Topic, out var str);
-                                EventHandler<OnListenResponseArgs> onListenResponse = OnListenResponse;
+                                EventHandler<ListenResponseArgs> onListenResponse = OnListenResponse;
                                 if (onListenResponse != null)
-                                    onListenResponse(this, new OnListenResponseArgs
+                                    onListenResponse(this, new ListenResponseArgs
                                     {
                                         Response = response,
                                         Topic = previousRequest.Topic,
@@ -252,11 +249,11 @@ public class CustomPubsub : ITwitchPubSub
                                 AutomodCaughtMessage
                                     data1 =
                                         messageData1.Data as AutomodCaughtMessage;
-                                EventHandler<OnAutomodCaughtMessageArgs> automodCaughtMessage =
+                                EventHandler<AutomodCaughtMessageArgs> automodCaughtMessage =
                                     OnAutomodCaughtMessage;
                                 if (automodCaughtMessage == null)
                                     return;
-                                automodCaughtMessage(this, new OnAutomodCaughtMessageArgs
+                                automodCaughtMessage(this, new AutomodCaughtMessageArgs
                                 {
                                     ChannelId = str2,
                                     AutomodCaughtMessage = data1
@@ -349,10 +346,10 @@ public class CustomPubsub : ITwitchPubSub
                         }
                     case "channel-subscribe-events-v1":
                         ChannelSubscription messageData6 = message1.MessageData as ChannelSubscription;
-                        EventHandler<OnChannelSubscriptionArgs> channelSubscription = OnChannelSubscription;
+                        EventHandler<ChannelSubscriptionArgs> channelSubscription = OnChannelSubscription;
                         if (channelSubscription == null)
                             return;
-                        channelSubscription(this, new OnChannelSubscriptionArgs
+                        channelSubscription(this, new ChannelSubscriptionArgs
                         {
                             Subscription = messageData6,
                             ChannelId = str2
@@ -642,10 +639,10 @@ public class CustomPubsub : ITwitchPubSub
                             switch (nullable3.GetValueOrDefault())
                             {
                                 case PredictionType.EventCreated:
-                                    EventHandler<OnPredictionArgs> onPrediction1 = OnPrediction;
+                                    EventHandler<PredictionArgs> onPrediction1 = OnPrediction;
                                     if (onPrediction1 == null)
                                         return;
-                                    onPrediction1(this, new OnPredictionArgs
+                                    onPrediction1(this, new PredictionArgs
                                     {
                                         CreatedAt = messageData11.CreatedAt,
                                         Title = messageData11.Title,
@@ -661,10 +658,10 @@ public class CustomPubsub : ITwitchPubSub
                                     });
                                     return;
                                 case PredictionType.EventUpdated:
-                                    EventHandler<OnPredictionArgs> onPrediction2 = OnPrediction;
+                                    EventHandler<PredictionArgs> onPrediction2 = OnPrediction;
                                     if (onPrediction2 == null)
                                         return;
-                                    onPrediction2(this, new OnPredictionArgs
+                                    onPrediction2(this, new PredictionArgs
                                     {
                                         CreatedAt = messageData11.CreatedAt,
                                         Title = messageData11.Title,
@@ -748,11 +745,11 @@ public class CustomPubsub : ITwitchPubSub
                         if (messageData13.Type != UserModerationNotificationsType.AutomodCaughtMessage)
                             return;
                         AutomodCaughtResponseMessage data3 = messageData13.Data as AutomodCaughtResponseMessage;
-                        EventHandler<OnAutomodCaughtUserMessage> caughtUserMessage =
+                        EventHandler<AutomodCaughtUserMessage> caughtUserMessage =
                             OnAutomodCaughtUserMessage;
                         if (caughtUserMessage == null)
                             return;
-                        caughtUserMessage(this, new OnAutomodCaughtUserMessage
+                        caughtUserMessage(this, new AutomodCaughtUserMessage
                         {
                             ChannelId = str2,
                             UserId = message1.Topic.Split('.')[2],
@@ -817,10 +814,10 @@ public class CustomPubsub : ITwitchPubSub
                         break;
                     case "whispers":
                         Whisper messageData15 = (Whisper)message1.MessageData;
-                        EventHandler<OnWhisperArgs> onWhisper = OnWhisper;
+                        EventHandler<WhisperArgs> onWhisper = OnWhisper;
                         if (onWhisper == null)
                             return;
-                        onWhisper(this, new OnWhisperArgs
+                        onWhisper(this, new WhisperArgs
                         {
                             Whisper = messageData15,
                             ChannelId = str2
