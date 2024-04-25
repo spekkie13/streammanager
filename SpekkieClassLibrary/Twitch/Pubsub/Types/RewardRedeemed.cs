@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class RewardRedeemed : ChannelPointsData
@@ -9,5 +10,5 @@ public class RewardRedeemed : ChannelPointsData
     public DateTime Timestamp { get; protected set; }
 
     [JsonProperty(PropertyName = "redemption")]
-    public Redemption? Redemption { get; protected set; }
+    public Redemption Redemption { get; protected set; }
 }

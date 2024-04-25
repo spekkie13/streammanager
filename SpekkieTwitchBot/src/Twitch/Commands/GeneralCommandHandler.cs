@@ -76,7 +76,9 @@ public class GeneralCommandHandler
             { "playsound", SpotifyCommandHandler.PlaySound },
             { "createredemption", () => HandleCreateRedemptionCommand(commandArgs) },
             
-            { "setscene", () => _ObsCommandHandler.HandleSetSceneCommand(commandArgs) }
+            { "setscene", () => _ObsCommandHandler.HandleSetSceneCommand(commandArgs) },
+            { "mutemic", () => _ObsCommandHandler.HandleSetInputMute("microphone") },
+            { "mutemusic", () => _ObsCommandHandler.HandleSetInputMute("spotify") }
         };
 
         if (_CommandHandlers.TryGetValue(commandText, out Action? handler))

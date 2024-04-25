@@ -4,12 +4,13 @@ using SpekkieClassLibrary.Twitch.Auth;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Twitch.FileHandling;
 
+#nullable disable
 namespace SpekkieTwitchBot.Auth;
 
 public class TwitchAuthService
 {
-    private TwitchUserAuth? _twitchUserAuth;
-    private GeneralTwitchAuth? _twitchGeneralAuth;
+    private TwitchUserAuth _twitchUserAuth;
+    private GeneralTwitchAuth _twitchGeneralAuth;
 
     private readonly TwitchFileReader _TwitchFileReader;
     private readonly TwitchFileWriter _TwitchFileWriter;
@@ -30,7 +31,7 @@ public class TwitchAuthService
         string jsonData = _TwitchFileReader.ReadTwitchUserAuthFile();
         _twitchUserAuth = JsonConvert.DeserializeObject<TwitchUserAuth>(jsonData) ?? new TwitchUserAuth();
         AuthorizationCredentials authCred =
-            GetUserAccessAuthCredentials(_twitchUserAuth).Result ?? new AuthorizationCredentials();
+            GetUserAccessAuthCredentials(_twitchUserAuth).Result;
 
         UpdateTwitchSettings(_twitchUserAuth, authCred);
 
@@ -64,8 +65,7 @@ public class TwitchAuthService
             case HttpStatusCode.OK:
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _Logger.LogInfo(responseContent);
-                AuthorizationCredentials cred =
-                    JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent);
+                AuthorizationCredentials cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent) ?? new AuthorizationCredentials();
                 return cred;
             case HttpStatusCode.BadRequest:
                 cred = await RefreshAppAccessTokenAsync(_twitchUserAuth.ClientId, _twitchUserAuth.ClientSecret,
@@ -73,7 +73,7 @@ public class TwitchAuthService
                 return cred;
             default:
                 _Logger.LogError($"Failed to get tokens. Status code: {response.StatusCode}");
-                return null;
+                return new AuthorizationCredentials();
         }
     }
 

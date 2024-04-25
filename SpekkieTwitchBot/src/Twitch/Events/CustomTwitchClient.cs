@@ -20,10 +20,10 @@ namespace SpekkieTwitchBot.Twitch.Events;
 public class CustomTwitchClient : ITwitchClient
 {
     private IClient _client;
-    private MessageEmoteCollection _channelEmotes = new MessageEmoteCollection();
+    private MessageEmoteCollection _channelEmotes = new();
     private readonly ICollection<char> _chatCommandIdentifiers = new HashSet<char>();
     private readonly ICollection<char> _whisperCommandIdentifiers = new HashSet<char>();
-    private readonly Queue<JoinedChannel> _joinChannelQueue = new Queue<JoinedChannel>();
+    private readonly Queue<JoinedChannel> _joinChannelQueue = new();
     private readonly ILogger<CustomTwitchClient> _logger;
     private readonly ClientProtocol _protocol;
     private bool _currentlyJoiningChannels;
@@ -31,9 +31,9 @@ public class CustomTwitchClient : ITwitchClient
     private List<KeyValuePair<string, DateTime>> _awaitingJoins;
     private readonly IrcParser _ircParser;
     private readonly JoinedChannelManager _joinedChannelManager;
-    private readonly List<string> _hasSeenJoinedChannels = new List<string>();
+    private readonly List<string> _hasSeenJoinedChannels = new();
     private string _lastMessageSent;
-    public Version Version => Assembly.GetEntryAssembly().GetName().Version;
+    public Version Version => Assembly.GetEntryAssembly()?.GetName().Version;
     public bool IsInitialized => _client != null;
     public IReadOnlyList<JoinedChannel> JoinedChannels
     {
@@ -41,10 +41,7 @@ public class CustomTwitchClient : ITwitchClient
     }
     public string TwitchUsername { get; private set; }
     public WhisperMessage PreviousWhisper { get; private set; }
-    public bool IsConnected
-    {
-        get => IsInitialized && _client != null && _client.IsConnected;
-    }
+    public bool IsConnected => IsInitialized && _client is { IsConnected: true };
     public MessageEmoteCollection ChannelEmotes => _channelEmotes;
     public bool DisableAutoPong { get; set; }
     public bool WillReplaceEmotes { get; set; }
@@ -106,7 +103,7 @@ public class CustomTwitchClient : ITwitchClient
     public event EventHandler<OnSuspendedArgs> OnSuspended;
     public event EventHandler<OnBannedArgs> OnBanned;
     public event EventHandler<OnSlowModeArgs> OnSlowMode;
-    public event EventHandler<OnR9kModeArgs> OnR9kMode;
+    public event EventHandler<OnR9kModeArgs> R9KMode;
     public event EventHandler<OnUserIntroArgs> OnUserIntro;
     public event EventHandler<OnUnaccountedForArgs> OnUnaccountedFor;
 
@@ -135,7 +132,7 @@ public class CustomTwitchClient : ITwitchClient
         int chatCommandIdentifier1 = chatCommandIdentifier;
         int whisperCommandIdentifier1 = whisperCommandIdentifier;
         int num = autoReListenOnExceptions ? 1 : 0;
-        initializeHelper(credentials1, channels, (char)chatCommandIdentifier1, (char)whisperCommandIdentifier1,
+        InitializeHelper(credentials1, channels, (char)chatCommandIdentifier1, (char)whisperCommandIdentifier1,
             num != 0);
     }
 
@@ -148,11 +145,11 @@ public class CustomTwitchClient : ITwitchClient
     {
         channels = channels.Select((Func<string, string>)(x => x[0] != '#' ? x : x.Substring(1)))
             .ToList();
-        initializeHelper(credentials, channels, chatCommandIdentifier, whisperCommandIdentifier,
+        InitializeHelper(credentials, channels, chatCommandIdentifier, whisperCommandIdentifier,
             autoReListenOnExceptions);
     }
 
-    private void initializeHelper(
+    private void InitializeHelper(
         ConnectionCredentials credentials,
         List<string> channels,
         char chatCommandIdentifier = '!',
@@ -173,8 +170,9 @@ public class CustomTwitchClient : ITwitchClient
             {
                 if (!string.IsNullOrEmpty(channels[i]))
                 {
+                    var i1 = i;
                     if (JoinedChannels.FirstOrDefault(
-                            (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channels[i])) != null)
+                            (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channels[i1])) != null)
                         return;
                     _joinChannelQueue.Enqueue(new JoinedChannel(channels[i]));
                 }
@@ -212,9 +210,11 @@ public class CustomTwitchClient : ITwitchClient
 
     internal void RaiseEvent(string eventName, object args = null)
     {
-        foreach (Delegate invocation in (GetType()
-                     .GetField(eventName, BindingFlags.Instance | BindingFlags.NonPublic)
-                     .GetValue(this) as MulticastDelegate).GetInvocationList())
+        var invocationList = (GetType().GetField(eventName, BindingFlags.Instance | BindingFlags.NonPublic)?
+            .GetValue(this) as MulticastDelegate)?.GetInvocationList();
+        if (invocationList == null) return;
+
+        foreach (Delegate invocation in invocationList)
         {
             MethodInfo method = invocation.Method;
             object target = invocation.Target;
@@ -255,7 +255,7 @@ public class CustomTwitchClient : ITwitchClient
     {
         if (!IsInitialized)
             HandleNotInitialized();
-        if (((channel == null ? 1 : (message == null ? 1 : 0)) | (dryRun ? 1 : 0)) != 0)
+        if (((channel == null ? 1 : message == "" ? 1 : 0) | (dryRun ? 1 : 0)) != 0)
             return;
         if (message.Length > 500)
         {
@@ -265,7 +265,7 @@ public class CustomTwitchClient : ITwitchClient
         {
             OutboundChatMessage outboundChatMessage = new OutboundChatMessage
             {
-                Channel = channel.Channel,
+                Channel = channel?.Channel,
                 Username = ConnectionCredentials.TwitchUsername,
                 Message = message
             };
@@ -392,8 +392,9 @@ public class CustomTwitchClient : ITwitchClient
             HandleNotInitialized();
         if (!IsConnected)
             HandleNotConnected();
+        var channel1 = channel;
         if (JoinedChannels.FirstOrDefault(
-                (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channel && !overrideCheck)) != null)
+                (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channel1 && !overrideCheck)) != null)
             return;
         if (channel[0] == '#')
             channel = channel.Substring(1);
@@ -837,7 +838,7 @@ public class CustomTwitchClient : ITwitchClient
                     });
                     break;
                 case "msg_r9k":
-                    EventHandler<OnR9kModeArgs> onR9KMode = OnR9kMode;
+                    EventHandler<OnR9kModeArgs> onR9KMode = R9KMode;
                     if (onR9KMode == null)
                         break;
                     onR9KMode(this, new OnR9kModeArgs
@@ -921,7 +922,7 @@ public class CustomTwitchClient : ITwitchClient
                     EventHandler noPermissionError = OnNoPermissionError;
                     if (noPermissionError == null)
                         break;
-                    noPermissionError(this, null);
+                    noPermissionError(this, EventArgs.Empty);
                     break;
                 case "no_vips":
                     EventHandler<OnVIPsReceivedArgs> onViPsReceived1 = OnVIPsReceived;
@@ -937,13 +938,13 @@ public class CustomTwitchClient : ITwitchClient
                     EventHandler onSelfRaidError = OnSelfRaidError;
                     if (onSelfRaidError == null)
                         break;
-                    onSelfRaidError(this, null);
+                    onSelfRaidError(this, EventArgs.Empty);
                     break;
                 case "raid_notice_mature":
                     EventHandler isMatureAudience = OnRaidedChannelIsMatureAudience;
                     if (isMatureAudience == null)
                         break;
-                    isMatureAudience(this, null);
+                    isMatureAudience(this, EventArgs.Empty);
                     break;
                 case "room_mods":
                     EventHandler<OnModeratorsReceivedArgs> moderatorsReceived2 = OnModeratorsReceived;

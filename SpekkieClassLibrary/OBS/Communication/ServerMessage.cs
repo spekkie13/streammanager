@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.OBS.Enum;
 
+#nullable disable
 namespace SpekkieClassLibrary.OBS.Communication;
 
 public class ServerMessage
@@ -10,5 +11,5 @@ public class ServerMessage
     public MessageTypes OperationCode { set; get; }
     
     [JsonProperty(PropertyName = "d")]
-    public JObject? Data { get; set; }
+    public JObject Data { get; set; }
 }

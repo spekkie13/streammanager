@@ -8,7 +8,7 @@ SPOTIFY
 text commands in db?
 expand song request to incorporate YT & Soundcloud
 
-SetInputVolume => music, mic, discord?
+SetInputVolume => music, mic, discord? -> define standard labels for all inputs?
 SetInputMute => music, mic
 SetStudioMode
 

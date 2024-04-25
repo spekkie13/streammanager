@@ -28,4 +28,14 @@ public class ObsCommandHandler
     {
         
     }
+
+    public void HandleSetInputMute(string inputName)
+    {
+        inputName = string.Concat(inputName[0].ToString().ToUpper(), inputName.AsSpan(1));
+        bool currentMuteStatus = _ObsWebsocket.GetInputMute(inputName);
+        _ObsWebsocket.SetInputMute(inputName, !currentMuteStatus);
+        string status = currentMuteStatus ? $"{inputName} set to unmuted" : $"{inputName} set to muted";
+        
+        _IrcClient.SendPublicChatMessage(status);
+    }
 }

@@ -38,7 +38,7 @@ public static class Program
                 services.AddLogging();
                 services.AddTwitchLibEventSubWebsockets();
                 services.AddSingleton<HttpClient>();
-                services.AddSingleton<Websocket.Client.WebsocketClient>(provider => new WebsocketClient(new Uri("ws://localhost:4455")));
+                services.AddSingleton<WebsocketClient>(provider => new WebsocketClient(new Uri("ws://localhost:4455")));
                 services.AddSingleton<Logger>();
                 services.AddSingleton<FileSetup>();
                 services.AddSingleton<FileReader>();
