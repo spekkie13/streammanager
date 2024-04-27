@@ -1,6 +1,7 @@
-﻿namespace SpekkieClassLibrary.Twitch.Events.ChannelPoint;
+﻿#nullable disable
+namespace SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 
 public class ChannelPointRewardRequest
 {
-    public ChannelPointRewardData[]? Data { get; set; }
+    public ChannelPointRewardData[] Data { get; set; }
 }

@@ -1,6 +1,7 @@
-﻿namespace SpekkieClassLibrary.Spotify.Song;
+﻿#nullable disable
+namespace SpekkieClassLibrary.Spotify.Song;
 
 public class ExternalUrls
 {
-    public string? Spotify { get; set; }
+    public string Spotify { get; set; }
 }

@@ -35,12 +35,12 @@ namespace SpekkieClassLibrary.Spotify.Exceptions
             Response = info.GetValue("APIException.Response", typeof(IResponse)) as IResponse;
         }
 
-        private static string? ParseApiErrorMessage(IResponse response)
+        private static string ParseApiErrorMessage(IResponse response)
         {
             var body = response.Body as string;
             if (string.IsNullOrEmpty(body))
             {
-                return null;
+                return "";
             }
 
             try
@@ -50,25 +50,23 @@ namespace SpekkieClassLibrary.Spotify.Exceptions
                 var error = bodyObject.Value<JToken>("error");
                 if (error == null)
                 {
-                    return null;
+                    return "";
                 }
 
-                if (error.Type == JTokenType.String)
+                switch (error.Type)
                 {
-                    return error.ToString();
-                }
-
-                if (error.Type == JTokenType.Object)
-                {
-                    return error.Value<string>("message");
+                    case JTokenType.String:
+                        return error.ToString();
+                    case JTokenType.Object:
+                        return error.Value<string>("message") ?? "";
                 }
             }
             catch (JsonReaderException)
             {
-                return null;
+                return "";
             }
 
-            return null;
+            return "";
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)

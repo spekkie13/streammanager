@@ -24,8 +24,8 @@ public class ChatModeratorActions : MessageData
                 Args.Add(obj.ToString());
         }
 
-        CreatedBy = jtoken.SelectToken("created_by").ToString();
-        CreatedByUserId = jtoken.SelectToken("created_by_user_id").ToString();
-        TargetUserId = jtoken.SelectToken("target_user_id").ToString();
+        CreatedBy = jtoken?.SelectToken("created_by")?.ToString();
+        CreatedByUserId = jtoken?.SelectToken("created_by_user_id")?.ToString();
+        TargetUserId = jtoken?.SelectToken("target_user_id")?.ToString();
     }
 }

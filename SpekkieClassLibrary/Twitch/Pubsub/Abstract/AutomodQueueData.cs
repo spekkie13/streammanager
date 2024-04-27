@@ -1,5 +1,3 @@
 ﻿namespace SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 
-public abstract class AutomodQueueData
-{
-}
+public abstract class AutomodQueueData;

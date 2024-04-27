@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.OBS.Enum;
 
+#nullable disable
 namespace SpekkieClassLibrary.OBS.Types;
 
 public class SceneItemDetails
@@ -10,10 +11,10 @@ public class SceneItemDetails
     public int ItemId { set; get; }
 
     [JsonProperty(PropertyName = "inputKind")]
-    public string? SourceKind { set; get; }
+    public string SourceKind { set; get; }
 
     [JsonProperty(PropertyName = "sourceName")]
-    public string? SourceName { set; get; }
+    public string SourceName { set; get; }
 
     [JsonProperty(PropertyName = "sourceType")]
     public SceneItemSourceType SourceType { set; get; }

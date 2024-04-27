@@ -77,11 +77,11 @@ public class IrcClient
         }
     }
 
-    public string? ReadMessage()
+    public string ReadMessage()
     {
         try
         {
-            string? message = _InputStream.ReadLine();
+            string message = _InputStream.ReadLine() ?? "";
             return message;
         }
         catch (Exception ex)

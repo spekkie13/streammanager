@@ -4,7 +4,7 @@ using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
 using TwitchLib.PubSub.Events;
 using OnRewardRedeemedArgs = TwitchLib.PubSub.Events.OnRewardRedeemedArgs;
 
-namespace SpekkieClassLibrary.Twitch.Pubsub.Interfaces;
+namespace SpekkieTwitchBot.Interfaces;
 
 public interface ITwitchPubSub
 {

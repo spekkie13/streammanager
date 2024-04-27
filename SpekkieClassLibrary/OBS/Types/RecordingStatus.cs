@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+#nullable disable
 namespace SpekkieClassLibrary.OBS.Types;
 
 public class RecordingStatus
@@ -12,7 +13,7 @@ public class RecordingStatus
     public bool IsRecordingPaused { set; get; }
 
     [JsonProperty(PropertyName = "outputTimecode")]
-    public string? RecordTimecode { set; get; }
+    public string RecordTimecode { set; get; }
 
     [JsonProperty(PropertyName = "outputDuration")]
     public long RecordingDuration { set; get; }

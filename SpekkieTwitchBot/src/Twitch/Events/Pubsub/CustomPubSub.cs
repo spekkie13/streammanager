@@ -3,9 +3,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
-using SpekkieClassLibrary.Twitch.Pubsub.Interfaces;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
-
+using SpekkieTwitchBot.Interfaces;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Enums;
 using TwitchLib.Communication.Events;
@@ -13,7 +12,6 @@ using TwitchLib.Communication.Models;
 using TwitchLib.PubSub.Enums;
 using TwitchLib.PubSub.Events;
 using TwitchLib.PubSub.Models;
-
 using AutomodCaughtMessage = SpekkieClassLibrary.Twitch.Pubsub.Types.AutomodCaughtMessage;
 using AutomodQueue = SpekkieClassLibrary.Twitch.Pubsub.Types.AutomodQueue;
 using AutomodQueueType = SpekkieClassLibrary.Twitch.Pubsub.Enums.AutomodQueueType;
@@ -40,7 +38,7 @@ using VideoPlaybackType = SpekkieClassLibrary.Twitch.Pubsub.Enums.VideoPlaybackT
 using Whisper = SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper;
 
 #nullable disable
-namespace SpekkieTwitchBot.Twitch.Events;
+namespace SpekkieTwitchBot.Twitch.Events.Pubsub;
 
 public class CustomPubsub : ITwitchPubSub
 {
@@ -703,7 +701,7 @@ public class CustomPubsub : ITwitchPubSub
                                     TargetChannelId = messageData12.TargetChannelId,
                                     AnnounceTime = messageData12.AnnounceTime,
                                     RaidTime = messageData12.RaidTime,
-                                    RemainingDurationSeconds = messageData12.RemainigDurationSeconds,
+                                    RemainingDurationSeconds = messageData12.RemainingDurationSeconds,
                                     ViewerCount = messageData12.ViewerCount
                                 });
                                 return;

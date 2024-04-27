@@ -39,13 +39,13 @@ public class ChannelPointHandler
         if (response.Count == 0) return;
         
         List<Reward> unfulfilledRedemptions = new List<Reward>();
-        foreach (string? rewardId in response)
+        foreach (string rewardId in response)
         {
             if (string.IsNullOrEmpty(rewardId)) continue;
-            List<Reward?> tempRed = GetFulfilledRedemptionsByStatus("UNFULFILLED", rewardId).Result;
+            List<Reward> tempRed = GetFulfilledRedemptionsByStatus("UNFULFILLED", rewardId).Result;
             if(tempRed.Count == 0)
                 continue;
-            unfulfilledRedemptions.AddRange(tempRed!);
+            unfulfilledRedemptions.AddRange(tempRed);
         }
         
         _Logger.LogInfo($"Unfulfilled redemptions: {unfulfilledRedemptions.Count}");
@@ -71,30 +71,32 @@ public class ChannelPointHandler
             : $"Failed to create custom reward. Status code: {response.StatusCode}");
     }
 
-    private async Task<List<string?>> GetCustomRedemptions()
+    private async Task<List<string>> GetCustomRedemptions()
     {
         string url = $"{TwitchConstants.TwitchChannelRewardsUrl}{TwitchConstants.BroadcasterId}";
         HttpResponseMessage message = await _TwitchHttpClient.GetAsync(url);
-        if (!message.IsSuccessStatusCode) return new List<string?>();
+        if (!message.IsSuccessStatusCode) return new List<string>();
         string response = await message.Content.ReadAsStringAsync();
         ChannelPointRequest redemptions = JsonConvert.DeserializeObject<ChannelPointRequest?>(response) ?? new ChannelPointRequest();
-        if (redemptions.Data == null) return new List<string?>();
-        List<string?> rewardIds = redemptions.Data.Select(x => x.Id).ToList();
+        if (redemptions.Data == null) return new List<string>();
+        List<string> rewardIds = redemptions.Data.Select(x => x.Id).ToList();
         return rewardIds;
     }
     
-    private async Task<List<Reward?>> GetFulfilledRedemptionsByStatus(string status, string rewardId)
+    private async Task<List<Reward>> GetFulfilledRedemptionsByStatus(string status, string rewardId)
     {
         string url = $"{TwitchConstants.TwitchChannelRedemptionsUrl}{TwitchConstants.BroadcasterId}&reward_id={rewardId}&status={status}";
 
         HttpResponseMessage message = await _TwitchHttpClient.GetAsync(url);
-        if (!message.IsSuccessStatusCode) return new List<Reward?>();
+        if (!message.IsSuccessStatusCode) return new List<Reward>();
 
         string response = await message.Content.ReadAsStringAsync();
-        var unfulfilled = JsonConvert.DeserializeObject<ChannelPointRewardRequest>(response) ?? new ChannelPointRewardRequest();
-        var redemptions = unfulfilled.Data;
-        var rewards = redemptions?.Select(x => x.Reward).ToList() ?? new List<Reward?>();
+        var unfulfilled = JsonConvert.DeserializeObject<ChannelPointRewardRequest>(response);
+        if (unfulfilled == null) return new List<Reward>();
+        ChannelPointRewardData[] redemptions = unfulfilled.Data;
+        var rewards = redemptions.Select(x => x.Reward).ToList();
         return rewards;
+
     }
     
     private async Task<HttpResponseMessage> UpdateRedemptionStatus(

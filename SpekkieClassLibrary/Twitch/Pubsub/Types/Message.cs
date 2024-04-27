@@ -22,98 +22,95 @@ public class Message
     public Message(string jsonStr)
     {
         JToken jtoken = JObject.Parse(jsonStr).SelectToken("data");
-        Topic = jtoken?.SelectToken("topic")?.ToString();
-        string jsonStr1 = jtoken?.SelectToken("message")?.ToString();
+        if (jtoken == null || string.IsNullOrEmpty(jtoken.SelectToken("topic")?.ToString())) return;
+        Topic = jtoken.SelectToken("topic")?.ToString();
+        if (string.IsNullOrEmpty(Topic) || string.IsNullOrEmpty(jtoken.SelectToken("message")?.ToString())) return;
+        string jsonStr1 = jtoken.SelectToken("message")?.ToString() ?? "";
         string topic = Topic;
-        string str;
-        if (topic == null)
-            str = null;
-        else
-            str = topic.Split('.')[0];
-        string s = str;
-        switch (ComputeStringHash(s))
+        string str = topic?.Split('.')[0];
+        switch (ComputeStringHash(str))
         {
             case 450000440:
-                if (s != "automod-queue")
+                if (str != "automod-queue")
                     break;
                 MessageData = new AutomodQueue(jsonStr1);
                 break;
             case 522816415:
-                if (s != "channel-bits-events-v1")
+                if (str != "channel-bits-events-v1")
                     break;
                 MessageData = new ChannelBitsEvents(jsonStr1);
                 break;
             case 539594034:
-                if (s != "channel-bits-events-v2")
+                if (str != "channel-bits-events-v2")
                     break;
                 MessageData =
                     JsonConvert.DeserializeObject<ChannelBitsEventsV2>(
-                        JObject.Parse(jsonStr1?.Replace("\\", ""))["data"]?.ToString() ?? "");
+                        JObject.Parse(jsonStr1.Replace("\\", ""))["data"]?.ToString() ?? "");
                 break;
             case 778451386:
-                if (s != "whispers")
+                if (str != "whispers")
                     break;
                 MessageData = new Whisper(jsonStr1);
                 break;
             case 1212123455:
-                if (s != "predictions-channel-v1")
+                if (str != "predictions-channel-v1")
                     break;
                 MessageData = new PredictionEvents(jsonStr1);
                 break;
             case 1248430604:
-                if (s != "leaderboard-events-v1")
+                if (str != "leaderboard-events-v1")
                     break;
                 MessageData = new LeaderboardEvents(jsonStr1);
                 break;
             case 1266735245:
-                if (s != "channel-subscribe-events-v1")
+                if (str != "channel-subscribe-events-v1")
                     break;
                 MessageData = new ChannelSubscription(jsonStr1);
                 break;
             case 1970825802:
-                if (s != "video-playback-by-id")
+                if (str != "video-playback-by-id")
                     break;
                 MessageData = new VideoPlayback(jsonStr1);
                 break;
             case 2101714332:
-                if (s != "channel-points-channel-v1")
+                if (str != "channel-points-channel-v1")
                     break;
                 MessageData = new ChannelPointsChannel(jsonStr1);
                 break;
             case 2157984858:
-                if (s != "community-points-channel-v1")
+                if (str != "community-points-channel-v1")
                     break;
                 MessageData = new CommunityPointsChannel(jsonStr1);
                 break;
             case 2476983697:
-                if (s != "raid")
+                if (str != "raid")
                     break;
                 MessageData = new RaidEvents(jsonStr1);
                 break;
             case 2535512472:
-                if (s != "following")
+                if (str != "following")
                     break;
                 MessageData = new Following(jsonStr1);
                 break;
             case 2643987228:
-                if (s != "user-moderation-notifications")
+                if (str != "user-moderation-notifications")
                     break;
                 MessageData = new UserModerationNotifications(jsonStr1);
                 break;
             case 3075833323:
-                if (s != "chat_moderator_actions")
+                if (str != "chat_moderator_actions")
                     break;
                 MessageData = new ChatModeratorActions(jsonStr1);
                 break;
             case 3729941884:
-                if (s != "channel-ext-v1")
+                if (str != "channel-ext-v1")
                     break;
                 MessageData = new ChannelExtensionBroadcast(jsonStr1);
                 break;
         }
     }
-    
-    internal static uint ComputeStringHash(string s)
+
+    private static uint ComputeStringHash(string s)
     {
         const uint StringHash = new();
         return s?.Aggregate(2166136261U, (current, t) => (uint)((t ^ (int)current) * 16777619)) ?? StringHash;

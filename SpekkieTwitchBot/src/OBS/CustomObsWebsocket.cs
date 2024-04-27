@@ -327,9 +327,9 @@ public class CustomObsWebsocket : IObsWebsocket
         _connectionPassword = "";
     }
 
-    private const string REQUEST_FIELD_VOLUME_DB = "inputVolumeDb";
-    private const string REQUEST_FIELD_VOLUME_MUL = "inputVolumeMul";
-    private const string RESPONSE_FIELD_IMAGE_DATA = "imageData";
+    private const string RequestFieldVolumeDb = "inputVolumeDb";
+    private const string RequestFieldVolumeMul = "inputVolumeMul";
+    private const string ResponseFieldImageData = "imageData";
 
     public ObsVideoSettings GetVideoSettings()
     {
@@ -706,7 +706,7 @@ public class CustomObsWebsocket : IObsWebsocket
         var requestFields = new JObject
         {
             { nameof(inputName), inputName },
-            { inputVolumeDb ? REQUEST_FIELD_VOLUME_DB : REQUEST_FIELD_VOLUME_MUL, inputVolume }
+            { inputVolumeDb ? RequestFieldVolumeDb : RequestFieldVolumeMul, inputVolume }
         };
 
         SendRequest(nameof(SetInputVolume), requestFields);

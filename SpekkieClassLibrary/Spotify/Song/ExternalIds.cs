@@ -1,6 +1,7 @@
-﻿namespace SpekkieClassLibrary.Spotify.Song;
+﻿#nullable disable
+namespace SpekkieClassLibrary.Spotify.Song;
 
-public class ExternalIds(string? isrc)
+public class ExternalIds(string isrc)
 {
-    public string? Isrc { get; set; } = isrc;
+    public string Isrc { get; set; } = isrc;
 }

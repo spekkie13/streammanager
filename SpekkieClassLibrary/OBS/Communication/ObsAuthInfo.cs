@@ -1,15 +1,16 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+#nullable disable
 namespace SpekkieClassLibrary.OBS.Communication;
 
 public class ObsAuthInfo
 {
     [JsonProperty(PropertyName = "challenge")]
-    public readonly string? Challenge;
+    public readonly string Challenge;
 
     [JsonProperty(PropertyName = "salt")]
-    public readonly string? PasswordSalt;
+    public readonly string PasswordSalt;
 
     public ObsAuthInfo(JObject data)
     {

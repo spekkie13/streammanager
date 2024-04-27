@@ -2,18 +2,19 @@
 using Newtonsoft.Json.Linq;
 using SceneItemDetails = SpekkieClassLibrary.OBS.Types.SceneItemDetails;
 
+#nullable disable
 namespace SpekkieClassLibrary.OBS;
 
 public class ObsScene
 {
     [JsonProperty(PropertyName = "sceneName")]
-    public string? Name;
+    public string Name;
 
     [JsonProperty(PropertyName = "isGroup")]
     public bool IsGroup;
 
     [JsonProperty(PropertyName = "sources")]
-    public List<SceneItemDetails>? Items;
+    public List<SceneItemDetails> Items;
 
     public ObsScene(JObject data)
     {
@@ -22,7 +23,7 @@ public class ObsScene
             ObjectCreationHandling = ObjectCreationHandling.Auto,
             NullValueHandling = NullValueHandling.Include
         };
-        JObject? currentProgramSceneName = (JObject?) data["currentProgramSceneName"];
+        JObject currentProgramSceneName = (JObject) data["currentProgramSceneName"];
         if (data.ContainsKey("currentProgramSceneName") && currentProgramSceneName != null)
         {
             var newToken = JToken.FromObject(currentProgramSceneName);

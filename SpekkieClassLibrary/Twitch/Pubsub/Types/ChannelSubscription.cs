@@ -17,7 +17,7 @@ public class ChannelSubscription : MessageData
     public string ChannelId { get; }
     public string RecipientId { get; }
     public DateTime Time { get; }
-    public SubscriptionPlan SubscriptionPlan { get; }
+    private SubscriptionPlan SubscriptionPlan { get; }
     public string SubscriptionPlanName { get; }
     public int? Months { get; }
     public int? CumulativeMonths { get; }
@@ -39,23 +39,14 @@ public class ChannelSubscription : MessageData
         RecipientId = jobject.SelectToken("recipient_id")?.ToString();
         ChannelId = jobject.SelectToken("channel_id")?.ToString();
         Time = Helpers.DateTimeStringToObject(jobject.SelectToken("time")?.ToString());
-        switch (jobject.SelectToken("sub_plan")?.ToString().ToLower())
+        SubscriptionPlan = jobject.SelectToken("sub_plan")?.ToString().ToLower() switch
         {
-            case "prime":
-                SubscriptionPlan = SubscriptionPlan.Prime;
-                break;
-            case "1000":
-                SubscriptionPlan = SubscriptionPlan.Tier1;
-                break;
-            case "2000":
-                SubscriptionPlan = SubscriptionPlan.Tier2;
-                break;
-            case "3000":
-                SubscriptionPlan = SubscriptionPlan.Tier3;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
+            "prime" => SubscriptionPlan.Prime,
+            "1000" => SubscriptionPlan.Tier1,
+            "2000" => SubscriptionPlan.Tier2,
+            "3000" => SubscriptionPlan.Tier3,
+            _ => throw new ArgumentOutOfRangeException(SubscriptionPlan.ToString())
+        };
 
         SubscriptionPlanName = jobject.SelectToken("sub_plan_name")?.ToString();
         SubMessage = new SubMessage(jobject.SelectToken("sub_message"));

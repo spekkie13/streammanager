@@ -1,17 +1,18 @@
 ﻿using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 
+#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class Following : MessageData
 {
-    public string? DisplayName { get; }
+    public string DisplayName { get; }
 
-    public string? Username { get; }
+    public string Username { get; }
 
-    public string? UserId { get; }
+    public string UserId { get; }
 
-    public string? FollowedChannelId { get; set; }
+    public string FollowedChannelId { get; set; }
 
     public Following(string jsonStr)
     {

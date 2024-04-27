@@ -19,15 +19,14 @@ public class ChannelBitsEvents : MessageData
     public ChannelBitsEvents(string jsonStr)
     {
         JObject jobject = JObject.Parse(jsonStr);
-        Username = jobject.SelectToken("data").SelectToken("user_name")?.ToString();
-        ChannelName = jobject.SelectToken("data").SelectToken("channel_name")?.ToString();
-        UserId = jobject.SelectToken("data").SelectToken("user_id")?.ToString();
-        ChannelId = jobject.SelectToken("data").SelectToken("channel_id")?.ToString();
-        Time = jobject.SelectToken("data").SelectToken("time")?.ToString();
-        ChatMessage = jobject.SelectToken("data").SelectToken("chat_message")?.ToString();
-        BitsUsed = int.Parse(jobject.SelectToken("data").SelectToken("bits_used").ToString());
-        TotalBitsUsed =
-            int.Parse(jobject.SelectToken("data").SelectToken("total_bits_used").ToString());
-        Context = jobject.SelectToken("data").SelectToken("context")?.ToString();
+        Username = jobject.SelectToken("data")?.SelectToken("user_name")?.ToString();
+        ChannelName = jobject.SelectToken("data")?.SelectToken("channel_name")?.ToString();
+        UserId = jobject.SelectToken("data")?.SelectToken("user_id")?.ToString();
+        ChannelId = jobject.SelectToken("data")?.SelectToken("channel_id")?.ToString();
+        Time = jobject.SelectToken("data")?.SelectToken("time")?.ToString();
+        ChatMessage = jobject.SelectToken("data")?.SelectToken("chat_message")?.ToString();
+        BitsUsed = int.Parse(jobject.SelectToken("data")?.SelectToken("bits_used")?.ToString() ?? "");
+        TotalBitsUsed = int.Parse(jobject.SelectToken("data")?.SelectToken("total_bits_used")?.ToString() ?? "");
+        Context = jobject.SelectToken("data")?.SelectToken("context")?.ToString();
     }
 }

@@ -1,12 +1,13 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+#nullable disable
 namespace SpekkieClassLibrary.OBS.Types;
 
 public class MediaInputStatus
 {
     [JsonProperty(PropertyName = "mediaState")]
-    public string? State { get; set; }
+    public string State { get; set; }
 
     [JsonProperty(PropertyName = "mediaDuration")]
     public int? Duration { get; set; }

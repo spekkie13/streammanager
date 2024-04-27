@@ -11,7 +11,7 @@ using SpekkieTwitchBot.Twitch.Events.Handlers;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 
-namespace SpekkieTwitchBot.Twitch.Events;
+namespace SpekkieTwitchBot.Twitch.Events.Pubsub;
 
 public class TwitchWebsocketService : IHostedService
 {

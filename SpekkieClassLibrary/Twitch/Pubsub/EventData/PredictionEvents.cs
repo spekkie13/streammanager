@@ -25,45 +25,63 @@ public class PredictionEvents : MessageData
     {
         JObject jobject = JObject.Parse(jsonStr);
         Type = (PredictionType)Enum.Parse(typeof(PredictionType),
-            jobject.SelectToken("type").ToString().Replace("-", ""), true);
+            jobject.SelectToken("type")!.ToString().Replace("-", ""), true);
         JToken jtoken1 = jobject.SelectToken("data.event");
-        Id = Guid.Parse(jtoken1.SelectToken("id").ToString());
-        ChannelId = jtoken1.SelectToken("channel_id").ToString();
+        if (jtoken1 == null) return;
+        Id = Guid.Parse(jtoken1.SelectToken("id")?.ToString() ?? "");
+        ChannelId = jtoken1.SelectToken("channel_id")?.ToString();
         CreatedAt = jtoken1.SelectToken("created_at").IsEmpty()
             ? new DateTime?()
-            : DateTime.Parse(jtoken1.SelectToken("created_at").ToString());
+            : DateTime.Parse(jtoken1.SelectToken("created_at")?.ToString() ?? "");
         EndedAt = jtoken1.SelectToken("ended_at").IsEmpty()
             ? new DateTime?()
-            : DateTime.Parse(jtoken1.SelectToken("ended_at").ToString());
+            : DateTime.Parse(jtoken1.SelectToken("ended_at")?.ToString() ?? "");
         LockedAt = jtoken1.SelectToken("locked_at").IsEmpty()
             ? new DateTime?()
-            : DateTime.Parse(jtoken1.SelectToken("locked_at").ToString());
+            : DateTime.Parse(jtoken1.SelectToken("locked_at")?.ToString() ?? "");
         Status = (PredictionStatus)Enum.Parse(typeof(PredictionStatus),
-            jtoken1.SelectToken("status").ToString().Replace("_", ""), true);
-        Title = jtoken1.SelectToken("title").ToString();
+            jtoken1.SelectToken("status")!.ToString().Replace("_", ""), true);
+        Title = jtoken1.SelectToken("title")?.ToString();
         WinningOutcomeId = jtoken1.SelectToken("winning_outcome_id").IsEmpty()
             ? new Guid?()
-            : Guid.Parse(jtoken1.SelectToken("winning_outcome_id").ToString());
-        PredictionTime = int.Parse(jtoken1.SelectToken("prediction_window_seconds").ToString());
-        JEnumerable<JToken> jenumerable = jtoken1.SelectToken("outcomes").Children();
+            : Guid.Parse(jtoken1.SelectToken("winning_outcome_id")?.ToString() ?? "");
+        PredictionTime = int.Parse(jtoken1.SelectToken("prediction_window_seconds")?.ToString() ?? "");
+        JToken outcomes = jtoken1.SelectToken("outcomes");
+        if (outcomes == null) return;
+        JEnumerable<JToken> jenumerable = outcomes.Children();
         foreach (JToken jtoken2 in jenumerable)
         {
+            string id = jtoken2.SelectToken("id")?.ToString() ?? "";
+            string color = jtoken2.SelectToken("color")?.ToString() ?? "";
+            string title = jtoken2.SelectToken("title")?.ToString() ?? "";
+            string totalPoints = jtoken2.SelectToken("total_points")?.ToString() ?? "";
+            string totalUsers = jtoken2.SelectToken("total_users")?.ToString() ?? "";
+            
             Outcome outcome = new Outcome
             {
-                Id = Guid.Parse(jtoken2.SelectToken("id").ToString()),
-                Color = jtoken2.SelectToken("color").ToString(),
-                Title = jtoken2.SelectToken("title").ToString(),
-                TotalPoints = long.Parse(jtoken2.SelectToken("total_points").ToString()),
-                TotalUsers = long.Parse(jtoken2.SelectToken("total_users").ToString())
+                Id = Guid.Parse(id),
+                Color = color,
+                Title = title,
+                TotalPoints = long.Parse(totalPoints),
+                TotalUsers = long.Parse(totalUsers)
             };
-            jenumerable = jtoken2.SelectToken("top_predictors").Children();
+            JToken topPredictors = jtoken1.SelectToken("top_predictors");
+            if (topPredictors == null) return;
+            jenumerable = topPredictors.Children();
             foreach (JToken jtoken3 in jenumerable)
+            {
+                string userDisplayName = jtoken3.SelectToken("user_display_name")?.ToString() ?? "";
+                string points = jtoken3.SelectToken("points")?.ToString() ?? "";
+                string userId = jtoken3.SelectToken("user_id")?.ToString() ?? "";
+
                 outcome.TopPredictors.Add(new Outcome.Predictor
                 {
-                    DisplayName = jtoken3.SelectToken("user_display_name").ToString(),
-                    Points = int.Parse(jtoken3.SelectToken("points").ToString()),
-                    UserId = jtoken3.SelectToken("user_id").ToString()
+                    DisplayName = userDisplayName,
+                    Points = int.Parse(points),
+                    UserId = userId
                 });
+                
+            }
             Outcomes.Add(outcome);
         }
     }

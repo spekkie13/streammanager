@@ -98,13 +98,13 @@ namespace SpekkieTwitchBot.Twitch.Events.Interfaces
 
     void OnReadLineTest(string rawIrc);
 
-    void SendMessage(JoinedChannel? channel, string? message, bool dryRun = false);
+    void SendMessage(JoinedChannel? channel, string message, bool dryRun = false);
 
-    void SendMessage(string channel, string? message, bool dryRun = false);
+    void SendMessage(string channel, string message, bool dryRun = false);
 
-    void SendReply(JoinedChannel channel, string? replyToId, string? message, bool dryRun = false);
+    void SendReply(JoinedChannel channel, string replyToId, string message, bool dryRun = false);
 
-    void SendReply(string channel, string? replyToId, string? message, bool dryRun = false);
+    void SendReply(string channel, string replyToId, string message, bool dryRun = false);
 
     void SendQueuedItem(string message);
 

@@ -25,7 +25,7 @@ public class RaidEvents : MessageData
 
     public DateTime RaidTime { get; protected set; }
 
-    public int RemainigDurationSeconds { get; protected set; }
+    public int RemainingDurationSeconds { get; protected set; }
 
     public int ViewerCount { get; protected set; }
 
@@ -53,7 +53,7 @@ public class RaidEvents : MessageData
                 TargetChannelId = jtoken.SelectToken("raid.target_id").ToString();
                 AnnounceTime = DateTime.Parse(jtoken.SelectToken("raid.announce_time").ToString());
                 RaidTime = DateTime.Parse(jtoken.SelectToken("raid.raid_time").ToString());
-                RemainigDurationSeconds =
+                RemainingDurationSeconds =
                     int.Parse(jtoken.SelectToken("raid.remaining_duration_seconds").ToString());
                 ViewerCount = int.Parse(jtoken.SelectToken("raid.viewer_count").ToString());
                 break;

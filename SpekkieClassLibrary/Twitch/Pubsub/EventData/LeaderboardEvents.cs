@@ -28,34 +28,38 @@ public class LeaderboardEvents : MessageData
         switch (Type)
         {
             case LeaderBoardType.BitsUsageByChannel:
-                ChannelId = jtoken.SelectToken("identifier.grouping_key").ToString();
-                using (IEnumerator<JToken> enumerator = jtoken["top"].Children().GetEnumerator())
+                string channelId = jtoken.SelectToken("identifier.grouping_key")?.ToString() ?? "";
+                ChannelId = channelId;
+                using (IEnumerator<JToken> enumerator = jtoken["top"]?.Children().GetEnumerator())
                 {
+                    if (enumerator == null) return;
                     while (enumerator.MoveNext())
                     {
                         JToken current = enumerator.Current;
                         Top.Add(new LeaderBoard
                         {
-                            Place = int.Parse(current.SelectToken("rank").ToString()),
-                            Score = int.Parse(current.SelectToken("score").ToString()),
-                            UserId = current.SelectToken("entry_key").ToString()
+                            Place = int.Parse(current?.SelectToken("rank")?.ToString() ?? ""),
+                            Score = int.Parse(current?.SelectToken("score")?.ToString() ?? ""),
+                            UserId = current?.SelectToken("entry_key")?.ToString()
                         });
                     }
 
                     break;
                 }
             case LeaderBoardType.SubGiftSent:
-                ChannelId = jtoken.SelectToken("identifier.grouping_key").ToString();
-                using (IEnumerator<JToken> enumerator = jtoken["top"].Children().GetEnumerator())
+                channelId = jtoken.SelectToken("identifier.grouping_key")?.ToString() ?? "";
+                ChannelId = channelId;
+                using (IEnumerator<JToken> enumerator = jtoken["top"]?.Children().GetEnumerator())
                 {
+                    if (enumerator == null) return;
                     while (enumerator.MoveNext())
                     {
                         JToken current = enumerator.Current;
                         Top.Add(new LeaderBoard
                         {
-                            Place = int.Parse(current.SelectToken("rank").ToString()),
-                            Score = int.Parse(current.SelectToken("score").ToString()),
-                            UserId = current.SelectToken("entry_key").ToString()
+                            Place = int.Parse(current?.SelectToken("rank")?.ToString() ?? ""),
+                            Score = int.Parse(current?.SelectToken("score")?.ToString() ?? ""),
+                            UserId = current?.SelectToken("entry_key")?.ToString()
                         });
                     }
 

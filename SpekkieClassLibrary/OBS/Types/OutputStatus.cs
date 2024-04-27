@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+#nullable disable
 namespace SpekkieClassLibrary.OBS.Types;
 
 public class OutputStatus
@@ -12,7 +13,7 @@ public class OutputStatus
     public bool IsReconnecting { get; set; }
     
     [JsonProperty(PropertyName = "outputTimecode")]
-    public string? TimeCode { get; set; }
+    public string TimeCode { get; set; }
     
     [JsonProperty(PropertyName = "outputDuration")]
     public long Duration { get; set; }

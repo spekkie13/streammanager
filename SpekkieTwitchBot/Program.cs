@@ -14,6 +14,7 @@ using SpekkieTwitchBot.Timer.FileHandling;
 using SpekkieTwitchBot.Twitch.Commands;
 using SpekkieTwitchBot.Twitch.Events;
 using SpekkieTwitchBot.Twitch.Events.Handlers;
+using SpekkieTwitchBot.Twitch.Events.Pubsub;
 using SpekkieTwitchBot.Twitch.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.EventSub.Websockets.Extensions;

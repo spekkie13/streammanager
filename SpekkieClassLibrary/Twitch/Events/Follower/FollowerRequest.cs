@@ -1,7 +1,8 @@
-﻿namespace SpekkieClassLibrary.Twitch.Events.Follower;
+﻿#nullable disable
+namespace SpekkieClassLibrary.Twitch.Events.Follower;
 
 public class FollowerRequest
 {
     public int Total { get; set; }
-    public FollowerData[]? Data { get; set; }
+    public FollowerData[] Data { get; set; }
 }
