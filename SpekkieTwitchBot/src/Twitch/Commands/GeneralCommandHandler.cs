@@ -1,4 +1,5 @@
-﻿using SpekkieTwitchBot.Constants;
+﻿using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
+using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Twitch.Events.Handlers;
 using SpekkieTwitchBot.Twitch.General;
@@ -9,7 +10,6 @@ namespace SpekkieTwitchBot.Twitch.Commands;
 public class GeneralCommandHandler
 {
     private readonly IrcClient _IrcClient;
-    private const string BroadcasterName = "spekkie1313";
     private Dictionary<string, Action> _CommandHandlers = new ();
     private readonly TextCommandHandler _TextCommandHandler;
     private readonly TimerCommandHandler _TimerCommandHandler;
@@ -109,7 +109,7 @@ public class GeneralCommandHandler
 
     private void HandleExitBotCommand(string username)
     {
-        if (!username.Equals(BroadcasterName)) return;
+        if (!username.Equals(TwitchConstants.ChannelName)) return;
         _IrcClient.SendPublicChatMessage(TwitchConstants.BotExitMessage);
         Environment.Exit(0);
     }
@@ -126,6 +126,12 @@ public class GeneralCommandHandler
     private void HandleRefundCommand(string username)
     {
         if (string.IsNullOrEmpty(username)) return;
+        Redemption redemption = _ChannelPointHandler.GetMostRecentRedemptionForUser(username).Result;
+
+        HttpResponseMessage message = _ChannelPointHandler.UpdateRedemptionStatus(redemption.Id, TwitchConstants.BroadcasterId, redemption.Reward.Id, "CANCELLED").Result;
+        _IrcClient.SendPublicChatMessage(message.IsSuccessStatusCode
+            ? $"Successfully refunded most recent channel point redemption for {username}"
+            : $"Unable to refund most recent channel point redemption for {username}");
     }
 
     private void HandleCreateRedemptionCommand(string commandArgs)

@@ -1,7 +1,7 @@
 ﻿#nullable disable
 namespace SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 
-public class ChannelPointRewardData
+public class Redemption
 {
     public string BroadcasterName { get; set; }
     public string BroadcasterLogin { get; set; }
