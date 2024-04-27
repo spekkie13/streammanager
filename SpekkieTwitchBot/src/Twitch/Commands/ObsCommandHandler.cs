@@ -1,4 +1,6 @@
-﻿using SpekkieTwitchBot.OBS;
+﻿using SpekkieClassLibrary.OBS.Types;
+using SpekkieTwitchBot.Constants;
+using SpekkieTwitchBot.OBS;
 using SpekkieTwitchBot.Twitch.General;
 
 namespace SpekkieTwitchBot.Twitch.Commands;
@@ -37,5 +39,39 @@ public class ObsCommandHandler
         string status = currentMuteStatus ? $"{inputName} set to unmuted" : $"{inputName} set to muted";
         
         _IrcClient.SendPublicChatMessage(status);
+    }
+    
+    public void HandleSetStandardVolumes()
+    {
+        //Set input captures to 0.0 db standard
+        //Set output captures to standard music volume of -25.3db standard
+        List<InputBasicInfo> inputCaptures = _ObsWebsocket.GetInputList("wasapi_input_capture");
+        List<InputBasicInfo> outputCaptures = _ObsWebsocket.GetInputList("wasapi_output_capture");
+
+        foreach (var input in inputCaptures)
+        {
+            _ObsWebsocket.SetInputVolume(input.InputName, ObsStandards.StandardMicVolume, true);
+        }
+
+        foreach (var output in outputCaptures)
+        {
+            _ObsWebsocket.SetInputVolume(output.InputName, ObsStandards.StandardMusicVolume, true);
+        }
+    }    
+    
+    public void HandleVolumeZero()
+    {
+        List<InputBasicInfo> inputCaptures = _ObsWebsocket.GetInputList("wasapi_input_capture");
+        List<InputBasicInfo> outputCaptures = _ObsWebsocket.GetInputList("wasapi_output_capture");
+
+        foreach (var input in inputCaptures)
+        {
+            _ObsWebsocket.SetInputVolume(input.InputName, (float) 0.0);
+        }
+
+        foreach (var output in outputCaptures)
+        {
+            _ObsWebsocket.SetInputVolume(output.InputName, (float) 0.0);
+        }
     }
 }

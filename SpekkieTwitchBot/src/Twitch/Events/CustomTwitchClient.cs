@@ -1,7 +1,7 @@
 ﻿#nullable disable
 using System.Reflection;
 using System.Timers;
-using Microsoft.Extensions.Logging;
+using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Twitch.General;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Enums.Internal;
@@ -24,7 +24,7 @@ public class CustomTwitchClient : ITwitchClient
     private readonly ICollection<char> _chatCommandIdentifiers = new HashSet<char>();
     private readonly ICollection<char> _whisperCommandIdentifiers = new HashSet<char>();
     private readonly Queue<JoinedChannel> _joinChannelQueue = new();
-    private readonly ILogger<CustomTwitchClient> _logger;
+    private readonly Logger _logger;
     private readonly ClientProtocol _protocol;
     private bool _currentlyJoiningChannels;
     private System.Timers.Timer _joinTimer;
@@ -107,8 +107,7 @@ public class CustomTwitchClient : ITwitchClient
     public event EventHandler<OnUserIntroArgs> OnUserIntro;
     public event EventHandler<OnUnaccountedForArgs> OnUnaccountedFor;
 
-    public CustomTwitchClient(IClient client = null, ClientProtocol protocol = ClientProtocol.WebSocket,
-        ILogger<CustomTwitchClient> logger = null)
+    public CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientProtocol.WebSocket, IClient client = null)
     {
         _logger = logger;
         _client = client;
@@ -156,7 +155,7 @@ public class CustomTwitchClient : ITwitchClient
         char whisperCommandIdentifier = '!',
         bool autoReListenOnExceptions = true)
     {
-        Log($"CustomTwitchClient initialized, assembly version: {Assembly.GetExecutingAssembly().GetName().Version}");
+        _logger.LogInfo($"CustomTwitchClient initialized, assembly version: {Assembly.GetExecutingAssembly().GetName().Version}");
         ConnectionCredentials = credentials;
         TwitchUsername = ConnectionCredentials.TwitchUsername;
         if (chatCommandIdentifier != char.MinValue)
@@ -235,7 +234,7 @@ public class CustomTwitchClient : ITwitchClient
     {
         if (!IsInitialized)
             HandleNotInitialized();
-        Log("Writing: " + message);
+        _logger.LogInfo("Writing: " + message);
         _client.Send(message);
         EventHandler<OnSendReceiveDataArgs> onSendReceiveData = OnSendReceiveData;
         if (onSendReceiveData == null)
@@ -259,7 +258,7 @@ public class CustomTwitchClient : ITwitchClient
             return;
         if (message.Length > 500)
         {
-            LogError("Message length has exceeded the maximum character count. (500)");
+            _logger.LogError("Message length has exceeded the maximum character count. (500)");
         }
         else
         {
@@ -322,17 +321,17 @@ public class CustomTwitchClient : ITwitchClient
     {
         if (!IsInitialized)
             HandleNotInitialized();
-        Log("Connecting to: " + ConnectionCredentials.TwitchWebsocketURI);
+        _logger.LogInfo("Connecting to: " + ConnectionCredentials.TwitchWebsocketURI);
         _joinedChannelManager.Clear();
         if (!_client.Open())
             return false;
-        Log("Should be connected!");
+        _logger.LogInfo("Should be connected!");
         return true;
     }
 
     public void Disconnect()
     {
-        Log("Disconnect Twitch Chat Client...");
+        _logger.LogInfo("Disconnect Twitch Chat Client...");
         if (!IsInitialized)
             HandleNotInitialized();
         _client.Close();
@@ -344,7 +343,7 @@ public class CustomTwitchClient : ITwitchClient
     {
         if (!IsInitialized)
             HandleNotInitialized();
-        Log("Reconnecting to Twitch");
+        _logger.LogInfo("Reconnecting to Twitch");
         _client.Reconnect();
     }
 
@@ -422,7 +421,7 @@ public class CustomTwitchClient : ITwitchClient
         channel = channel.ToLower();
         if (channel[0] == '#')
             channel = channel.Substring(1);
-        Log("Leaving channel: " + channel);
+        _logger.LogInfo("Leaving channel: " + channel);
         if (_joinedChannelManager.GetJoinedChannel(channel) == null)
             return;
         _client.Send(Rfc2812.Part("#" + channel));
@@ -502,7 +501,7 @@ public class CustomTwitchClient : ITwitchClient
         {
             if (raw.Length > 1)
             {
-                Log("Received: " + raw);
+                _logger.LogInfo("Received: " + raw);
                 EventHandler<OnSendReceiveDataArgs> onSendReceiveData = OnSendReceiveData;
                 if (onSendReceiveData != null)
                     onSendReceiveData(this, new OnSendReceiveDataArgs
@@ -538,13 +537,13 @@ public class CustomTwitchClient : ITwitchClient
         {
             _currentlyJoiningChannels = true;
             JoinedChannel joinedChannel = _joinChannelQueue.Dequeue();
-            Log("Joining channel: " + joinedChannel.Channel);
+            _logger.LogInfo("Joining channel: " + joinedChannel.Channel);
             _client.Send(Rfc2812.Join("#" + joinedChannel.Channel.ToLower()));
             _joinedChannelManager.AddJoinedChannel(new JoinedChannel(joinedChannel.Channel));
             StartJoinedChannelTimer(joinedChannel.Channel);
         }
         else
-            Log("Finished channel joining queue.");
+            _logger.LogInfo("Finished channel joining queue.");
     }
     
     private void StartJoinedChannelTimer(string channel)
@@ -1349,73 +1348,12 @@ public class CustomTwitchClient : ITwitchClient
     
     private void HandleCap(IrcMessage ircMessage)
     {
-        Log(ircMessage.Message);
+        _logger.LogInfo(ircMessage.Message);
     }
 
     private void UnaccountedFor(string ircString)
     {
-        Log("Unaccounted for: " + ircString + " (please create a TwitchLib GitHub issue :P)");
-    }
-    
-    private void Log(string message, bool includeDate = false, bool includeTime = false)
-    {
-        string str = !(includeDate & includeTime)
-            ? !includeDate ? DateTime.UtcNow.ToShortTimeString() : DateTime.UtcNow.ToShortDateString()
-            : $"{DateTime.UtcNow}";
-        if (includeDate | includeTime)
-        {
-            ILogger<CustomTwitchClient> logger = _logger;
-            if (logger != null)
-                logger.LogInformation(
-                    $"[CustomTwitchClient, {Assembly.GetExecutingAssembly().GetName().Version} - {str}] {message}");
-        }
-        else
-        {
-            ILogger<CustomTwitchClient> logger = _logger;
-            if (logger != null)
-                logger.LogInformation(
-                    $"[CustomTwitchClient, {Assembly.GetExecutingAssembly().GetName().Version}] {message}");
-        }
-
-        EventHandler<OnLogArgs> onLog = OnLog;
-        if (onLog == null)
-            return;
-        onLog(this, new OnLogArgs
-        {
-            BotUsername = ConnectionCredentials?.TwitchUsername,
-            Data = message,
-            DateTime = DateTime.UtcNow
-        });
-    }
-    
-    private void LogError(string message, bool includeDate = false, bool includeTime = false)
-    {
-        string str = !(includeDate & includeTime)
-            ? !includeDate ? DateTime.UtcNow.ToShortTimeString() : DateTime.UtcNow.ToShortDateString()
-            : $"{DateTime.UtcNow}";
-        if (includeDate | includeTime)
-        {
-            ILogger<CustomTwitchClient> logger = _logger;
-            if (logger != null)
-                logger.LogError($"[CustomTwitchClient, {Assembly.GetExecutingAssembly().GetName().Version} - {str}] {message}");
-        }
-        else
-        {
-            ILogger<CustomTwitchClient> logger = _logger;
-            if (logger != null)
-                logger.LogError(string.Format("[CustomTwitchClient, {0}] {1}",
-                    Assembly.GetExecutingAssembly().GetName().Version, message));
-        }
-
-        EventHandler<OnLogArgs> onLog = OnLog;
-        if (onLog == null)
-            return;
-        onLog(this, new OnLogArgs
-        {
-            BotUsername = ConnectionCredentials?.TwitchUsername,
-            Data = message,
-            DateTime = DateTime.UtcNow
-        });
+        _logger.LogInfo("Unaccounted for: " + ircString + " (please create a TwitchLib GitHub issue :P)");
     }
     
     public void SendQueuedItem(string message)

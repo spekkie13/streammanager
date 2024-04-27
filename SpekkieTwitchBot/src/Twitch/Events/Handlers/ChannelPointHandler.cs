@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.Constants;
+using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Twitch.General;
 using Reward = SpekkieClassLibrary.Twitch.Events.ChannelPoint.Reward;
 
@@ -10,10 +11,12 @@ namespace SpekkieTwitchBot.Twitch.Events.Handlers;
 public class ChannelPointHandler
 {
     private readonly CustomTwitchHttpClient _TwitchHttpClient;
+    private readonly Logger _Logger;
     
-    public ChannelPointHandler(CustomTwitchHttpClient client)
+    public ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
     {
         _TwitchHttpClient = client;
+        _Logger = logger;
         GetAllRedemptions();
     }
 
@@ -45,7 +48,7 @@ public class ChannelPointHandler
             unfulfilledRedemptions.AddRange(tempRed!);
         }
         
-        Console.WriteLine(unfulfilledRedemptions.Count);
+        _Logger.LogInfo($"Unfulfilled redemptions: {unfulfilledRedemptions.Count}");
     }
     
     public void CreateRedemption(string commandArgs)
@@ -63,7 +66,7 @@ public class ChannelPointHandler
 
         var response = _TwitchHttpClient.PostAsync(url, content).Result;
 
-        Console.WriteLine(response.IsSuccessStatusCode
+        _Logger.LogInfo(response.IsSuccessStatusCode
             ? "Custom reward created successfully!"
             : $"Failed to create custom reward. Status code: {response.StatusCode}");
     }

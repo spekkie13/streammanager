@@ -8,11 +8,5 @@ SPOTIFY
 text commands in db?
 expand song request to incorporate YT & Soundcloud
 
-SetInputVolume => music, mic, discord? -> define standard labels for all inputs?
-SetInputMute => music, mic
-SetStudioMode
-
-
 [LOW PRIO]
 Expand logging into daily/session logs + file structure
-Text to ENUM converters for all ENUM types

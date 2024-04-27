@@ -78,7 +78,9 @@ public class GeneralCommandHandler
             
             { "setscene", () => _ObsCommandHandler.HandleSetSceneCommand(commandArgs) },
             { "mutemic", () => _ObsCommandHandler.HandleSetInputMute("microphone") },
-            { "mutemusic", () => _ObsCommandHandler.HandleSetInputMute("spotify") }
+            { "mutemusic", () => _ObsCommandHandler.HandleSetInputMute("spotify") },
+            { "standardvolumes", _ObsCommandHandler.HandleSetStandardVolumes},
+            { "volumezero", _ObsCommandHandler.HandleVolumeZero },
         };
 
         if (_CommandHandlers.TryGetValue(commandText, out Action? handler))

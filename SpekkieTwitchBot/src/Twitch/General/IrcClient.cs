@@ -73,7 +73,7 @@ public class IrcClient
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _Logger.LogError(ex.Message);
         }
     }
 

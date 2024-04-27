@@ -1,6 +1,7 @@
 ﻿#nullable disable
 using System.Net.Security;
 using System.Net.Sockets;
+using SpekkieTwitchBot.General;
 using TwitchLib.Communication.Events;
 using TwitchLib.Communication.Interfaces;
 using TwitchLib.Communication.Models;
@@ -15,6 +16,7 @@ public class CustomClient : IClient
     private StreamReader _reader;
     private StreamWriter _writer;
     private readonly Throttlers _throttlers;
+    private readonly Logger _Logger;
     private CancellationTokenSource _tokenSource = new();
     private bool _stopServices;
     private bool _networkServicesRunning;
@@ -72,8 +74,9 @@ public class CustomClient : IClient
 
     private TcpClient Client { get; set; }
 
-    public CustomClient(IClientOptions options = null)
+    public CustomClient(Logger logger, IClientOptions options = null)
     {
+        _Logger = logger;
         Options = options ?? new ClientOptions();
         _throttlers = new Throttlers(this, Options.ThrottlingPeriod, Options.WhisperThrottlingPeriod)
         {
@@ -127,7 +130,7 @@ public class CustomClient : IClient
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _Logger.LogInfo(ex.Message);
             InitializeClient();
             return false;
         }

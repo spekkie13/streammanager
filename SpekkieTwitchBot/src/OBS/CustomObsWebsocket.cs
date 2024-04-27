@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,6 +10,7 @@ using SpekkieClassLibrary.OBS.Enum;
 using SpekkieClassLibrary.OBS.Events;
 using SpekkieClassLibrary.OBS.Interface;
 using SpekkieClassLibrary.OBS.Types;
+using SpekkieTwitchBot.General;
 using Websocket.Client;
 using Monitor = SpekkieClassLibrary.OBS.Types.Monitor;
 
@@ -24,7 +24,8 @@ public class CustomObsWebsocket : IObsWebsocket
     private TimeSpan _wsTimeout = TimeSpan.FromSeconds(10);
     private string _connectionPassword;
     private WebsocketClient _wsConnection;
-
+    private readonly Logger _Logger;
+    
     private delegate void RequestCallback(CustomObsWebsocket sender, JObject body);
 
     private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> _responseHandlers;
@@ -43,8 +44,9 @@ public class CustomObsWebsocket : IObsWebsocket
 
     public bool IsConnected => _wsConnection.IsRunning;
 
-    public CustomObsWebsocket(WebsocketClient wsConnection)
+    public CustomObsWebsocket(WebsocketClient wsConnection, Logger logger)
     {
+        _Logger = logger;
         _wsConnection = wsConnection;
         _responseHandlers = new ConcurrentDictionary<string, TaskCompletionSource<JObject>>();
     }
@@ -62,13 +64,12 @@ public class CustomObsWebsocket : IObsWebsocket
 
     public void ConnectAsync(string url, string password)
     {
-        Console.WriteLine($"url: {url}");
         if (!url.ToLower().StartsWith(WebsocketUrlPrefix))
         {
             throw new ArgumentException($"Invalid url, must start with '{WebsocketUrlPrefix}'");
         }
 
-        if (_wsConnection != null && _wsConnection.IsRunning)
+        if (_wsConnection is { IsRunning: true })
         {
             Disconnect();
         }
@@ -94,7 +95,7 @@ public class CustomObsWebsocket : IObsWebsocket
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _Logger.LogError(ex.Message);
         }
 
         _wsConnection = new WebsocketClient(new Uri(""));
@@ -603,7 +604,7 @@ public class CustomObsWebsocket : IObsWebsocket
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            _Logger.LogError(e.Message);
         }
 
         return false;
@@ -704,10 +705,9 @@ public class CustomObsWebsocket : IObsWebsocket
     {
         var requestFields = new JObject
         {
-            { nameof(inputName), inputName }
+            { nameof(inputName), inputName },
+            { inputVolumeDb ? REQUEST_FIELD_VOLUME_DB : REQUEST_FIELD_VOLUME_MUL, inputVolume }
         };
-
-        requestFields.Add(inputVolumeDb ? REQUEST_FIELD_VOLUME_DB : REQUEST_FIELD_VOLUME_MUL, inputVolume);
 
         SendRequest(nameof(SetInputVolume), requestFields);
     }
@@ -1140,10 +1140,9 @@ public class CustomObsWebsocket : IObsWebsocket
         {
             { nameof(sceneName), sceneName },
             { nameof(inputName), inputName },
-            { nameof(inputKind), inputKind }
+            { nameof(inputKind), inputKind },
+            { nameof(inputSettings), inputSettings }
         };
-
-        request.Add(nameof(inputSettings), inputSettings);
 
         if (sceneItemEnabled.HasValue)
         {
@@ -1950,33 +1949,17 @@ public class CustomObsWebsocket : IObsWebsocket
         if (bodyObj == null) return;
 
         string profileName;
-        string profiles;
         string sceneName;
-        string sceneItems;
-        string scenes;
         string sceneCollectionName;
         string sceneItemIdx;
-        string sceneCollections;
         string sourceName;
         string transitionName;
         string inputName;
-        string inputKind;
         string filterName;
-        string filterKind;
-        string filterObj;
-        string mediaAction;
-        string monitorType;
-        
-        int filterIndex;
+
         int sceneItemId;
-        int sceneItemIndex;
-        int transitionDuration;
-        int inputAudioSyncOffset;
 
         bool sceneItemEnabled;
-        bool studioModeEnabled;
-        bool inputMuted;
-        bool filterEnabled;
         bool isGroup;
         
         switch (eventType)
@@ -1986,14 +1969,14 @@ public class CustomObsWebsocket : IObsWebsocket
                 CurrentProgramSceneChanged.Invoke(this, new ProgramSceneChangedEventArgs(sceneName));
                 break;
             case nameof(SceneListChanged):
-                scenes = bodyObj["scenes"]?.ToString() ?? "";
+                string scenes = bodyObj["scenes"]?.ToString() ?? "";
                 List<JObject> sceneList = JsonConvert.DeserializeObject<List<JObject>>(scenes) ?? new List<JObject>();
                 SceneListChanged.Invoke(this,
                     new SceneListChangedEventArgs(sceneList));
                 break;
             case nameof(SceneItemListReindexed):
                 sceneName = bodyObj["sceneName"]?.ToString() ?? "";
-                sceneItems = bodyObj["sceneItems"]?.ToString() ?? "";
+                string sceneItems = bodyObj["sceneItems"]?.ToString() ?? "";
                 List<JObject> sceneItemsList =
                     JsonConvert.DeserializeObject<List<JObject>>(sceneItems) ?? new List<JObject>();
                 SceneItemListReindexed.Invoke(this,
@@ -2003,7 +1986,7 @@ public class CustomObsWebsocket : IObsWebsocket
                 sceneName = bodyObj["sceneName"]?.ToString() ?? "";
                 sourceName = bodyObj["sourceName"]?.ToString() ?? "";
                 sceneItemId = Convert.ToInt32(bodyObj["sceneItemId"]);
-                sceneItemIndex = Convert.ToInt32(bodyObj["sceneItemIndex"]);
+                int sceneItemIndex = Convert.ToInt32(bodyObj["sceneItemIndex"]);
                 SceneItemCreated.Invoke(this,
                     new SceneItemCreatedEventArgs(sceneName, sourceName, sceneItemId, sceneItemIndex));
                 break;
@@ -2037,7 +2020,7 @@ public class CustomObsWebsocket : IObsWebsocket
                     new CurrentSceneCollectionChangedEventArgs(sceneCollectionName));
                 break;
             case nameof(SceneCollectionListChanged):
-                sceneCollections = bodyObj["sceneCollections"]?.ToString() ?? "";
+                string sceneCollections = bodyObj["sceneCollections"]?.ToString() ?? "";
                 List<string> sceneCollectionsList = JsonConvert.DeserializeObject<List<string>>(sceneCollections) ?? new List<string>();
 
                 SceneCollectionListChanged.Invoke(this,
@@ -2049,7 +2032,7 @@ public class CustomObsWebsocket : IObsWebsocket
                     new CurrentSceneTransitionChangedEventArgs(transitionName));
                 break;
             case nameof(CurrentSceneTransitionDurationChanged):
-                transitionDuration = Convert.ToInt32(bodyObj["transitionDuration"]);
+                int transitionDuration = Convert.ToInt32(bodyObj["transitionDuration"]);
                 CurrentSceneTransitionDurationChanged.Invoke(this,
                     new CurrentSceneTransitionDurationChangedEventArgs(transitionDuration));
                 break;
@@ -2072,7 +2055,7 @@ public class CustomObsWebsocket : IObsWebsocket
                 CurrentProfileChanged.Invoke(this, new CurrentProfileChangedEventArgs(profileName));
                 break;
             case nameof(ProfileListChanged):
-                profiles = bodyObj["profiles"]?.ToString() ?? "";
+                string profiles = bodyObj["profiles"]?.ToString() ?? "";
                 List<string> profileList = JsonConvert.DeserializeObject<List<string>>(profiles) ?? new List<string>();
                 ProfileListChanged.Invoke(this, new ProfileListChangedEventArgs(profileList));
                 break;
@@ -2088,7 +2071,7 @@ public class CustomObsWebsocket : IObsWebsocket
                 CurrentPreviewSceneChanged.Invoke(this, new CurrentPreviewSceneChangedEventArgs(sceneName));
                 break;
             case nameof(StudioModeStateChanged):
-                studioModeEnabled = Convert.ToBoolean(bodyObj["studioModeEnabled"]);
+                bool studioModeEnabled = Convert.ToBoolean(bodyObj["studioModeEnabled"]);
                 StudioModeStateChanged.Invoke(this,
                     new StudioModeStateChangedEventArgs(studioModeEnabled));
                 break;
@@ -2114,13 +2097,13 @@ public class CustomObsWebsocket : IObsWebsocket
                 break;
             case nameof(InputAudioSyncOffsetChanged):
                 inputName = bodyObj["inputName"]?.ToString() ?? "";
-                inputAudioSyncOffset = Convert.ToInt32(bodyObj["inputAudioSyncOffset"]);
+                int inputAudioSyncOffset = Convert.ToInt32(bodyObj["inputAudioSyncOffset"]);
                 InputAudioSyncOffsetChanged.Invoke(this,
                     new InputAudioSyncOffsetChangedEventArgs(inputName, inputAudioSyncOffset));
                 break;
             case nameof(InputMuteStateChanged):
                 inputName = bodyObj["inputName"]?.ToString() ?? "";
-                inputMuted = Convert.ToBoolean(bodyObj["inputMuted"]);
+                bool inputMuted = Convert.ToBoolean(bodyObj["inputMuted"]);
                 InputMuteStateChanged.Invoke(this,
                     new InputMuteStateChangedEventArgs(inputName, inputMuted));
                 break;
@@ -2130,8 +2113,8 @@ public class CustomObsWebsocket : IObsWebsocket
             case nameof(SourceFilterCreated):
                 sourceName = bodyObj["sourceName"]?.ToString() ?? "";
                 filterName = bodyObj["filterName"]?.ToString() ?? "";
-                filterKind = bodyObj["filterKind"]?.ToString() ?? "";
-                filterIndex = Convert.ToInt32(bodyObj["filterIndex"]);
+                string filterKind = bodyObj["filterKind"]?.ToString() ?? "";
+                int filterIndex = Convert.ToInt32(bodyObj["filterIndex"]);
                 JObject filterSettings = (JObject)bodyObj["filterSettings"] ?? new JObject();
                 JObject defaultFilterSettings = (JObject)bodyObj["defaultFilterSettings"] ?? new JObject();
                 SourceFilterCreated.Invoke(this,
@@ -2147,7 +2130,7 @@ public class CustomObsWebsocket : IObsWebsocket
                 break;
             case nameof(SourceFilterListReindexed):
                 sourceName = bodyObj["sourceName"]?.ToString() ?? "";
-                filterObj = bodyObj["filters"]?.ToString() ?? "";
+                string filterObj = bodyObj["filters"]?.ToString() ?? "";
                 
                 List<FilterReorderItem> filters = new List<FilterReorderItem>();
                 JsonConvert.PopulateObject(filterObj, filters);
@@ -2159,7 +2142,7 @@ public class CustomObsWebsocket : IObsWebsocket
             case nameof(SourceFilterEnableStateChanged):
                 sourceName = bodyObj["sourceName"]?.ToString() ?? "";
                 filterName = bodyObj["filterName"]?.ToString() ?? "";
-                filterEnabled = Convert.ToBoolean(bodyObj["filterEnabled"]);
+                bool filterEnabled = Convert.ToBoolean(bodyObj["filterEnabled"]);
                 SourceFilterEnableStateChanged.Invoke(this,
                     new SourceFilterEnableStateChangedEventArgs(sourceName, filterName, filterEnabled));
                 break;
@@ -2180,7 +2163,7 @@ public class CustomObsWebsocket : IObsWebsocket
                 break;
             case nameof(MediaInputActionTriggered):
                 inputName = bodyObj["inputName"]?.ToString() ?? "";
-                mediaAction = bodyObj["mediaAction"]?.ToString() ?? "";
+                string mediaAction = bodyObj["mediaAction"]?.ToString() ?? "";
                 MediaInputActionTriggered.Invoke(this,
                     new MediaInputActionTriggeredEventArgs(inputName, mediaAction));
                 break;
@@ -2205,7 +2188,7 @@ public class CustomObsWebsocket : IObsWebsocket
                 break;
             case nameof(InputCreated):
                 inputName = bodyObj["inputName"]?.ToString() ?? "";
-                inputKind = bodyObj["inputKind"]?.ToString() ?? "";
+                string inputKind = bodyObj["inputKind"]?.ToString() ?? "";
                 string unversionedInputKind = bodyObj["unversionedInputKind"]?.ToString() ?? "";
                 JObject inputSettings = (JObject)bodyObj["inputSettings"] ?? new JObject();
                 JObject defaultInputSettings = (JObject)bodyObj["defaultInputSettings"] ?? new JObject();
@@ -2250,7 +2233,7 @@ public class CustomObsWebsocket : IObsWebsocket
                 break;
             case nameof(InputAudioMonitorTypeChanged):
                 inputName = bodyObj["inputName"]?.ToString() ?? "";
-                monitorType = bodyObj["monitorType"]?.ToString() ?? "";
+                string monitorType = bodyObj["monitorType"]?.ToString() ?? "";
                 
                 InputAudioMonitorTypeChanged.Invoke(this,
                     new InputAudioMonitorTypeChangedEventArgs(inputName, monitorType));
@@ -2284,8 +2267,7 @@ public class CustomObsWebsocket : IObsWebsocket
                 break;
             default:
                 var message = $"Unsupported Event: {eventType}\n{body}";
-                Console.WriteLine(message);
-                Debug.WriteLine(message);
+                _Logger.LogWarning(message);
                 break;
         }
     }
