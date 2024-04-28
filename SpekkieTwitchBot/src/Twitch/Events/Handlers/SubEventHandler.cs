@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
+using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Events.Subscription;
 using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
-using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.Twitch.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
 

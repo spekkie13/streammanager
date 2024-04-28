@@ -2,11 +2,11 @@
 using System.Text;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Spotify;
 using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.Auth;
-using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Spotify.FileHandling;
 
@@ -149,8 +149,8 @@ public class SpotifyService : BackgroundService
     private void UpdateSongImg(CurrentlyPlaying? currentlyPlaying)
     {
         if (currentlyPlaying == null) return;
-        FullTrack currentSong = (FullTrack) currentlyPlaying.Item;
-        string url = $"{currentSong.Album.Images.First().Url}";
+        FullTrack? currentSong = (FullTrack?) currentlyPlaying.Item;
+        string url = $"{currentSong?.Album.Images.First().Url}";
         var imageBytes = _Client.GetByteArrayAsync(url).Result;
         _SpotifyFileWriter.WriteCurrentSongImage(imageBytes);
     }

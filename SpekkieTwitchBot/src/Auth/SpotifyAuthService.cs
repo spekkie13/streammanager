@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
+using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Spotify;
 using SpekkieClassLibrary.Spotify.Auth;
-using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Spotify.FileHandling;
 

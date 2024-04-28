@@ -1,9 +1,9 @@
 ﻿using System.Net.Http.Headers;
 using Newtonsoft.Json;
+using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.Auth;
-using SpekkieTwitchBot.Constants;
 
 namespace SpekkieTwitchBot.Spotify;
 

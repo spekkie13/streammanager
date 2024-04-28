@@ -1,5 +1,5 @@
-﻿using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
-using SpekkieTwitchBot.Constants;
+﻿using SpekkieClassLibrary.Constants;
+using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Twitch.Events.Handlers;
 using SpekkieTwitchBot.Twitch.General;
@@ -128,7 +128,7 @@ public class GeneralCommandHandler
         if (string.IsNullOrEmpty(username)) return;
         Redemption redemption = _ChannelPointHandler.GetMostRecentRedemptionForUser(username).Result;
 
-        HttpResponseMessage message = _ChannelPointHandler.UpdateRedemptionStatus(redemption.Id, TwitchConstants.BroadcasterId, redemption.Reward.Id, "CANCELLED").Result;
+        HttpResponseMessage message = _ChannelPointHandler.UpdateRedemptionStatus(redemption.Id, TwitchConstants.BroadcasterId, redemption.Reward.Id, TwitchConstants.ChannelPointStatusCancelled).Result;
         _IrcClient.SendPublicChatMessage(message.IsSuccessStatusCode
             ? $"Successfully refunded most recent channel point redemption for {username}"
             : $"Unable to refund most recent channel point redemption for {username}");

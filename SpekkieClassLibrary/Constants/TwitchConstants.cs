@@ -1,4 +1,4 @@
-﻿namespace SpekkieTwitchBot.Constants;
+﻿namespace SpekkieClassLibrary.Constants;
 
 public static class TwitchConstants
 {

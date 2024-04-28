@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
+using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
-using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Twitch.General;
 using Redemption = SpekkieClassLibrary.Twitch.Events.ChannelPoint.Redemption;
@@ -104,7 +104,7 @@ public class ChannelPointHandler
             "application/json");
 
         string requestUrl =
-            $"{TwitchConstants.TwitchChannelRedemptionsUrl}?broadcaster_id={broadcasterId}&reward_id={rewardId}&id={id}";
+            $"{TwitchConstants.TwitchChannelRedemptionsUrl}{broadcasterId}&reward_id={rewardId}&id={id}";
         HttpResponseMessage message = await _TwitchHttpClient.PatchAsync(requestUrl, requestContent);
         return message;
     }

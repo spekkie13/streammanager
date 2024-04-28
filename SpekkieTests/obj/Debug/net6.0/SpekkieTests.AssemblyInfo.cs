@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SpekkieTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4d4dc7ee68920a17e427ac795be9e528780e30f4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+17d31e593b4b61fa1391c8a6ab07c543047af21f")]
 [assembly: System.Reflection.AssemblyProductAttribute("SpekkieTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SpekkieTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

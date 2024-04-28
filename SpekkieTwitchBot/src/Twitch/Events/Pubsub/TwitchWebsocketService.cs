@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Auth;
 using SpekkieClassLibrary.Twitch.Pubsub.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using SpekkieTwitchBot.Auth;
-using SpekkieTwitchBot.Constants;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Twitch.Commands;
 using SpekkieTwitchBot.Twitch.Events.Handlers;

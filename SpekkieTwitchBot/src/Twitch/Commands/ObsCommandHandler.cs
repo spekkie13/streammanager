@@ -1,5 +1,5 @@
-﻿using SpekkieClassLibrary.OBS.Types;
-using SpekkieTwitchBot.Constants;
+﻿using SpekkieClassLibrary.Constants;
+using SpekkieClassLibrary.OBS.Types;
 using SpekkieTwitchBot.OBS;
 using SpekkieTwitchBot.Twitch.General;
 
