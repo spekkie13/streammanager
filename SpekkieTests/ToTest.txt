@@ -1,0 +1,2 @@
+﻿1. Deserialization of auth info (Spotify & Twitch)
+2. Fetching of record by criteria

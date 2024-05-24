@@ -29,7 +29,7 @@ public class CustomObsWebsocket : IObsWebsocket
     private delegate void RequestCallback(CustomObsWebsocket sender, JObject body);
 
     private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> _responseHandlers;
-    private static readonly Random Random = new Random();
+    private static readonly Random Random = new ();
 
     public TimeSpan WsTimeout
     {
@@ -338,11 +338,6 @@ public class CustomObsWebsocket : IObsWebsocket
         return settings;
     }
 
-    ObsVideoSettings IObsWebsocket.GetVideoSettings()
-    {
-        return GetVideoSettings();
-    }
-
     public string SaveSourceScreenshot(string sourceName, string imageFormat, string imageFilePath, int imageWidth = -1,
         int imageHeight = -1, int imageCompressionQuality = -1)
     {
@@ -424,26 +419,6 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(SetCurrentProgramScene), request);
     }
 
-    ObsStats IObsWebsocket.GetStats()
-    {
-        return GetStats();
-    }
-
-    List<SceneBasicInfo> IObsWebsocket.ListScenes()
-    {
-        return ListScenes();
-    }
-
-    GetSceneListInfo IObsWebsocket.GetSceneList()
-    {
-        return GetSceneList();
-    }
-
-    TransitionOverrideInfo IObsWebsocket.GetSceneSceneTransitionOverride(string sceneName)
-    {
-        return GetSceneSceneTransitionOverride(sceneName);
-    }
-
     public ObsStats GetStats()
     {
         JObject response = SendRequest(nameof(GetStats));
@@ -451,7 +426,7 @@ public class CustomObsWebsocket : IObsWebsocket
         return stats;
     }
 
-    private List<SceneBasicInfo> ListScenes()
+    public List<SceneBasicInfo> ListScenes()
     {
         var response = GetSceneList();
         List<SceneBasicInfo> info = response.Scenes ?? new List<SceneBasicInfo>();
@@ -496,7 +471,7 @@ public class CustomObsWebsocket : IObsWebsocket
 
     public void SetTBarPosition(double position, bool release = true)
     {
-        if (position < 0.0 || position > 1.0)
+        if (position is < 0.0 or > 1.0)
         {
             throw new ArgumentOutOfRangeException(nameof(position));
         }
@@ -524,18 +499,11 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(SetSourceFilterSettings), request);
     }
 
-    void IObsWebsocket.SetSourceFilterSettings(string sourceName, string filterName, FilterSettings filterSettings,
-        bool overlay)
-    {
-        SetSourceFilterSettings(sourceName, filterName, filterSettings, overlay);
-    }
-
     public void SetSourceFilterSettings(string sourceName, string filterName, FilterSettings filterSettings,
         bool overlay = false)
     {
         SetSourceFilterSettings(sourceName, filterName, JObject.FromObject(filterSettings), overlay);
     }
-
 
     public void SetSourceFilterEnabled(string sourceName, string filterName, bool filterEnabled)
     {
@@ -547,16 +515,6 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         SendRequest(nameof(SetSourceFilterEnabled), request);
-    }
-
-    List<FilterSettings> IObsWebsocket.GetSourceFilterList(string sourceName)
-    {
-        return GetSourceFilterList(sourceName);
-    }
-
-    FilterSettings IObsWebsocket.GetSourceFilter(string sourceName, string filterName)
-    {
-        return GetSourceFilter(sourceName, filterName);
     }
 
     public List<FilterSettings> GetSourceFilterList(string sourceName)
@@ -623,12 +581,6 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(CreateSourceFilter), request);
     }
 
-    void IObsWebsocket.CreateSourceFilter(string sourceName, string filterName, string filterKind,
-        FilterSettings filterSettings)
-    {
-        CreateSourceFilter(sourceName, filterName, filterKind, filterSettings);
-    }
-
     public void CreateSourceFilter(string sourceName, string filterName, string filterKind,
         FilterSettings filterSettings)
     {
@@ -645,16 +597,6 @@ public class CustomObsWebsocket : IObsWebsocket
     public void ToggleRecord()
     {
         SendRequest(nameof(ToggleRecord));
-    }
-
-    OutputStatus IObsWebsocket.GetStreamStatus()
-    {
-        return GetStreamStatus();
-    }
-
-    TransitionSettings IObsWebsocket.GetCurrentSceneTransition()
-    {
-        return GetCurrentSceneTransition();
     }
 
     public OutputStatus GetStreamStatus()
@@ -710,11 +652,6 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         SendRequest(nameof(SetInputVolume), requestFields);
-    }
-
-    VolumeInfo IObsWebsocket.GetInputVolume(string inputName)
-    {
-        return GetInputVolume(inputName);
     }
 
     public VolumeInfo GetInputVolume(string inputName)
@@ -773,12 +710,6 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(SetSceneItemTransform), requestFields);
     }
 
-    void IObsWebsocket.SetSceneItemTransform(string sceneName, int sceneItemId,
-        SceneItemTransformInfo sceneItemTransform)
-    {
-        SetSceneItemTransform(sceneName, sceneItemId, sceneItemTransform);
-    }
-
     public void SetSceneItemTransform(string sceneName, int sceneItemId, SceneItemTransformInfo sceneItemTransform)
     {
         SetSceneItemTransform(sceneName, sceneItemId, JObject.FromObject(sceneItemTransform));
@@ -818,11 +749,6 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         SendRequest(nameof(SetCurrentProfile), requestFields);
-    }
-
-    GetProfileListInfo IObsWebsocket.GetProfileList()
-    {
-        return GetProfileList();
     }
 
     public GetProfileListInfo GetProfileList()
@@ -871,11 +797,6 @@ public class CustomObsWebsocket : IObsWebsocket
         return recordDirectory;
     }
 
-    RecordingStatus IObsWebsocket.GetRecordStatus()
-    {
-        return GetRecordStatus();
-    }
-
     public RecordingStatus GetRecordStatus()
     {
         var response = SendRequest(nameof(GetRecordStatus));
@@ -889,11 +810,6 @@ public class CustomObsWebsocket : IObsWebsocket
         var response = SendRequest(nameof(GetReplayBufferStatus));
         bool outputActive = Convert.ToBoolean(response["outputActive"]);
         return outputActive;
-    }
-
-    GetTransitionListInfo IObsWebsocket.GetSceneTransitionList()
-    {
-        return GetSceneTransitionList();
     }
 
     public GetTransitionListInfo GetSceneTransitionList()
@@ -935,11 +851,6 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         SendRequest(nameof(SetCurrentPreviewScene), requestFields);
-    }
-
-    void IObsWebsocket.SetCurrentPreviewScene(ObsScene previewScene)
-    {
-        SetCurrentPreviewScene(previewScene);
     }
 
     public void SetCurrentPreviewScene(ObsScene previewScene)
@@ -1046,16 +957,6 @@ public class CustomObsWebsocket : IObsWebsocket
         }
 
         return sources;
-    }
-
-    void IObsWebsocket.SetStreamServiceSettings(StreamingService service)
-    {
-        SetStreamServiceSettings(service);
-    }
-
-    StreamingService IObsWebsocket.GetStreamServiceSettings()
-    {
-        return GetStreamServiceSettings();
     }
 
     public void SetStreamServiceSettings(StreamingService service)
@@ -1166,11 +1067,6 @@ public class CustomObsWebsocket : IObsWebsocket
         return defaultInputSettings;
     }
 
-    List<SceneItemDetails> IObsWebsocket.GetSceneItemList(string sceneName)
-    {
-        return GetSceneItemList(sceneName);
-    }
-
     public List<SceneItemDetails> GetSceneItemList(string sceneName)
     {
         JObject request = null;
@@ -1213,11 +1109,6 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(CreateScene), request);
     }
 
-    SourceTracks IObsWebsocket.GetInputAudioTracks(string inputName)
-    {
-        return GetInputAudioTracks(inputName);
-    }
-
     public SourceTracks GetInputAudioTracks(string inputName)
     {
         var request = new JObject
@@ -1238,21 +1129,6 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         SendRequest(nameof(SetInputAudioTracks), request);
-    }
-
-    void IObsWebsocket.SetInputAudioTracks(string inputName, SourceTracks inputAudioTracks)
-    {
-        SetInputAudioTracks(inputName, inputAudioTracks);
-    }
-
-    SourceActiveInfo IObsWebsocket.GetSourceActive(string sourceName)
-    {
-        return GetSourceActive(sourceName);
-    }
-
-    VirtualCamStatus IObsWebsocket.GetVirtualCamStatus()
-    {
-        return GetVirtualCamStatus();
     }
 
     public void SetInputAudioTracks(string inputName, SourceTracks inputAudioTracks)
@@ -1286,11 +1162,6 @@ public class CustomObsWebsocket : IObsWebsocket
     public void StopVirtualCam()
     {
         SendRequest(nameof(StopVirtualCam));
-    }
-
-    VirtualCamStatus IObsWebsocket.ToggleVirtualCam()
-    {
-        return ToggleVirtualCam();
     }
 
     public VirtualCamStatus ToggleVirtualCam()
@@ -1376,11 +1247,6 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(SetProfileParameter), request);
     }
 
-    void IObsWebsocket.SetVideoSettings(ObsVideoSettings obsVideoSettings)
-    {
-        SetVideoSettings(obsVideoSettings);
-    }
-
     public void SetVideoSettings(ObsVideoSettings obsVideoSettings)
     {
         SendRequest(nameof(SetVideoSettings), JObject.FromObject(obsVideoSettings));
@@ -1420,11 +1286,6 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(SetSourceFilterIndex), request);
     }
 
-    ObsVersion IObsWebsocket.GetVersion()
-    {
-        return GetVersion();
-    }
-
     public ObsVersion GetVersion()
     {
         JObject response = SendRequest(nameof(GetVersion));
@@ -1460,11 +1321,6 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         SendRequest(nameof(Sleep), request);
-    }
-
-    List<InputBasicInfo> IObsWebsocket.GetInputList(string inputKind)
-    {
-        return GetInputList(inputKind);
     }
 
     public List<InputBasicInfo> GetInputList(string inputKind = "")
@@ -1523,16 +1379,6 @@ public class CustomObsWebsocket : IObsWebsocket
         };
 
         SendRequest(nameof(SetInputName), request);
-    }
-
-    InputSettings IObsWebsocket.GetInputSettings(string inputName)
-    {
-        return GetInputSettings(inputName);
-    }
-
-    void IObsWebsocket.SetInputSettings(InputSettings inputSettings, bool overlay)
-    {
-        SetInputSettings(inputSettings, overlay);
     }
 
     public InputSettings GetInputSettings(string inputName)
@@ -1612,11 +1458,6 @@ public class CustomObsWebsocket : IObsWebsocket
         SendRequest(nameof(PressInputPropertiesButton), request);
     }
 
-    MediaInputStatus IObsWebsocket.GetMediaInputStatus(string inputName)
-    {
-        return GetMediaInputStatus(inputName);
-    }
-
     public MediaInputStatus GetMediaInputStatus(string inputName)
     {
         var request = new JObject
@@ -1675,11 +1516,6 @@ public class CustomObsWebsocket : IObsWebsocket
         var response = SendRequest(nameof(GetSceneItemId), request);
         int sceneItemId = Convert.ToInt32(response["sceneItemId"]);
         return sceneItemId;
-    }
-
-    SceneItemTransformInfo IObsWebsocket.GetSceneItemTransform(string sceneName, int sceneItemId)
-    {
-        return GetSceneItemTransform(sceneName, sceneItemId);
     }
 
     public SceneItemTransformInfo GetSceneItemTransform(string sceneName, int sceneItemId)

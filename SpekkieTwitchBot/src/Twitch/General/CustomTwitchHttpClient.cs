@@ -10,10 +10,9 @@ public class CustomTwitchHttpClient
     private readonly TwitchAuthService _TwitchAuthService;
 
     public CustomTwitchHttpClient(
-        HttpClient client,
         TwitchAuthService twitchAuthService)
     {
-        _Client = client;
+        _Client = new HttpClient();
         _TwitchAuthService = twitchAuthService;
         Setup();
     }

@@ -1,12 +1,5 @@
-﻿CHANNEL POINTS
--> Refund last redemption for a user with command
--> Auto refund song request when not provided with a valid spotify link
-
-SPOTIFY
--> Use /search endpoint to check song request input to determine artist & song name so order of submitting does not matter
-
-text commands in db?
-expand song request to incorporate YT & Soundcloud
+﻿text commands in db => find way to interpret and format response messages
 
 [LOW PRIO]
 Expand logging into daily/session logs + file structure
+Empty input testing for all methods

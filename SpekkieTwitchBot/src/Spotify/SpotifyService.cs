@@ -1,12 +1,8 @@
-﻿using System.Net.Http.Headers;
-using System.Text;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Spotify;
-using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieClassLibrary.Spotify.Song;
-using SpekkieTwitchBot.Auth;
 using SpekkieTwitchBot.General;
 using SpekkieTwitchBot.Spotify.FileHandling;
 
@@ -17,23 +13,19 @@ public class SpotifyService : BackgroundService
     private readonly SpotifyFileWriter _SpotifyFileWriter;
     private readonly Logger _Logger;
     
-    private readonly HttpClient _Client;
+    private readonly CustomSpotifyHttpClient _Client;
     private FullTrack? _CurrentSong;
     private CurrentlyPlaying? _CurrentPlayable;
 
     public SpotifyService(
         SpotifyFileWriter spotifyFileWriter, 
-        SpotifyAuthService authService,
+        CustomSpotifyHttpClient spotifyHttpClient, 
         Logger logger)
     {
-        _Client = new HttpClient();
+        _Client = spotifyHttpClient;
         _Logger = logger;
         
         _SpotifyFileWriter = spotifyFileWriter;
-        SpotifyAuth spotifyAuth = authService.GetSpotifyAuth();
-        var tokenResponse = authService.GetSpotifyToken(_Client, spotifyAuth);
-        _Client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", tokenResponse.AccessToken);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -44,7 +36,7 @@ public class SpotifyService : BackgroundService
         {
             GetCurrentPlayable();
             _CurrentSong = GetCurrentSong(_CurrentPlayable);
-            UpdateSongImg(_CurrentPlayable);
+            //UpdateSongImg(_CurrentPlayable);
             _SpotifyFileWriter.WriteSongFile(GetNowPlaying());
 
             int durationLeft = _CurrentSong?.DurationMs - _CurrentPlayable?.ProgressMs ?? 10000;
@@ -63,11 +55,12 @@ public class SpotifyService : BackgroundService
 
     private void GetCurrentPlayable()
     {
-        string currentlyPlayingData = GetData(SpotifyConstants.CurrentlyPlayingUrl);
+        HttpResponseMessage message = _Client.GetAsync(SpotifyConstants.CurrentlyPlayingUrl).Result;
+        string currentlyPlayingData = message.Content.ReadAsStringAsync().Result;
         _CurrentPlayable = JsonConvert.DeserializeObject<CurrentlyPlaying>(currentlyPlayingData);
     }
     
-    private FullTrack? GetCurrentSong(CurrentlyPlaying? currentlyPlaying)
+    private static FullTrack? GetCurrentSong(CurrentlyPlaying? currentlyPlaying)
     {
         FullTrack? currentSong = (FullTrack?) currentlyPlaying?.Item;
         return currentSong;
@@ -146,18 +139,19 @@ public class SpotifyService : BackgroundService
         return false;
     }
 
-    private void UpdateSongImg(CurrentlyPlaying? currentlyPlaying)
-    {
-        if (currentlyPlaying == null) return;
-        FullTrack? currentSong = (FullTrack?) currentlyPlaying.Item;
-        string url = $"{currentSong?.Album.Images.First().Url}";
-        var imageBytes = _Client.GetByteArrayAsync(url).Result;
-        _SpotifyFileWriter.WriteCurrentSongImage(imageBytes);
-    }
+    // private void UpdateSongImg(CurrentlyPlaying? currentlyPlaying)
+    // {
+    //     if (currentlyPlaying == null) return;
+    //     FullTrack? currentSong = (FullTrack?) currentlyPlaying.Item;
+    //     string url = $"{currentSong?.Album.Images.First().Url}";
+    //     var imageBytes = _Client.GetByteArrayAsync(url).Result;
+    //     _SpotifyFileWriter.WriteCurrentSongImage(imageBytes);
+    // }
     
     public string GetCurrentlyPlayingPlaylist()
     {
-        string currentlyPlayingData = GetData(SpotifyConstants.CurrentlyPlayingUrl);
+        HttpResponseMessage message = _Client.GetAsync(SpotifyConstants.CurrentlyPlayingUrl).Result;
+        string currentlyPlayingData = message.Content.ReadAsStringAsync().Result;
         CurrentlyPlaying? currentlyPlaying = JsonConvert.DeserializeObject<CurrentlyPlaying>(currentlyPlayingData);
         Context? currentlyPlayingContext = currentlyPlaying?.Context;
         string id = currentlyPlayingContext?.Uri.Split(':').Last() ?? "";
@@ -168,7 +162,8 @@ public class SpotifyService : BackgroundService
 
     public string GetQueue()
     {
-        string queueData = GetData(SpotifyConstants.GetQueueUrl);
+        HttpResponseMessage message = _Client.GetAsync(SpotifyConstants.GetQueueUrl).Result;
+        string queueData = message.Content.ReadAsStringAsync().Result;
         string queue = "";
         QueueResponse songQueue = JsonConvert.DeserializeObject<QueueResponse>(queueData) ?? new QueueResponse();
         int songIdx = 1;
@@ -199,16 +194,4 @@ public class SpotifyService : BackgroundService
 
         return artists;
     }
-
-    private string GetData(string url)
-    {
-        var myUri = new Uri(url);
-        
-        var myWebResponse = _Client.GetAsync(myUri).Result;
-        var responseStream = myWebResponse.Content.ReadAsStreamAsync().Result;
-        var myStreamReader = new StreamReader(responseStream, Encoding.Default);
-        var json = myStreamReader.ReadToEnd();
-
-        return json;
-    } 
 }

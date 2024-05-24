@@ -50,7 +50,9 @@ public class GeneralCommandHandler
             { "commands", HandleCommandsCommand },
             { "exitbot", () => HandleExitBotCommand(username) },
             { "afgeleid", HandleAfgeleidCommand},
-            { "refund", () => HandleRefundCommand(username) },
+            { "refund", () => HandleRefundCommand(commandArgs) },
+            { "complete", () => HandleCompleteCommand(commandArgs) },
+            { "specs", _TextCommandHandler.HandleSpecsCommand},
             
             { "hello", _TextCommandHandler.HandleHelloCommand },
             { "twitter", _TextCommandHandler.HandleGetTwitterCommand },
@@ -132,6 +134,17 @@ public class GeneralCommandHandler
         _IrcClient.SendPublicChatMessage(message.IsSuccessStatusCode
             ? $"Successfully refunded most recent channel point redemption for {username}"
             : $"Unable to refund most recent channel point redemption for {username}");
+    }
+    
+    private void HandleCompleteCommand(string username)
+    {
+        if (string.IsNullOrEmpty(username)) return;
+        Redemption redemption = _ChannelPointHandler.GetMostRecentRedemptionForUser(username).Result;
+
+        HttpResponseMessage message = _ChannelPointHandler.UpdateRedemptionStatus(redemption.Id, TwitchConstants.BroadcasterId, redemption.Reward.Id, TwitchConstants.ChannelPointStatusFulfilled).Result;
+        _IrcClient.SendPublicChatMessage(message.IsSuccessStatusCode
+            ? $"Successfully completed most recent channel point redemption for {username}"
+            : $"Unable to complete most recent channel point redemption for {username}");
     }
 
     private void HandleCreateRedemptionCommand(string commandArgs)

@@ -35,10 +35,7 @@ public class CustomTwitchClient : ITwitchClient
     private string _lastMessageSent;
     public Version Version => Assembly.GetEntryAssembly()?.GetName().Version;
     public bool IsInitialized => _client != null;
-    public IReadOnlyList<JoinedChannel> JoinedChannels
-    {
-        get => _joinedChannelManager.GetJoinedChannels();
-    }
+    public IReadOnlyList<JoinedChannel> JoinedChannels => _joinedChannelManager.GetJoinedChannels();
     public string TwitchUsername { get; private set; }
     public WhisperMessage PreviousWhisper { get; private set; }
     public bool IsConnected => IsInitialized && _client is { IsConnected: true };
@@ -124,14 +121,12 @@ public class CustomTwitchClient : ITwitchClient
         bool autoReListenOnExceptions = true)
     {
         if (channel != null && channel[0] == '#')
-            channel = channel.Substring(1);
-        ConnectionCredentials credentials1 = credentials;
-        List<string> channels = new List<string>();
-        channels.Add(channel);
+            channel = channel[1..];
+        List<string> channels = new List<string> { channel };
         int chatCommandIdentifier1 = chatCommandIdentifier;
         int whisperCommandIdentifier1 = whisperCommandIdentifier;
         int num = autoReListenOnExceptions ? 1 : 0;
-        InitializeHelper(credentials1, channels, (char)chatCommandIdentifier1, (char)whisperCommandIdentifier1,
+        InitializeHelper(credentials, channels, (char)chatCommandIdentifier1, (char)whisperCommandIdentifier1,
             num != 0);
     }
 
@@ -142,7 +137,7 @@ public class CustomTwitchClient : ITwitchClient
         char whisperCommandIdentifier = '!',
         bool autoReListenOnExceptions = true)
     {
-        channels = channels.Select((Func<string, string>)(x => x[0] != '#' ? x : x.Substring(1)))
+        channels = channels.Select((Func<string, string>)(x => x[0] != '#' ? x : x[1..]))
             .ToList();
         InitializeHelper(credentials, channels, chatCommandIdentifier, whisperCommandIdentifier,
             autoReListenOnExceptions);
@@ -1363,13 +1358,13 @@ public class CustomTwitchClient : ITwitchClient
         _client.Send(message);
     }
 
-    protected static void HandleNotInitialized()
+    private static void HandleNotInitialized()
     {
         throw new ClientNotInitializedException(
             "The twitch client has not been initialized and cannot be used. Please call Initialize();");
     }
 
-    protected static void HandleNotConnected()
+    private static void HandleNotConnected()
     {
         throw new ClientNotConnectedException(
             "In order to perform this action, the client must be connected to Twitch. To confirm connection, try performing this action in or after the OnConnected event has been fired.");

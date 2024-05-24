@@ -39,8 +39,9 @@ public static class Program
                 services.AddLogging();
                 services.AddTwitchLibEventSubWebsockets();
                 services.AddSingleton<HttpClient>();
-                services.AddSingleton<WebsocketClient>(provider => new WebsocketClient(new Uri("ws://localhost:4455")));
+                services.AddSingleton<WebsocketClient>(_ => new WebsocketClient(new Uri("ws://localhost:4455")));
                 services.AddSingleton<Logger>();
+                
                 services.AddSingleton<FileSetup>();
                 services.AddSingleton<FileReader>();
                 services.AddSingleton<FileWriter>();
@@ -63,6 +64,7 @@ public static class Program
                 services.AddSingleton<TwitchAuthService>();
                 services.AddSingleton<SpotifyAuthService>();
                 services.AddSingleton<CustomTwitchHttpClient>();
+                services.AddSingleton<CustomSpotifyHttpClient>();
                 services.AddSingleton<SubEventHandler>();
                 services.AddSingleton<FollowEventHandler>();
                 services.AddSingleton<ChannelPointHandler>();

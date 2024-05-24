@@ -933,8 +933,7 @@ public class CustomPubsub : ITwitchPubSub
         ListenToTopic(str);
     }
 
-    [Obsolete("This method listens to an undocumented/retired/obsolete topic. Consider using ListenToChannelPoints()",
-        false)]
+    [Obsolete("This method listens to an undocumented/retired/obsolete topic. Consider using ListenToChannelPoints()", false)]
     public void ListenToRewards(string channelTwitchId)
     {
         string str = "community-points-channel-v1." + channelTwitchId;
