@@ -6,6 +6,8 @@ public class FileWriter : IFileWriter
 {
     public void Write(string fileName, string data)
     {
-        File.WriteAllText(path: fileName, data);
+        using StreamWriter writer = new StreamWriter(fileName);
+        writer.WriteLine(data);
+        writer.Flush();
     }
 }

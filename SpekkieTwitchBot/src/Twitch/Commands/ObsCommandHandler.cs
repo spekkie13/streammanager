@@ -43,17 +43,16 @@ public class ObsCommandHandler
     
     public void HandleSetStandardVolumes()
     {
-        //Set input captures to 0.0 db standard
-        //Set output captures to standard music volume of -25.3db standard
+
         List<InputBasicInfo> inputCaptures = _ObsWebsocket.GetInputList("wasapi_input_capture");
         List<InputBasicInfo> outputCaptures = _ObsWebsocket.GetInputList("wasapi_output_capture");
 
-        foreach (var input in inputCaptures)
+        foreach (InputBasicInfo input in inputCaptures)
         {
             _ObsWebsocket.SetInputVolume(input.InputName, ObsStandards.StandardMicVolume, true);
         }
 
-        foreach (var output in outputCaptures)
+        foreach (InputBasicInfo output in outputCaptures)
         {
             _ObsWebsocket.SetInputVolume(output.InputName, ObsStandards.StandardMusicVolume, true);
         }
@@ -64,12 +63,12 @@ public class ObsCommandHandler
         List<InputBasicInfo> inputCaptures = _ObsWebsocket.GetInputList("wasapi_input_capture");
         List<InputBasicInfo> outputCaptures = _ObsWebsocket.GetInputList("wasapi_output_capture");
 
-        foreach (var input in inputCaptures)
+        foreach (InputBasicInfo input in inputCaptures)
         {
             _ObsWebsocket.SetInputVolume(input.InputName, (float) 0.0);
         }
 
-        foreach (var output in outputCaptures)
+        foreach (InputBasicInfo output in outputCaptures)
         {
             _ObsWebsocket.SetInputVolume(output.InputName, (float) 0.0);
         }

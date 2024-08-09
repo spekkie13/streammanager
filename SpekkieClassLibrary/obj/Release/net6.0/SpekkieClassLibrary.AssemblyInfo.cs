@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SpekkieClassLibrary")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6e3c601c4f426cde94a2f1f5b0f1cb8c04cc70d2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3694055fce26cd09b1141e0e3a815d4c3a287105")]
 [assembly: System.Reflection.AssemblyProductAttribute("SpekkieClassLibrary")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SpekkieClassLibrary")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

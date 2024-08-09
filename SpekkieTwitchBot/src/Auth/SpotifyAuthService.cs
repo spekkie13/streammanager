@@ -30,7 +30,7 @@ public class SpotifyAuthService
 
     public AuthorizationCodeTokenResponse GetSpotifyToken(HttpClient client, SpotifyAuth auth)
     {
-        var accessToken = RefreshSpotifyAccessToken(auth.ClientId, auth.ClientSecret, auth.RefreshToken, client).Result;
+        TokenResponse? accessToken = RefreshSpotifyAccessToken(auth.ClientId, auth.ClientSecret, auth.RefreshToken, client).Result;
         AuthorizationCodeTokenResponse tokenResponse = new ()
         {
             RefreshToken = accessToken?.RefreshToken ?? "",
@@ -44,7 +44,7 @@ public class SpotifyAuthService
     
     private async Task<TokenResponse?> RefreshSpotifyAccessToken(string clientId, string clientSecret, string refreshToken, HttpClient client)
     {
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        FormUrlEncodedContent content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "grant_type", "refresh_token" },
             { "refresh_token", refreshToken },
@@ -52,12 +52,12 @@ public class SpotifyAuthService
             { "client_secret", clientSecret }
         });
 
-        var response = await client.PostAsync(SpotifyConstants.TokenUrl, content);
+        HttpResponseMessage response = await client.PostAsync(SpotifyConstants.TokenUrl, content);
 
         if (response.IsSuccessStatusCode)
         {
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseContent);
+            string responseContent = await response.Content.ReadAsStringAsync();
+            TokenResponse? tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseContent);
 
             return new TokenResponse { AccessToken = tokenResponse?.AccessToken ?? "", RefreshToken = tokenResponse?.RefreshToken ?? "" };
         }

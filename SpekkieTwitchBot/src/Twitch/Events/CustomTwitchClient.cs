@@ -162,14 +162,12 @@ public class CustomTwitchClient : ITwitchClient
         {
             for (int i = 0; i < channels.Count; i++)
             {
-                if (!string.IsNullOrEmpty(channels[i]))
-                {
-                    var i1 = i;
-                    if (JoinedChannels.FirstOrDefault(
-                            (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channels[i1])) != null)
-                        return;
-                    _joinChannelQueue.Enqueue(new JoinedChannel(channels[i]));
-                }
+                if (string.IsNullOrEmpty(channels[i])) continue;
+                int i1 = i;
+                if (JoinedChannels.FirstOrDefault(
+                        (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channels[i1])) != null)
+                    return;
+                _joinChannelQueue.Enqueue(new JoinedChannel(channels[i]));
             }
         }
 
@@ -204,7 +202,7 @@ public class CustomTwitchClient : ITwitchClient
 
     internal void RaiseEvent(string eventName, object args = null)
     {
-        var invocationList = (GetType().GetField(eventName, BindingFlags.Instance | BindingFlags.NonPublic)?
+        Delegate[] invocationList = (GetType().GetField(eventName, BindingFlags.Instance | BindingFlags.NonPublic)?
             .GetValue(this) as MulticastDelegate)?.GetInvocationList();
         if (invocationList == null) return;
 
@@ -386,7 +384,7 @@ public class CustomTwitchClient : ITwitchClient
             HandleNotInitialized();
         if (!IsConnected)
             HandleNotConnected();
-        var channel1 = channel;
+        string channel1 = channel;
         if (JoinedChannels.FirstOrDefault(
                 (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channel1 && !overrideCheck)) != null)
             return;
@@ -703,7 +701,7 @@ public class CustomTwitchClient : ITwitchClient
             {
                 ChatMessage = chatMessage
             });
-        if (ircMessage.Tags.TryGetValue("msg-id", out var str) && str == "user-intro")
+        if (ircMessage.Tags.TryGetValue("msg-id", out string str) && str == "user-intro")
         {
             EventHandler<OnUserIntroArgs> onUserIntro = OnUserIntro;
             if (onUserIntro != null)
@@ -741,7 +739,7 @@ public class CustomTwitchClient : ITwitchClient
         }
         else
         {
-            if (!ircMessage.Tags.TryGetValue("msg-id", out var str))
+            if (!ircMessage.Tags.TryGetValue("msg-id", out string str))
             {
                 EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
                 if (onUnaccountedFor != null)
@@ -1191,7 +1189,7 @@ public class CustomTwitchClient : ITwitchClient
     
     private void HandleUserNotice(IrcMessage ircMessage)
     {
-        if (!ircMessage.Tags.TryGetValue("msg-id", out var str))
+        if (!ircMessage.Tags.TryGetValue("msg-id", out string str))
         {
             EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
             if (onUnaccountedFor != null)

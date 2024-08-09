@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using Newtonsoft.Json;
 using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieTwitchBot.Auth;
 
@@ -19,7 +20,7 @@ public class CustomSpotifyHttpClient
     private void Setup()
     {
         SpotifyAuth spotifyAuth = _SpotifyAuthService.GetSpotifyAuth();
-        var tokenResponse = _SpotifyAuthService.GetSpotifyToken(_Client, spotifyAuth);
+        AuthorizationCodeTokenResponse tokenResponse = _SpotifyAuthService.GetSpotifyToken(_Client, spotifyAuth);
         _Client.DefaultRequestHeaders.Add("client-id", spotifyAuth.ClientId);
         _Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenResponse.AccessToken);
     }
@@ -59,5 +60,12 @@ public class CustomSpotifyHttpClient
             Console.WriteLine($"Error retrieving data: {ex.Message}");
             throw;
         }
+    }
+
+    public async Task<T?> DecipherData<T>(string url) where T : notnull
+    {
+        HttpResponseMessage message = await GetAsync(url);
+        string json = await message.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<T>(json);
     }
 }

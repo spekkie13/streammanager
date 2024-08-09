@@ -1,5 +1,4 @@
-﻿using System.Text;
-using SpekkieTwitchBot.FileHandling;
+﻿using SpekkieTwitchBot.FileHandling;
 
 namespace SpekkieTwitchBot.Spotify.FileHandling;
 
@@ -27,22 +26,16 @@ public class SpotifyFileWriter
     public void WriteCurrentSongImage(byte[] imgBytes)
     {
         string imgPath = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}currentsong.png";
-        
+
         try
         {
-            using FileStream fileStream = new FileStream(imgPath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite);
-            using StreamWriter writer = new StreamWriter(fileStream, Encoding.UTF8);
-            File.WriteAllBytesAsync(imgPath, imgBytes);
+            using FileStream fileStream = new FileStream(imgPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
+        
+            fileStream.Write(imgBytes, 0, imgBytes.Length);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error writing to the file: {ex.Message}");
         }
-    }
-    
-    public void WriteSpotifyAuthFile(string text)
-    {
-        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Spotify.json";
-        _fileWriter.Write(dir, text);
     }
 }

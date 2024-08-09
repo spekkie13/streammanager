@@ -1,5 +1,6 @@
 ﻿using System.Media;
 using System.Runtime.InteropServices;
+using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.Spotify;
 using SpekkieTwitchBot.Spotify.FileHandling;
 using SpekkieTwitchBot.Twitch.General;
@@ -33,7 +34,7 @@ public class SpotifyCommandHandler
 
     public void HandleGetCurrentPlaylistCommand()
     {
-        var currentPlaylistUrl = _SpotifyService.GetCurrentlyPlayingPlaylist();
+        string currentPlaylistUrl = _SpotifyService.GetCurrentlyPlayingPlaylist();
         _IrcClient.SendPublicChatMessage($"The current playlist is {currentPlaylistUrl}");
     }
 
@@ -80,7 +81,7 @@ public class SpotifyCommandHandler
         {
             string title = songData.Split("|")[0];
             string artist = songData.Split("|")[1];
-            var song = _SpotifySearchService.GetSongsByName(title, artist).Result;
+            Tracks? song = _SpotifySearchService.GetSongsByName(title, artist).Result;
             if (song?.Items?.Count > 0)
             {
                 string uri = song.Items[0].Uri ?? "";

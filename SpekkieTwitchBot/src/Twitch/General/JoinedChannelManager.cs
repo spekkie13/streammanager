@@ -19,7 +19,7 @@ public class JoinedChannelManager
 
     public JoinedChannel? GetJoinedChannel(string channel)
     {
-        _JoinedChannels.TryGetValue(channel, out var joinedChannel);
+        _JoinedChannels.TryGetValue(channel, out JoinedChannel? joinedChannel);
         return joinedChannel;
     }
 

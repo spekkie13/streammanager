@@ -49,7 +49,7 @@ public class TwitchAuthService
     {
         using HttpClient client = new HttpClient();
 
-        var parameters = new FormUrlEncodedContent(new[]
+        FormUrlEncodedContent parameters = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("client_id", twitchUserAuth.ClientId),
             new KeyValuePair<string, string>("client_secret", twitchUserAuth.ClientSecret),
@@ -58,12 +58,12 @@ public class TwitchAuthService
             new KeyValuePair<string, string>("redirect_uri", "http://localhost:3000/")
         });
 
-        var response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
+        HttpResponseMessage response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
 
         switch (response.StatusCode)
         {
             case HttpStatusCode.OK:
-                var responseContent = await response.Content.ReadAsStringAsync();
+                string responseContent = await response.Content.ReadAsStringAsync();
                 _Logger.LogInfo(responseContent);
                 AuthorizationCredentials cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent) ?? new AuthorizationCredentials();
                 return cred;
@@ -81,7 +81,7 @@ public class TwitchAuthService
         string refreshToken)
     {
         using HttpClient client = new HttpClient();
-        var parameters = new FormUrlEncodedContent(new[]
+        FormUrlEncodedContent parameters = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("client_id", clientId),
             new KeyValuePair<string, string>("client_secret", clientSecret),
@@ -89,11 +89,11 @@ public class TwitchAuthService
             new KeyValuePair<string, string>("refresh_token", refreshToken)
         });
 
-        var response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
+        HttpResponseMessage response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
 
         if (response.IsSuccessStatusCode)
         {
-            var responseContent = await response.Content.ReadAsStringAsync();
+            string responseContent = await response.Content.ReadAsStringAsync();
             _Logger.LogInfo($"Refreshed token successfully: {responseContent}");
             return JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent);
         }

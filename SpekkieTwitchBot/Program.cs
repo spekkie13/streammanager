@@ -45,9 +45,9 @@ public static class Program
                 services.AddSingleton<FileSetup>();
                 services.AddSingleton<FileReader>();
                 services.AddSingleton<FileWriter>();
+                services.AddSingleton<SpotifyFileSetup>();                
                 services.AddSingleton<SpotifyFileReader>();
                 services.AddSingleton<SpotifyFileWriter>();
-                services.AddSingleton<SpotifyFileSetup>();                
                 services.AddSingleton<TwitchFileReader>();
                 services.AddSingleton<TwitchFileWriter>();
                 services.AddSingleton<TwitchFileSetup>();                

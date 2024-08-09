@@ -22,23 +22,23 @@ namespace SpekkieClassLibrary.Spotify.Converter
                 return null;
             }
 
-            var type = obj.GetValue("type", StringComparison.OrdinalIgnoreCase)?.Value<string>();
+            string? type = obj.GetValue("type", StringComparison.OrdinalIgnoreCase)?.Value<string>();
             if (string.Equals(type, "track", StringComparison.OrdinalIgnoreCase))
             {
-                var track = new FullTrack();
+                FullTrack track = new FullTrack();
                 serializer.Populate(obj.CreateReader(), track);
                 return track;
             }
 
             if (string.Equals(type, "episode", StringComparison.OrdinalIgnoreCase))
             {
-                var episode = new FullEpisode();
+                FullEpisode episode = new FullEpisode();
                 serializer.Populate(obj.CreateReader(), episode);
                 return episode;
             }
 
-            throw new ApiException($@"Received unkown playlist element type: {type}.
-If you're requesting a subset of available fields via the fields query paramter,
+            throw new ApiException($@"Received unknown playlist element type: {type}.
+If you're requesting a subset of available fields via the fields query parameter,
 make sure to include at least the type field. Often it's `items(track(type))` or `item(type)`");
         }
 

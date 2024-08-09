@@ -208,7 +208,7 @@ public class CustomPubsub : ITwitchPubSub
                             if (string.Equals(previousRequest.Nonce, response.Nonce, StringComparison.CurrentCulture))
                             {
                                 _previousRequests.RemoveAt(index);
-                                _topicToChannelId.TryGetValue(previousRequest.Topic, out var str);
+                                _topicToChannelId.TryGetValue(previousRequest.Topic, out string str);
                                 EventHandler<ListenResponseArgs> onListenResponse = OnListenResponse;
                                 if (onListenResponse != null)
                                     onListenResponse(this, new ListenResponseArgs

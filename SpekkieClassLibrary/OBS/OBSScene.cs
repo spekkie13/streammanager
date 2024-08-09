@@ -26,7 +26,7 @@ public class ObsScene
         JObject currentProgramSceneName = (JObject) data["currentProgramSceneName"];
         if (data.ContainsKey("currentProgramSceneName") && currentProgramSceneName != null)
         {
-            var newToken = JToken.FromObject(currentProgramSceneName);
+            JToken newToken = JToken.FromObject(currentProgramSceneName);
             data.Add("sceneName", newToken);
         }
         JsonConvert.PopulateObject(data.ToString(), this, settings);

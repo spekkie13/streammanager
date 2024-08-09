@@ -27,7 +27,7 @@ public class IrcClient
 
         FillAuthorizationInfo();
 
-        var tcpClient = new TcpClient("irc.twitch.tv", 6667);
+        TcpClient tcpClient = new TcpClient("irc.twitch.tv", 6667);
         _InputStream = new StreamReader(tcpClient.GetStream());
         _OutputStream = new StreamWriter(tcpClient.GetStream());
         

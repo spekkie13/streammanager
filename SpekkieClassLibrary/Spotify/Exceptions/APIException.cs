@@ -37,7 +37,7 @@ namespace SpekkieClassLibrary.Spotify.Exceptions
 
         private static string ParseApiErrorMessage(IResponse response)
         {
-            var body = response.Body as string;
+            string? body = response.Body as string;
             if (string.IsNullOrEmpty(body))
             {
                 return "";
@@ -47,7 +47,7 @@ namespace SpekkieClassLibrary.Spotify.Exceptions
             {
                 JObject bodyObject = JObject.Parse(body);
 
-                var error = bodyObject.Value<JToken>("error");
+                JToken? error = bodyObject.Value<JToken>("error");
                 if (error == null)
                 {
                     return "";
