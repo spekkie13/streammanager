@@ -1,5 +1,10 @@
-﻿text commands in db => find way to interpret and format response messages
+﻿[Must Have]
+-> Add attack count file
 
-[LOW PRIO]
-Expand logging into daily/session logs + file structure
-Empty input testing for all methods
+[Should Have]
+-> Change war stats active status on startup to which source is visible
+
+[Could Have]
+-> Search for logo by name in folder
+-> Reply to commands instead of just sending a separate chat message
+-> Build a text command interpreter

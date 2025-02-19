@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<RootNamespace>SpotifyAuthService</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\SpekkieTwitchBot.Common.SpekkieClassLibrary\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj" />
+		<ProjectReference Include="..\SpekkieTwitchBot.General.FileHandling\SpekkieTwitchBot.General.FileHandling.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+	</ItemGroup>
+
+</Project>

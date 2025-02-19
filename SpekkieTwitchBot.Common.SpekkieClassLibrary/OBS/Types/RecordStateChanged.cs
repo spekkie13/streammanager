@@ -1,0 +1,20 @@
+﻿#nullable disable
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+namespace SpekkieClassLibrary.OBS.Types;
+
+public class RecordStateChanged : OutputStateChanged
+{
+    public RecordStateChanged(JObject body) : base(body)
+    {
+        JsonConvert.PopulateObject(body.ToString(), this);
+    }
+
+    public RecordStateChanged()
+    {
+    }
+
+    [JsonProperty(PropertyName = "outputPath")]
+    public string OutputPath { set; get; }
+}
