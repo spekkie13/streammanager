@@ -116,8 +116,11 @@ public class CustomSpotifyHttpClient
 
         HttpResponseMessage response = await GetAsync(url);
         string json = await response.Content.ReadAsStringAsync();
+        if(string.IsNullOrEmpty(json))
+            return null;
+        
         JObject jsonObject = JObject.Parse(json);
-        var itemData = jsonObject["item"];
+        JToken? itemData = jsonObject["item"];
 
         if (itemData == null)
             return null;
