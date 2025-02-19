@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{EEADA625-2FA0-48DC-AAB3-E855CDB53BFC}|SpekkieTwitchBot.Spotify.SpotifyService\\SpekkieTwitchBot.Spotify.SpotifyService.csproj|c:\\users\\tomsp\\onedrive\\bureaublad\\projecten\\rider\\streammanager\\streammanager\\spekkietwitchbot.spotify.spotifyservice\\spotifyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EEADA625-2FA0-48DC-AAB3-E855CDB53BFC}|SpekkieTwitchBot.Spotify.SpotifyService\\SpekkieTwitchBot.Spotify.SpotifyService.csproj|solutionrelative:spekkietwitchbot.spotify.spotifyservice\\spotifyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 1,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedHeight": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "SpotifyService.cs",
+              "DocumentMoniker": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Spotify.SpotifyService\\SpotifyService.cs",
+              "RelativeDocumentMoniker": "SpekkieTwitchBot.Spotify.SpotifyService\\SpotifyService.cs",
+              "ToolTip": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Spotify.SpotifyService\\SpotifyService.cs",
+              "RelativeToolTip": "SpekkieTwitchBot.Spotify.SpotifyService\\SpotifyService.cs",
+              "ViewState": "AgIAACQAAAAAAAAAAAASwDYAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-07T18:34:01.147Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
