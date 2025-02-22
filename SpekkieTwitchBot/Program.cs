@@ -1,5 +1,6 @@
 ﻿using CommandService;
 using CommandService.CommandHandlers;
+using EventTimerService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,6 +11,7 @@ using SpekkieTwitchBot.General.FileHandling.Clash;
 using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
+using SpekkieTwitchBot.General.FileHandling.Timer;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
 using SpekkieTwitchBot.OBS.OBSServiceNew;
 using SpotifyAuthService;
@@ -55,6 +57,9 @@ public static class Program
                 services.AddSingleton<TwitchFileReader>();
                 services.AddSingleton<TwitchFileWriter>();
                 services.AddSingleton<TwitchFileSetup>();
+                services.AddSingleton<TimerFileReader>();
+                services.AddSingleton<TimerFileWriter>();
+                services.AddSingleton<TimerFileSetup>();
                 services.AddSingleton<ClashFileReader>();
                 services.AddSingleton<ClashFileWriter>();
                 services.AddSingleton<ClashFileSetup>();
@@ -81,9 +86,13 @@ public static class Program
                 services.AddSingleton<SpotifyService>();
                 services.AddSingleton<CustomTwitchClient>();
                 services.AddSingleton<CustomPubsub>();
+                services.AddSingleton<EventTimer>();
+                services.AddSingleton<EventTimerService.EventTimerService>();
                 services.AddSingleton<SpotifyCommandHandler>();
                 services.AddSingleton<ObsCommandHandler>();
                 services.AddSingleton<TextCommandHandler>();
+                services.AddSingleton<TimerCommandHandler>();
+
                 services.AddSingleton<ClashCommandHandler>();
                 services.AddSingleton<TwitchCommandHandler>();
                 services.AddSingleton<GeneralCommandHandler>();
@@ -92,6 +101,7 @@ public static class Program
                 services.AddSingleton<IrcParser>();
                 services.AddHostedService<WarService>();
                 services.AddHostedService<SpotifyService>();
+                services.AddHostedService<EventTimerService.EventTimerService>();
                 services.AddHostedService<ObsWebsocketService>();
                 services.AddHostedService<TwitchWebsocketService>();
             });

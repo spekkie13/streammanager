@@ -14,6 +14,7 @@ public class GeneralCommandHandler
     private readonly TextCommandHandler _TextCommandHandler;
     private readonly ClashCommandHandler _ClashCommandHandler;
     private readonly TwitchCommandHandler _TwitchCommandHandler;
+    private readonly TimerCommandHandler _TimerCommandHandler;
 
     private Dictionary<string, Action> _CommandHandlers = new();
 
@@ -25,6 +26,7 @@ public class GeneralCommandHandler
         SpotifyCommandHandler spotifyCommandHandler,
         ObsCommandHandler obsCommandHandler,
         ClashCommandHandler clashCommandHandler,
+        TimerCommandHandler timerCommandHandler,
         TwitchCommandHandler twitchCommandHandler)
     {
         _IrcClient = ircClient;
@@ -35,6 +37,7 @@ public class GeneralCommandHandler
         _ObsCommandHandler = obsCommandHandler;
         _ClashCommandHandler = clashCommandHandler;
         _TwitchCommandHandler = twitchCommandHandler;
+        _TimerCommandHandler = timerCommandHandler ;
     }
 
     public void HandleCommand(ChatCommand command)
@@ -76,8 +79,15 @@ public class GeneralCommandHandler
             { "standardvolumes", _ObsCommandHandler.HandleSetStandardVolumes },
             { "volumezero", _ObsCommandHandler.HandleVolumeZero },
             
+            { "pausetimer", _TimerCommandHandler.HandlePauseTimerCommand },
+            { "starttimer", _TimerCommandHandler.HandleStartTimerCommand },
+            { "addtime", () => _TimerCommandHandler.HandleAddTimeToTimerCommand(commandArgs) },
+            { "settime", () => _TimerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs) },
+            
             { "togglewarstats", _ClashCommandHandler.HandleToggleWarStatsCommand },
             { "playertag", () => _ClashCommandHandler.HandleAddPlayerTagCommand(commandArgs) }
+            
+            
         };
 
         if (_CommandHandlers.TryGetValue(commandText, out var handler))

@@ -1,42 +1,90 @@
 ﻿using SpekkieTwitchBot.General.FileHandling.Timer;
+using System;
+using System.Threading;
 
-namespace EventTimerService;
-
-public class EventTimer
+namespace EventTimerService
 {
-    private readonly TimerFileWriter _timerFileWriter;
-    public readonly Timer Timer;
-    private TimeSpan _RemainingTime;
-
-    public EventTimer(TimerFileWriter timerFileWriter)
+    public class EventTimer
     {
-        _timerFileWriter = timerFileWriter;
-        _RemainingTime = new TimeSpan(1, 15, 15);
-        Timer = new Timer(CountDownTick, null, 1000, 1000);
-    }
+        private readonly TimerFileWriter _timerFileWriter;
+        private readonly TimerFileReader _timerFileReader;
+        private TimeSpan _RemainingTime;
+        private bool _isRunning;
+        private readonly Timer _timer;
 
-    private void CountDownTick(object? state)
-    {
-        WriteFile();
-        _RemainingTime -= TimeSpan.FromSeconds(1);
-    }
+        public EventTimer(TimerFileWriter timerFileWriter, TimerFileReader timerFileReader)
+        {
+            _timerFileWriter = timerFileWriter;
+            _timerFileReader = timerFileReader;
+            SetupTimer();
+//            _RemainingTime = new TimeSpan(6, 0, 0); // Default to 6 hours
+            _timerFileWriter.WriteRemainingTime(_RemainingTime);
+            _timer = new Timer(CountDownTick, null, Timeout.Infinite, 1000); // Initially paused
+            _isRunning = false;
+        }
 
-    private void WriteFile()
-    {
-        var hours = _RemainingTime.Hours + _RemainingTime.Days * 24;
-        var minutes = _RemainingTime.Minutes;
-        var seconds = _RemainingTime.Seconds;
-        var totalTime = new TimeSpan(hours, minutes, seconds);
-        _timerFileWriter.WriteRemainingTime(totalTime);
-    }
+        private void SetupTimer()
+        {
+            string remainingTime = _timerFileReader.ReadRemainingTime();
+            _RemainingTime = TimeSpan.Parse(remainingTime);
+        }
 
-    public void SetRemainingTime(TimeSpan time)
-    {
-        _RemainingTime = time;
-    }
+        private void CountDownTick(object? state)
+        {
+            if (!_isRunning || _RemainingTime <= TimeSpan.Zero)
+            {
+                StopTimer(); // Stop if time runs out
+                return;
+            }
 
-    public TimeSpan GetRemainingTime()
-    {
-        return _RemainingTime;
+            _RemainingTime -= TimeSpan.FromSeconds(1);
+            WriteFile();
+        }
+
+        private void WriteFile()
+        {
+            var totalTime = new TimeSpan(_RemainingTime.Days * 24 + _RemainingTime.Hours, _RemainingTime.Minutes, _RemainingTime.Seconds);
+            _timerFileWriter.WriteRemainingTime(totalTime);
+        }
+
+        public void StartTimer()
+        {
+            if (_isRunning) return;
+            Console.WriteLine("Timer started.");
+            _timer.Change(0, 1000); // Start immediately, tick every second
+            _isRunning = true;
+        }
+
+        public void StopTimer()
+        {
+            if (!_isRunning) return;
+            Console.WriteLine("Timer paused.");
+            _timer.Change(Timeout.Infinite, Timeout.Infinite); // Pause timer
+            _isRunning = false;
+        }
+
+        public void RestartTimer()
+        {
+            Console.WriteLine("Timer restarted.");
+            StopTimer(); // Ensure it stops first
+            _RemainingTime = new TimeSpan(6, 0, 0); // Reset to 6 hours
+            StartTimer();
+        }
+
+        public void AddTime(TimeSpan extraTime)
+        {
+            _RemainingTime += extraTime;
+            Console.WriteLine($"Added {extraTime}. New remaining time: {_RemainingTime}");
+        }
+
+        public void SetRemainingTime(TimeSpan time)
+        {
+            _RemainingTime = time;
+        }
+
+        public TimeSpan GetRemainingTime()
+        {
+            return _RemainingTime;
+        }
     }
 }

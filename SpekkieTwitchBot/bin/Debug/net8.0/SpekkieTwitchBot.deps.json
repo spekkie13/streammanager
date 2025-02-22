@@ -13,6 +13,7 @@
           "SharpPcap": "6.3.0",
           "SpekkieTwitchBot.ClashOfClans.StatsBot": "1.0.0",
           "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
+          "SpekkieTwitchBot.General.EventTimerService": "1.0.0",
           "SpekkieTwitchBot.General.FileHandling": "1.0.0",
           "SpekkieTwitchBot.Spotify.SpotifyService": "1.0.0",
           "SpekkieTwitchBot.Twitch": "1.0.0",
@@ -1097,6 +1098,19 @@
           }
         }
       },
+      "SpekkieTwitchBot.General.EventTimerService/1.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Hosting": "8.0.1",
+          "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
+          "SpekkieTwitchBot.General.FileHandling": "1.0.0"
+        },
+        "runtime": {
+          "SpekkieTwitchBot.General.EventTimerService.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
       "SpekkieTwitchBot.General.FileHandling/1.0.0": {
         "dependencies": {
           "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0"
@@ -1150,6 +1164,7 @@
       "SpekkieTwitchBot.Twitch.CommandService/1.0.0": {
         "dependencies": {
           "SpekkieTwitchBot.ClashOfClans.StatsBot": "1.0.0",
+          "SpekkieTwitchBot.General.EventTimerService": "1.0.0",
           "SpekkieTwitchBot.OBS.OBSService": "1.0.0",
           "SpekkieTwitchBot.Spotify.SpotifyService": "1.0.0",
           "SpekkieTwitchBot.Twitch": "1.0.0"
@@ -1932,6 +1947,11 @@
       "sha512": ""
     },
     "SpekkieTwitchBot.Common.SpekkieClassLibrary/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SpekkieTwitchBot.General.EventTimerService/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

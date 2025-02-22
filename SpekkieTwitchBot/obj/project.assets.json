@@ -1911,6 +1911,21 @@
           "bin/placeholder/SpekkieTwitchBot.Common.SpekkieClassLibrary.dll": {}
         }
       },
+      "SpekkieTwitchBot.General.EventTimerService/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "Microsoft.Extensions.Hosting": "8.0.1",
+          "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
+          "SpekkieTwitchBot.General.FileHandling": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/SpekkieTwitchBot.General.EventTimerService.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SpekkieTwitchBot.General.EventTimerService.dll": {}
+        }
+      },
       "SpekkieTwitchBot.General.FileHandling/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
@@ -1974,6 +1989,7 @@
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
           "SpekkieTwitchBot.ClashOfClans.StatsBot": "1.0.0",
+          "SpekkieTwitchBot.General.EventTimerService": "1.0.0",
           "SpekkieTwitchBot.OBS.OBSService": "1.0.0",
           "SpekkieTwitchBot.Spotify.SpotifyService": "1.0.0",
           "SpekkieTwitchBot.Twitch": "1.0.0"
@@ -6827,6 +6843,11 @@
       "path": "../SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj",
       "msbuildProject": "../SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
     },
+    "SpekkieTwitchBot.General.EventTimerService/1.0.0": {
+      "type": "project",
+      "path": "../SpekkieTwitchBot.General.EventTimerService/SpekkieTwitchBot.General.EventTimerService.csproj",
+      "msbuildProject": "../SpekkieTwitchBot.General.EventTimerService/SpekkieTwitchBot.General.EventTimerService.csproj"
+    },
     "SpekkieTwitchBot.General.FileHandling/1.0.0": {
       "type": "project",
       "path": "../SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj",
@@ -6860,6 +6881,7 @@
       "SharpPcap >= 6.3.0",
       "SpekkieTwitchBot.ClashOfClans.StatsBot >= 1.0.0",
       "SpekkieTwitchBot.Common.SpekkieClassLibrary >= 1.0.0",
+      "SpekkieTwitchBot.General.EventTimerService >= 1.0.0",
       "SpekkieTwitchBot.General.FileHandling >= 1.0.0",
       "SpekkieTwitchBot.Spotify.SpotifyService >= 1.0.0",
       "SpekkieTwitchBot.Twitch >= 1.0.0",
@@ -6911,6 +6933,9 @@
             },
             "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
               "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
+            },
+            "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.EventTimerService\\SpekkieTwitchBot.General.EventTimerService.csproj": {
+              "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.EventTimerService\\SpekkieTwitchBot.General.EventTimerService.csproj"
             },
             "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj": {
               "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj"

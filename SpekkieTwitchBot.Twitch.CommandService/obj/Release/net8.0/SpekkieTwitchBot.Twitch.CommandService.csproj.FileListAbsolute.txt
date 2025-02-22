@@ -26,3 +26,5 @@ C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\S
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Release\net8.0\SpekkieTwitchBot.ClashOfClans.StatsBot.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Release\net8.0\SpekkieTwitchBot.Twitch.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Release\net8.0\SpekkieTwitchBot.Twitch.pdb
+C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Release\net8.0\SpekkieTwitchBot.General.EventTimerService.dll
+C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Release\net8.0\SpekkieTwitchBot.General.EventTimerService.pdb
