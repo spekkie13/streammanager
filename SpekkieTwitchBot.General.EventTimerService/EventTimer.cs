@@ -1,6 +1,4 @@
 ﻿using SpekkieTwitchBot.General.FileHandling.Timer;
-using System;
-using System.Threading;
 
 namespace EventTimerService
 {
@@ -17,7 +15,6 @@ namespace EventTimerService
             _timerFileWriter = timerFileWriter;
             _timerFileReader = timerFileReader;
             SetupTimer();
-//            _RemainingTime = new TimeSpan(6, 0, 0); // Default to 6 hours
             _timerFileWriter.WriteRemainingTime(_RemainingTime);
             _timer = new Timer(CountDownTick, null, Timeout.Infinite, 1000); // Initially paused
             _isRunning = false;

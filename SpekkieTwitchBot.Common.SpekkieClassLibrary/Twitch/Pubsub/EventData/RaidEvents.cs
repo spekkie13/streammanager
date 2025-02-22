@@ -10,49 +10,30 @@ public class RaidEvents : MessageData
     public RaidEvents(string jsonStr)
     {
         JToken jtoken = JObject.Parse(jsonStr);
-        switch (jtoken.SelectToken("type").ToString())
+        Type = jtoken.SelectToken("type")?.ToString() switch
         {
-            case "raid_update":
-                Type = RaidType.RaidUpdate;
-                break;
-            case "raid_update_v2":
-                Type = RaidType.RaidUpdateV2;
-                break;
-            case "raid_go_v2":
-                Type = RaidType.RaidGo;
-                break;
-        }
+            "raid_update" => RaidType.RaidUpdate,
+            "raid_update_v2" => RaidType.RaidUpdateV2,
+            "raid_go_v2" => RaidType.RaidGo,
+            _ => Type
+        };
 
         switch (Type)
         {
             case RaidType.RaidUpdate:
-                Id = Guid.Parse(jtoken.SelectToken("raid.id").ToString());
-                ChannelId = jtoken.SelectToken("raid.source_id").ToString();
-                TargetChannelId = jtoken.SelectToken("raid.target_id").ToString();
-                AnnounceTime = DateTime.Parse(jtoken.SelectToken("raid.announce_time").ToString());
-                RaidTime = DateTime.Parse(jtoken.SelectToken("raid.raid_time").ToString());
-                RemainingDurationSeconds =
-                    int.Parse(jtoken.SelectToken("raid.remaining_duration_seconds").ToString());
-                ViewerCount = int.Parse(jtoken.SelectToken("raid.viewer_count").ToString());
-                break;
             case RaidType.RaidUpdateV2:
-                Id = Guid.Parse(jtoken.SelectToken("raid.id").ToString());
-                ChannelId = jtoken.SelectToken("raid.source_id").ToString();
-                TargetChannelId = jtoken.SelectToken("raid.target_id").ToString();
-                TargetLogin = jtoken.SelectToken("raid.target_login").ToString();
-                TargetDisplayName = jtoken.SelectToken("raid.target_display_name").ToString();
-                TargetProfileImage = jtoken.SelectToken("raid.target_profile_image").ToString();
-                ViewerCount = int.Parse(jtoken.SelectToken("raid.viewer_count").ToString());
-                break;
             case RaidType.RaidGo:
-                Id = Guid.Parse(jtoken.SelectToken("raid.id").ToString());
-                ChannelId = jtoken.SelectToken("raid.source_id").ToString();
-                TargetChannelId = jtoken.SelectToken("raid.target_id").ToString();
-                TargetLogin = jtoken.SelectToken("raid.target_login").ToString();
-                TargetDisplayName = jtoken.SelectToken("raid.target_display_name").ToString();
-                TargetProfileImage = jtoken.SelectToken("raid.target_profile_image").ToString();
-                ViewerCount = int.Parse(jtoken.SelectToken("raid.viewer_count").ToString());
+                Id = Guid.Parse(jtoken.SelectToken("raid.id")?.ToString() ?? "");
+                ChannelId = jtoken.SelectToken("raid.source_id")?.ToString();
+                TargetChannelId = jtoken.SelectToken("raid.target_id")?.ToString();
+                AnnounceTime = DateTime.Parse(jtoken.SelectToken("raid.announce_time")?.ToString() ?? "");
+                RaidTime = DateTime.Parse(jtoken.SelectToken("raid.raid_time")?.ToString() ?? "");
+                RemainingDurationSeconds =
+                    int.Parse(jtoken.SelectToken("raid.remaining_duration_seconds")?.ToString() ?? "0");
+                ViewerCount = int.Parse(jtoken.SelectToken("raid.viewer_count")?.ToString() ?? "0");
                 break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 

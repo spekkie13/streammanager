@@ -82,7 +82,10 @@ public class ObsWebSocket
                 _wsConnection.Stop(WebSocketCloseStatus.NormalClosure, "User requested disconnect");
                 ((IDisposable)_wsConnection).Dispose();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while disconnecting websocket: {ex.Message}");
+            }
             _wsConnection = null;
         }
 
