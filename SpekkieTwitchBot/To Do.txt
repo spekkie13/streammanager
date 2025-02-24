@@ -1,10 +1,2 @@
-﻿[Must Have]
--> Add attack count file
-
-[Should Have]
--> Change war stats active status on startup to which source is visible
-
-[Could Have]
--> Search for logo by name in folder
--> Reply to commands instead of just sending a separate chat message
+﻿-> Event system instead of tight coupling
 -> Build a text command interpreter

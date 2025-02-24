@@ -287,9 +287,7 @@ public class CustomPubsub : ITwitchPubSub
 
     private void Socket_OnDisconnected(object sender, EventArgs e)
     {
-        var logger = _logger;
-        if (logger != null)
-            logger.LogWarning("PubSub Websocket connection closed");
+        _logger?.LogWarning("PubSub Websocket connection closed");
         _pingTimer.Stop();
         _pongTimer.Stop();
         var subServiceClosed = OnPubSubServiceClosed;
