@@ -35,6 +35,7 @@ public class ObsWebSocket
         _wsConnection = wsConnection;
         _responseHandlers = new ConcurrentDictionary<string, TaskCompletionSource<JObject>>();
     }
+    
     public TimeSpan WsTimeout
     {
         get => _wsConnection.ReconnectTimeout ?? _wsTimeout;
@@ -50,7 +51,7 @@ public class ObsWebSocket
 
     public void ConnectAsync(string url, string password)
     {
-        if (!url.ToLower().StartsWith(WebsocketUrlPrefix))
+        if (!url.StartsWith(WebsocketUrlPrefix, StringComparison.CurrentCultureIgnoreCase))
         {
             throw new ArgumentException($"Invalid url, must start with '{WebsocketUrlPrefix}'");
         }

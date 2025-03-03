@@ -96,17 +96,15 @@ public class CustomSpotifyHttpClient
         }
         else
         {
-            item.Context = new Context
-            {
-                ExternalUrls =
-                    JsonConvert.DeserializeObject<Dictionary<string, string>>(
-                        contextData["external_urls"]?.ToString() ?? "") ?? new Dictionary<string, string>(),
-                Href = contextData["href"]?.ToString() ?? "",
-                Type = contextData["type"]?.ToString() ?? "",
-                Uri = contextData["uri"]?.ToString() ?? ""
-            };
+            var urls = contextData["external_urls"];
+            Context? context = JsonConvert.DeserializeObject<Context>(json);
+            if(context == null)
+                context = new Context();
+            else
+                context.ExternalUrls = JsonConvert.DeserializeObject<Dictionary<string, string>>(urls?.ToString() ?? string.Empty) ?? new Dictionary<string, string>();
+            item.Context = context;
         }
-
+        
         return item;
     }
 
@@ -124,6 +122,7 @@ public class CustomSpotifyHttpClient
 
         if (itemData == null)
             return null;
+        
         //Standard properties
         item.Href = itemData["href"]?.ToString() ?? "";
         item.Id = itemData["id"]?.ToString() ?? "";

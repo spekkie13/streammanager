@@ -12,7 +12,7 @@ public class GeneralCommandHandler
     private readonly ObsCommandHandler _ObsCommandHandler;
     private readonly SpotifyCommandHandler _SpotifyCommandHandler;
     private readonly TextCommandHandler _TextCommandHandler;
-    private readonly ClashCommandHandler _ClashCommandHandler;
+//    private readonly ClashCommandHandler _ClashCommandHandler;
     private readonly TwitchCommandHandler _TwitchCommandHandler;
     private readonly TimerCommandHandler _TimerCommandHandler;
 
@@ -25,7 +25,7 @@ public class GeneralCommandHandler
         TextCommandHandler textCommandHandler,
         SpotifyCommandHandler spotifyCommandHandler,
         ObsCommandHandler obsCommandHandler,
-        ClashCommandHandler clashCommandHandler,
+//        ClashCommandHandler clashCommandHandler,
         TimerCommandHandler timerCommandHandler,
         TwitchCommandHandler twitchCommandHandler)
     {
@@ -35,7 +35,7 @@ public class GeneralCommandHandler
         _TextCommandHandler = textCommandHandler;
         _SpotifyCommandHandler = spotifyCommandHandler;
         _ObsCommandHandler = obsCommandHandler;
-        _ClashCommandHandler = clashCommandHandler;
+//        _ClashCommandHandler = clashCommandHandler;
         _TwitchCommandHandler = twitchCommandHandler;
         _TimerCommandHandler = timerCommandHandler ;
     }
@@ -84,8 +84,8 @@ public class GeneralCommandHandler
             { "addtime", () => _TimerCommandHandler.HandleAddTimeToTimerCommand(commandArgs) },
             { "settime", () => _TimerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs) },
             
-            { "togglewarstats", _ClashCommandHandler.HandleToggleWarStatsCommand },
-            { "playertag", () => _ClashCommandHandler.HandleAddPlayerTagCommand(commandArgs) }
+//            { "togglewarstats", _ClashCommandHandler.HandleToggleWarStatsCommand },
+//            { "playertag", () => _ClashCommandHandler.HandleAddPlayerTagCommand(commandArgs) }
             
             
         };
