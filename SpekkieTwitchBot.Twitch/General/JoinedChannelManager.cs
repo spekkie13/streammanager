@@ -19,7 +19,7 @@ public class JoinedChannelManager
 
     public JoinedChannel? GetJoinedChannel(string channel)
     {
-        _JoinedChannels.TryGetValue(channel, out var joinedChannel);
+        _JoinedChannels.TryGetValue(channel, out JoinedChannel? joinedChannel);
         return joinedChannel;
     }
 
@@ -30,7 +30,7 @@ public class JoinedChannelManager
 
     public void RemoveJoinedChannel(string channel)
     {
-        _JoinedChannels.TryRemove(channel, out var _);
+        _JoinedChannels.TryRemove(channel, out JoinedChannel _);
     }
 
     public void Clear()

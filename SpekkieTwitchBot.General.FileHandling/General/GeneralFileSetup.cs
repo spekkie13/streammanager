@@ -20,19 +20,19 @@ public class GeneralFileSetup
 
     private void SetupCounterFiles()
     {
-        var dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Counters";
+        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Counters";
         if (!_fileSetup.DirExists(dir))
             _fileSetup.CreateDir(dir);
 
-        var file = $"{dir}/afgeleid.txt";
+        string file = $"{dir}/afgeleid.txt";
         if (!_fileSetup.FileExists(file))
             _fileSetup.CreateFile(file);
     }
 
     private void SetupLogFile()
     {
-        var dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Log";
-        var file = $"{dir}/log.txt";
+        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Log";
+        string file = $"{dir}/log.txt";
 
         if (!_fileSetup.DirExists(dir))
             _fileSetup.CreateDir(dir);

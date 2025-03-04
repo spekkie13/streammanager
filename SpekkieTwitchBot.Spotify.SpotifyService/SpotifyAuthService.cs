@@ -29,25 +29,25 @@ public class SpotifyAuthService(SpotifyFileReader spotifyFileReader, Logger logg
     
     private async Task<string> RefreshAccessTokenAsync(SpotifyAuth spotifyAuth)
     {
-        using var client = new HttpClient();
-        var requestBody = new StringContent(
+        using HttpClient client = new HttpClient();
+        StringContent requestBody = new StringContent(
             $"grant_type=refresh_token&refresh_token={spotifyAuth.RefreshToken}",
             Encoding.UTF8, "application/x-www-form-urlencoded");
 
         client.DefaultRequestHeaders.Add("Authorization", GetBasicAuthHeader(spotifyAuth.ClientId, spotifyAuth.ClientSecret));
 
-        var response = await client.PostAsync("https://accounts.spotify.com/api/token", requestBody);
+        HttpResponseMessage response = await client.PostAsync("https://accounts.spotify.com/api/token", requestBody);
         response.EnsureSuccessStatusCode();
 
-        var responseData = await response.Content.ReadAsStringAsync();
-        var tokenData = JsonConvert.DeserializeObject<TokenResponse>(responseData);
+        string responseData = await response.Content.ReadAsStringAsync();
+        TokenResponse? tokenData = JsonConvert.DeserializeObject<TokenResponse>(responseData);
 
         return tokenData?.AccessToken ?? "";
     }
     
     private static string GetBasicAuthHeader(string clientId, string clientSecret)
     {
-        var credentials = $"{clientId}:{clientSecret}";
+        string credentials = $"{clientId}:{clientSecret}";
         return "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials));
     }
 }

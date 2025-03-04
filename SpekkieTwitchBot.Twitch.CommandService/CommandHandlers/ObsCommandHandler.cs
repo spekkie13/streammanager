@@ -20,9 +20,9 @@ public class ObsCommandHandler(IrcClient ircClient, ObsWebSocket socket)
     public void HandleSetInputMute(string inputName)
     {
         inputName = string.Concat(inputName[0].ToString().ToUpper(), inputName.AsSpan(1));
-        var currentMuteStatus = socket.GetInputMute(inputName);
+        bool currentMuteStatus = socket.GetInputMute(inputName);
         socket.SetInputMute(inputName, !currentMuteStatus);
-        var status = currentMuteStatus ? $"{inputName} set to unmuted" : $"{inputName} set to muted";
+        string status = currentMuteStatus ? $"{inputName} set to unmuted" : $"{inputName} set to muted";
 
         ircClient.SendPublicChatMessage(status);
     }
@@ -32,10 +32,10 @@ public class ObsCommandHandler(IrcClient ircClient, ObsWebSocket socket)
         List<InputBasicInfo> inputCaptures = socket.GetInputList("wasapi_input_capture");
         List<InputBasicInfo> outputCaptures = socket.GetInputList("wasapi_output_capture");
 
-        foreach (var input in inputCaptures)
+        foreach (InputBasicInfo? input in inputCaptures)
             socket.SetInputVolume(input.InputName, ObsStandards.StandardMicVolume, true);
 
-        foreach (var output in outputCaptures)
+        foreach (InputBasicInfo? output in outputCaptures)
             socket.SetInputVolume(output.InputName, ObsStandards.StandardMusicVolume, true);
     }
 
@@ -44,8 +44,8 @@ public class ObsCommandHandler(IrcClient ircClient, ObsWebSocket socket)
         List<InputBasicInfo> inputCaptures = socket.GetInputList("wasapi_input_capture");
         List<InputBasicInfo> outputCaptures = socket.GetInputList("wasapi_output_capture");
 
-        foreach (var input in inputCaptures) socket.SetInputVolume(input.InputName, (float)0.0);
+        foreach (InputBasicInfo? input in inputCaptures) socket.SetInputVolume(input.InputName, (float)0.0);
 
-        foreach (var output in outputCaptures) socket.SetInputVolume(output.InputName, (float)0.0);
+        foreach (InputBasicInfo? output in outputCaptures) socket.SetInputVolume(output.InputName, (float)0.0);
     }
 }

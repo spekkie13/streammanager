@@ -22,17 +22,17 @@ public class PlayableItemConverter : JsonConverter
 
         if (JToken.ReadFrom(reader) is not JObject obj) return null;
 
-        var type = obj.GetValue("type", StringComparison.OrdinalIgnoreCase)?.Value<string>();
+        string? type = obj.GetValue("type", StringComparison.OrdinalIgnoreCase)?.Value<string>();
         if (string.Equals(type, "track", StringComparison.OrdinalIgnoreCase))
         {
-            var track = new FullTrack();
+            FullTrack track = new ();
             serializer.Populate(obj.CreateReader(), track);
             return track;
         }
 
         if (string.Equals(type, "episode", StringComparison.OrdinalIgnoreCase))
         {
-            var episode = new FullEpisode();
+            FullEpisode episode = new ();
             serializer.Populate(obj.CreateReader(), episode);
             return episode;
         }

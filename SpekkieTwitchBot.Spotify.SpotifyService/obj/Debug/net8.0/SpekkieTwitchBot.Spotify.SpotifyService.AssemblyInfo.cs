@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SpekkieTwitchBot.Spotify.SpotifyService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c58a17ef3c1a7070cf1d77adc29f8f8793952cb0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1db71a06d7ec0639ee2423176d5d1969f54083ff")]
 [assembly: System.Reflection.AssemblyProductAttribute("SpekkieTwitchBot.Spotify.SpotifyService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SpekkieTwitchBot.Spotify.SpotifyService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

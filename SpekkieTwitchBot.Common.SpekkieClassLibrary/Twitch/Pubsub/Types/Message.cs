@@ -20,13 +20,13 @@ public class Message
 
     public Message(string jsonStr)
     {
-        var jtoken = JObject.Parse(jsonStr).SelectToken("data");
-        if (jtoken == null || string.IsNullOrEmpty(jtoken.SelectToken("topic")?.ToString())) return;
-        Topic = jtoken.SelectToken("topic")?.ToString();
-        if (string.IsNullOrEmpty(Topic) || string.IsNullOrEmpty(jtoken.SelectToken("message")?.ToString())) return;
-        var jsonStr1 = jtoken.SelectToken("message")?.ToString() ?? "";
-        var topic = Topic;
-        var str = topic?.Split('.')[0];
+        JToken jToken = JObject.Parse(jsonStr).SelectToken("data");
+        if (jToken == null || string.IsNullOrEmpty(jToken.SelectToken("topic")?.ToString())) return;
+        Topic = jToken.SelectToken("topic")?.ToString();
+        if (string.IsNullOrEmpty(Topic) || string.IsNullOrEmpty(jToken.SelectToken("message")?.ToString())) return;
+        string jsonStr1 = jToken.SelectToken("message")?.ToString() ?? "";
+        string topic = Topic;
+        string str = topic?.Split('.')[0];
         switch (ComputeStringHash(str))
         {
             case 450000440:
@@ -113,7 +113,7 @@ public class Message
 
     private static uint ComputeStringHash(string s)
     {
-        const uint StringHash = new();
+        const uint StringHash = 0;
         return s?.Aggregate(2166136261U, (current, t) => (uint)((t ^ (int)current) * 16777619)) ?? StringHash;
     }
 }

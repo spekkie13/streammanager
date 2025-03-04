@@ -7,19 +7,19 @@ public class IrcParser
 {
     public IrcMessage ParseIrcMessage(string raw)
     {
-        var tags = new Dictionary<string, string>();
-        var index1 = ParserState.StateNone;
-        var numArray1 = new int[6];
-        var numArray2 = new int[6];
-        for (var index2 = 0; index2 < raw.Length; ++index2)
+        Dictionary<string, string> tags = new ();
+        ParserState index1 = ParserState.StateNone;
+        int[] numArray1 = new int[6];
+        int[] numArray2 = new int[6];
+        for (int index2 = 0; index2 < raw.Length; ++index2)
         {
             numArray2[(int)index1] = index2 - numArray1[(int)index1] - 1;
             if (index1 == ParserState.StateNone && raw[index2] == '@')
             {
                 index1 = ParserState.StateV3;
                 numArray1[(int)index1] = ++index2;
-                var startIndex = index2;
-                var key = "";
+                int startIndex = index2;
+                string? key = "";
                 for (; index2 < raw.Length; ++index2)
                     if (raw[index2] == '=')
                     {
@@ -88,8 +88,8 @@ public class IrcParser
         }
 
         numArray2[(int)index1] = raw.Length - numArray1[(int)index1];
-        var str1 = raw.Substring(numArray1[3], numArray2[3]);
-        var command = IrcCommand.Unknown;
+        string str1 = raw.Substring(numArray1[3], numArray2[3]);
+        IrcCommand command = IrcCommand.Unknown;
         switch (str1)
         {
             case "001":
@@ -178,14 +178,13 @@ public class IrcParser
                 break;
         }
 
-        var str2 = raw.Substring(numArray1[4], numArray2[4]);
-        var str3 = raw.Substring(numArray1[5], numArray2[5]);
-        var hostmask = raw.Substring(numArray1[2], numArray2[2]);
-        return new IrcMessage(command, new[]
-        {
+        string str2 = raw.Substring(numArray1[4], numArray2[4]);
+        string str3 = raw.Substring(numArray1[5], numArray2[5]);
+        string hostmask = raw.Substring(numArray1[2], numArray2[2]);
+        return new IrcMessage(command, [
             str2,
             str3
-        }, hostmask, tags);
+        ], hostmask, tags);
     }
 
     private enum ParserState

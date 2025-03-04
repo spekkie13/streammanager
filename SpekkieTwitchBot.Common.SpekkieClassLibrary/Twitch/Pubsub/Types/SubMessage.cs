@@ -9,7 +9,7 @@ public class SubMessage : MessageData
     public SubMessage(JToken json)
     {
         Message = json.SelectToken("message")?.ToString();
-        foreach (var json1 in json.SelectToken("emotes")!)
+        foreach (JToken json1 in json.SelectToken("emotes")!)
             Emotes.Add(new Emote(json1));
     }
 

@@ -37,7 +37,7 @@ public class SpotifyService : BackgroundService
             UpdateSongImg(_CurrentPlayable);
             _SpotifyFileWriter.WriteSongFile(GetNowPlaying());
 
-            var durationLeft = _CurrentSong?.DurationMs - _CurrentPlayable?.ProgressMs ?? 10000;
+            int durationLeft = _CurrentSong?.DurationMs - _CurrentPlayable?.ProgressMs ?? 10000;
             await Task.Delay(TimeSpan.FromMilliseconds(durationLeft), stoppingToken);
         }
     }
@@ -161,9 +161,9 @@ public class SpotifyService : BackgroundService
 
         string queue = "";
         int songIdx = 1;
-        for (var i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++)
         {
-            var track = songQueue.Queue.ElementAt(i);
+            FullTrack track = songQueue.Queue.ElementAt(i);
             if (i < 9)
                 queue += $"{songIdx}: {track.Name} - {JoinArtists(track)}, ";
             else
@@ -178,7 +178,7 @@ public class SpotifyService : BackgroundService
     {
         string artists = "";
         if (currentSong?.Artists == null) return "";
-        foreach (var artist in currentSong.Artists)
+        foreach (SimpleArtist? artist in currentSong.Artists)
             if (artist == currentSong.Artists[0])
                 artists += $"{artist.Name}";
             else

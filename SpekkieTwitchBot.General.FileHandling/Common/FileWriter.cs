@@ -6,7 +6,7 @@ public class FileWriter : IFileWriter
 {
     public void Write(string fileName, string data)
     {
-        using var writer = new StreamWriter(fileName);
+        using StreamWriter writer = new (fileName);
         writer.WriteLine(data);
         writer.Flush();
     }

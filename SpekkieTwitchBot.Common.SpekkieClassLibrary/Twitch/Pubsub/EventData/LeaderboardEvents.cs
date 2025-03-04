@@ -24,14 +24,14 @@ public class LeaderboardEvents : MessageData
         switch (Type)
         {
             case LeaderBoardType.BitsUsageByChannel:
-                var channelId = jtoken.SelectToken("identifier.grouping_key")?.ToString() ?? "";
+                string channelId = jtoken.SelectToken("identifier.grouping_key")?.ToString() ?? "";
                 ChannelId = channelId;
-                using (var enumerator = jtoken["top"]?.Children().GetEnumerator())
+                using (IEnumerator<JToken> enumerator = jtoken["top"]?.Children().GetEnumerator())
                 {
                     if (enumerator == null) return;
                     while (enumerator.MoveNext())
                     {
-                        var current = enumerator.Current;
+                        JToken current = enumerator.Current;
                         Top.Add(new LeaderBoard
                         {
                             Place = int.Parse(current?.SelectToken("rank")?.ToString() ?? ""),
@@ -45,12 +45,12 @@ public class LeaderboardEvents : MessageData
             case LeaderBoardType.SubGiftSent:
                 channelId = jtoken.SelectToken("identifier.grouping_key")?.ToString() ?? "";
                 ChannelId = channelId;
-                using (var enumerator = jtoken["top"]?.Children().GetEnumerator())
+                using (IEnumerator<JToken> enumerator = jtoken["top"]?.Children().GetEnumerator())
                 {
                     if (enumerator == null) return;
                     while (enumerator.MoveNext())
                     {
-                        var current = enumerator.Current;
+                        JToken current = enumerator.Current;
                         Top.Add(new LeaderBoard
                         {
                             Place = int.Parse(current?.SelectToken("rank")?.ToString() ?? ""),

@@ -21,7 +21,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\SpekkieTwitchBot.ClashOfClans.StatsBot\SpekkieTwitchBot.ClashOfClans.StatsBot.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.General.EventTimerService\SpekkieTwitchBot.General.EventTimerService.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.Twitch.CommandService\SpekkieTwitchBot.Twitch.CommandService.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.Common.SpekkieClassLibrary\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj" />

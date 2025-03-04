@@ -18,9 +18,9 @@ public class SpotifyFileSetup
 
     public void SetupSongFiles()
     {
-        var titleDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentTitle.txt";
-        var artistDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentArtist.txt";
-        var pictureDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentSong.png";
+        string titleDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentTitle.txt";
+        string artistDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentArtist.txt";
+        string pictureDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentSong.png";
 
         if (!_fileSetup.FileExists(titleDir))
             _fileSetup.CreateFile(titleDir);

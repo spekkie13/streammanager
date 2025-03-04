@@ -9,7 +9,7 @@ public class Whisper : MessageData
 {
     public Whisper(string jsonStr)
     {
-        var jobject = JObject.Parse(jsonStr);
+        JObject jobject = JObject.Parse(jsonStr);
         Type = jobject.SelectToken("type")?.ToString();
         Data = jobject.SelectToken("data")?.ToString();
         switch (Type)
@@ -75,8 +75,8 @@ public class Whisper : MessageData
 
         public class TagsObj
         {
-            private readonly List<Badge> _badges = new();
-            private readonly List<EmoteObj> _emotes = new();
+            private readonly List<Badge> _badges = [];
+            private readonly List<EmoteObj> _emotes = [];
 
             public TagsObj(JToken json)
             {
@@ -84,9 +84,9 @@ public class Whisper : MessageData
                 DisplayName = json.SelectToken("login")?.ToString();
                 Color = json.SelectToken("color")?.ToString();
                 UserType = json.SelectToken("user_type")?.ToString();
-                foreach (var json1 in json.SelectToken("emotes")!)
+                foreach (JToken json1 in json.SelectToken("emotes")!)
                     _emotes.Add(new EmoteObj(json1));
-                foreach (var json2 in json.SelectToken("badges")!)
+                foreach (JToken json2 in json.SelectToken("badges")!)
                     _badges.Add(new Badge(json2));
             }
 

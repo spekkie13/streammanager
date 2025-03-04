@@ -9,12 +9,12 @@ public static class MessageFactory
         out string messageId)
     {
         messageId = Guid.NewGuid().ToString();
-        var payload = new JObject
+        JObject payload = new ()
         {
             { "op", (int)opCode }
         };
 
-        var data = new JObject();
+        JObject data = new ();
 
         switch (opCode)
         {

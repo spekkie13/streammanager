@@ -23,7 +23,7 @@ public class FileSetup : IFileSetup
     {
         try
         {
-            using var fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            using FileStream fs = new (filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             fs.Flush();
         }
         catch (Exception ex)

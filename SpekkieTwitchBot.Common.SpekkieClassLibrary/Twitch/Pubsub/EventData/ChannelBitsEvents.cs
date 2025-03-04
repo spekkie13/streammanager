@@ -8,7 +8,7 @@ public class ChannelBitsEvents : MessageData
 {
     public ChannelBitsEvents(string jsonStr)
     {
-        var jobject = JObject.Parse(jsonStr);
+        JObject jobject = JObject.Parse(jsonStr);
         Username = jobject.SelectToken("data")?.SelectToken("user_name")?.ToString();
         ChannelName = jobject.SelectToken("data")?.SelectToken("channel_name")?.ToString();
         UserId = jobject.SelectToken("data")?.SelectToken("user_id")?.ToString();

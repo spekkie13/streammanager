@@ -18,23 +18,22 @@ public class SpotifyFileWriter
 
     public void WriteSongFile(string text)
     {
-        var title = text.Split(" by ")[0];
-        var titleDir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}currentTitle.txt";
+        string title = text.Split(" by ")[0];
+        string titleDir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}currentTitle.txt";
         _fileWriter.Write(titleDir, title);
 
-        var artist = text.Split(" by ")[1];
-        var artistDir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}currentArtist.txt";
+        string artist = text.Split(" by ")[1];
+        string artistDir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}currentArtist.txt";
         _fileWriter.Write(artistDir, artist);
     }
 
     public void WriteCurrentSongImage(byte[] imgBytes)
     {
-        var imgPath = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}currentsong.png";
+        string imgPath = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}currentsong.png";
 
         try
         {
-            using var fileStream =
-                new FileStream(imgPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
+            using FileStream fileStream = new(imgPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
 
             fileStream.Write(imgBytes, 0, imgBytes.Length);
         }

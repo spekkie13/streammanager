@@ -10,7 +10,7 @@ public class ChannelSubscription : MessageData
 {
     public ChannelSubscription(string jsonStr)
     {
-        var jobject = JObject.Parse(jsonStr);
+        JObject jobject = JObject.Parse(jsonStr);
         Username = jobject.SelectToken("user_name")?.ToString();
         DisplayName = jobject.SelectToken("display_name")?.ToString();
         RecipientName = jobject.SelectToken("recipient_user_name")?.ToString();
@@ -31,20 +31,20 @@ public class ChannelSubscription : MessageData
 
         SubscriptionPlanName = jobject.SelectToken("sub_plan_name")?.ToString();
         SubMessage = new SubMessage(jobject.SelectToken("sub_message"));
-        var str1 = jobject.SelectToken("is_gift")?.ToString();
+        string str1 = jobject.SelectToken("is_gift")?.ToString();
         if (str1 != null)
             IsGift = Convert.ToBoolean(str1);
-        var str2 = jobject.SelectToken("multi_month_duration")?.ToString();
+        string str2 = jobject.SelectToken("multi_month_duration")?.ToString();
         if (str2 != null)
             MultiMonthDuration = int.Parse(str2);
         Context = jobject.SelectToken("context")?.ToString();
-        var jtoken1 = jobject.SelectToken("months");
+        JToken jtoken1 = jobject.SelectToken("months");
         if (jtoken1 != null)
             Months = int.Parse(jtoken1.ToString());
-        var jtoken2 = jobject.SelectToken("cumulative_months");
+        JToken jtoken2 = jobject.SelectToken("cumulative_months");
         if (jtoken2 != null)
             CumulativeMonths = int.Parse(jtoken2.ToString());
-        var jtoken3 = jobject.SelectToken("streak_months");
+        JToken jtoken3 = jobject.SelectToken("streak_months");
         if (jtoken3 == null)
             return;
         StreakMonths = int.Parse(jtoken3.ToString());

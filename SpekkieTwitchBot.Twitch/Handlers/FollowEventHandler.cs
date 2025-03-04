@@ -13,8 +13,8 @@ public class FollowEventHandler(
 {
     public void HandleFollow(object? sender, OnFollowArgs e)
     {
-        var followerName = e.DisplayName;
-        var mostRecentFollower = twitchFileReader.ReadMostRecentFollowerFile();
+        string followerName = e.DisplayName;
+        string mostRecentFollower = twitchFileReader.ReadMostRecentFollowerFile();
         if (mostRecentFollower.Equals(followerName)) return;
 
         UpdateFollowerInfo();
@@ -22,11 +22,11 @@ public class FollowEventHandler(
 
     private async void UpdateFollowerInfo()
     {
-        var url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
-        var message = await client.GetAsync(url);
+        string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
+        HttpResponseMessage message = await client.GetAsync(url);
 
-        var response = await message.Content.ReadAsStringAsync();
-        var req = JsonConvert.DeserializeObject<FollowerRequest>(response);
+        string response = await message.Content.ReadAsStringAsync();
+        FollowerRequest? req = JsonConvert.DeserializeObject<FollowerRequest>(response);
         twitchFileWriter.WriteTotalFollowersFile(req?.Total.ToString() ?? "0");
         twitchFileWriter.WriteMostRecentFollowerFile(req?.Data?[0].UserName ?? "N/A");
     }

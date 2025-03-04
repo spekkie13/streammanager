@@ -90,11 +90,11 @@ public class ObsWebSocket
             _wsConnection = null;
         }
 
-        var unusedHandlers = _responseHandlers.ToArray();
+        KeyValuePair<string, TaskCompletionSource<JObject>>[] unusedHandlers = _responseHandlers.ToArray();
         _responseHandlers.Clear();
-        foreach (var cb in unusedHandlers)
+        foreach (KeyValuePair<string, TaskCompletionSource<JObject>> cb in unusedHandlers)
         {
-            var tcs = cb.Value;
+            TaskCompletionSource<JObject> tcs = cb.Value;
             tcs.TrySetCanceled();
         }
     }
@@ -284,13 +284,13 @@ public class ObsWebSocket
 
     protected static string NewMessageId(int length = 16)
     {
-        const string Pool = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string pool = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
         string result = "";
         for (int i = 0; i < length; i++)
         {
-            int index = Random.Next(0, Pool.Length - 1);
-            result += Pool[index];
+            int index = Random.Next(0, pool.Length - 1);
+            result += pool[index];
         }
 
         return result;

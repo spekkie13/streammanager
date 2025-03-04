@@ -42,9 +42,9 @@ public class GeneralCommandHandler
 
     public void HandleCommand(ChatCommand command)
     {
-        var username = command.ChatMessage.DisplayName;
-        var commandText = command.CommandText;
-        var commandArgs = command.ArgumentsAsString;
+        string? username = command.ChatMessage.DisplayName;
+        string? commandText = command.CommandText;
+        string? commandArgs = command.ArgumentsAsString;
 
         _CommandHandlers = new Dictionary<string, Action>
         {
@@ -90,7 +90,7 @@ public class GeneralCommandHandler
             
         };
 
-        if (_CommandHandlers.TryGetValue(commandText, out var handler))
+        if (_CommandHandlers.TryGetValue(commandText, out Action? handler))
             handler.Invoke();
         else
             HandleUnknownCommand();
@@ -98,7 +98,7 @@ public class GeneralCommandHandler
 
     private void HandleCommandsCommand()
     {
-        var commands = "";
+        string commands = "";
         foreach (string command in _CommandHandlers.Keys)
             if (command != _CommandHandlers.Keys.Last())
                 commands += $"{command}, ";
@@ -121,8 +121,8 @@ public class GeneralCommandHandler
 
     private void HandleAfgeleidCommand()
     {
-        var afgeleidtext = _GeneralFileReader.ReadAfgeleidCounter();
-        var afgeleid = Convert.ToInt32(afgeleidtext);
+        string afgeleidtext = _GeneralFileReader.ReadAfgeleidCounter();
+        int afgeleid = Convert.ToInt32(afgeleidtext);
         afgeleid++;
         _IrcClient.SendPublicChatMessage($"Spekkie is {afgeleid}x afgeleid geweest");
         _GeneralFileWriter.WriteAfgeleidCounter(afgeleid.ToString());

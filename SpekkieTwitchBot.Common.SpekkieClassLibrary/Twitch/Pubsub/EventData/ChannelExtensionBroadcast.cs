@@ -8,7 +8,7 @@ public class ChannelExtensionBroadcast : MessageData
 {
     public ChannelExtensionBroadcast(string jsonStr)
     {
-        foreach (var obj in JObject.Parse(jsonStr)["content"]!)
+        foreach (JToken obj in JObject.Parse(jsonStr)["content"]!)
             Messages.Add(obj.ToString());
     }
 

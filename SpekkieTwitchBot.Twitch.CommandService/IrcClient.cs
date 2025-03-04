@@ -25,7 +25,7 @@ public class IrcClient
 
         FillAuthorizationInfo();
 
-        var tcpClient = new TcpClient("irc.twitch.tv", 6667);
+        TcpClient tcpClient = new ("irc.twitch.tv", 6667);
         _OutputStream = new StreamWriter(tcpClient.GetStream());
 
         Setup();
@@ -42,8 +42,8 @@ public class IrcClient
 
     private void FillAuthorizationInfo()
     {
-        var jsonData = _TwitchFileReader.ReadTwitchGeneralAuthFile();
-        var auth = JsonConvert.DeserializeObject<GeneralTwitchAuth>(jsonData) ?? new GeneralTwitchAuth();
+        string jsonData = _TwitchFileReader.ReadTwitchGeneralAuthFile();
+        GeneralTwitchAuth auth = JsonConvert.DeserializeObject<GeneralTwitchAuth>(jsonData) ?? new GeneralTwitchAuth();
         _Username = auth.BotName;
         _Channel = $"#{auth.BroadcasterName}";
         _OAuth = auth.ImplicitOAuth;

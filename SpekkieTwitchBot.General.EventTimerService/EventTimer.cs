@@ -40,7 +40,7 @@ namespace EventTimerService
 
         private void WriteFile()
         {
-            var totalTime = new TimeSpan(_RemainingTime.Days * 24 + _RemainingTime.Hours, _RemainingTime.Minutes, _RemainingTime.Seconds);
+            TimeSpan totalTime = new TimeSpan(_RemainingTime.Days * 24 + _RemainingTime.Hours, _RemainingTime.Minutes, _RemainingTime.Seconds);
             _timerFileWriter.WriteRemainingTime(totalTime);
         }
 

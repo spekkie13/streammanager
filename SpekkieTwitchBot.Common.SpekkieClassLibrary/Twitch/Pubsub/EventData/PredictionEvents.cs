@@ -11,10 +11,10 @@ public class PredictionEvents : MessageData
 {
     public PredictionEvents(string jsonStr)
     {
-        var jobject = JObject.Parse(jsonStr);
+        JObject jobject = JObject.Parse(jsonStr);
         Type = (PredictionType)Enum.Parse(typeof(PredictionType),
             jobject.SelectToken("type")!.ToString().Replace("-", ""), true);
-        var jtoken1 = jobject.SelectToken("data.event");
+        JToken jtoken1 = jobject.SelectToken("data.event");
         if (jtoken1 == null) return;
         Id = Guid.Parse(jtoken1.SelectToken("id")?.ToString() ?? "");
         ChannelId = jtoken1.SelectToken("channel_id")?.ToString();
@@ -34,18 +34,18 @@ public class PredictionEvents : MessageData
             ? new Guid?()
             : Guid.Parse(jtoken1.SelectToken("winning_outcome_id")?.ToString() ?? "");
         PredictionTime = int.Parse(jtoken1.SelectToken("prediction_window_seconds")?.ToString() ?? "");
-        var outcomes = jtoken1.SelectToken("outcomes");
+        JToken outcomes = jtoken1.SelectToken("outcomes");
         if (outcomes == null) return;
-        var jenumerable = outcomes.Children();
-        foreach (var jtoken2 in jenumerable)
+        JEnumerable<JToken> jenumerable = outcomes.Children();
+        foreach (JToken jtoken2 in jenumerable)
         {
-            var id = jtoken2.SelectToken("id")?.ToString() ?? "";
-            var color = jtoken2.SelectToken("color")?.ToString() ?? "";
-            var title = jtoken2.SelectToken("title")?.ToString() ?? "";
-            var totalPoints = jtoken2.SelectToken("total_points")?.ToString() ?? "";
-            var totalUsers = jtoken2.SelectToken("total_users")?.ToString() ?? "";
+            string id = jtoken2.SelectToken("id")?.ToString() ?? "";
+            string color = jtoken2.SelectToken("color")?.ToString() ?? "";
+            string title = jtoken2.SelectToken("title")?.ToString() ?? "";
+            string totalPoints = jtoken2.SelectToken("total_points")?.ToString() ?? "";
+            string totalUsers = jtoken2.SelectToken("total_users")?.ToString() ?? "";
 
-            var outcome = new Outcome
+            Outcome outcome = new Outcome
             {
                 Id = Guid.Parse(id),
                 Color = color,
@@ -53,14 +53,14 @@ public class PredictionEvents : MessageData
                 TotalPoints = long.Parse(totalPoints),
                 TotalUsers = long.Parse(totalUsers)
             };
-            var topPredictors = jtoken1.SelectToken("top_predictors");
+            JToken topPredictors = jtoken1.SelectToken("top_predictors");
             if (topPredictors == null) return;
             jenumerable = topPredictors.Children();
-            foreach (var jtoken3 in jenumerable)
+            foreach (JToken jtoken3 in jenumerable)
             {
-                var userDisplayName = jtoken3.SelectToken("user_display_name")?.ToString() ?? "";
-                var points = jtoken3.SelectToken("points")?.ToString() ?? "";
-                var userId = jtoken3.SelectToken("user_id")?.ToString() ?? "";
+                string userDisplayName = jtoken3.SelectToken("user_display_name")?.ToString() ?? "";
+                string points = jtoken3.SelectToken("points")?.ToString() ?? "";
+                string userId = jtoken3.SelectToken("user_id")?.ToString() ?? "";
 
                 outcome.TopPredictors.Add(new Outcome.Predictor
                 {

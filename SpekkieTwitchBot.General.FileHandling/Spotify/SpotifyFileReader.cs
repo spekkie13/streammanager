@@ -2,22 +2,15 @@
 
 namespace SpekkieTwitchBot.General.FileHandling.Spotify;
 
-public class SpotifyFileReader
+public class SpotifyFileReader(FileReader fileReader)
 {
     private static readonly string BaseDir =
         Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
 
-    private readonly FileReader _fileReader;
-
-    public SpotifyFileReader(FileReader fileReader)
-    {
-        _fileReader = fileReader;
-    }
-
     public string ReadSpotifyAuthFile()
     {
-        var dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Spotify.json";
-        var jsonData = _fileReader.Read(dir);
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Spotify.json";
+        string jsonData = fileReader.Read(dir);
 
         return jsonData;
     }

@@ -89,14 +89,14 @@ public class CustomSpotifyHttpClient
         item.Timestamp = long.Parse(jsonObject["timestamp"]?.ToString() ?? "0");
         item.Item = await GetFullTrack(url) ?? new FullTrack();
 
-        var contextData = jsonObject["context"];
+        JToken? contextData = jsonObject["context"];
         if (contextData == null)
         {
             item.Context = new Context();
         }
         else
         {
-            var urls = contextData["external_urls"];
+            JToken? urls = contextData["external_urls"];
             Context? context = JsonConvert.DeserializeObject<Context>(json);
             if(context == null)
                 context = new Context();
@@ -155,7 +155,7 @@ public class CustomSpotifyHttpClient
         item.Artists = JsonConvert.DeserializeObject<List<SimpleArtist>>(itemData["artists"]?.ToString() ?? "") ?? [];
 
         //Building complex objects
-        var albumData = itemData["album"];
+        JToken? albumData = itemData["album"];
         SimpleAlbum album = new SimpleAlbum();
         if(albumData == null)
             item.Album = new SimpleAlbum();
@@ -197,8 +197,8 @@ public class CustomSpotifyHttpClient
         HttpResponseMessage httpResponse = await GetAsync(url);
         string json = await httpResponse.Content.ReadAsStringAsync();
         JObject jsonObject = JObject.Parse(json);
-        var trackData = jsonObject["tracks"];
-        var itemData = trackData?["items"];
+        JToken? trackData = jsonObject["tracks"];
+        JToken? itemData = trackData?["items"];
         
         return itemData == null ? [] : JsonConvert.DeserializeObject<List<Track>>(itemData.ToString());
     }

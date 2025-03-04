@@ -8,7 +8,7 @@ public class Following : MessageData
 {
     public Following(string jsonStr)
     {
-        var jobject = JObject.Parse(jsonStr);
+        JObject jobject = JObject.Parse(jsonStr);
         DisplayName = jobject["display_name"]?.ToString();
         Username = jobject["username"]?.ToString();
         UserId = jobject["user_id"]?.ToString();

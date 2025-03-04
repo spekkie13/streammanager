@@ -5,9 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.Twitch.Auth;
-using SpekkieTwitchBot.ClashOfClans.StatsBot;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.General.FileHandling.Clash;
 using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
@@ -60,18 +58,12 @@ public static class Program
                 services.AddSingleton<TimerFileReader>();
                 services.AddSingleton<TimerFileWriter>();
                 services.AddSingleton<TimerFileSetup>();
-//                services.AddSingleton<ClashFileReader>();
-//                services.AddSingleton<ClashFileWriter>();
-//                services.AddSingleton<ClashFileSetup>();
-//                services.AddSingleton<ClashFileManager>();
                 services.AddSingleton<GeneralFileReader>();
                 services.AddSingleton<GeneralFileWriter>();
                 services.AddSingleton<GeneralFileSetup>();
                 services.AddSingleton<TwitchUserAuth>();
 
                 services.AddSingleton<CustomClient>();
-//                services.AddSingleton<CocHttpClient>();
-//                services.AddSingleton<WarStatus>();
 
                 services.AddSingleton<TwitchAuthService.TwitchAuthService>();
                 services.AddSingleton<SpotifyAuthService.SpotifyAuthService>();
@@ -93,13 +85,10 @@ public static class Program
                 services.AddSingleton<TextCommandHandler>();
                 services.AddSingleton<TimerCommandHandler>();
 
-//                services.AddSingleton<ClashCommandHandler>();
                 services.AddSingleton<TwitchCommandHandler>();
                 services.AddSingleton<GeneralCommandHandler>();
                 services.AddSingleton<JoinedChannelManager>();
-//                services.AddSingleton<WarService>();
                 services.AddSingleton<IrcParser>();
-//                services.AddHostedService<WarService>();
                 services.AddHostedService<SpotifyService>();
                 services.AddHostedService<EventTimerService.EventTimerService>();
                 services.AddHostedService<ObsWebsocketService>();

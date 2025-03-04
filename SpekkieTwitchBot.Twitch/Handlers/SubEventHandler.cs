@@ -25,11 +25,11 @@ public class SubEventHandler
 
     private async void UpdateSubscriberInfo()
     {
-        var url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
-        var message = await _TwitchHttpClient.GetAsync(url);
+        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
+        HttpResponseMessage message = await _TwitchHttpClient.GetAsync(url);
 
-        var response = await message.Content.ReadAsStringAsync();
-        var req = JsonConvert.DeserializeObject<SubscriptionRequest>(response);
+        string response = await message.Content.ReadAsStringAsync();
+        SubscriptionRequest? req = JsonConvert.DeserializeObject<SubscriptionRequest>(response);
         _TwitchFileWriter.WriteTotalSubscribersFile(req?.Total.ToString() ?? "0");
         _TwitchFileWriter.WriteMostRecentSubscriberFile(req?.Data?[0].UserName ?? "N/A");
     }

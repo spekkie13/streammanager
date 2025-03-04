@@ -8,11 +8,11 @@ public class ChatModeratorActions : MessageData
 {
     public ChatModeratorActions(string jsonStr)
     {
-        var jtoken = JObject.Parse(jsonStr).SelectToken("data");
+        JToken jtoken = JObject.Parse(jsonStr).SelectToken("data");
         Type = jtoken?.SelectToken("type")?.ToString();
         ModerationAction = jtoken?.SelectToken("moderation_action")?.ToString();
         if (jtoken?.SelectToken("args") != null)
-            foreach (var obj in jtoken.SelectToken("args")!)
+            foreach (JToken obj in jtoken.SelectToken("args")!)
                 Args.Add(obj.ToString());
 
         CreatedBy = jtoken?.SelectToken("created_by")?.ToString();

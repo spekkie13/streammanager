@@ -56,7 +56,7 @@ public class CustomClient : IClient
     {
         get
         {
-            var client = Client;
+            TcpClient client = Client;
             return client is { Connected: true };
         }
     }
@@ -97,7 +97,7 @@ public class CustomClient : IClient
                 Client.Connect(Server, Port);
                 if (Options.UseSsl)
                 {
-                    var sslStream = new SslStream(Client.GetStream(), false);
+                    SslStream sslStream = new SslStream(Client.GetStream(), false);
                     sslStream.AuthenticateAsClient(Server);
                     _reader = new StreamReader(sslStream);
                     _writer = new StreamWriter(sslStream);
@@ -129,7 +129,7 @@ public class CustomClient : IClient
         _stopServices = callDisconnect;
         CleanupServices();
         InitializeClient();
-        var onDisconnected = OnDisconnected;
+        EventHandler<OnDisconnectedEventArgs> onDisconnected = OnDisconnected;
         onDisconnected?.Invoke(this, new OnDisconnectedEventArgs());
     }
 
@@ -141,7 +141,7 @@ public class CustomClient : IClient
             Close();
             if (!Open())
                 return;
-            var onReconnected = OnReconnected;
+            EventHandler<OnReconnectedEventArgs> onReconnected = OnReconnected;
             if (onReconnected == null)
                 return;
             onReconnected(this, new OnReconnectedEventArgs());
@@ -159,7 +159,7 @@ public class CustomClient : IClient
         }
         catch (Exception ex)
         {
-            var onError = OnError;
+            EventHandler<OnErrorEventArgs> onError = OnError;
             onError?.Invoke(this, new OnErrorEventArgs
             {
                 Exception = ex
@@ -179,7 +179,7 @@ public class CustomClient : IClient
         }
         catch (Exception ex)
         {
-            var onError = OnError;
+            EventHandler<OnErrorEventArgs> onError = OnError;
             onError?.Invoke(this, new OnErrorEventArgs
             {
                 Exception = ex
@@ -190,7 +190,7 @@ public class CustomClient : IClient
 
     public void WhisperThrottled(OnWhisperThrottledEventArgs eventArgs)
     {
-        var whisperThrottled = OnWhisperThrottled;
+        EventHandler<OnWhisperThrottledEventArgs> whisperThrottled = OnWhisperThrottled;
         if (whisperThrottled == null)
             return;
         whisperThrottled(this, eventArgs);
@@ -198,7 +198,7 @@ public class CustomClient : IClient
 
     public void MessageThrottled(OnMessageThrottledEventArgs eventArgs)
     {
-        var messageThrottled = OnMessageThrottled;
+        EventHandler<OnMessageThrottledEventArgs> messageThrottled = OnMessageThrottled;
         if (messageThrottled == null)
             return;
         messageThrottled(this, eventArgs);
@@ -206,7 +206,7 @@ public class CustomClient : IClient
 
     public void SendFailed(OnSendFailedEventArgs eventArgs)
     {
-        var onSendFailed = OnSendFailed;
+        EventHandler<OnSendFailedEventArgs> onSendFailed = OnSendFailed;
         if (onSendFailed == null)
             return;
         onSendFailed(this, eventArgs);
@@ -214,7 +214,7 @@ public class CustomClient : IClient
 
     public void Error(OnErrorEventArgs eventArgs)
     {
-        var onError = OnError;
+        EventHandler<OnErrorEventArgs> onError = OnError;
         if (onError == null)
             return;
         onError(this, eventArgs);
@@ -274,21 +274,21 @@ public class CustomClient : IClient
     {
         return Task.Run((Func<Task>)(async () =>
         {
-            var sender = this;
+            CustomClient sender = this;
             while (sender.IsConnected)
             {
                 if (!sender._networkServicesRunning)
                     break;
                 try
                 {
-                    var str = await sender._reader.ReadLineAsync();
+                    string str = await sender._reader.ReadLineAsync();
                     if (str == null && sender.IsConnected)
                     {
                         sender.Send("PING");
                         Task.Delay(500).Wait();
                     }
 
-                    var onMessage = sender.OnMessage;
+                    EventHandler<OnMessageEventArgs> onMessage = sender.OnMessage;
                     if (onMessage != null)
                         onMessage(sender, new OnMessageEventArgs
                         {
@@ -297,7 +297,7 @@ public class CustomClient : IClient
                 }
                 catch (Exception ex)
                 {
-                    var onError = sender.OnError;
+                    EventHandler<OnErrorEventArgs> onError = sender.OnError;
                     if (onError != null)
                         onError(sender, new OnErrorEventArgs
                         {
@@ -312,11 +312,11 @@ public class CustomClient : IClient
     {
         return Task.Run((Action)(() =>
         {
-            var flag = false;
-            var num = 0;
+            bool flag = false;
+            int num = 0;
             try
             {
-                var isConnected = IsConnected;
+                bool isConnected = IsConnected;
                 while (!_tokenSource.IsCancellationRequested)
                     if (isConnected == IsConnected)
                     {
@@ -351,7 +351,7 @@ public class CustomClient : IClient
                     }
                     else
                     {
-                        var onStateChanged = OnStateChanged;
+                        EventHandler<OnStateChangedEventArgs> onStateChanged = OnStateChanged;
                         if (onStateChanged != null)
                             onStateChanged(this, new OnStateChangedEventArgs
                             {
@@ -360,7 +360,7 @@ public class CustomClient : IClient
                             });
                         if (IsConnected)
                         {
-                            var onConnected = OnConnected;
+                            EventHandler<OnConnectedEventArgs> onConnected = OnConnected;
                             if (onConnected != null)
                                 onConnected(this, new OnConnectedEventArgs());
                         }
@@ -374,7 +374,7 @@ public class CustomClient : IClient
                                 break;
                             }
 
-                            var onDisconnected = OnDisconnected;
+                            EventHandler<OnDisconnectedEventArgs> onDisconnected = OnDisconnected;
                             if (onDisconnected != null)
                                 onDisconnected(this, new OnDisconnectedEventArgs());
                         }
@@ -384,7 +384,7 @@ public class CustomClient : IClient
             }
             catch (Exception ex)
             {
-                var onError = OnError;
+                EventHandler<OnErrorEventArgs> onError = OnError;
                 if (onError != null)
                     onError(this, new OnErrorEventArgs
                     {
@@ -405,11 +405,11 @@ public class CustomClient : IClient
         _throttlers.TokenSource = _tokenSource;
         if (!_stopServices)
             return;
-        var networkTasks = _networkTasks;
+        Task[] networkTasks = _networkTasks;
         if ((networkTasks != null ? networkTasks.Length != 0 ? 1 : 0 : 0) == 0 ||
             Task.WaitAll(_networkTasks, 15000))
             return;
-        var onFatality = OnFatality;
+        EventHandler<OnFatalErrorEventArgs> onFatality = OnFatality;
         if (onFatality != null)
             onFatality(this, new OnFatalErrorEventArgs
             {

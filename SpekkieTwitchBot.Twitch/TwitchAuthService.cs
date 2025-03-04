@@ -43,12 +43,12 @@ public class TwitchAuthService(TwitchFileReader twitchFileReader, TwitchFileWrit
             new KeyValuePair<string, string>("redirect_uri", "http://localhost:3000/")
         });
 
-        var response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
+        HttpResponseMessage response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
 
         switch (response.StatusCode)
         {
             case HttpStatusCode.OK:
-                var responseContent = await response.Content.ReadAsStringAsync();
+                string responseContent = await response.Content.ReadAsStringAsync();
                 logger.LogInfo(responseContent);
                 AuthorizationCredentials cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(responseContent) ??
                                                 new AuthorizationCredentials();

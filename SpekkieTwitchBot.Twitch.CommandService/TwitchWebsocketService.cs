@@ -4,6 +4,7 @@ using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Auth;
 using SpekkieClassLibrary.Twitch.Pubsub.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
+using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using SpekkieTwitchBot.General.FileHandling;
 using TwitchAuthService.Events;
 using TwitchAuthService.Events.Pubsub;
@@ -89,7 +90,7 @@ public class TwitchWebsocketService : IHostedService
 
     private void SetupTwitchClient()
     {
-        var cred = new ConnectionCredentials(TwitchConstants.ChannelName, _generalTwitchAuth.ImplicitOAuth);
+        ConnectionCredentials cred = new (twitchUsername: TwitchConstants.ChannelName, _generalTwitchAuth.ImplicitOAuth);
         _CustomTwitchClient.Initialize(cred, _generalTwitchAuth.BroadcasterName);
         _CustomTwitchClient.OnChatCommandReceived += OnChatCommandReceived;
         _CustomTwitchClient.OnFailureToReceiveJoinConfirmation += FailureToJoin;
@@ -533,7 +534,7 @@ public class TwitchWebsocketService : IHostedService
 
     private void OnChannelPointsRewardRedeemed(object? sender, ChannelPointsRewardRedeemedArgs e)
     {
-        var reward = e.RewardRedeemed?.Redemption;
+        Redemption? reward = e.RewardRedeemed?.Redemption;
         if (reward?.Reward == null ||
             string.IsNullOrEmpty(reward.UserInput) ||
             string.IsNullOrEmpty(reward.Reward.Id) ||
@@ -541,8 +542,8 @@ public class TwitchWebsocketService : IHostedService
         switch (reward.Reward.Title)
         {
             case "Song Request":
-                var success = _SpotifyCommandHandler.HandleAddSongToQueueCommand(reward.UserInput);
-                var message = _ChannelPointHandler.HandleSongRedemption(
+                bool success = _SpotifyCommandHandler.HandleAddSongToQueueCommand(reward.UserInput);
+                HttpResponseMessage message = _ChannelPointHandler.HandleSongRedemption(
                     success,
                     reward.Id,
                     reward.Reward.Id);

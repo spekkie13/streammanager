@@ -8,34 +8,34 @@ public class SpotifyCommandHandler(SpotifyService spotifyService, SpotifyFileWri
 {
     public void HandleGetCurrentSongCommand()
     {
-        var currentSong = spotifyService.GetNowPlaying();
+        string currentSong = spotifyService.GetNowPlaying();
         ircClient.SendPublicChatMessage($"The current song is {currentSong}");
     }
 
     public void HandleGetCurrentPlaylistCommand()
     {
-        var currentPlaylistUrl = spotifyService.GetCurrentlyPlayingPlaylist();
+        string currentPlaylistUrl = spotifyService.GetCurrentlyPlayingPlaylist();
         ircClient.SendPublicChatMessage($"The current playlist is {currentPlaylistUrl}");
     }
 
     public void HandlePauseMusicCommand()
     {
-        var success = spotifyService.PausePlayer().Result;
-        var message = success ? "Player paused..." : "Player not paused due to an error...";
+        bool success = spotifyService.PausePlayer().Result;
+        string message = success ? "Player paused..." : "Player not paused due to an error...";
         ircClient.SendPublicChatMessage(message);
     }
 
     public void HandleResumeMusicCommand()
     {
-        var success = spotifyService.ResumePlayer().Result;
-        var message = success ? "Player resumed..." : "Player not resumed due to an error...";
+        bool success = spotifyService.ResumePlayer().Result;
+        string message = success ? "Player resumed..." : "Player not resumed due to an error...";
         ircClient.SendPublicChatMessage(message);
     }
 
     public void HandleNextSongCommand()
     {
-        var success = spotifyService.SkipNextSong().Result;
-        var currentSong = spotifyService.GetNowPlaying();
+        bool success = spotifyService.SkipNextSong().Result;
+        string currentSong = spotifyService.GetNowPlaying();
         spotifyFileWriter.WriteSongFile(currentSong);
 
         ircClient.SendPublicChatMessage(success
@@ -45,8 +45,8 @@ public class SpotifyCommandHandler(SpotifyService spotifyService, SpotifyFileWri
 
     public void HandlePrevSongCommand()
     {
-        var success = spotifyService.SkipPrevSong().Result;
-        var currentSong = spotifyService.GetNowPlaying();
+        bool success = spotifyService.SkipPrevSong().Result;
+        string currentSong = spotifyService.GetNowPlaying();
         spotifyFileWriter.WriteSongFile(currentSong);
 
         ircClient.SendPublicChatMessage(success
@@ -66,7 +66,7 @@ public class SpotifyCommandHandler(SpotifyService spotifyService, SpotifyFileWri
             {
                 string uri = song.Uri ?? "";
                 success = spotifyService.AddSongToQueue(uri).Result;
-                var message = success ? "Added song to the queue..." : "Could not add song to the queue...";
+                string message = success ? "Added song to the queue..." : "Could not add song to the queue...";
                 ircClient.SendPublicChatMessage(message);
                 return success;
             }
@@ -74,7 +74,7 @@ public class SpotifyCommandHandler(SpotifyService spotifyService, SpotifyFileWri
         else if (songData.Contains("open.spotify.com"))
         {
             success = spotifyService.AddSongToQueue(songData).Result;
-            var message = success ? "Added song to the queue..." : "Could not add song to the queue...";
+            string message = success ? "Added song to the queue..." : "Could not add song to the queue...";
             ircClient.SendPublicChatMessage(message);
             return success;
         }
@@ -86,13 +86,13 @@ public class SpotifyCommandHandler(SpotifyService spotifyService, SpotifyFileWri
     public void HandlePlaySpecificSongCommand(string song, string username)
     {
         if (!username.Equals("spekkie1313", StringComparison.CurrentCultureIgnoreCase)) return;
-        var success = spotifyService.PlaySpecificSong(song).Result;
+        bool success = spotifyService.PlaySpecificSong(song).Result;
         ircClient.SendPublicChatMessage(success ? $"started song: {song}" : $"failed to start song: {song}");
     }
 
     public void HandleGetQueueCommand()
     {
-        var queue = spotifyService.GetQueue();
+        string queue = spotifyService.GetQueue();
 
         ircClient.SendPublicChatMessage($"current queue: {queue}");
     }

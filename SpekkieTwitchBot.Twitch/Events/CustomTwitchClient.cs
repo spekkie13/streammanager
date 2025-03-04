@@ -92,10 +92,10 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (channel != null && channel[0] == '#')
             channel = channel[1..];
-        var channels = new List<string> { channel };
+        List<string> channels = new List<string> { channel };
         int chatCommandIdentifier1 = chatCommandIdentifier;
         int whisperCommandIdentifier1 = whisperCommandIdentifier;
-        var num = autoReListenOnExceptions ? 1 : 0;
+        int num = autoReListenOnExceptions ? 1 : 0;
         InitializeHelper(credentials, channels, (char)chatCommandIdentifier1, (char)whisperCommandIdentifier1,
             num != 0);
     }
@@ -114,7 +114,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             HandleNotInitialized();
         logger.LogInfo("Writing: " + message);
         _client.Send(message);
-        var onSendReceiveData = OnSendReceiveData;
+        EventHandler<OnSendReceiveDataArgs> onSendReceiveData = OnSendReceiveData;
         if (onSendReceiveData == null)
             return;
         onSendReceiveData(this, new OnSendReceiveDataArgs
@@ -156,7 +156,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             Username = ConnectionCredentials.TwitchUsername,
             Message = message
         }.ToString());
-        var onWhisperSent = OnWhisperSent;
+        EventHandler<OnWhisperSentArgs> onWhisperSent = OnWhisperSent;
         if (onWhisperSent == null)
             return;
         onWhisperSent(this, new OnWhisperSentArgs
@@ -240,7 +240,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             HandleNotInitialized();
         if (!IsConnected)
             HandleNotConnected();
-        var channel1 = channel;
+        string channel1 = channel;
         if (JoinedChannels.FirstOrDefault(
                 (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channel1 && !overrideCheck)) != null)
             return;
@@ -331,10 +331,10 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             _whisperCommandIdentifiers.Add(whisperCommandIdentifier);
         AutoReListenOnException = autoReListenOnExceptions;
         if (channels is { Count: > 0 })
-            for (var i = 0; i < channels.Count; i++)
+            for (int i = 0; i < channels.Count; i++)
             {
                 if (string.IsNullOrEmpty(channels[i])) continue;
-                var i1 = i;
+                int i1 = i;
                 if (JoinedChannels.FirstOrDefault(
                         (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channels[i1])) != null)
                     return;
@@ -370,14 +370,14 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     internal void RaiseEvent(string eventName, object args = null)
     {
-        var invocationList = (GetType().GetField(eventName, BindingFlags.Instance | BindingFlags.NonPublic)?
+        Delegate[] invocationList = (GetType().GetField(eventName, BindingFlags.Instance | BindingFlags.NonPublic)?
             .GetValue(this) as MulticastDelegate)?.GetInvocationList();
         if (invocationList == null) return;
 
-        foreach (var invocation in invocationList)
+        foreach (Delegate invocation in invocationList)
         {
-            var method = invocation.Method;
-            var target = invocation.Target;
+            MethodInfo method = invocation.Method;
+            object target = invocation.Target;
             object[] parameters;
             if (args != null)
                 parameters = new[] { this, args };
@@ -407,7 +407,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         }
         else
         {
-            var outboundChatMessage = new OutboundChatMessage
+            OutboundChatMessage outboundChatMessage = new OutboundChatMessage
             {
                 Channel = channel?.Channel,
                 Username = ConnectionCredentials.TwitchUsername,
@@ -422,7 +422,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void _client_OnWhisperThrottled(object sender, OnWhisperThrottledEventArgs e)
     {
-        var whisperThrottled = OnWhisperThrottled;
+        EventHandler<OnWhisperThrottledEventArgs> whisperThrottled = OnWhisperThrottled;
         if (whisperThrottled == null)
             return;
         whisperThrottled(sender, e);
@@ -430,7 +430,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void _client_OnMessageThrottled(object sender, OnMessageThrottledEventArgs e)
     {
-        var messageThrottled = OnMessageThrottled;
+        EventHandler<OnMessageThrottledEventArgs> messageThrottled = OnMessageThrottled;
         if (messageThrottled == null)
             return;
         messageThrottled(sender, e);
@@ -438,7 +438,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void _client_OnFatality(object sender, OnFatalErrorEventArgs e)
     {
-        var onConnectionError = OnConnectionError;
+        EventHandler<OnConnectionErrorArgs> onConnectionError = OnConnectionError;
         if (onConnectionError == null)
             return;
         onConnectionError(this, new OnConnectionErrorArgs
@@ -450,7 +450,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void _client_OnDisconnected(object sender, OnDisconnectedEventArgs e)
     {
-        var onDisconnected = OnDisconnected;
+        EventHandler<OnDisconnectedEventArgs> onDisconnected = OnDisconnected;
         if (onDisconnected == null)
             return;
         onDisconnected(sender, e);
@@ -458,14 +458,14 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void _client_OnReconnected(object sender, OnReconnectedEventArgs e)
     {
-        foreach (var joinedChannel in (IEnumerable<JoinedChannel>)_joinedChannelManager
+        foreach (JoinedChannel joinedChannel in (IEnumerable<JoinedChannel>)_joinedChannelManager
                      .GetJoinedChannels())
             if (!string.Equals(joinedChannel.Channel, TwitchUsername,
                     StringComparison.CurrentCultureIgnoreCase))
                 _joinChannelQueue.Enqueue(joinedChannel);
 
         _joinedChannelManager.Clear();
-        var onReconnected = OnReconnected;
+        EventHandler<OnReconnectedEventArgs> onReconnected = OnReconnected;
         if (onReconnected == null)
             return;
         onReconnected(sender, e);
@@ -474,11 +474,11 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     private void _client_OnMessage(object sender, OnMessageEventArgs e)
     {
         string[] separator = ["\r\n"];
-        foreach (var raw in e.Message.Split(separator, StringSplitOptions.None))
+        foreach (string raw in e.Message.Split(separator, StringSplitOptions.None))
             if (raw.Length > 1)
             {
                 logger.LogInfo("Received: " + raw);
-                var onSendReceiveData = OnSendReceiveData;
+                EventHandler<OnSendReceiveDataArgs> onSendReceiveData = OnSendReceiveData;
                 if (onSendReceiveData != null)
                     onSendReceiveData(this, new OnSendReceiveDataArgs
                     {
@@ -511,7 +511,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         if (_joinChannelQueue.Count > 0)
         {
             _currentlyJoiningChannels = true;
-            var joinedChannel = _joinChannelQueue.Dequeue();
+            JoinedChannel joinedChannel = _joinChannelQueue.Dequeue();
             logger.LogInfo("Joining channel: " + joinedChannel.Channel);
             _client.Send(Rfc2812.Join("#" + joinedChannel.Channel.ToLower()));
             _joinedChannelManager.AddJoinedChannel(new JoinedChannel(joinedChannel.Channel));
@@ -542,7 +542,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (_awaitingJoins.Any())
         {
-            var list = _awaitingJoins
+            List<KeyValuePair<string, DateTime>> list = _awaitingJoins
                 .Where(
                     (Func<KeyValuePair<string, DateTime>, bool>)(x => (DateTime.Now - x.Value).TotalSeconds > 5.0))
                 .ToList();
@@ -550,10 +550,10 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                 return;
             _awaitingJoins.RemoveAll(
                 (Predicate<KeyValuePair<string, DateTime>>)(x => (DateTime.Now - x.Value).TotalSeconds > 5.0));
-            foreach (var keyValuePair in list)
+            foreach (KeyValuePair<string, DateTime> keyValuePair in list)
             {
                 _joinedChannelManager.RemoveJoinedChannel(keyValuePair.Key.ToLowerInvariant());
-                var joinConfirmation =
+                EventHandler<OnFailureToReceiveJoinConfirmationArgs> joinConfirmation =
                     OnFailureToReceiveJoinConfirmation;
                 if (joinConfirmation != null)
                     joinConfirmation(this, new OnFailureToReceiveJoinConfirmationArgs
@@ -574,7 +574,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (ircMessage.Message.Contains("Login authentication failed"))
         {
-            var onIncorrectLogin = OnIncorrectLogin;
+            EventHandler<OnIncorrectLoginArgs> onIncorrectLogin = OnIncorrectLogin;
             if (onIncorrectLogin == null)
                 return;
             onIncorrectLogin(this, new OnIncorrectLoginArgs
@@ -656,7 +656,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     HandleMode(ircMessage);
                     break;
                 default:
-                    var onUnaccountedFor = OnUnaccountedFor;
+                    EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
                     if (onUnaccountedFor != null)
                         onUnaccountedFor(this, new OnUnaccountedForArgs
                         {
@@ -673,21 +673,21 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void HandlePrivMsg(IrcMessage ircMessage)
     {
-        var chatMessage = new ChatMessage(TwitchUsername, ircMessage, ref _channelEmotes,
+        ChatMessage chatMessage = new ChatMessage(TwitchUsername, ircMessage, ref _channelEmotes,
             WillReplaceEmotes);
-        foreach (var joinedChannel in JoinedChannels.Where(
+        foreach (JoinedChannel joinedChannel in JoinedChannels.Where(
                      (Func<JoinedChannel, bool>)(x => string.Equals(x.Channel, ircMessage.Channel,
                          StringComparison.InvariantCultureIgnoreCase))))
             joinedChannel.HandleMessage(chatMessage);
-        var onMessageReceived = OnMessageReceived;
+        EventHandler<OnMessageReceivedArgs> onMessageReceived = OnMessageReceived;
         if (onMessageReceived != null)
             onMessageReceived(this, new OnMessageReceivedArgs
             {
                 ChatMessage = chatMessage
             });
-        if (ircMessage.Tags.TryGetValue("msg-id", out var str) && str == "user-intro")
+        if (ircMessage.Tags.TryGetValue("msg-id", out string str) && str == "user-intro")
         {
-            var onUserIntro = OnUserIntro;
+            EventHandler<OnUserIntroArgs> onUserIntro = OnUserIntro;
             if (onUserIntro != null)
                 onUserIntro(this, new OnUserIntroArgs
                 {
@@ -699,8 +699,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             string.IsNullOrEmpty(chatMessage.Message) ||
             !_chatCommandIdentifiers.Contains(chatMessage.Message[0]))
             return;
-        var chatCommand = new ChatCommand(chatMessage);
-        var chatCommandReceived = OnChatCommandReceived;
+        ChatCommand chatCommand = new ChatCommand(chatMessage);
+        EventHandler<OnChatCommandReceivedArgs> chatCommandReceived = OnChatCommandReceived;
         if (chatCommandReceived == null)
             return;
         chatCommandReceived(this, new OnChatCommandReceivedArgs
@@ -713,7 +713,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (ircMessage.Message.Contains("Improperly formatted auth"))
         {
-            var onIncorrectLogin = OnIncorrectLogin;
+            EventHandler<OnIncorrectLoginArgs> onIncorrectLogin = OnIncorrectLogin;
             if (onIncorrectLogin == null)
                 return;
             onIncorrectLogin(this, new OnIncorrectLoginArgs
@@ -723,9 +723,9 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         }
         else
         {
-            if (!ircMessage.Tags.TryGetValue("msg-id", out var str))
+            if (!ircMessage.Tags.TryGetValue("msg-id", out string str))
             {
-                var onUnaccountedFor = OnUnaccountedFor;
+                EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
                 if (onUnaccountedFor != null)
                     onUnaccountedFor(this, new OnUnaccountedForArgs
                     {
@@ -740,7 +740,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             switch (str)
             {
                 case "color_changed":
-                    var chatColorChanged = OnChatColorChanged;
+                    EventHandler<OnChatColorChangedArgs> chatColorChanged = OnChatColorChanged;
                     if (chatColorChanged == null)
                         break;
                     chatColorChanged(this, new OnChatColorChangedArgs
@@ -749,7 +749,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_banned":
-                    var onBanned = OnBanned;
+                    EventHandler<OnBannedArgs> onBanned = OnBanned;
                     if (onBanned == null)
                         break;
                     onBanned(this, new OnBannedArgs
@@ -759,7 +759,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_banned_email_alias":
-                    var bannedEmailAlias = OnBannedEmailAlias;
+                    EventHandler<OnBannedEmailAliasArgs> bannedEmailAlias = OnBannedEmailAlias;
                     if (bannedEmailAlias == null)
                         break;
                     bannedEmailAlias(this, new OnBannedEmailAliasArgs
@@ -773,7 +773,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                         (Predicate<KeyValuePair<string, DateTime>>)(x => x.Key.ToLower() == ircMessage.Channel));
                     _joinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
                     QueueingJoinCheck();
-                    var joinConfirmation =
+                    EventHandler<OnFailureToReceiveJoinConfirmationArgs> joinConfirmation =
                         OnFailureToReceiveJoinConfirmation;
                     if (joinConfirmation == null)
                         break;
@@ -784,7 +784,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_duplicate":
-                    var onDuplicate = OnDuplicate;
+                    EventHandler<OnDuplicateArgs> onDuplicate = OnDuplicate;
                     if (onDuplicate == null)
                         break;
                     onDuplicate(this, new OnDuplicateArgs
@@ -794,7 +794,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_emoteonly":
-                    var onEmoteOnly = OnEmoteOnly;
+                    EventHandler<OnEmoteOnlyArgs> onEmoteOnly = OnEmoteOnly;
                     if (onEmoteOnly == null)
                         break;
                     onEmoteOnly(this, new OnEmoteOnlyArgs
@@ -804,7 +804,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_followersonly":
-                    var onFollowersOnly = OnFollowersOnly;
+                    EventHandler<OnFollowersOnlyArgs> onFollowersOnly = OnFollowersOnly;
                     if (onFollowersOnly == null)
                         break;
                     onFollowersOnly(this, new OnFollowersOnlyArgs
@@ -814,7 +814,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_r9k":
-                    var onR9KMode = OnR9KMode;
+                    EventHandler<OnR9kModeArgs> onR9KMode = OnR9KMode;
                     if (onR9KMode == null)
                         break;
                     onR9KMode(this, new OnR9kModeArgs
@@ -824,7 +824,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_ratelimit":
-                    var onRateLimit = OnRateLimit;
+                    EventHandler<OnRateLimitArgs> onRateLimit = OnRateLimit;
                     if (onRateLimit == null)
                         break;
                     onRateLimit(this, new OnRateLimitArgs
@@ -834,7 +834,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_requires_verified_phone_number":
-                    var verifiedPhoneNumber =
+                    EventHandler<OnRequiresVerifiedPhoneNumberArgs> verifiedPhoneNumber =
                         OnRequiresVerifiedPhoneNumber;
                     if (verifiedPhoneNumber == null)
                         break;
@@ -845,7 +845,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_slowmode":
-                    var onSlowMode = OnSlowMode;
+                    EventHandler<OnSlowModeArgs> onSlowMode = OnSlowMode;
                     if (onSlowMode == null)
                         break;
                     onSlowMode(this, new OnSlowModeArgs
@@ -855,7 +855,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_subsonly":
-                    var onSubsOnly = OnSubsOnly;
+                    EventHandler<OnSubsOnlyArgs> onSubsOnly = OnSubsOnly;
                     if (onSubsOnly == null)
                         break;
                     onSubsOnly(this, new OnSubsOnlyArgs
@@ -865,7 +865,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_suspended":
-                    var onSuspended = OnSuspended;
+                    EventHandler<OnSuspendedArgs> onSuspended = OnSuspended;
                     if (onSuspended == null)
                         break;
                     onSuspended(this, new OnSuspendedArgs
@@ -875,7 +875,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_verified_email":
-                    var requiresVerifiedEmail = OnRequiresVerifiedEmail;
+                    EventHandler<OnRequiresVerifiedEmailArgs> requiresVerifiedEmail = OnRequiresVerifiedEmail;
                     if (requiresVerifiedEmail == null)
                         break;
                     requiresVerifiedEmail(this, new OnRequiresVerifiedEmailArgs
@@ -885,7 +885,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "no_mods":
-                    var moderatorsReceived1 = OnModeratorsReceived;
+                    EventHandler<OnModeratorsReceivedArgs> moderatorsReceived1 = OnModeratorsReceived;
                     if (moderatorsReceived1 == null)
                         break;
                     moderatorsReceived1(this, new OnModeratorsReceivedArgs
@@ -895,13 +895,13 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "no_permission":
-                    var noPermissionError = OnNoPermissionError;
+                    EventHandler noPermissionError = OnNoPermissionError;
                     if (noPermissionError == null)
                         break;
                     noPermissionError(this, EventArgs.Empty);
                     break;
                 case "no_vips":
-                    var onViPsReceived1 = OnVIPsReceived;
+                    EventHandler<OnVIPsReceivedArgs> onViPsReceived1 = OnVIPsReceived;
                     if (onViPsReceived1 == null)
                         break;
                     onViPsReceived1(this, new OnVIPsReceivedArgs
@@ -911,19 +911,19 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "raid_error_self":
-                    var onSelfRaidError = OnSelfRaidError;
+                    EventHandler onSelfRaidError = OnSelfRaidError;
                     if (onSelfRaidError == null)
                         break;
                     onSelfRaidError(this, EventArgs.Empty);
                     break;
                 case "raid_notice_mature":
-                    var isMatureAudience = OnRaidedChannelIsMatureAudience;
+                    EventHandler isMatureAudience = OnRaidedChannelIsMatureAudience;
                     if (isMatureAudience == null)
                         break;
                     isMatureAudience(this, EventArgs.Empty);
                     break;
                 case "room_mods":
-                    var moderatorsReceived2 = OnModeratorsReceived;
+                    EventHandler<OnModeratorsReceivedArgs> moderatorsReceived2 = OnModeratorsReceived;
                     if (moderatorsReceived2 == null)
                         break;
                     moderatorsReceived2(this, new OnModeratorsReceivedArgs
@@ -935,7 +935,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "vips_success":
-                    var onViPsReceived2 = OnVIPsReceived;
+                    EventHandler<OnVIPsReceivedArgs> onViPsReceived2 = OnVIPsReceived;
                     if (onViPsReceived2 == null)
                         break;
                     onViPsReceived2(this, new OnVIPsReceivedArgs
@@ -947,7 +947,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 default:
-                    var onUnaccountedFor1 = OnUnaccountedFor;
+                    EventHandler<OnUnaccountedForArgs> onUnaccountedFor1 = OnUnaccountedFor;
                     if (onUnaccountedFor1 != null)
                         onUnaccountedFor1(this, new OnUnaccountedForArgs
                         {
@@ -964,7 +964,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void HandleJoin(IrcMessage ircMessage)
     {
-        var onUserJoined = OnUserJoined;
+        EventHandler<OnUserJoinedArgs> onUserJoined = OnUserJoined;
         if (onUserJoined == null)
             return;
         onUserJoined(this, new OnUserJoinedArgs
@@ -980,7 +980,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         {
             _joinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
             _hasSeenJoinedChannels.Remove(ircMessage.Channel);
-            var onLeftChannel = OnLeftChannel;
+            EventHandler<OnLeftChannelArgs> onLeftChannel = OnLeftChannel;
             if (onLeftChannel == null)
                 return;
             onLeftChannel(this, new OnLeftChannelArgs
@@ -991,7 +991,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         }
         else
         {
-            var onUserLeft = OnUserLeft;
+            EventHandler<OnUserLeftArgs> onUserLeft = OnUserLeft;
             if (onUserLeft == null)
                 return;
             onUserLeft(this, new OnUserLeftArgs
@@ -1006,7 +1006,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (string.IsNullOrWhiteSpace(ircMessage.Message))
         {
-            var onChatCleared = OnChatCleared;
+            EventHandler<OnChatClearedArgs> onChatCleared = OnChatCleared;
             if (onChatCleared == null)
                 return;
             onChatCleared(this, new OnChatClearedArgs
@@ -1014,10 +1014,10 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                 Channel = ircMessage.Channel
             });
         }
-        else if (ircMessage.Tags.TryGetValue("ban-duration", out var _))
+        else if (ircMessage.Tags.TryGetValue("ban-duration", out string _))
         {
-            var userTimeout = new UserTimeout(ircMessage);
-            var onUserTimedout = OnUserTimedout;
+            UserTimeout userTimeout = new UserTimeout(ircMessage);
+            EventHandler<OnUserTimedoutArgs> onUserTimedout = OnUserTimedout;
             if (onUserTimedout == null)
                 return;
             onUserTimedout(this, new OnUserTimedoutArgs
@@ -1027,8 +1027,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         }
         else
         {
-            var userBan = new UserBan(ircMessage);
-            var onUserBanned = OnUserBanned;
+            UserBan userBan = new UserBan(ircMessage);
+            EventHandler<OnUserBannedArgs> onUserBanned = OnUserBanned;
             if (onUserBanned == null)
                 return;
             onUserBanned(this, new OnUserBannedArgs
@@ -1040,7 +1040,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void HandleClearMsg(IrcMessage ircMessage)
     {
-        var onMessageCleared = OnMessageCleared;
+        EventHandler<OnMessageClearedArgs> onMessageCleared = OnMessageCleared;
         if (onMessageCleared == null)
             return;
         onMessageCleared(this, new OnMessageClearedArgs
@@ -1054,11 +1054,11 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void HandleUserState(IrcMessage ircMessage)
     {
-        var state = new UserState(ircMessage);
+        UserState state = new UserState(ircMessage);
         if (!_hasSeenJoinedChannels.Contains(state.Channel.ToLowerInvariant()))
         {
             _hasSeenJoinedChannels.Add(state.Channel.ToLowerInvariant());
-            var userStateChanged = OnUserStateChanged;
+            EventHandler<OnUserStateChangedArgs> userStateChanged = OnUserStateChanged;
             if (userStateChanged == null)
                 return;
             userStateChanged(this, new OnUserStateChangedArgs
@@ -1068,7 +1068,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         }
         else
         {
-            var onMessageSent = OnMessageSent;
+            EventHandler<OnMessageSentArgs> onMessageSent = OnMessageSent;
             if (onMessageSent == null)
                 return;
             onMessageSent(this, new OnMessageSentArgs
@@ -1080,7 +1080,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void Handle004()
     {
-        var onConnected = OnConnected;
+        EventHandler<OnConnectedArgs> onConnected = OnConnected;
         if (onConnected == null)
             return;
         onConnected(this, new OnConnectedArgs
@@ -1091,7 +1091,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void Handle353(IrcMessage ircMessage)
     {
-        var existingUsersDetected = OnExistingUsersDetected;
+        EventHandler<OnExistingUsersDetectedArgs> existingUsersDetected = OnExistingUsersDetected;
         if (existingUsersDetected == null)
             return;
         existingUsersDetected(this, new OnExistingUsersDetectedArgs
@@ -1109,9 +1109,9 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void HandleWhisper(IrcMessage ircMessage)
     {
-        var whisperMessage = new WhisperMessage(ircMessage, TwitchUsername);
+        WhisperMessage whisperMessage = new WhisperMessage(ircMessage, TwitchUsername);
         PreviousWhisper = whisperMessage;
-        var onWhisperReceived = OnWhisperReceived;
+        EventHandler<OnWhisperReceivedArgs> onWhisperReceived = OnWhisperReceived;
         if (onWhisperReceived != null)
             onWhisperReceived(this, new OnWhisperReceivedArgs
             {
@@ -1121,8 +1121,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             !string.IsNullOrEmpty(whisperMessage.Message) &&
             _whisperCommandIdentifiers.Contains(whisperMessage.Message[0]))
         {
-            var whisperCommand = new WhisperCommand(whisperMessage);
-            var whisperCommandReceived = OnWhisperCommandReceived;
+            WhisperCommand whisperCommand = new WhisperCommand(whisperMessage);
+            EventHandler<OnWhisperCommandReceivedArgs> whisperCommandReceived = OnWhisperCommandReceived;
             if (whisperCommandReceived == null)
                 return;
             whisperCommandReceived(this, new OnWhisperCommandReceivedArgs
@@ -1132,7 +1132,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         }
         else
         {
-            var onUnaccountedFor = OnUnaccountedFor;
+            EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
             if (onUnaccountedFor != null)
                 onUnaccountedFor(this, new OnUnaccountedForArgs
                 {
@@ -1152,7 +1152,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             _awaitingJoins.Remove(
                 _awaitingJoins.FirstOrDefault(
                     (Func<KeyValuePair<string, DateTime>, bool>)(x => x.Key == ircMessage.Channel)));
-            var onJoinedChannel = OnJoinedChannel;
+            EventHandler<OnJoinedChannelArgs> onJoinedChannel = OnJoinedChannel;
             if (onJoinedChannel != null)
                 onJoinedChannel(this, new OnJoinedChannelArgs
                 {
@@ -1161,7 +1161,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                 });
         }
 
-        var channelStateChanged = OnChannelStateChanged;
+        EventHandler<OnChannelStateChangedArgs> channelStateChanged = OnChannelStateChanged;
         if (channelStateChanged == null)
             return;
         channelStateChanged(this, new OnChannelStateChangedArgs
@@ -1173,9 +1173,9 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void HandleUserNotice(IrcMessage ircMessage)
     {
-        if (!ircMessage.Tags.TryGetValue("msg-id", out var str))
+        if (!ircMessage.Tags.TryGetValue("msg-id", out string str))
         {
-            var onUnaccountedFor = OnUnaccountedFor;
+            EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
             if (onUnaccountedFor != null)
                 onUnaccountedFor(this, new OnUnaccountedForArgs
                 {
@@ -1191,8 +1191,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             switch (str)
             {
                 case "announcement":
-                    var announcement = new Announcement(ircMessage);
-                    var onAnnouncement = OnAnnouncement;
+                    Announcement announcement = new Announcement(ircMessage);
+                    EventHandler<OnAnnouncementArgs> onAnnouncement = OnAnnouncement;
                     if (onAnnouncement == null)
                         break;
                     onAnnouncement(this, new OnAnnouncementArgs
@@ -1202,8 +1202,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "giftpaidupgrade":
-                    var giftedSubscription1 = new ContinuedGiftedSubscription(ircMessage);
-                    var giftedSubscription2 =
+                    ContinuedGiftedSubscription giftedSubscription1 = new ContinuedGiftedSubscription(ircMessage);
+                    EventHandler<OnContinuedGiftedSubscriptionArgs> giftedSubscription2 =
                         OnContinuedGiftedSubscription;
                     if (giftedSubscription2 == null)
                         break;
@@ -1214,8 +1214,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "primepaidupgrade":
-                    var primePaidSubscriber1 = new PrimePaidSubscriber(ircMessage);
-                    var primePaidSubscriber2 = OnPrimePaidSubscriber;
+                    PrimePaidSubscriber primePaidSubscriber1 = new PrimePaidSubscriber(ircMessage);
+                    EventHandler<OnPrimePaidSubscriberArgs> primePaidSubscriber2 = OnPrimePaidSubscriber;
                     if (primePaidSubscriber2 == null)
                         break;
                     primePaidSubscriber2(this, new OnPrimePaidSubscriberArgs
@@ -1225,8 +1225,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "raid":
-                    var raidNotification1 = new RaidNotification(ircMessage);
-                    var raidNotification2 = OnRaidNotification;
+                    RaidNotification raidNotification1 = new RaidNotification(ircMessage);
+                    EventHandler<OnRaidNotificationArgs> raidNotification2 = OnRaidNotification;
                     if (raidNotification2 == null)
                         break;
                     raidNotification2(this, new OnRaidNotificationArgs
@@ -1236,8 +1236,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "resub":
-                    var reSubscriber = new ReSubscriber(ircMessage);
-                    var onReSubscriber = OnReSubscriber;
+                    ReSubscriber reSubscriber = new ReSubscriber(ircMessage);
+                    EventHandler<OnReSubscriberArgs> onReSubscriber = OnReSubscriber;
                     if (onReSubscriber == null)
                         break;
                     onReSubscriber(this, new OnReSubscriberArgs
@@ -1247,8 +1247,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "sub":
-                    var subscriber = new Subscriber(ircMessage);
-                    var onNewSubscriber = OnNewSubscriber;
+                    Subscriber subscriber = new Subscriber(ircMessage);
+                    EventHandler<OnNewSubscriberArgs> onNewSubscriber = OnNewSubscriber;
                     if (onNewSubscriber == null)
                         break;
                     onNewSubscriber(this, new OnNewSubscriberArgs
@@ -1258,8 +1258,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "subgift":
-                    var giftedSubscription3 = new GiftedSubscription(ircMessage);
-                    var giftedSubscription4 = OnGiftedSubscription;
+                    GiftedSubscription giftedSubscription3 = new GiftedSubscription(ircMessage);
+                    EventHandler<OnGiftedSubscriptionArgs> giftedSubscription4 = OnGiftedSubscription;
                     if (giftedSubscription4 == null)
                         break;
                     giftedSubscription4(this, new OnGiftedSubscriptionArgs
@@ -1269,8 +1269,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "submysterygift":
-                    var communitySubscription1 = new CommunitySubscription(ircMessage);
-                    var communitySubscription2 = OnCommunitySubscription;
+                    CommunitySubscription communitySubscription1 = new CommunitySubscription(ircMessage);
+                    EventHandler<OnCommunitySubscriptionArgs> communitySubscription2 = OnCommunitySubscription;
                     if (communitySubscription2 == null)
                         break;
                     communitySubscription2(this, new OnCommunitySubscriptionArgs
@@ -1280,7 +1280,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 default:
-                    var onUnaccountedFor1 = OnUnaccountedFor;
+                    EventHandler<OnUnaccountedForArgs> onUnaccountedFor1 = OnUnaccountedFor;
                     if (onUnaccountedFor1 != null)
                         onUnaccountedFor1(this, new OnUnaccountedForArgs
                         {
@@ -1299,7 +1299,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (ircMessage.Message.StartsWith("+o"))
         {
-            var onModeratorJoined = OnModeratorJoined;
+            EventHandler<OnModeratorJoinedArgs> onModeratorJoined = OnModeratorJoined;
             if (onModeratorJoined == null)
                 return;
             onModeratorJoined(this, new OnModeratorJoinedArgs
@@ -1312,7 +1312,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         {
             if (!ircMessage.Message.StartsWith("-o"))
                 return;
-            var onModeratorLeft = OnModeratorLeft;
+            EventHandler<OnModeratorLeftArgs> onModeratorLeft = OnModeratorLeft;
             if (onModeratorLeft == null)
                 return;
             onModeratorLeft(this, new OnModeratorLeftArgs

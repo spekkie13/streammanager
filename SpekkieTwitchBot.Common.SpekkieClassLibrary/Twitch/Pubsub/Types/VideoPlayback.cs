@@ -30,15 +30,15 @@ public class VideoPlayback : MessageData
         switch (Type)
         {
             case VideoPlaybackType.StreamUp:
-                var delay = Convert.ToInt32(jtoken.SelectToken("play_delay"));
+                int delay = Convert.ToInt32(jtoken.SelectToken("play_delay"));
                 PlayDelay = delay;
                 break;
             case VideoPlaybackType.ViewCount:
-                var viewCount = Convert.ToInt32(jtoken.SelectToken("viewers"));
+                int viewCount = Convert.ToInt32(jtoken.SelectToken("viewers"));
                 Viewers = viewCount;
                 break;
             case VideoPlaybackType.Commercial:
-                var length = Convert.ToInt32(jtoken.SelectToken("length"));
+                int length = Convert.ToInt32(jtoken.SelectToken("length"));
                 Length = length;
                 break;
         }

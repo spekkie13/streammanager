@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using SpekkieClassLibrary.Twitch.Auth;
 
 namespace TwitchAuthService;
 
@@ -16,8 +17,8 @@ public class CustomTwitchHttpClient
 
     private void Setup()
     {
-        var auth = _TwitchAuthService.GetTwitchUserAuth();
-        var genAuth = _TwitchAuthService.GetGeneralTwitchAuth();
+        TwitchUserAuth? auth = _TwitchAuthService.GetTwitchUserAuth();
+        GeneralTwitchAuth? genAuth = _TwitchAuthService.GetGeneralTwitchAuth();
 
         _Client.DefaultRequestHeaders.Add("client-id", auth.ClientId);
         _Client.DefaultRequestHeaders.Add("broadcaster_id", genAuth.ChannelId);

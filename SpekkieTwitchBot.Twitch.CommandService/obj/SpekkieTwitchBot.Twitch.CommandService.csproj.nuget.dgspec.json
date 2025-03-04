@@ -1,111 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch.CommandService\\SpekkieTwitchBot.Twitch.CommandService.csproj": {}
+    "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch.CommandService/SpekkieTwitchBot.Twitch.CommandService.csproj": {}
   },
   "projects": {
-    "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.ClashOfClans.StatsBot\\SpekkieTwitchBot.ClashOfClans.StatsBot.csproj": {
+    "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.ClashOfClans.StatsBot\\SpekkieTwitchBot.ClashOfClans.StatsBot.csproj",
-        "projectName": "SpekkieTwitchBot.ClashOfClans.StatsBot",
-        "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.ClashOfClans.StatsBot\\SpekkieTwitchBot.ClashOfClans.StatsBot.csproj",
-        "packagesPath": "C:\\Users\\tomsp\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.ClashOfClans.StatsBot\\obj\\",
-        "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
-        "configFilePaths": [
-          "C:\\Users\\tomsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
-        ],
-        "originalTargetFrameworks": [
-          "net8.0"
-        ],
-        "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
-          "https://api.nuget.org/v3/index.json": {}
-        },
-        "frameworks": {
-          "net8.0": {
-            "targetAlias": "net8.0",
-            "projectReferences": {
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
-              },
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj"
-              }
-            }
-          }
-        },
-        "warningProperties": {
-          "warnAsError": [
-            "NU1605"
-          ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.100"
-      },
-      "frameworks": {
-        "net8.0": {
-          "targetAlias": "net8.0",
-          "dependencies": {
-            "Microsoft.Extensions.Hosting": {
-              "target": "Package",
-              "version": "[8.0.1, )"
-            }
-          },
-          "imports": [
-            "net461",
-            "net462",
-            "net47",
-            "net471",
-            "net472",
-            "net48",
-            "net481"
-          ],
-          "assetTargetFallback": true,
-          "warn": true,
-          "frameworkReferences": {
-            "Microsoft.NETCore.App": {
-              "privateAssets": "all"
-            }
-          },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
-        }
-      }
-    },
-    "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
-      "version": "1.0.0",
-      "restore": {
-        "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj",
+        "projectUniqueName": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj",
         "projectName": "SpekkieTwitchBot.Common.SpekkieClassLibrary",
-        "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj",
-        "packagesPath": "C:\\Users\\tomsp\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\obj\\",
+        "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj",
+        "packagesPath": "/Users/tomspek/.nuget/packages/",
+        "outputPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\tomsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/tomspek/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -122,7 +36,7 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
@@ -150,49 +64,52 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/Users/tomspek/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.EventTimerService\\SpekkieTwitchBot.General.EventTimerService.csproj": {
+    "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.EventTimerService/SpekkieTwitchBot.General.EventTimerService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.EventTimerService\\SpekkieTwitchBot.General.EventTimerService.csproj",
+        "projectUniqueName": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.EventTimerService/SpekkieTwitchBot.General.EventTimerService.csproj",
         "projectName": "SpekkieTwitchBot.General.EventTimerService",
-        "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.EventTimerService\\SpekkieTwitchBot.General.EventTimerService.csproj",
-        "packagesPath": "C:\\Users\\tomsp\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.EventTimerService\\obj\\",
+        "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.EventTimerService/SpekkieTwitchBot.General.EventTimerService.csproj",
+        "packagesPath": "/Users/tomspek/.nuget/packages/",
+        "outputPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.EventTimerService/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\tomsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/tomspek/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
               },
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj"
               }
             }
           }
@@ -205,7 +122,7 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
@@ -229,46 +146,49 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/Users/tomspek/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj": {
+    "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj",
+        "projectUniqueName": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj",
         "projectName": "SpekkieTwitchBot.General.FileHandling",
-        "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj",
-        "packagesPath": "C:\\Users\\tomsp\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\obj\\",
+        "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj",
+        "packagesPath": "/Users/tomspek/.nuget/packages/",
+        "outputPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\tomsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/tomspek/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
               }
             }
           }
@@ -281,7 +201,7 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
@@ -299,49 +219,52 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/Users/tomspek/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.OBS.OBSService\\SpekkieTwitchBot.OBS.OBSService.csproj": {
+    "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.OBS.OBSService/SpekkieTwitchBot.OBS.OBSService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.OBS.OBSService\\SpekkieTwitchBot.OBS.OBSService.csproj",
+        "projectUniqueName": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.OBS.OBSService/SpekkieTwitchBot.OBS.OBSService.csproj",
         "projectName": "SpekkieTwitchBot.OBS.OBSService",
-        "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.OBS.OBSService\\SpekkieTwitchBot.OBS.OBSService.csproj",
-        "packagesPath": "C:\\Users\\tomsp\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.OBS.OBSService\\obj\\",
+        "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.OBS.OBSService/SpekkieTwitchBot.OBS.OBSService.csproj",
+        "packagesPath": "/Users/tomspek/.nuget/packages/",
+        "outputPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.OBS.OBSService/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\tomsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/tomspek/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
               },
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj"
               }
             }
           }
@@ -354,7 +277,7 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
@@ -378,49 +301,52 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/Users/tomspek/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Spotify.SpotifyService\\SpekkieTwitchBot.Spotify.SpotifyService.csproj": {
+    "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spotify.SpotifyService/SpekkieTwitchBot.Spotify.SpotifyService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Spotify.SpotifyService\\SpekkieTwitchBot.Spotify.SpotifyService.csproj",
+        "projectUniqueName": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spotify.SpotifyService/SpekkieTwitchBot.Spotify.SpotifyService.csproj",
         "projectName": "SpekkieTwitchBot.Spotify.SpotifyService",
-        "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Spotify.SpotifyService\\SpekkieTwitchBot.Spotify.SpotifyService.csproj",
-        "packagesPath": "C:\\Users\\tomsp\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Spotify.SpotifyService\\obj\\",
+        "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spotify.SpotifyService/SpekkieTwitchBot.Spotify.SpotifyService.csproj",
+        "packagesPath": "/Users/tomspek/.nuget/packages/",
+        "outputPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spotify.SpotifyService/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\tomsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/tomspek/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
               },
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj"
               }
             }
           }
@@ -433,7 +359,7 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
@@ -457,58 +383,58 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/Users/tomspek/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch.CommandService\\SpekkieTwitchBot.Twitch.CommandService.csproj": {
+    "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch.CommandService/SpekkieTwitchBot.Twitch.CommandService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch.CommandService\\SpekkieTwitchBot.Twitch.CommandService.csproj",
+        "projectUniqueName": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch.CommandService/SpekkieTwitchBot.Twitch.CommandService.csproj",
         "projectName": "SpekkieTwitchBot.Twitch.CommandService",
-        "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch.CommandService\\SpekkieTwitchBot.Twitch.CommandService.csproj",
-        "packagesPath": "C:\\Users\\tomsp\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch.CommandService\\obj\\",
+        "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch.CommandService/SpekkieTwitchBot.Twitch.CommandService.csproj",
+        "packagesPath": "/Users/tomspek/.nuget/packages/",
+        "outputPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch.CommandService/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\tomsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/tomspek/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.ClashOfClans.StatsBot\\SpekkieTwitchBot.ClashOfClans.StatsBot.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.ClashOfClans.StatsBot\\SpekkieTwitchBot.ClashOfClans.StatsBot.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.EventTimerService/SpekkieTwitchBot.General.EventTimerService.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.EventTimerService/SpekkieTwitchBot.General.EventTimerService.csproj"
               },
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.EventTimerService\\SpekkieTwitchBot.General.EventTimerService.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.EventTimerService\\SpekkieTwitchBot.General.EventTimerService.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.OBS.OBSService/SpekkieTwitchBot.OBS.OBSService.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.OBS.OBSService/SpekkieTwitchBot.OBS.OBSService.csproj"
               },
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.OBS.OBSService\\SpekkieTwitchBot.OBS.OBSService.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.OBS.OBSService\\SpekkieTwitchBot.OBS.OBSService.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spotify.SpotifyService/SpekkieTwitchBot.Spotify.SpotifyService.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spotify.SpotifyService/SpekkieTwitchBot.Spotify.SpotifyService.csproj"
               },
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Spotify.SpotifyService\\SpekkieTwitchBot.Spotify.SpotifyService.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Spotify.SpotifyService\\SpekkieTwitchBot.Spotify.SpotifyService.csproj"
-              },
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch\\SpekkieTwitchBot.Twitch.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch\\SpekkieTwitchBot.Twitch.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch/SpekkieTwitchBot.Twitch.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch/SpekkieTwitchBot.Twitch.csproj"
               }
             }
           }
@@ -521,7 +447,7 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
@@ -539,49 +465,52 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/Users/tomspek/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch\\SpekkieTwitchBot.Twitch.csproj": {
+    "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch/SpekkieTwitchBot.Twitch.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch\\SpekkieTwitchBot.Twitch.csproj",
+        "projectUniqueName": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch/SpekkieTwitchBot.Twitch.csproj",
         "projectName": "SpekkieTwitchBot.Twitch",
-        "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch\\SpekkieTwitchBot.Twitch.csproj",
-        "packagesPath": "C:\\Users\\tomsp\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch\\obj\\",
+        "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch/SpekkieTwitchBot.Twitch.csproj",
+        "packagesPath": "/Users/tomspek/.nuget/packages/",
+        "outputPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\tomsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/tomspek/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
               },
-              "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj": {
-                "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj"
+              "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj": {
+                "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj"
               }
             }
           }
@@ -594,7 +523,7 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
@@ -618,12 +547,22 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.11, 8.0.11]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/Users/tomspek/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

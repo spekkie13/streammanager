@@ -121,12 +121,12 @@ public class CustomPubsub : ITwitchPubSub
     {
         if (oauth.Contains("oauth:"))
             oauth = oauth.Replace("oauth:", "");
-        var nonce = GenerateNonce();
-        var content = new JArray();
+        string nonce = GenerateNonce();
+        JArray content = new JArray();
         _previousRequestsSemaphore.WaitOne();
         try
         {
-            foreach (var topic in _topicList)
+            foreach (string topic in _topicList)
             {
                 _previousRequests.Add(new PreviousRequest(nonce, PubSubRequestType.ListenToTopic, topic));
                 content.Add(new JValue(topic));
@@ -137,10 +137,10 @@ public class CustomPubsub : ITwitchPubSub
             _previousRequestsSemaphore.Release();
         }
 
-        var jobject = new JObject(new JProperty("type", !unlisten ? "LISTEN" : (object)"UNLISTEN"),
+        JObject jobject = new JObject(new JProperty("type", !unlisten ? "LISTEN" : (object)"UNLISTEN"),
             new JProperty("nonce", nonce), new JProperty("data", new JObject(new JProperty("topics", content))));
         {
-            var data = (JContainer)jobject.SelectToken("data") ?? new JConstructor();
+            JContainer data = (JContainer)jobject.SelectToken("data") ?? new JConstructor();
             data.Add(new JProperty("auth_token", oauth));
         }
         _socket.Send(jobject.ToString());
@@ -149,21 +149,21 @@ public class CustomPubsub : ITwitchPubSub
 
     public void ListenToFollows(string channelId)
     {
-        var str = "following." + channelId;
+        string str = "following." + channelId;
         _topicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
 
     public void ListenToChatModeratorActions(string userId, string channelId)
     {
-        var str = "chat_moderator_actions." + userId + "." + channelId;
+        string str = "chat_moderator_actions." + userId + "." + channelId;
         _topicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
 
     public void ListenToChannelExtensionBroadcast(string channelId, string extensionId)
     {
-        var str = "channel-ext-v1." + channelId + "-" + extensionId + "-broadcast";
+        string str = "channel-ext-v1." + channelId + "-" + extensionId + "-broadcast";
         _topicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
@@ -171,21 +171,21 @@ public class CustomPubsub : ITwitchPubSub
     [Obsolete("This topic is deprecated by Twitch. Please use ListenToBitsEventsV2()", false)]
     public void ListenToBitsEvents(string channelTwitchId)
     {
-        var str = "channel-bits-events-v1." + channelTwitchId;
+        string str = "channel-bits-events-v1." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
     public void ListenToVideoPlayback(string channelTwitchId)
     {
-        var str = "video-playback-by-id." + channelTwitchId;
+        string str = "video-playback-by-id." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
     public void ListenToWhispers(string channelTwitchId)
     {
-        var str = "whispers." + channelTwitchId;
+        string str = "whispers." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
@@ -194,22 +194,22 @@ public class CustomPubsub : ITwitchPubSub
         false)]
     public void ListenToRewards(string channelTwitchId)
     {
-        var str = "community-points-channel-v1." + channelTwitchId;
+        string str = "community-points-channel-v1." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
     public void ListenToChannelPoints(string channelTwitchId)
     {
-        var str = "channel-points-channel-v1." + channelTwitchId;
+        string str = "channel-points-channel-v1." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
     public void ListenToLeaderboards(string channelTwitchId)
     {
-        var key1 = "leaderboard-events-v1.bits-usage-by-channel-v1-" + channelTwitchId + "-WEEK";
-        var key2 = "leaderboard-events-v1.sub-gift-sent-" + channelTwitchId + "-WEEK";
+        string key1 = "leaderboard-events-v1.bits-usage-by-channel-v1-" + channelTwitchId + "-WEEK";
+        string key2 = "leaderboard-events-v1.sub-gift-sent-" + channelTwitchId + "-WEEK";
         _topicToChannelId[key1] = channelTwitchId;
         _topicToChannelId[key2] = channelTwitchId;
         ListenToTopics(key1, key2);
@@ -217,21 +217,21 @@ public class CustomPubsub : ITwitchPubSub
 
     public void ListenToRaid(string channelTwitchId)
     {
-        var str = "raid." + channelTwitchId;
+        string str = "raid." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
     public void ListenToSubscriptions(string channelId)
     {
-        var str = "channel-subscribe-events-v1." + channelId;
+        string str = "channel-subscribe-events-v1." + channelId;
         _topicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
 
     public void ListenToPredictions(string channelTwitchId)
     {
-        var str = "predictions-channel-v1." + channelTwitchId;
+        string str = "predictions-channel-v1." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
@@ -259,10 +259,10 @@ public class CustomPubsub : ITwitchPubSub
 
     private void OnError(object sender, OnErrorEventArgs e)
     {
-        var logger = _logger;
+        Logger logger = _logger;
         if (logger != null)
             logger.LogError($"OnError in PubSub Websocket connection occured! Exception: {e.Exception}");
-        var pubSubServiceError = OnPubSubServiceError;
+        EventHandler<OnPubSubServiceErrorArgs> pubSubServiceError = OnPubSubServiceError;
         if (pubSubServiceError == null)
             return;
         pubSubServiceError(this, new OnPubSubServiceErrorArgs
@@ -273,10 +273,10 @@ public class CustomPubsub : ITwitchPubSub
 
     private void OnMessage(object sender, OnMessageEventArgs e)
     {
-        var logger = _logger;
+        Logger logger = _logger;
         if (logger != null)
             logger.LogInfo("Received Websocket OnMessage: " + e.Message);
-        var onLog = OnLog;
+        EventHandler<OnLogArgs> onLog = OnLog;
         if (onLog != null)
             onLog(this, new OnLogArgs
             {
@@ -290,7 +290,7 @@ public class CustomPubsub : ITwitchPubSub
         _logger?.LogWarning("PubSub Websocket connection closed");
         _pingTimer.Stop();
         _pongTimer.Stop();
-        var subServiceClosed = OnPubSubServiceClosed;
+        EventHandler subServiceClosed = OnPubSubServiceClosed;
         if (subServiceClosed == null)
             return;
         subServiceClosed(this, EventArgs.Empty);
@@ -298,13 +298,13 @@ public class CustomPubsub : ITwitchPubSub
 
     private void Socket_OnConnected(object sender, EventArgs e)
     {
-        var logger = _logger;
+        Logger logger = _logger;
         if (logger != null)
             logger.LogInfo("PubSub Websocket connection established");
         _pingTimer.Interval = 180000.0;
         _pingTimer.Elapsed += PingTimerTick;
         _pingTimer.Start();
-        var serviceConnected = OnPubSubServiceConnected;
+        EventHandler serviceConnected = OnPubSubServiceConnected;
         if (serviceConnected == null)
             return;
         serviceConnected(this, EventArgs.Empty);
@@ -328,27 +328,27 @@ public class CustomPubsub : ITwitchPubSub
 
     private void ParseMessage(string message)
     {
-        var type = JObject.Parse(message).SelectToken("type")?.ToString().ToLower() ?? "";
+        string type = JObject.Parse(message).SelectToken("type")?.ToString().ToLower() ?? "";
         if (string.IsNullOrEmpty(type)) return;
         switch (type)
         {
             case "response":
-                var response = new Response(message);
+                Response response = new Response(message);
                 if (_previousRequests.Count != 0)
                 {
-                    var flag = false;
+                    bool flag = false;
                     _previousRequestsSemaphore.WaitOne();
                     try
                     {
-                        var index = 0;
+                        int index = 0;
                         while (index < _previousRequests.Count)
                         {
-                            var previousRequest = _previousRequests[index];
+                            PreviousRequest previousRequest = _previousRequests[index];
                             if (string.Equals(previousRequest.Nonce, response.Nonce, StringComparison.CurrentCulture))
                             {
                                 _previousRequests.RemoveAt(index);
-                                _topicToChannelId.TryGetValue(previousRequest.Topic, out var str);
-                                var onListenResponse = OnListenResponse;
+                                _topicToChannelId.TryGetValue(previousRequest.Topic, out string str);
+                                EventHandler<ListenResponseArgs> onListenResponse = OnListenResponse;
                                 if (onListenResponse != null)
                                     onListenResponse(this, new ListenResponseArgs
                                     {
@@ -376,20 +376,20 @@ public class CustomPubsub : ITwitchPubSub
 
                 break;
             case nameof(message):
-                var message1 = new Message(message);
-                _topicToChannelId.TryGetValue(message1.Topic, out var str1);
-                var str2 = str1 ?? "";
+                Message message1 = new Message(message);
+                _topicToChannelId.TryGetValue(message1.Topic, out string str1);
+                string str2 = str1 ?? "";
                 switch (message1.Topic.Split('.')[0])
                 {
                     case "automod-queue":
-                        var messageData1 = (AutomodQueue)message1.MessageData;
+                        AutomodQueue messageData1 = (AutomodQueue)message1.MessageData;
                         switch (messageData1.Type)
                         {
                             case AutomodQueueType.CaughtMessage:
-                                var
+                                AutomodCaughtMessage
                                     data1 =
                                         messageData1.Data as AutomodCaughtMessage;
-                                var automodCaughtMessage =
+                                EventHandler<AutomodCaughtMessageArgs> automodCaughtMessage =
                                     OnAutomodCaughtMessage;
                                 if (automodCaughtMessage == null)
                                     return;
@@ -408,7 +408,7 @@ public class CustomPubsub : ITwitchPubSub
                     case "channel-bits-events-v1":
                         if (message1.MessageData is ChannelBitsEvents messageData2)
                         {
-                            var onBitsReceived = OnBitsReceived;
+                            EventHandler<OnBitsReceivedArgs> onBitsReceived = OnBitsReceived;
                             if (onBitsReceived == null)
                                 return;
                             onBitsReceived(this, new OnBitsReceivedArgs
@@ -430,7 +430,7 @@ public class CustomPubsub : ITwitchPubSub
                     case "channel-bits-events-v2":
                         if (message1.MessageData is ChannelBitsEventsV2 messageData3)
                         {
-                            var onBitsReceivedV2 = OnBitsReceivedV2;
+                            EventHandler<BitsReceivedV2Args> onBitsReceivedV2 = OnBitsReceivedV2;
                             if (onBitsReceivedV2 == null)
                                 return;
                             onBitsReceivedV2(this, new BitsReceivedV2Args
@@ -451,8 +451,8 @@ public class CustomPubsub : ITwitchPubSub
 
                         break;
                     case "channel-ext-v1":
-                        var messageData4 = (ChannelExtensionBroadcast)message1.MessageData;
-                        var extensionBroadcast =
+                        ChannelExtensionBroadcast messageData4 = (ChannelExtensionBroadcast)message1.MessageData;
+                        EventHandler<OnChannelExtensionBroadcastArgs> extensionBroadcast =
                             OnChannelExtensionBroadcast;
                         if (extensionBroadcast == null)
                             return;
@@ -463,12 +463,12 @@ public class CustomPubsub : ITwitchPubSub
                         });
                         return;
                     case "channel-points-channel-v1":
-                        var messageData5 = (ChannelPointsChannel)message1.MessageData;
+                        ChannelPointsChannel messageData5 = (ChannelPointsChannel)message1.MessageData;
                         switch (messageData5.Type)
                         {
                             case ChannelPointsChannelType.RewardRedeemed:
-                                var data2 = (RewardRedeemed)messageData5.Data;
-                                var pointsRewardRedeemed =
+                                RewardRedeemed data2 = (RewardRedeemed)messageData5.Data;
+                                EventHandler<ChannelPointsRewardRedeemedArgs> pointsRewardRedeemed =
                                     OnChannelPointsRewardRedeemed;
                                 if (pointsRewardRedeemed == null)
                                     return;
@@ -485,8 +485,8 @@ public class CustomPubsub : ITwitchPubSub
                                 return;
                         }
                     case "channel-subscribe-events-v1":
-                        var messageData6 = message1.MessageData as ChannelSubscription;
-                        var channelSubscription = OnChannelSubscription;
+                        ChannelSubscription messageData6 = message1.MessageData as ChannelSubscription;
+                        EventHandler<ChannelSubscriptionArgs> channelSubscription = OnChannelSubscription;
                         if (channelSubscription == null)
                             return;
                         channelSubscription(this, new ChannelSubscriptionArgs
@@ -496,14 +496,14 @@ public class CustomPubsub : ITwitchPubSub
                         });
                         return;
                     case "chat_moderator_actions":
-                        var messageData7 = message1.MessageData as ChatModeratorActions;
-                        var str3 = "";
+                        ChatModeratorActions messageData7 = message1.MessageData as ChatModeratorActions;
+                        string str3 = "";
                         switch (messageData7?.ModerationAction.ToLower())
                         {
                             case "ban":
                                 if (messageData7.Args.Count > 1)
                                     str3 = messageData7.Args[1];
-                                var onBan = OnBan;
+                                EventHandler<OnBanArgs> onBan = OnBan;
                                 if (onBan == null)
                                     return;
                                 onBan(this, new OnBanArgs
@@ -517,7 +517,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "clear":
-                                var onClear = OnClear;
+                                EventHandler<OnClearArgs> onClear = OnClear;
                                 if (onClear == null)
                                     return;
                                 onClear(this, new OnClearArgs
@@ -527,7 +527,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "delete":
-                                var onMessageDeleted = OnMessageDeleted;
+                                EventHandler<OnMessageDeletedArgs> onMessageDeleted = OnMessageDeleted;
                                 if (onMessageDeleted == null)
                                     return;
                                 onMessageDeleted(this, new OnMessageDeletedArgs
@@ -542,7 +542,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "emoteonly":
-                                var onEmoteOnly = OnEmoteOnly;
+                                EventHandler<OnEmoteOnlyArgs> onEmoteOnly = OnEmoteOnly;
                                 if (onEmoteOnly == null)
                                     return;
                                 onEmoteOnly(this, new OnEmoteOnlyArgs
@@ -552,7 +552,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "emoteonlyoff":
-                                var onEmoteOnlyOff = OnEmoteOnlyOff;
+                                EventHandler<OnEmoteOnlyOffArgs> onEmoteOnlyOff = OnEmoteOnlyOff;
                                 if (onEmoteOnlyOff == null)
                                     return;
                                 onEmoteOnlyOff(this, new OnEmoteOnlyOffArgs
@@ -562,7 +562,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "host":
-                                var onHost = OnHost;
+                                EventHandler<OnHostArgs> onHost = OnHost;
                                 if (onHost == null)
                                     return;
                                 onHost(this, new OnHostArgs
@@ -573,7 +573,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "r9kbeta":
-                                var onR9KBeta = OnR9KBeta;
+                                EventHandler<OnR9kBetaArgs> onR9KBeta = OnR9KBeta;
                                 if (onR9KBeta == null)
                                     return;
                                 onR9KBeta(this, new OnR9kBetaArgs
@@ -583,7 +583,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "r9kbetaoff":
-                                var onR9KBetaOff = OnR9KBetaOff;
+                                EventHandler<OnR9kBetaOffArgs> onR9KBetaOff = OnR9KBetaOff;
                                 if (onR9KBetaOff == null)
                                     return;
                                 onR9KBetaOff(this, new OnR9kBetaOffArgs
@@ -593,7 +593,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "subscribers":
-                                var onSubscribersOnly = OnSubscribersOnly;
+                                EventHandler<OnSubscribersOnlyArgs> onSubscribersOnly = OnSubscribersOnly;
                                 if (onSubscribersOnly == null)
                                     return;
                                 onSubscribersOnly(this, new OnSubscribersOnlyArgs
@@ -603,7 +603,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "subscribersoff":
-                                var subscribersOnlyOff = OnSubscribersOnlyOff;
+                                EventHandler<OnSubscribersOnlyOffArgs> subscribersOnlyOff = OnSubscribersOnlyOff;
                                 if (subscribersOnlyOff == null)
                                     return;
                                 subscribersOnlyOff(this, new OnSubscribersOnlyOffArgs
@@ -615,7 +615,7 @@ public class CustomPubsub : ITwitchPubSub
                             case "timeout":
                                 if (messageData7.Args.Count > 2)
                                     str3 = messageData7.Args[2];
-                                var onTimeout = OnTimeout;
+                                EventHandler<OnTimeoutArgs> onTimeout = OnTimeout;
                                 if (onTimeout == null)
                                     return;
                                 onTimeout(this, new OnTimeoutArgs
@@ -630,7 +630,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "unban":
-                                var onUnban = OnUnban;
+                                EventHandler<OnUnbanArgs> onUnban = OnUnban;
                                 if (onUnban == null)
                                     return;
                                 onUnban(this, new OnUnbanArgs
@@ -643,7 +643,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case "untimeout":
-                                var onUntimeout = OnUntimeout;
+                                EventHandler<OnUntimeoutArgs> onUntimeout = OnUntimeout;
                                 if (onUntimeout == null)
                                     return;
                                 onUntimeout(this, new OnUntimeoutArgs
@@ -659,12 +659,12 @@ public class CustomPubsub : ITwitchPubSub
 
                         break;
                     case "community-points-channel-v1":
-                        var messageData8 = (CommunityPointsChannel)message1.MessageData;
+                        CommunityPointsChannel messageData8 = (CommunityPointsChannel)message1.MessageData;
                         CommunityPointsChannelType? nullable1 = messageData8.Type;
                         switch (nullable1.GetValueOrDefault())
                         {
                             case CommunityPointsChannelType.RewardRedeemed:
-                                var onRewardRedeemed = OnRewardRedeemed;
+                                EventHandler<OnRewardRedeemedArgs> onRewardRedeemed = OnRewardRedeemed;
                                 if (onRewardRedeemed == null)
                                     return;
                                 onRewardRedeemed(this, new OnRewardRedeemedArgs
@@ -683,8 +683,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case CommunityPointsChannelType.CustomRewardUpdated:
-                                var
-                                    customRewardUpdated = OnCustomRewardUpdated;
+                                EventHandler<OnCustomRewardUpdatedArgs> customRewardUpdated = OnCustomRewardUpdated;
                                 if (customRewardUpdated == null)
                                     return;
                                 customRewardUpdated(this, new OnCustomRewardUpdatedArgs
@@ -698,8 +697,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case CommunityPointsChannelType.CustomRewardCreated:
-                                var
-                                    customRewardCreated = OnCustomRewardCreated;
+                                EventHandler<OnCustomRewardCreatedArgs> customRewardCreated = OnCustomRewardCreated;
                                 if (customRewardCreated == null)
                                     return;
                                 customRewardCreated(this, new OnCustomRewardCreatedArgs
@@ -713,8 +711,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case CommunityPointsChannelType.CustomRewardDeleted:
-                                var
-                                    customRewardDeleted = OnCustomRewardDeleted;
+                                EventHandler<OnCustomRewardDeletedArgs> customRewardDeleted = OnCustomRewardDeleted;
                                 if (customRewardDeleted == null)
                                     return;
                                 customRewardDeleted(this, new OnCustomRewardDeletedArgs
@@ -730,9 +727,9 @@ public class CustomPubsub : ITwitchPubSub
                                 return;
                         }
                     case "following":
-                        var messageData9 = (Following)message1.MessageData;
+                        Following messageData9 = (Following)message1.MessageData;
                         messageData9.FollowedChannelId = message1.Topic.Split('.')[1];
-                        var onFollow = OnFollow;
+                        EventHandler<OnFollowArgs> onFollow = OnFollow;
                         if (onFollow == null)
                             return;
                         onFollow(this, new OnFollowArgs
@@ -744,12 +741,12 @@ public class CustomPubsub : ITwitchPubSub
                         });
                         return;
                     case "leaderboard-events-v1":
-                        var messageData10 = (LeaderboardEvents)message1.MessageData;
+                        LeaderboardEvents messageData10 = (LeaderboardEvents)message1.MessageData;
                         LeaderBoardType? nullable2 = messageData10.Type;
                         switch (nullable2.GetValueOrDefault())
                         {
                             case LeaderBoardType.BitsUsageByChannel:
-                                var onLeaderboardBits = OnLeaderboardBits;
+                                EventHandler<OnLeaderboardEventArgs> onLeaderboardBits = OnLeaderboardBits;
                                 if (onLeaderboardBits == null)
                                     return;
                                 onLeaderboardBits(this, new OnLeaderboardEventArgs
@@ -759,7 +756,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case LeaderBoardType.SubGiftSent:
-                                var onLeaderboardSubs = OnLeaderboardSubs;
+                                EventHandler<OnLeaderboardEventArgs> onLeaderboardSubs = OnLeaderboardSubs;
                                 if (onLeaderboardSubs == null)
                                     return;
                                 onLeaderboardSubs(this, new OnLeaderboardEventArgs
@@ -772,13 +769,13 @@ public class CustomPubsub : ITwitchPubSub
                                 return;
                         }
                     case "predictions-channel-v1":
-                        var messageData11 = (PredictionEvents)message1.MessageData;
+                        PredictionEvents messageData11 = (PredictionEvents)message1.MessageData;
                         PredictionType? nullable3 = messageData11.Type;
                         if (nullable3.HasValue)
                             switch (nullable3.GetValueOrDefault())
                             {
                                 case PredictionType.EventCreated:
-                                    var onPrediction1 = OnPrediction;
+                                    EventHandler<PredictionArgs> onPrediction1 = OnPrediction;
                                     if (onPrediction1 == null)
                                         return;
                                     onPrediction1(this, new PredictionArgs
@@ -797,7 +794,7 @@ public class CustomPubsub : ITwitchPubSub
                                     });
                                     return;
                                 case PredictionType.EventUpdated:
-                                    var onPrediction2 = OnPrediction;
+                                    EventHandler<PredictionArgs> onPrediction2 = OnPrediction;
                                     if (onPrediction2 == null)
                                         return;
                                     onPrediction2(this, new PredictionArgs
@@ -823,14 +820,14 @@ public class CustomPubsub : ITwitchPubSub
                         UnaccountedFor("Prediction Type: null");
                         return;
                     case "raid":
-                        var messageData12 = (RaidEvents)message1.MessageData;
+                        RaidEvents messageData12 = (RaidEvents)message1.MessageData;
                         RaidType? nullable4 = messageData12.Type;
                         if (!nullable4.HasValue)
                             return;
                         switch (nullable4.GetValueOrDefault())
                         {
                             case RaidType.RaidUpdate:
-                                var onRaidUpdate = OnRaidUpdate;
+                                EventHandler<OnRaidUpdateArgs> onRaidUpdate = OnRaidUpdate;
                                 if (onRaidUpdate == null)
                                     return;
                                 onRaidUpdate(this, new OnRaidUpdateArgs
@@ -845,7 +842,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case RaidType.RaidUpdateV2:
-                                var onRaidUpdateV2 = OnRaidUpdateV2;
+                                EventHandler<OnRaidUpdateV2Args> onRaidUpdateV2 = OnRaidUpdateV2;
                                 if (onRaidUpdateV2 == null)
                                     return;
                                 onRaidUpdateV2(this, new OnRaidUpdateV2Args
@@ -860,7 +857,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case RaidType.RaidGo:
-                                var onRaidGo = OnRaidGo;
+                                EventHandler<OnRaidGoArgs> onRaidGo = OnRaidGo;
                                 if (onRaidGo == null)
                                     return;
                                 onRaidGo(this, new OnRaidGoArgs
@@ -878,12 +875,12 @@ public class CustomPubsub : ITwitchPubSub
                                 return;
                         }
                     case "user-moderation-notifications":
-                        var messageData13 =
+                        UserModerationNotifications messageData13 =
                             message1.MessageData as UserModerationNotifications;
                         if (messageData13.Type != UserModerationNotificationsType.AutomodCaughtMessage)
                             return;
-                        var data3 = messageData13.Data as AutomodCaughtResponseMessage;
-                        var caughtUserMessage =
+                        AutomodCaughtResponseMessage data3 = messageData13.Data as AutomodCaughtResponseMessage;
+                        EventHandler<AutomodCaughtUserMessage> caughtUserMessage =
                             OnAutomodCaughtUserMessage;
                         if (caughtUserMessage == null)
                             return;
@@ -895,12 +892,12 @@ public class CustomPubsub : ITwitchPubSub
                         });
                         return;
                     case "video-playback-by-id":
-                        var messageData14 = (VideoPlayback)message1.MessageData;
+                        VideoPlayback messageData14 = (VideoPlayback)message1.MessageData;
                         VideoPlaybackType? nullable5 = messageData14.Type;
                         switch (nullable5.GetValueOrDefault())
                         {
                             case VideoPlaybackType.StreamUp:
-                                var onStreamUp = OnStreamUp;
+                                EventHandler<OnStreamUpArgs> onStreamUp = OnStreamUp;
                                 onStreamUp(this, new OnStreamUpArgs
                                 {
                                     PlayDelay = messageData14.PlayDelay,
@@ -909,7 +906,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case VideoPlaybackType.StreamDown:
-                                var onStreamDown = OnStreamDown;
+                                EventHandler<OnStreamDownArgs> onStreamDown = OnStreamDown;
                                 onStreamDown(this, new OnStreamDownArgs
                                 {
                                     ServerTime = messageData14.ServerTime,
@@ -917,7 +914,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case VideoPlaybackType.ViewCount:
-                                var onViewCount = OnViewCount;
+                                EventHandler<OnViewCountArgs> onViewCount = OnViewCount;
                                 onViewCount(this, new OnViewCountArgs
                                 {
                                     ServerTime = messageData14.ServerTime,
@@ -926,7 +923,7 @@ public class CustomPubsub : ITwitchPubSub
                                 });
                                 return;
                             case VideoPlaybackType.Commercial:
-                                var onCommercial = OnCommercial;
+                                EventHandler<OnCommercialArgs> onCommercial = OnCommercial;
                                 onCommercial(this, new OnCommercialArgs
                                 {
                                     ServerTime = messageData14.ServerTime,
@@ -938,8 +935,8 @@ public class CustomPubsub : ITwitchPubSub
 
                         break;
                     case "whispers":
-                        var messageData15 = (Whisper)message1.MessageData;
-                        var onWhisper = OnWhisper;
+                        Whisper messageData15 = (Whisper)message1.MessageData;
+                        EventHandler<WhisperArgs> onWhisper = OnWhisper;
                         onWhisper(this, new WhisperArgs
                         {
                             Whisper = messageData15,
@@ -973,7 +970,7 @@ public class CustomPubsub : ITwitchPubSub
 
     private void ListenToTopics(params string[] topics)
     {
-        foreach (var topic in topics)
+        foreach (string topic in topics)
             _topicList.Add(topic);
     }
 
@@ -984,21 +981,21 @@ public class CustomPubsub : ITwitchPubSub
 
     public void ListenToUserModerationNotifications(string myTwitchId, string channelTwitchId)
     {
-        var str = "user-moderation-notifications." + myTwitchId + "." + channelTwitchId;
+        string str = "user-moderation-notifications." + myTwitchId + "." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
     public void ListenToAutomodQueue(string userTwitchId, string channelTwitchId)
     {
-        var str = "automod-queue." + userTwitchId + "." + channelTwitchId;
+        string str = "automod-queue." + userTwitchId + "." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
     public void ListenToBitsEventsV2(string channelTwitchId)
     {
-        var str = "channel-bits-events-v2." + channelTwitchId;
+        string str = "channel-bits-events-v2." + channelTwitchId;
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
