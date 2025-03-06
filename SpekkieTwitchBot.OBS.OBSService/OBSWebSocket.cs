@@ -284,13 +284,13 @@ public class ObsWebSocket
 
     protected static string NewMessageId(int length = 16)
     {
-        const string pool = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string Pool = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
         string result = "";
         for (int i = 0; i < length; i++)
         {
-            int index = Random.Next(0, pool.Length - 1);
-            result += pool[index];
+            int index = Random.Next(0, Pool.Length - 1);
+            result += Pool[index];
         }
 
         return result;

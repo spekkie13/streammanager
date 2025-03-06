@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTwitchBot.OBS.OBSSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTwitchBot.General.EventTimerService", "SpekkieTwitchBot.General.EventTimerService\SpekkieTwitchBot.General.EventTimerService.csproj", "{E746E996-28AA-492E-A8B4-EC7266F26652}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTwitchBot.Twitch.Tests", "SpekkieTwitchBot.Twitch.Tests\SpekkieTwitchBot.Twitch.Tests.csproj", "{97A725DF-B540-429B-BDC0-0023D26322D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{E746E996-28AA-492E-A8B4-EC7266F26652}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E746E996-28AA-492E-A8B4-EC7266F26652}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E746E996-28AA-492E-A8B4-EC7266F26652}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97A725DF-B540-429B-BDC0-0023D26322D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97A725DF-B540-429B-BDC0-0023D26322D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97A725DF-B540-429B-BDC0-0023D26322D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97A725DF-B540-429B-BDC0-0023D26322D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -82,5 +88,6 @@ Global
 		{C4223AE0-F65B-4655-93A3-ABE3FD5776BE} = {5BC4BDF0-8362-4E86-BF4F-F2F7D1F1C5A7}
 		{7E74529D-34B0-41FB-8DBD-443F58D77EDB} = {5BC4BDF0-8362-4E86-BF4F-F2F7D1F1C5A7}
 		{E746E996-28AA-492E-A8B4-EC7266F26652} = {CD877BF6-EC4C-4B23-9165-A07580C5BD34}
+		{97A725DF-B540-429B-BDC0-0023D26322D7} = {5BC4BDF0-8362-4E86-BF4F-F2F7D1F1C5A7}
 	EndGlobalSection
 EndGlobal

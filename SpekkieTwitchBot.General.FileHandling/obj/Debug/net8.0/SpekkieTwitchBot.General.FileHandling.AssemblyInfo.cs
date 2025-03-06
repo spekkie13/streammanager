@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SpekkieTwitchBot.General.FileHandling")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1db71a06d7ec0639ee2423176d5d1969f54083ff")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3a3af3d7d7a9e0cfd67e04460cf1ae367231c897")]
 [assembly: System.Reflection.AssemblyProductAttribute("SpekkieTwitchBot.General.FileHandling")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SpekkieTwitchBot.General.FileHandling")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "GE7bMFbKqqk=",
+  "dgSpecHash": "dpacBullvuY=",
   "success": true,
   "projectFilePath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spotify.SpotifyService/SpekkieTwitchBot.Spotify.SpotifyService.csproj",
   "expectedPackageFiles": [
+    "/Users/tomspek/.nuget/packages/castle.core/5.1.1/castle.core.5.1.1.nupkg.sha512",
     "/Users/tomspek/.nuget/packages/microsoft.extensions.configuration/8.0.0/microsoft.extensions.configuration.8.0.0.nupkg.sha512",
     "/Users/tomspek/.nuget/packages/microsoft.extensions.configuration.abstractions/8.0.0/microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
     "/Users/tomspek/.nuget/packages/microsoft.extensions.configuration.binder/8.0.2/microsoft.extensions.configuration.binder.8.0.2.nupkg.sha512",
@@ -33,6 +34,7 @@
     "/Users/tomspek/.nuget/packages/microsoft.extensions.primitives/8.0.0/microsoft.extensions.primitives.8.0.0.nupkg.sha512",
     "/Users/tomspek/.nuget/packages/microsoft.netcore.platforms/1.1.1/microsoft.netcore.platforms.1.1.1.nupkg.sha512",
     "/Users/tomspek/.nuget/packages/microsoft.netcore.targets/1.1.0/microsoft.netcore.targets.1.1.0.nupkg.sha512",
+    "/Users/tomspek/.nuget/packages/moq/4.20.72/moq.4.20.72.nupkg.sha512",
     "/Users/tomspek/.nuget/packages/newtonsoft.json/13.0.1/newtonsoft.json.13.0.1.nupkg.sha512",
     "/Users/tomspek/.nuget/packages/runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl/4.3.2/runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",
     "/Users/tomspek/.nuget/packages/runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl/4.3.2/runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",

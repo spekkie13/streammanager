@@ -17,10 +17,10 @@ public class FollowEventHandler(
         string mostRecentFollower = twitchFileReader.ReadMostRecentFollowerFile();
         if (mostRecentFollower.Equals(followerName)) return;
 
-        UpdateFollowerInfo();
+        UpdateFollowerInfo().Wait(); // Ensure we can test it
     }
 
-    private async void UpdateFollowerInfo()
+    private async Task UpdateFollowerInfo()  // Change to Task
     {
         string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
         HttpResponseMessage message = await client.GetAsync(url);
