@@ -69,8 +69,6 @@ C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\S
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\obj\Release\net8.0\SpekkieTwitchBot.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\obj\Release\net8.0\SpekkieTwitchBot.genruntimeconfig.cache
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\obj\Release\net8.0\ref\SpekkieTwitchBot.dll
-C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\SpekkieTwitchBot.ClashOfClans.StatsBot.dll
-C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\SpekkieTwitchBot.ClashOfClans.StatsBot.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\SpekkieTwitchBot.Twitch.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\SpekkieTwitchBot.Twitch.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\Microsoft.Extensions.Configuration.dll
@@ -85,3 +83,5 @@ C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\S
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\SpekkieTwitchBot.General.EventTimerService.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\SpekkieTwitchBot.General.EventTimerService.pdb
+C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\Castle.Core.dll
+C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\Moq.dll

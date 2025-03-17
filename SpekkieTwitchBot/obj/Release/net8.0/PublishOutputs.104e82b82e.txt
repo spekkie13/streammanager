@@ -3,6 +3,7 @@ C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.deps.json
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.runtimeconfig.json
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.pdb
+C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Castle.Core.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Microsoft.Extensions.Configuration.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Microsoft.Extensions.Configuration.Abstractions.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Microsoft.Extensions.Configuration.Binder.dll
@@ -30,6 +31,7 @@ C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Microsoft.Extensions
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Microsoft.Extensions.Options.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Microsoft.Extensions.Options.ConfigurationExtensions.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Microsoft.Extensions.Primitives.dll
+C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Moq.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Newtonsoft.Json.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\obs-websocket-dotnet.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\PacketDotNet.dll
@@ -55,7 +57,6 @@ C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\websocket-sharp.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\runtimes\win\lib\net8.0\System.Windows.Extensions.dll
-C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.ClashOfClans.StatsBot.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Common.SpekkieClassLibrary.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.General.EventTimerService.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.General.FileHandling.dll
@@ -64,7 +65,6 @@ C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Spo
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Twitch.CommandService.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Twitch.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\System.Reactive.dll
-C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.ClashOfClans.StatsBot.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.General.EventTimerService.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Twitch.CommandService.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Common.SpekkieClassLibrary.pdb

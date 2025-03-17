@@ -91,13 +91,13 @@ public class ObsWebsocketService : IHostedService
         if (e.ObsCloseCode == ObsCloseCodes.AuthenticationFailed)
             _GeneralLogger.LogError("Authentication Failed");
         else if (e.WebsocketDisconnectionInfo.Exception != null)
-            _GeneralLogger.LogError($@"Connection failed: 
+            _GeneralLogger.LogWarning($@"Connection failed: 
                                      CloseCode: {e.ObsCloseCode} 
                                      Desc: {e.WebsocketDisconnectionInfo.CloseStatusDescription} 
                                      Exception:{e.WebsocketDisconnectionInfo.Exception?.Message}\n
                                      Type: {e.WebsocketDisconnectionInfo.Type}");
         else
-            _GeneralLogger.LogError($@"Connection failed: 
+            _GeneralLogger.LogWarning($@"Connection failed: 
                                      CloseCode: {e.ObsCloseCode} 
                                      Desc: {e.WebsocketDisconnectionInfo.CloseStatusDescription} 
                                      Exception:{e.WebsocketDisconnectionInfo.Exception?.Message}\n

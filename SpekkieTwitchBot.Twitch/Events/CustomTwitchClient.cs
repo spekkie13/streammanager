@@ -620,9 +620,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     HandleCap(ircMessage);
                     break;
                 case IrcCommand.RPL_001:
-                    break;
                 case IrcCommand.RPL_002:
-                    break;
                 case IrcCommand.RPL_003:
                     break;
                 case IrcCommand.RPL_004:
@@ -635,9 +633,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     Handle366();
                     break;
                 case IrcCommand.RPL_372:
-                    break;
                 case IrcCommand.RPL_375:
-                    break;
                 case IrcCommand.RPL_376:
                     break;
                 case IrcCommand.Whisper:
@@ -655,6 +651,10 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                 case IrcCommand.Mode:
                     HandleMode(ircMessage);
                     break;
+                case IrcCommand.Unknown:
+                case IrcCommand.Nick:
+                case IrcCommand.Pass:
+                case IrcCommand.ServerChange:
                 default:
                     EventHandler<OnUnaccountedForArgs> onUnaccountedFor = OnUnaccountedFor;
                     if (onUnaccountedFor != null)

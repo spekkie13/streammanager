@@ -15,14 +15,14 @@ public class TwitchFileWriter(FileWriter fileWriter)
         fileWriter.Write(dir, text);
     }
 
-    public void WriteMostRecentFollowerFile(string text)
+    public virtual void WriteMostRecentFollowerFile(string text)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentFollower.txt";
 
         fileWriter.Write(dir, text);
     }
 
-    public void WriteTotalFollowersFile(string text)
+    public virtual void WriteTotalFollowersFile(string text)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalFollowers.txt";
         fileWriter.Write(dir, text);

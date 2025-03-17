@@ -1,7 +1,6 @@
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.Twitch.CommandService.deps.json
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.Twitch.CommandService.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.Twitch.CommandService.pdb
-C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.ClashOfClans.StatsBot.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.Common.SpekkieClassLibrary.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.General.EventTimerService.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.General.FileHandling.dll
@@ -9,7 +8,6 @@ C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\S
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.Spotify.SpotifyService.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.Twitch.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\System.Reactive.dll
-C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.ClashOfClans.StatsBot.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.General.EventTimerService.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.OBS.OBSService.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.CommandService\bin\Debug\net8.0\SpekkieTwitchBot.Spotify.SpotifyService.pdb

@@ -38,7 +38,7 @@ public static class Program
                 configure.AddJsonFile(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) +
                                       "/SpekkieTwitchBot/Settings/appsettings.json");
             })
-            .ConfigureServices((hostContext, services) =>
+            .ConfigureServices(services =>
             {
                 services.AddLogging();
                 services.AddTwitchLibEventSubWebsockets();
@@ -84,9 +84,9 @@ public static class Program
                 services.AddSingleton<ObsCommandHandler>();
                 services.AddSingleton<TextCommandHandler>();
                 services.AddSingleton<TimerCommandHandler>();
-
                 services.AddSingleton<TwitchCommandHandler>();
                 services.AddSingleton<GeneralCommandHandler>();
+                
                 services.AddSingleton<JoinedChannelManager>();
                 services.AddSingleton<IrcParser>();
                 services.AddHostedService<SpotifyService>();

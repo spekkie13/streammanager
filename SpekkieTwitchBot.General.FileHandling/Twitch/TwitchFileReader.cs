@@ -25,7 +25,7 @@ public class TwitchFileReader(FileReader fileReader)
         return jsonData;
     }
 
-    public string ReadMostRecentFollowerFile()
+    public virtual string ReadMostRecentFollowerFile()
     {
         string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentFollower.txt";
         string text = fileReader.Read(file);

@@ -6,6 +6,7 @@ using SpekkieClassLibrary.Twitch.Pubsub.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using SpekkieTwitchBot.General.FileHandling;
+using TwitchAuthService;
 using TwitchAuthService.Events;
 using TwitchAuthService.Events.Pubsub;
 using TwitchAuthService.Handlers;
@@ -30,6 +31,7 @@ public class TwitchWebsocketService : IHostedService
     private readonly Logger _GeneralLogger;
     private readonly GeneralTwitchAuth _generalTwitchAuth;
     private readonly SpotifyCommandHandler _SpotifyCommandHandler;
+    private readonly CustomTwitchHttpClient _CustomTwitchHttpClient;
 
     private readonly SubEventHandler _SubEventHandler;
     private readonly TwitchUserAuth _twitchUserAuth;
@@ -43,7 +45,8 @@ public class TwitchWebsocketService : IHostedService
         GeneralCommandHandler generalCommandHandler,
         SubEventHandler subEventHandler,
         FollowEventHandler followEventHandler,
-        ChannelPointHandler channelPointHandler
+        ChannelPointHandler channelPointHandler,
+        CustomTwitchHttpClient customTwitchHttpClient
     )
     {
         _GeneralLogger = generalLogger;
@@ -58,7 +61,7 @@ public class TwitchWebsocketService : IHostedService
 
         _CustomTwitchClient = customTwitchClient ?? throw new ArgumentNullException(nameof(customTwitchClient));
         _CustomPubsub = customPubsub ?? throw new ArgumentNullException(nameof(customPubsub));
-
+        _CustomTwitchHttpClient = customTwitchHttpClient ?? throw new ArgumentNullException(nameof(customTwitchHttpClient));
         _SubEventHandler = subEventHandler;
         _FollowEventHandler = followEventHandler;
         _ChannelPointHandler = channelPointHandler;
@@ -71,6 +74,8 @@ public class TwitchWebsocketService : IHostedService
     {
         _CustomTwitchClient.Connect();
         _CustomPubsub.Connect();
+        await _CustomTwitchHttpClient.UpdateFollowerInfo();
+        await _CustomTwitchHttpClient.UpdateSubscriberInfo();
         try
         {
             await Task.Delay(Timeout.Infinite, cancellationToken);
@@ -181,9 +186,7 @@ public class TwitchWebsocketService : IHostedService
         _CustomPubsub.OnStreamDown += OnStreamDown;
         _CustomPubsub.OnViewCount += OnViewCount;
         _CustomPubsub.OnWhisper += OnWhisper;
-        _CustomPubsub.OnChannelSubscription += OnChannelSubscription;
         _CustomPubsub.OnChannelExtensionBroadcast += OnChannelExtensionBroadcast;
-        _CustomPubsub.OnFollow += OnFollow;
         _CustomPubsub.OnLeaderboardSubs += OnLeaderboardSubs;
         _CustomPubsub.OnLeaderboardBits += OnLeaderboardBits;
         _CustomPubsub.OnRaidUpdate += OnRaidUpdate;
@@ -282,7 +285,6 @@ public class TwitchWebsocketService : IHostedService
         _GeneralLogger.LogInfo($"New whisper message sent: {e.Message}");
     }
 
-    //TODO: Handle Whisper Command
     private void OnWhisperCommandReceived(object? sender, OnWhisperCommandReceivedArgs e)
     {
         _GeneralLogger.LogInfo($"New whisper command received: {e.Command}");
@@ -667,20 +669,9 @@ public class TwitchWebsocketService : IHostedService
         _GeneralLogger.LogInfo($"Whisper received: {e.Whisper}");
     }
 
-    private void OnChannelSubscription(object? sender, ChannelSubscriptionArgs e)
-    {
-        _GeneralLogger.LogInfo(
-            $"Channel subscription: {e.Subscription.Username} has subscribed for {e.Subscription.Months}");
-    }
-
     private void OnChannelExtensionBroadcast(object? sender, OnChannelExtensionBroadcastArgs e)
     {
         _GeneralLogger.LogInfo($"Channel extension broadcast: {string.Join(',', e.Messages)}");
-    }
-
-    private void OnFollow(object? sender, OnFollowArgs e)
-    {
-        _GeneralLogger.LogInfo($"{e.DisplayName} just followed");
     }
 
     private void OnLeaderboardSubs(object? sender, OnLeaderboardEventArgs e)

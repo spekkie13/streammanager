@@ -8,7 +8,7 @@
     ".NETCoreApp,Version=v8.0": {
       "SpekkieTwitchBot.Twitch.CommandService/1.0.0": {
         "dependencies": {
-          "SpekkieTwitchBot.ClashOfClans.StatsBot": "1.0.0",
+          "Moq": "4.20.72",
           "SpekkieTwitchBot.General.EventTimerService": "1.0.0",
           "SpekkieTwitchBot.OBS.OBSService": "1.0.0",
           "SpekkieTwitchBot.Spotify.SpotifyService": "1.0.0",
@@ -17,6 +17,17 @@
         },
         "runtime": {
           "SpekkieTwitchBot.Twitch.CommandService.dll": {}
+        }
+      },
+      "Castle.Core/5.1.1": {
+        "dependencies": {
+          "System.Diagnostics.EventLog": "8.0.1"
+        },
+        "runtime": {
+          "lib/net6.0/Castle.Core.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.1.1.0"
+          }
         }
       },
       "Microsoft.Extensions.Configuration/8.0.0": {
@@ -380,6 +391,17 @@
       },
       "Microsoft.NETCore.Platforms/1.1.1": {},
       "Microsoft.NETCore.Targets/1.1.0": {},
+      "Moq/4.20.72": {
+        "dependencies": {
+          "Castle.Core": "5.1.1"
+        },
+        "runtime": {
+          "lib/net6.0/Moq.dll": {
+            "assemblyVersion": "4.20.72.0",
+            "fileVersion": "4.20.72.0"
+          }
+        }
+      },
       "Newtonsoft.Json/13.0.1": {
         "runtime": {
           "lib/netstandard2.0/Newtonsoft.Json.dll": {
@@ -987,21 +1009,9 @@
           }
         }
       },
-      "SpekkieTwitchBot.ClashOfClans.StatsBot/1.0.0": {
-        "dependencies": {
-          "Microsoft.Extensions.Hosting": "8.0.1",
-          "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
-          "SpekkieTwitchBot.General.FileHandling": "1.0.0"
-        },
-        "runtime": {
-          "SpekkieTwitchBot.ClashOfClans.StatsBot.dll": {
-            "assemblyVersion": "1.0.0",
-            "fileVersion": "1.0.0.0"
-          }
-        }
-      },
       "SpekkieTwitchBot.Common.SpekkieClassLibrary/1.0.0": {
         "dependencies": {
+          "Moq": "4.20.72",
           "TwitchLib": "3.5.3",
           "Websocket.Client": "4.4.43"
         },
@@ -1015,6 +1025,7 @@
       "SpekkieTwitchBot.General.EventTimerService/1.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Hosting": "8.0.1",
+          "Moq": "4.20.72",
           "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
           "SpekkieTwitchBot.General.FileHandling": "1.0.0"
         },
@@ -1027,6 +1038,7 @@
       },
       "SpekkieTwitchBot.General.FileHandling/1.0.0": {
         "dependencies": {
+          "Moq": "4.20.72",
           "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0"
         },
         "runtime": {
@@ -1039,6 +1051,7 @@
       "SpekkieTwitchBot.OBS.OBSService/1.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Hosting": "8.0.1",
+          "Moq": "4.20.72",
           "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
           "SpekkieTwitchBot.General.FileHandling": "1.0.0"
         },
@@ -1052,6 +1065,7 @@
       "SpekkieTwitchBot.Spotify.SpotifyService/1.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Hosting": "8.0.1",
+          "Moq": "4.20.72",
           "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
           "SpekkieTwitchBot.General.FileHandling": "1.0.0"
         },
@@ -1065,6 +1079,7 @@
       "SpekkieTwitchBot.Twitch/1.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Hosting": "8.0.1",
+          "Moq": "4.20.72",
           "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
           "SpekkieTwitchBot.General.FileHandling": "1.0.0"
         },
@@ -1090,6 +1105,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "Castle.Core/5.1.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-rpYtIczkzGpf+EkZgDr9CClTdemhsrwA/W5hMoPjLkRFnXzH44zDLoovXeKtmxb1ykXK9aJVODSpiJml8CTw2g==",
+      "path": "castle.core/5.1.1",
+      "hashPath": "castle.core.5.1.1.nupkg.sha512"
     },
     "Microsoft.Extensions.Configuration/8.0.0": {
       "type": "package",
@@ -1293,6 +1315,13 @@
       "sha512": "sha512-aOZA3BWfz9RXjpzt0sRJJMjAscAUm3Hoa4UWAfceV9UTYxgwZ1lZt5nO2myFf+/jetYQo4uTP7zS8sJY67BBxg==",
       "path": "microsoft.netcore.targets/1.1.0",
       "hashPath": "microsoft.netcore.targets.1.1.0.nupkg.sha512"
+    },
+    "Moq/4.20.72": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-EA55cjyNn8eTNWrgrdZJH5QLFp2L43oxl1tlkoYUKIE9pRwL784OWiTXeCV5ApS+AMYEAlt7Fo03A2XfouvHmQ==",
+      "path": "moq/4.20.72",
+      "hashPath": "moq.4.20.72.nupkg.sha512"
     },
     "Newtonsoft.Json/13.0.1": {
       "type": "package",
@@ -1769,11 +1798,6 @@
       "sha512": "sha512-h0sS4zsnXrVkYyMYDaRc0k/oV54uXXBlN/HOHAK5d/RWleLTmWS6bxtt0l3D5Q2rgtfLinkHLdf4sOqdrxZ0NA==",
       "path": "websocket.client/4.4.43",
       "hashPath": "websocket.client.4.4.43.nupkg.sha512"
-    },
-    "SpekkieTwitchBot.ClashOfClans.StatsBot/1.0.0": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
     },
     "SpekkieTwitchBot.Common.SpekkieClassLibrary/1.0.0": {
       "type": "project",
