@@ -40,7 +40,7 @@ public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
         return red;
     }
 
-    public void CreateRedemption(string commandArgs)
+    public string CreateRedemption(string commandArgs)
     {
         string title = commandArgs.Split("|")[0];
         string prompt = commandArgs.Split("|")[1];
@@ -55,10 +55,11 @@ public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
         StringContent content = new (rewardInfo, Encoding.UTF8, "application/json");
 
         HttpResponseMessage response = client.PostAsync(url, content).Result;
-
-        logger.LogInfo(response.IsSuccessStatusCode
+        string responseMessage = response.IsSuccessStatusCode
             ? "Custom reward created successfully!"
-            : $"Failed to create custom reward. Status code: {response.StatusCode}");
+            : $"Failed to create custom reward. Status code: {response.StatusCode}";
+        logger.LogInfo(responseMessage);
+        return responseMessage;
     }
 
     private async Task<List<string>> GetCustomRedemptions()

@@ -74,7 +74,6 @@ public static class Program
                 services.AddSingleton<ChannelPointHandler>();
                 services.AddSingleton<SpotifySearchService>();
                 services.AddSingleton<ObsWebSocket>();
-                services.AddSingleton<IrcClient>();
                 services.AddSingleton<SpotifyService>();
                 services.AddSingleton<CustomTwitchClient>();
                 services.AddSingleton<CustomPubsub>();

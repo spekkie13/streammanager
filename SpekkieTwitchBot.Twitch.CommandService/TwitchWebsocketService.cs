@@ -217,8 +217,11 @@ public class TwitchWebsocketService : IHostedService
 
     private void OnChatCommandReceived(object? sender, OnChatCommandReceivedArgs e)
     {
-        _GeneralCommandHandler.HandleCommand(e.Command);
+        string messageId = e.Command.ChatMessage.Id;
+        string message = _GeneralCommandHandler.HandleCommand(e.Command);
+        _CustomTwitchClient.SendReply(e.Command.ChatMessage.Channel, messageId, message);
     }
+
 
     private void FailureToJoin(object? sender, OnFailureToReceiveJoinConfirmationArgs e)
     {
@@ -277,7 +280,7 @@ public class TwitchWebsocketService : IHostedService
 
     private void OnMessageSent(object? sender, OnMessageSentArgs e)
     {
-        _GeneralLogger.LogInfo($"New message sent: {e.SentMessage}");
+        _GeneralLogger.LogInfo($"New message sent: {e.SentMessage.Message}");
     }
 
     private void OnWhisperSent(object? sender, OnWhisperSentArgs e)
@@ -544,7 +547,7 @@ public class TwitchWebsocketService : IHostedService
         switch (reward.Reward.Title)
         {
             case "Song Request":
-                bool success = _SpotifyCommandHandler.HandleAddSongToQueueCommand(reward.UserInput);
+                bool success = _SpotifyCommandHandler.HandleAddSongToQueueCommand(reward.UserInput).Contains("Added");
                 HttpResponseMessage message = _ChannelPointHandler.HandleSongRedemption(
                     success,
                     reward.Id,

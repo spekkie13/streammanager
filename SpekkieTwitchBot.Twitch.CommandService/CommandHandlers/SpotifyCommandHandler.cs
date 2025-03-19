@@ -4,57 +4,55 @@ using SpotifyAuthService;
 
 namespace CommandService.CommandHandlers;
 
-public class SpotifyCommandHandler(SpotifyService spotifyService, SpotifyFileWriter spotifyFileWriter, SpotifySearchService spotifySearchService, IrcClient ircClient)
+public class SpotifyCommandHandler(SpotifyService spotifyService, SpotifyFileWriter spotifyFileWriter, SpotifySearchService spotifySearchService)
 {
-    public void HandleGetCurrentSongCommand()
+    public string HandleGetCurrentSongCommand()
     {
         string currentSong = spotifyService.GetNowPlaying();
-        ircClient.SendPublicChatMessage($"The current song is {currentSong}");
+        return $"The current song is {currentSong}";
     }
 
-    public void HandleGetCurrentPlaylistCommand()
+    public string HandleGetCurrentPlaylistCommand()
     {
         string currentPlaylistUrl = spotifyService.GetCurrentlyPlayingPlaylist();
-        ircClient.SendPublicChatMessage($"The current playlist is {currentPlaylistUrl}");
+        return $"The current playlist is {currentPlaylistUrl}";
     }
 
-    public void HandlePauseMusicCommand()
+    public string HandlePauseMusicCommand()
     {
         bool success = spotifyService.PausePlayer().Result;
-        string message = success ? "Player paused..." : "Player not paused due to an error...";
-        ircClient.SendPublicChatMessage(message);
+        return success ? "Player paused..." : "Player not paused due to an error...";
     }
 
-    public void HandleResumeMusicCommand()
+    public string HandleResumeMusicCommand()
     {
         bool success = spotifyService.ResumePlayer().Result;
-        string message = success ? "Player resumed..." : "Player not resumed due to an error...";
-        ircClient.SendPublicChatMessage(message);
+        return success ? "Player resumed..." : "Player not resumed due to an error...";
     }
 
-    public void HandleNextSongCommand()
+    public string HandleNextSongCommand()
     {
         bool success = spotifyService.SkipNextSong().Result;
         string currentSong = spotifyService.GetNowPlaying();
         spotifyFileWriter.WriteSongFile(currentSong);
 
-        ircClient.SendPublicChatMessage(success
+        return success
             ? "Skipped to the next song..."
-            : "Failed to skip to the next song...");
+            : "Failed to skip to the next song...";
     }
 
-    public void HandlePrevSongCommand()
+    public string HandlePrevSongCommand()
     {
         bool success = spotifyService.SkipPrevSong().Result;
         string currentSong = spotifyService.GetNowPlaying();
         spotifyFileWriter.WriteSongFile(currentSong);
 
-        ircClient.SendPublicChatMessage(success
+        return success
             ? "Skipped to the previous song..."
-            : "Failed to skip to the previous song...");
+            : "Failed to skip to the previous song...";
     }
 
-    public bool HandleAddSongToQueueCommand(string songData)
+    public string HandleAddSongToQueueCommand(string songData)
     {
         bool success;
         if (songData.Split("|").Length == 2)
@@ -66,34 +64,28 @@ public class SpotifyCommandHandler(SpotifyService spotifyService, SpotifyFileWri
             {
                 string uri = song.Uri ?? "";
                 success = spotifyService.AddSongToQueue(uri).Result;
-                string message = success ? "Added song to the queue..." : "Could not add song to the queue...";
-                ircClient.SendPublicChatMessage(message);
-                return success;
+                return success ? "Added song to the queue..." : "Could not add song to the queue...";
             }
         }
         else if (songData.Contains("open.spotify.com"))
         {
             success = spotifyService.AddSongToQueue(songData).Result;
-            string message = success ? "Added song to the queue..." : "Could not add song to the queue...";
-            ircClient.SendPublicChatMessage(message);
-            return success;
+            return success ? "Added song to the queue..." : "Could not add song to the queue...";
         }
 
-        ircClient.SendPublicChatMessage("Please provide a valid spotify link");
-        return false;
+        return "Please provide a valid spotify link";
     }
 
-    public void HandlePlaySpecificSongCommand(string song, string username)
+    public string HandlePlaySpecificSongCommand(string song, string username)
     {
-        if (!username.Equals("spekkie1313", StringComparison.CurrentCultureIgnoreCase)) return;
+        if (!username.Equals("spekkie1313", StringComparison.CurrentCultureIgnoreCase)) return "";
         bool success = spotifyService.PlaySpecificSong(song).Result;
-        ircClient.SendPublicChatMessage(success ? $"started song: {song}" : $"failed to start song: {song}");
+        return success ? $"started song: {song}" : $"failed to start song: {song}";
     }
 
-    public void HandleGetQueueCommand()
+    public string HandleGetQueueCommand()
     {
         string queue = spotifyService.GetQueue();
-
-        ircClient.SendPublicChatMessage($"current queue: {queue}");
+        return $"current queue: {queue}";
     }
 }

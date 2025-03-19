@@ -26,7 +26,7 @@ public class ObsWebSocket
 
     private delegate void RequestCallback(ObsWebSocket sender, JObject body);
 
-    private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> _responseHandlers = new();
+    private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> _responseHandlers;
     private static readonly Random Random = new ();
 
     public ObsWebSocket(WebsocketClient wsConnection, Logger logger)

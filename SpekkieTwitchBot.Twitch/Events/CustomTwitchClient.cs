@@ -92,7 +92,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (channel != null && channel[0] == '#')
             channel = channel[1..];
-        List<string> channels = new List<string> { channel };
+        List<string> channels = [channel];
         int chatCommandIdentifier1 = chatCommandIdentifier;
         int whisperCommandIdentifier1 = whisperCommandIdentifier;
         int num = autoReListenOnExceptions ? 1 : 0;
@@ -380,13 +380,13 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             object target = invocation.Target;
             object[] parameters;
             if (args != null)
-                parameters = new[] { this, args };
+                parameters = [this, args];
             else
-                parameters = new object[]
-                {
+                parameters =
+                [
                     this,
                     EventArgs.Empty
-                };
+                ];
             method.Invoke(target, parameters);
         }
     }
@@ -407,7 +407,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         }
         else
         {
-            OutboundChatMessage outboundChatMessage = new OutboundChatMessage
+            OutboundChatMessage outboundChatMessage = new ()
             {
                 Channel = channel?.Channel,
                 Username = ConnectionCredentials.TwitchUsername,
