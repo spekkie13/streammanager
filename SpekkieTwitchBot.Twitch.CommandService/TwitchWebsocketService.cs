@@ -230,7 +230,7 @@ public class TwitchWebsocketService : IHostedService
 
     private void OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
-        _GeneralLogger.LogInfo(e.ChatMessage.Message);
+        //_GeneralLogger.LogInfo(e.ChatMessage.Message);
     }
 
     private void OnAnnouncement(object? sender, OnAnnouncementArgs e)
