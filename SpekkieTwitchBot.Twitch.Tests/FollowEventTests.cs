@@ -29,7 +29,7 @@ public class FollowEventTests
         
         Mock<TwitchAuthService.TwitchAuthService> twitchAuthServiceMock = new Mock<TwitchAuthService.TwitchAuthService>(_mockTwitchFileReader.Object, _mockTwitchFileWriter.Object, loggerMock.Object);
         _mockTwitchHttpClient = new Mock<CustomTwitchHttpClient>(twitchAuthServiceMock.Object, _mockTwitchFileWriter.Object);
-        _handler = new FollowEventHandler(_mockTwitchFileReader.Object, _mockTwitchHttpClient.Object);
+        _handler = new FollowEventHandler(_mockTwitchFileReader.Object, _mockTwitchFileWriter.Object, _mockTwitchHttpClient.Object);
     }
     
     [Fact]
@@ -56,7 +56,7 @@ public class FollowEventTests
         _handler.HandleFollow(null, eventArgs);
         await Task.Delay(100);
         
-        _mockTwitchFileWriter.Verify(w => w.WriteTotalFollowersFile("100"), Times.Once);
+        _mockTwitchFileWriter.Verify(w => w.WriteTotalFollowersFile(100), Times.Once);
         _mockTwitchFileWriter.Verify(w => w.WriteMostRecentFollowerFile("NewFollower"), Times.Once);
     }
 }

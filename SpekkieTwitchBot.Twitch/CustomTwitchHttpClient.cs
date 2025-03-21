@@ -1,11 +1,7 @@
 ﻿using System.Net.Http.Headers;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Auth;
-using SpekkieClassLibrary.Twitch.Events.Follower;
-using SpekkieClassLibrary.Twitch.Events.Subscription;
-using SpekkieTwitchBot.General.FileHandling.Twitch;
 
 namespace TwitchAuthService;
 
@@ -13,13 +9,11 @@ public class CustomTwitchHttpClient
 {
     private readonly HttpClient _Client;
     private readonly TwitchAuthService _TwitchAuthService;
-    private readonly TwitchFileWriter _TwitchFileWriter;
 
-    public CustomTwitchHttpClient(TwitchAuthService twitchAuthService, TwitchFileWriter twitchFileWriter)
+    public CustomTwitchHttpClient(TwitchAuthService twitchAuthService)
     {
         _Client = new HttpClient();
         _TwitchAuthService = twitchAuthService;
-        _TwitchFileWriter = twitchFileWriter;
         Setup();
     }
 
@@ -48,7 +42,7 @@ public class CustomTwitchHttpClient
         return await _Client.PostAsync(url, content);
     }
     
-    public async Task UpdateFollowerInfo()  
+    public async Task<int> UpdateFollowerInfo()  
     {
         string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
         HttpResponseMessage message = await GetAsync(url);
@@ -56,17 +50,12 @@ public class CustomTwitchHttpClient
         string response = await message.Content.ReadAsStringAsync();
         
         JObject jsonObject = JObject.Parse(response);
-        JToken? followerData = jsonObject["data"];
-        JToken? followerCount = jsonObject["total"];
-        
-        List<Follower>? followers = JsonConvert.DeserializeObject<List<Follower>>(followerData?.ToString() ?? string.Empty);
+        int followerCount = Convert.ToInt32(jsonObject["total"]);
 
-        _TwitchFileWriter.WriteTotalFollowersFile($"Total Followers: {followerCount}");
-        _TwitchFileWriter.WriteMostRecentFollowerFile($"Recent Follower: {followers?.First().UserName}");
+        return followerCount;
     }
     
-    
-    public async Task UpdateSubscriberInfo()
+    public async Task<int> UpdateSubscriberInfo()
     {
         string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
         HttpResponseMessage message = await GetAsync(url);
@@ -74,12 +63,8 @@ public class CustomTwitchHttpClient
         string response = await message.Content.ReadAsStringAsync();
         
         JObject jsonObject = JObject.Parse(response);
-        JToken? subscriberData = jsonObject["data"];
-        JToken? subscriberCount = jsonObject["total"];
+        int subscriberCount = Convert.ToInt32(jsonObject["total"]);
         
-        List<Subscription>? subscribers = JsonConvert.DeserializeObject<List<Subscription>>(subscriberData?.ToString() ?? string.Empty);
-        
-        _TwitchFileWriter.WriteTotalSubscribersFile($"Total Subscribers: {subscriberCount}");
-        _TwitchFileWriter.WriteMostRecentSubscriberFile($"Recent Subscriber: {subscribers?.First().UserName}");
+        return subscriberCount;
     }
 }

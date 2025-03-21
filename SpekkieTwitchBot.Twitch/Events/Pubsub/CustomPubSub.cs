@@ -50,7 +50,7 @@ public class CustomPubsub : ITwitchPubSub
     private readonly List<PreviousRequest> _previousRequests = new();
     private readonly Semaphore _previousRequestsSemaphore = new(1, 1);
     private readonly WebSocketClient _socket;
-    private readonly List<string> _topicList = new();
+    private readonly List<string> _topicList = [];
     private readonly Dictionary<string, string> _topicToChannelId = new();
     private bool _pongReceived;
 

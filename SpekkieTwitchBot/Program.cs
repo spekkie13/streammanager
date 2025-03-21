@@ -66,19 +66,22 @@ public static class Program
                 services.AddSingleton<CustomClient>();
 
                 services.AddSingleton<TwitchAuthService.TwitchAuthService>();
-                services.AddSingleton<SpotifyAuthService.SpotifyAuthService>();
                 services.AddSingleton<CustomTwitchHttpClient>();
-                services.AddSingleton<CustomSpotifyHttpClient>();
                 services.AddSingleton<SubEventHandler>();
                 services.AddSingleton<FollowEventHandler>();
                 services.AddSingleton<ChannelPointHandler>();
-                services.AddSingleton<SpotifySearchService>();
-                services.AddSingleton<ObsWebSocket>();
-                services.AddSingleton<SpotifyService>();
                 services.AddSingleton<CustomTwitchClient>();
                 services.AddSingleton<CustomPubsub>();
+
+                services.AddSingleton<SpotifyAuthService.SpotifyAuthService>();
+                services.AddSingleton<CustomSpotifyHttpClient>();
+                services.AddSingleton<SpotifySearchService>();
+                services.AddSingleton<SpotifyService>();
+
+                services.AddSingleton<ObsWebSocket>();
                 services.AddSingleton<EventTimer>();
                 services.AddSingleton<EventTimerService.EventTimerService>();
+                
                 services.AddSingleton<SpotifyCommandHandler>();
                 services.AddSingleton<ObsCommandHandler>();
                 services.AddSingleton<TextCommandHandler>();
@@ -88,6 +91,7 @@ public static class Program
                 
                 services.AddSingleton<JoinedChannelManager>();
                 services.AddSingleton<IrcParser>();
+                
                 services.AddHostedService<SpotifyService>();
                 services.AddHostedService<EventTimerService.EventTimerService>();
                 services.AddHostedService<ObsWebsocketService>();

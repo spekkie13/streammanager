@@ -22,10 +22,10 @@ public class TwitchFileWriter(FileWriter fileWriter)
         fileWriter.Write(dir, text);
     }
 
-    public virtual void WriteTotalFollowersFile(string text)
+    public virtual void WriteTotalFollowersFile(int totalFollowers)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalFollowers.txt";
-        fileWriter.Write(dir, text);
+        fileWriter.Write(dir, totalFollowers.ToString());
     }
 
     public void WriteMostRecentSubscriberFile(string text)
@@ -35,9 +35,9 @@ public class TwitchFileWriter(FileWriter fileWriter)
         fileWriter.Write(dir, text);
     }
 
-    public void WriteTotalSubscribersFile(string text)
+    public void WriteTotalSubscribersFile(int totalSubscribers)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalSubscribers.txt";
-        fileWriter.Write(dir, text);
+        fileWriter.Write(dir, totalSubscribers.ToString());
     }
 }

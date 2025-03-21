@@ -32,16 +32,15 @@ public class TwitchAuthService(TwitchFileReader twitchFileReader, TwitchFileWrit
 
     private async Task<AuthorizationCredentials> GetUserAccessAuthCredentials(TwitchUserAuth twitchUserAuth)
     {
-        using HttpClient client = new HttpClient();
+        using HttpClient client = new ();
 
-        FormUrlEncodedContent parameters = new FormUrlEncodedContent(new[]
-        {
+        FormUrlEncodedContent parameters = new ([
             new KeyValuePair<string, string>("client_id", twitchUserAuth.ClientId),
             new KeyValuePair<string, string>("client_secret", twitchUserAuth.ClientSecret),
             new KeyValuePair<string, string>("code", twitchUserAuth.Code),
             new KeyValuePair<string, string>("grant_type", "authorization_code"),
             new KeyValuePair<string, string>("redirect_uri", "http://localhost:3000/")
-        });
+        ]);
 
         HttpResponseMessage response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
 
@@ -65,14 +64,13 @@ public class TwitchAuthService(TwitchFileReader twitchFileReader, TwitchFileWrit
 
     private async Task<AuthorizationCredentials> RefreshAppAccessTokenAsync(string clientId, string clientSecret, string refreshToken)
     {
-        using HttpClient client = new HttpClient();
-        FormUrlEncodedContent parameters = new FormUrlEncodedContent(new[]
-        {
+        using HttpClient client = new ();
+        FormUrlEncodedContent parameters = new ([
             new KeyValuePair<string, string>("client_id", clientId),
             new KeyValuePair<string, string>("client_secret", clientSecret),
             new KeyValuePair<string, string>("grant_type", "refresh_token"),
             new KeyValuePair<string, string>("refresh_token", refreshToken)
-        });
+        ]);
 
         HttpResponseMessage response = await client.PostAsync("https://id.twitch.tv/oauth2/token", parameters);
 

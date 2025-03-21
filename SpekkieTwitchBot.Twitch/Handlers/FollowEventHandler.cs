@@ -5,6 +5,7 @@ namespace TwitchAuthService.Handlers;
 
 public class FollowEventHandler(
     TwitchFileReader twitchFileReader,
+    TwitchFileWriter twitchFileWriter,
     CustomTwitchHttpClient client)
 {
     public void HandleFollow(object? sender, OnFollowArgs e)
@@ -13,6 +14,8 @@ public class FollowEventHandler(
         string mostRecentFollower = twitchFileReader.ReadMostRecentFollowerFile();
         if (mostRecentFollower.Equals(followerName)) return;
 
-        client.UpdateFollowerInfo().Wait(); // Ensure we can test it
+        int followerCount = client.UpdateFollowerInfo().Result;
+        twitchFileWriter.WriteMostRecentFollowerFile(e.DisplayName);
+        twitchFileWriter.WriteTotalFollowersFile(followerCount);
     }
 }
