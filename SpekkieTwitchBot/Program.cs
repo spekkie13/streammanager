@@ -19,7 +19,7 @@ using TwitchAuthService.Events.Pubsub;
 using TwitchAuthService.General;
 using TwitchAuthService.Handlers;
 using TwitchLib.EventSub.Websockets.Extensions;
-using Websocket.Client;
+using WebsocketClient = Websocket.Client.WebsocketClient;
 
 namespace SpekkieTwitchBot;
 
@@ -77,7 +77,8 @@ public static class Program
                 services.AddSingleton<CustomSpotifyHttpClient>();
                 services.AddSingleton<SpotifySearchService>();
                 services.AddSingleton<SpotifyService>();
-
+                services.AddSingleton<CustomWebSocketClient>();
+                services.AddSingleton<System.Net.WebSockets.ClientWebSocket>();
                 services.AddSingleton<ObsWebSocket>();
                 services.AddSingleton<EventTimer>();
                 services.AddSingleton<EventTimerService.EventTimerService>();
@@ -96,6 +97,7 @@ public static class Program
                 services.AddHostedService<EventTimerService.EventTimerService>();
                 services.AddHostedService<ObsWebsocketService>();
                 services.AddHostedService<TwitchWebsocketService>();
+                //services.AddHostedService<NewTwitchWebsocketService>();
             });
     }
 }

@@ -7,8 +7,8 @@ namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 public class RewardRedeemed : ChannelPointsData
 {
     [JsonProperty(PropertyName = "timestamp")]
-    public DateTime Timestamp { get; protected set; }
+    public DateTime Timestamp { get; set; }
 
     [JsonProperty(PropertyName = "redemption")]
-    public Redemption Redemption { get; protected set; }
+    public Redemption Redemption { get; set; }
 }

@@ -5,7 +5,6 @@ using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using SpekkieTwitchBot.General.FileHandling;
 using TwitchAuthService.Events.Interfaces;
-using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Enums;
 using TwitchLib.Communication.Events;
 using TwitchLib.Communication.Models;
@@ -49,7 +48,7 @@ public class CustomPubsub : ITwitchPubSub
     private readonly Timer _pongTimer = new();
     private readonly List<PreviousRequest> _previousRequests = new();
     private readonly Semaphore _previousRequestsSemaphore = new(1, 1);
-    private readonly WebSocketClient _socket;
+    private readonly CustomWebSocketClient _socket;
     private readonly List<string> _topicList = [];
     private readonly Dictionary<string, string> _topicToChannelId = new();
     private bool _pongReceived;
@@ -57,14 +56,16 @@ public class CustomPubsub : ITwitchPubSub
     public CustomPubsub(Logger logger = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _socket = new WebSocketClient(new ClientOptions
+        _socket = new CustomWebSocketClient(new ClientOptions
         {
             ClientType = ClientType.PubSub
+            
         });
         _socket.OnConnected += Socket_OnConnected;
         _socket.OnError += OnError;
         _socket.OnMessage += OnMessage;
         _socket.OnDisconnected += Socket_OnDisconnected;
+        _socket.DefaultKeepAliveInterval = TimeSpan.FromSeconds(30);
         _pongTimer.Interval = 15000.0;
         _pongTimer.Elapsed += PongTimerTick;
     }
@@ -92,21 +93,6 @@ public class CustomPubsub : ITwitchPubSub
     public event EventHandler<ChannelSubscriptionArgs> OnChannelSubscription;
     public event EventHandler<OnChannelExtensionBroadcastArgs> OnChannelExtensionBroadcast;
     public event EventHandler<OnFollowArgs> OnFollow;
-
-    [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
-    public event EventHandler<OnCustomRewardCreatedArgs> OnCustomRewardCreated;
-
-    [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
-    public event EventHandler<OnCustomRewardUpdatedArgs> OnCustomRewardUpdated;
-
-    [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
-    public event EventHandler<OnCustomRewardDeletedArgs> OnCustomRewardDeleted;
-
-    [Obsolete(
-        "This event fires on an undocumented/retired/obsolete topic. Consider using OnChannelPointsRewardRedeemed",
-        false)]
-    public event EventHandler<OnRewardRedeemedArgs> OnRewardRedeemed;
-
     public event EventHandler<ChannelPointsRewardRedeemedArgs> OnChannelPointsRewardRedeemed;
     public event EventHandler<OnLeaderboardEventArgs> OnLeaderboardSubs;
     public event EventHandler<OnLeaderboardEventArgs> OnLeaderboardBits;
@@ -116,6 +102,11 @@ public class CustomPubsub : ITwitchPubSub
     public event EventHandler<OnLogArgs> OnLog;
     public event EventHandler<OnCommercialArgs> OnCommercial;
     public event EventHandler<PredictionArgs> OnPrediction;
+    public event EventHandler<OnR9kBetaArgs> OnR9KBeta;
+    public event EventHandler<OnR9kBetaOffArgs> OnR9KBetaOff;
+    public event EventHandler<BitsReceivedV2Args> OnBitsReceivedV2;
+    public event EventHandler<AutomodCaughtMessageArgs> OnAutomodCaughtMessage;
+    public event EventHandler<AutomodCaughtUserMessage> OnAutomodCaughtUserMessage;
 
     public void SendTopics(string oauth = "", bool unlisten = false)
     {
@@ -168,14 +159,6 @@ public class CustomPubsub : ITwitchPubSub
         ListenToTopic(str);
     }
 
-    [Obsolete("This topic is deprecated by Twitch. Please use ListenToBitsEventsV2()", false)]
-    public void ListenToBitsEvents(string channelTwitchId)
-    {
-        string str = "channel-bits-events-v1." + channelTwitchId;
-        _topicToChannelId[str] = channelTwitchId;
-        ListenToTopic(str);
-    }
-
     public void ListenToVideoPlayback(string channelTwitchId)
     {
         string str = "video-playback-by-id." + channelTwitchId;
@@ -189,16 +172,7 @@ public class CustomPubsub : ITwitchPubSub
         _topicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
-
-    [Obsolete("This method listens to an undocumented/retired/obsolete topic. Consider using ListenToChannelPoints()",
-        false)]
-    public void ListenToRewards(string channelTwitchId)
-    {
-        string str = "community-points-channel-v1." + channelTwitchId;
-        _topicToChannelId[str] = channelTwitchId;
-        ListenToTopic(str);
-    }
-
+    
     public void ListenToChannelPoints(string channelTwitchId)
     {
         string str = "channel-points-channel-v1." + channelTwitchId;
@@ -243,7 +217,7 @@ public class CustomPubsub : ITwitchPubSub
 
     public void Disconnect()
     {
-        _socket.Close();
+        _socket.Close(false);
     }
 
     public void TestMessageParser(string testJsonString)
@@ -251,17 +225,9 @@ public class CustomPubsub : ITwitchPubSub
         ParseMessage(testJsonString);
     }
 
-    public event EventHandler<OnR9kBetaArgs> OnR9KBeta;
-    public event EventHandler<OnR9kBetaOffArgs> OnR9KBetaOff;
-    public event EventHandler<BitsReceivedV2Args> OnBitsReceivedV2;
-    public event EventHandler<AutomodCaughtMessageArgs> OnAutomodCaughtMessage;
-    public event EventHandler<AutomodCaughtUserMessage> OnAutomodCaughtUserMessage;
-
     private void OnError(object sender, OnErrorEventArgs e)
     {
-        Logger logger = _logger;
-        if (logger != null)
-            logger.LogError($"OnError in PubSub Websocket connection occured! Exception: {e.Exception}");
+        _logger.LogError($"OnError in PubSub Websocket connection occured! Exception: {e.Exception}");
         EventHandler<OnPubSubServiceErrorArgs> pubSubServiceError = OnPubSubServiceError;
         if (pubSubServiceError == null)
             return;
@@ -288,6 +254,7 @@ public class CustomPubsub : ITwitchPubSub
     private void Socket_OnDisconnected(object sender, EventArgs e)
     {
         _logger?.LogWarning("PubSub Websocket connection closed");
+        Connect();
         _pingTimer.Stop();
         _pongTimer.Stop();
         EventHandler subServiceClosed = OnPubSubServiceClosed;
@@ -664,63 +631,31 @@ public class CustomPubsub : ITwitchPubSub
                         switch (nullable1.GetValueOrDefault())
                         {
                             case CommunityPointsChannelType.RewardRedeemed:
-                                EventHandler<OnRewardRedeemedArgs> onRewardRedeemed = OnRewardRedeemed;
+                                EventHandler<ChannelPointsRewardRedeemedArgs> onRewardRedeemed = OnChannelPointsRewardRedeemed;
                                 if (onRewardRedeemed == null)
                                     return;
-                                onRewardRedeemed(this, new OnRewardRedeemedArgs
+
+                                Redemption redemption = new()
                                 {
-                                    TimeStamp = messageData8.TimeStamp,
-                                    ChannelId = messageData8.ChannelId,
-                                    Login = messageData8.Login,
-                                    DisplayName = messageData8.DisplayName,
-                                    Message = messageData8.Message,
-                                    RewardId = messageData8.RewardId,
-                                    RewardTitle = messageData8.RewardTitle,
-                                    RewardPrompt = messageData8.RewardPrompt,
-                                    RewardCost = messageData8.RewardCost,
+                                    Id = messageData8.RedemptionId.ToString(),
+                                    User = { DisplayName = messageData8.DisplayName, Login = messageData8.Login },
+                                    ChannelId = "",
+                                    RedeemedAt = messageData8.TimeStamp,
+                                    Reward = { Id = messageData8.RewardId.ToString(), Cost = messageData8.RewardCost, Title = messageData8.RewardTitle, Prompt = messageData8.RewardPrompt},
+                                    UserInput = messageData8.Message,
                                     Status = messageData8.Status,
-                                    RedemptionId = messageData8.RedemptionId
-                                });
-                                return;
-                            case CommunityPointsChannelType.CustomRewardUpdated:
-                                EventHandler<OnCustomRewardUpdatedArgs> customRewardUpdated = OnCustomRewardUpdated;
-                                if (customRewardUpdated == null)
-                                    return;
-                                customRewardUpdated(this, new OnCustomRewardUpdatedArgs
+                                };
+
+                                RewardRedeemed rewardRedeemed = new()
                                 {
-                                    TimeStamp = messageData8.TimeStamp,
-                                    ChannelId = messageData8.ChannelId,
-                                    RewardId = messageData8.RewardId,
-                                    RewardTitle = messageData8.RewardTitle,
-                                    RewardPrompt = messageData8.RewardPrompt,
-                                    RewardCost = messageData8.RewardCost
-                                });
-                                return;
-                            case CommunityPointsChannelType.CustomRewardCreated:
-                                EventHandler<OnCustomRewardCreatedArgs> customRewardCreated = OnCustomRewardCreated;
-                                if (customRewardCreated == null)
-                                    return;
-                                customRewardCreated(this, new OnCustomRewardCreatedArgs
+                                    Timestamp = messageData8.TimeStamp,
+                                    Redemption = redemption
+                                };
+                                
+                                onRewardRedeemed(this, new ChannelPointsRewardRedeemedArgs
                                 {
-                                    TimeStamp = messageData8.TimeStamp,
                                     ChannelId = messageData8.ChannelId,
-                                    RewardId = messageData8.RewardId,
-                                    RewardTitle = messageData8.RewardTitle,
-                                    RewardPrompt = messageData8.RewardPrompt,
-                                    RewardCost = messageData8.RewardCost
-                                });
-                                return;
-                            case CommunityPointsChannelType.CustomRewardDeleted:
-                                EventHandler<OnCustomRewardDeletedArgs> customRewardDeleted = OnCustomRewardDeleted;
-                                if (customRewardDeleted == null)
-                                    return;
-                                customRewardDeleted(this, new OnCustomRewardDeletedArgs
-                                {
-                                    TimeStamp = messageData8.TimeStamp,
-                                    ChannelId = messageData8.ChannelId,
-                                    RewardId = messageData8.RewardId,
-                                    RewardTitle = messageData8.RewardTitle,
-                                    RewardPrompt = messageData8.RewardPrompt
+                                    RewardRedeemed = rewardRedeemed,
                                 });
                                 return;
                             default:
@@ -977,20 +912,6 @@ public class CustomPubsub : ITwitchPubSub
     private void UnaccountedFor(string message)
     {
         _logger.LogInfo("[TwitchPubSub] " + message);
-    }
-
-    public void ListenToUserModerationNotifications(string myTwitchId, string channelTwitchId)
-    {
-        string str = "user-moderation-notifications." + myTwitchId + "." + channelTwitchId;
-        _topicToChannelId[str] = channelTwitchId;
-        ListenToTopic(str);
-    }
-
-    public void ListenToAutomodQueue(string userTwitchId, string channelTwitchId)
-    {
-        string str = "automod-queue." + userTwitchId + "." + channelTwitchId;
-        _topicToChannelId[str] = channelTwitchId;
-        ListenToTopic(str);
     }
 
     public void ListenToBitsEventsV2(string channelTwitchId)

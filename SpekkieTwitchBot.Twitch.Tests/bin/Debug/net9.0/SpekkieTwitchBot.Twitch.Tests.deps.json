@@ -10,7 +10,7 @@
         "dependencies": {
           "Microsoft.NET.Test.Sdk": "17.11.1",
           "Moq": "4.20.72",
-          "SpekkieTwitchBot.General.FileHandling": "1.0.0",
+          "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
           "SpekkieTwitchBot.Twitch": "1.0.0",
           "coverlet.collector": "6.0.2",
           "xunit": "2.9.2",

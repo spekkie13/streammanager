@@ -1,0 +1,6 @@
+﻿crit: Microsoft.Extensions.Hosting.Internal.Host[10]
+      The HostOptions.BackgroundServiceExceptionBehavior is configured to StopHost. A BackgroundService has thrown an unhandled exception, and the IHost instance is stopping. To avoid this behavior, configure this to Ignore; however the BackgroundService will not be restarted.
+      System.NullReferenceException: Object reference not set to an instance of an object.
+         at SpotifyAuthService.SpotifyService.UpdateSongImg(CurrentlyPlaying currentlyPlaying) in C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Spotify.SpotifyService\SpotifyService.cs:line 142
+         at SpotifyAuthService.SpotifyService.ExecuteAsync(CancellationToken stoppingToken) in C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Spotify.SpotifyService\SpotifyService.cs:line 37
+         at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)

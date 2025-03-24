@@ -72,12 +72,12 @@ public class TwitchWebsocketService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _CustomTwitchClient.Connect();
-        _CustomPubsub.Connect();
-        await _CustomTwitchHttpClient.UpdateFollowerInfo();
-        await _CustomTwitchHttpClient.UpdateSubscriberInfo();
         try
         {
+            _CustomTwitchClient.Connect();
+            _CustomPubsub.Connect();
+            await _CustomTwitchHttpClient.UpdateFollowerInfo();
+            await _CustomTwitchHttpClient.UpdateSubscriberInfo();
             await Task.Delay(Timeout.Infinite, cancellationToken);
         }
         catch (TaskCanceledException)
@@ -230,7 +230,7 @@ public class TwitchWebsocketService : IHostedService
 
     private void OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
-        //_GeneralLogger.LogInfo(e.ChatMessage.Message);
+        _GeneralLogger.LogInfo(e.ChatMessage.Message);
     }
 
     private void OnAnnouncement(object? sender, OnAnnouncementArgs e)
@@ -265,7 +265,7 @@ public class TwitchWebsocketService : IHostedService
 
     private void OnChannelStateChanged(object? sender, OnChannelStateChangedArgs e)
     {
-        _GeneralLogger.LogInfo($"Channel State changed to {e.ChannelState}");
+        _GeneralLogger.LogInfo($"Channel State changed to {e.ChannelState.Channel}");
     }
 
     private void OnUserStateChanged(object? sender, OnUserStateChangedArgs e)
@@ -572,6 +572,8 @@ public class TwitchWebsocketService : IHostedService
     private void OnPubSubServiceClosed(object? sender, EventArgs e)
     {
         _GeneralLogger.LogInfo("Pubsub service closed");
+        _CustomTwitchClient.Connect();
+        _CustomPubsub.Connect();
     }
 
     private void OnTimeout(object? sender, OnTimeoutArgs e)

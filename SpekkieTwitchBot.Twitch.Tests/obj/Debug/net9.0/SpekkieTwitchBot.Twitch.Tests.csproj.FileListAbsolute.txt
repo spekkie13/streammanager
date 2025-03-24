@@ -138,9 +138,9 @@ C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\S
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\bin\Debug\net9.0\SpekkieTwitchBot.General.FileHandling.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\bin\Debug\net9.0\SpekkieTwitchBot.Twitch.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\bin\Debug\net9.0\System.Reactive.dll
-C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\bin\Debug\net9.0\SpekkieTwitchBot.General.FileHandling.pdb
-C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\bin\Debug\net9.0\SpekkieTwitchBot.Twitch.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\bin\Debug\net9.0\SpekkieTwitchBot.Common.SpekkieClassLibrary.pdb
+C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\bin\Debug\net9.0\SpekkieTwitchBot.Twitch.pdb
+C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\bin\Debug\net9.0\SpekkieTwitchBot.General.FileHandling.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\bin\Debug\net9.0\System.Reactive.xml
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\obj\Debug\net9.0\SpekkieTwitchBot.Twitch.Tests.csproj.AssemblyReference.cache
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot.Twitch.Tests\obj\Debug\net9.0\SpekkieTwitchBot.Twitch.Tests.GeneratedMSBuildEditorConfig.editorconfig

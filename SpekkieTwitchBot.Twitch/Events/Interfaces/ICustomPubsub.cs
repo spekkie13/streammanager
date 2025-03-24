@@ -2,7 +2,6 @@
 using SpekkieClassLibrary.Twitch.Pubsub.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
 using TwitchLib.PubSub.Events;
-using OnRewardRedeemedArgs = TwitchLib.PubSub.Events.OnRewardRedeemedArgs;
 
 namespace TwitchAuthService.Events.Interfaces;
 
@@ -31,19 +30,6 @@ public interface ITwitchPubSub
     event EventHandler<OnUntimeoutArgs> OnUntimeout;
     event EventHandler<OnViewCountArgs> OnViewCount;
     event EventHandler<WhisperArgs> OnWhisper;
-
-    [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
-    event EventHandler<OnCustomRewardCreatedArgs> OnCustomRewardCreated;
-
-    [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
-    event EventHandler<OnCustomRewardUpdatedArgs> OnCustomRewardUpdated;
-
-    [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
-    event EventHandler<OnCustomRewardDeletedArgs> OnCustomRewardDeleted;
-
-    [Obsolete("This event fires on an undocumented/retired/obsolete topic.", false)]
-    event EventHandler<OnRewardRedeemedArgs> OnRewardRedeemed;
-
     event EventHandler<ChannelPointsRewardRedeemedArgs> OnChannelPointsRewardRedeemed;
     event EventHandler<OnLeaderboardEventArgs> OnLeaderboardSubs;
     event EventHandler<OnLeaderboardEventArgs> OnLeaderboardBits;
@@ -56,21 +42,12 @@ public interface ITwitchPubSub
 
     void Connect();
     void Disconnect();
-
-    [Obsolete("This topic is deprecated by Twitch. Please use ListenToBitsEventsV2()", false)]
-    void ListenToBitsEvents(string channelTwitchId);
-
     void ListenToChannelExtensionBroadcast(string channelId, string extensionId);
     void ListenToChatModeratorActions(string myTwitchId, string channelTwitchId);
     void ListenToFollows(string channelId);
     void ListenToSubscriptions(string channelId);
     void ListenToVideoPlayback(string channelName);
     void ListenToWhispers(string channelTwitchId);
-
-    [Obsolete("This method listens to an undocumented/retired/obsolete topic. Consider using ListenToChannelPoints()",
-        false)]
-    void ListenToRewards(string channelTwitchId);
-
     void ListenToChannelPoints(string channelTwitchId);
     void ListenToLeaderboards(string channelTwitchId);
     void ListenToRaid(string channelTwitchId);
