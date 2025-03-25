@@ -97,7 +97,6 @@ public static class Program
                 services.AddHostedService<EventTimerService.EventTimerService>();
                 services.AddHostedService<ObsWebsocketService>();
                 services.AddHostedService<TwitchWebsocketService>();
-                //services.AddHostedService<NewTwitchWebsocketService>();
             });
     }
 }

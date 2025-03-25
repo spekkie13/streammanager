@@ -2,7 +2,7 @@
 
 public class FullTrack
 {
-    public SimpleAlbum Album { get; set; } = default!;
+    public SimpleAlbum? Album { get; set; }
     public List<SimpleArtist> Artists { get; set; } = default!;
     public List<string> AvailableMarkets { get; set; } = default!;
     public int DiscNumber { get; set; }

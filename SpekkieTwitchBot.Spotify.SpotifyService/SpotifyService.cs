@@ -29,16 +29,27 @@ public class SpotifyService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
-
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            GetCurrentPlayable();
-            UpdateSongImg(_CurrentPlayable);
-            _SpotifyFileWriter.WriteSongFile(GetNowPlaying());
+            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
 
-            int durationLeft = _CurrentSong?.DurationMs - _CurrentPlayable?.ProgressMs ?? 10000;
-            await Task.Delay(TimeSpan.FromMilliseconds(durationLeft), stoppingToken);
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                GetCurrentPlayable();
+                UpdateSongImg(_CurrentPlayable);
+                _SpotifyFileWriter.WriteSongFile(GetNowPlaying());
+
+                int durationLeft = _CurrentSong?.DurationMs - _CurrentPlayable?.ProgressMs ?? 10000;
+                await Task.Delay(TimeSpan.FromMilliseconds(durationLeft), stoppingToken);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            _Logger.LogInfo("Spotify service canceled.");
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogError("An error occured in spotify Service: " + ex.Message);
         }
     }
     
@@ -137,8 +148,9 @@ public class SpotifyService : BackgroundService
 
     private void UpdateSongImg(CurrentlyPlaying? currentlyPlaying)
     {
-        if (currentlyPlaying == null) return;
-        FullTrack currentSong = currentlyPlaying.Item;
+        FullTrack? currentSong = currentlyPlaying?.Item;
+        if (currentSong?.Album?.Images == null || currentSong.Album.Images.Count == 0) return;
+
         string url = $"{currentSong.Album.Images.First().Url}";
         byte[] imageBytes = _Client.GetByteArrayAsync(url).Result;
         _SpotifyFileWriter.WriteCurrentSongImage(imageBytes);
@@ -174,7 +186,7 @@ public class SpotifyService : BackgroundService
         return queue;
     }
 
-    public static string JoinArtists(FullTrack? currentSong)
+    private static string JoinArtists(FullTrack? currentSong)
     {
         string artists = "";
         if (currentSong?.Artists == null) return "";

@@ -88,10 +88,23 @@ public class TwitchWebsocketService : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _CustomTwitchClient.Disconnect();
-        _CustomPubsub.Disconnect();
+        _GeneralLogger.LogInfo("Stopping WebSocket service...");
+
+        try
+        {
+             _CustomPubsub.Disconnect(); // Ensure proper cleanup
+        }
+        catch (TaskCanceledException)
+        {
+            _GeneralLogger.LogInfo("WebSocket service stopped due to cancellation.");
+        }
+        catch (Exception ex)
+        {
+            _GeneralLogger.LogError($"Error while stopping WebSocket service. Message: {ex.Message}");
+        }
         return Task.CompletedTask;
     }
+
 
     private void SetupTwitchClient()
     {
@@ -572,7 +585,6 @@ public class TwitchWebsocketService : IHostedService
     private void OnPubSubServiceClosed(object? sender, EventArgs e)
     {
         _GeneralLogger.LogInfo("Pubsub service closed");
-        _CustomTwitchClient.Connect();
         _CustomPubsub.Connect();
     }
 

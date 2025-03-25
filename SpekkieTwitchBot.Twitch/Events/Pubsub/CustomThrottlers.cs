@@ -149,7 +149,6 @@ namespace TwitchAuthService.Events.Pubsub
             catch (OperationCanceledException)
             {
                 // Gracefully handle cancellation without logging an error
-                return;
             }
             catch (Exception ex)
             {

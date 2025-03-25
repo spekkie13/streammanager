@@ -94,10 +94,10 @@
   &lt;Assembly Path="C:\Users\tomsp\.nuget\packages\twitchlib.client\3.3.1\lib\netstandard2.0\TwitchLib.Client.dll" /&gt;&#xD;
   &lt;Assembly Path="C:\Users\tomsp\.nuget\packages\twitchlib.api.helix\3.9.0\lib\netstandard2.0\TwitchLib.Api.Helix.dll" /&gt;&#xD;
 &lt;/AssemblyExplorer&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=77cd6a0c_002Df5f3_002D41fd_002D88bd_002Df6b658fca65f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="FollowEventHandlerTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::C41A60D1-9C31-447E-851A-F23FE52E7E8B::net9.0::SpekkieTwitchBot.Twitch.Tests.FollowEventHandlerTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=77cd6a0c_002Df5f3_002D41fd_002D88bd_002Df6b658fca65f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="FollowEventHandlerTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::C41A60D1-9C31-447E-851A-F23FE52E7E8B::net9.0::SpekkieTwitchBot.Twitch.Tests.FollowEventHandlerTests&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
 	
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=abcdefghijklmnopqrstuvwxyz/@EntryIndexedValue">True</s:Boolean>

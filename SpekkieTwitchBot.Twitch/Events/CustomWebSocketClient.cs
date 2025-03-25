@@ -61,7 +61,7 @@ namespace TwitchAuthService.Events
 
         private string Url { get; }
 
-        private static readonly int[] sourceArray = [25, 75, 150, 300, 600, 1200];
+        private static readonly int[] SourceArray = [25, 75, 150, 300, 600, 1200];
 
         public CustomWebSocketClient(IClientOptions options = null)
         {
@@ -99,6 +99,7 @@ namespace TwitchAuthService.Events
             }
         }
 
+        //TODO: FIX
         public bool Open()
         {
             try
@@ -111,6 +112,10 @@ namespace TwitchAuthService.Events
                     return Open();
                 StartNetworkServices();
                 return true;
+            }
+            catch (TaskCanceledException)
+            {
+                return false;
             }
             catch (WebSocketException)
             {
@@ -282,7 +287,7 @@ namespace TwitchAuthService.Events
                         if (!IsConnected)
                         {
                             _notConnectedCounter++;
-                            if (sourceArray.Contains(_notConnectedCounter))
+                            if (SourceArray.Contains(_notConnectedCounter))
                             {
                                 Console.WriteLine($"Attempting reconnect, counter: {_notConnectedCounter}");
                                 Reconnect();
