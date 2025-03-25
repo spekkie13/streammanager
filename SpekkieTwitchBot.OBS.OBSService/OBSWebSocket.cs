@@ -15,27 +15,17 @@ using Monitor = SpekkieClassLibrary.OBS.Types.Monitor;
 #nullable disable
 namespace SpekkieTwitchBot.OBS.OBSServiceNew;
 
-public class ObsWebSocket
+public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
 {
     private const string WebsocketUrlPrefix = "ws://";
     private const int SupportedRpcVersion = 1;
     private TimeSpan _wsTimeout = TimeSpan.FromSeconds(10);
     private string _connectionPassword;
-    private WebsocketClient _wsConnection;
-    private readonly Logger _logger;
+    private WebsocketClient _wsConnection = wsConnection;
 
-    private delegate void RequestCallback(ObsWebSocket sender, JObject body);
-
-    private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> _responseHandlers;
+    private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> _responseHandlers = new();
     private static readonly Random Random = new ();
 
-    public ObsWebSocket(WebsocketClient wsConnection, Logger logger)
-    {
-        _logger = logger;
-        _wsConnection = wsConnection;
-        _responseHandlers = new ConcurrentDictionary<string, TaskCompletionSource<JObject>>();
-    }
-    
     public TimeSpan WsTimeout
     {
         get => _wsConnection.ReconnectTimeout ?? _wsTimeout;
@@ -85,7 +75,7 @@ public class ObsWebSocket
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while disconnecting websocket: {ex.Message}");
+                logger.LogError($"Error while disconnecting websocket: {ex.Message}");
             }
             _wsConnection = null;
         }
@@ -109,6 +99,7 @@ public class ObsWebSocket
 
     private void WebsocketMessageHandler(object sender, ResponseMessage e)
     {
+        logger.LogInfo($"{sender} has requested to handle: {e.MessageType}");
         if (e.MessageType != WebSocketMessageType.Text)
         {
             return;
@@ -311,7 +302,6 @@ public class ObsWebSocket
 
     private const string RequestFieldVolumeDb = "inputVolumeDb";
     private const string RequestFieldVolumeMul = "inputVolumeMul";
-    private const string ResponseFieldImageData = "imageData";
 
     public ObsVideoSettings GetVideoSettings()
     {
@@ -342,11 +332,6 @@ public class ObsWebSocket
         JObject response = SendRequest(nameof(SaveSourceScreenshot), request);
         string imageData = response["imageData"]?.ToString() ?? "";
         return imageData;
-    }
-
-    public string SaveSourceScreenshot(string sourceName, string imageFormat, string imageFilePath) 
-    {
-        return SaveSourceScreenshot(sourceName, imageFormat, imageFilePath, -1);
     }
 
     public void TriggerHotkeyByName(string hotkeyName)
@@ -514,7 +499,7 @@ public class ObsWebSocket
         }
         catch (Exception e)
         {
-            _logger.LogError(e.Message);
+            logger.LogError(e.Message);
         }
 
         return false;
@@ -2046,7 +2031,7 @@ public class ObsWebSocket
                 break;
             default:
                 string message = $"Unsupported Event: {eventType}\n{body}";
-                _logger.LogWarning(message);
+                logger.LogWarning(message);
                 break;
         }
     }

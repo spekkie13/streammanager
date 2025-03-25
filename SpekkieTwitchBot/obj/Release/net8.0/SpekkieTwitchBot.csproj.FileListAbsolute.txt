@@ -85,3 +85,5 @@ C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\S
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\SpekkieTwitchBot.General.EventTimerService.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\Castle.Core.dll
 C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\Moq.dll
+C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\Macross.Json.Extensions.dll
+C:\Users\tomsp\OneDrive\Bureaublad\Projecten\Rider\StreamManager\streammanager\SpekkieTwitchBot\bin\Release\net8.0\Twitch.Net.dll
