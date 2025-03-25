@@ -4,7 +4,10 @@ using SpotifyAuthService;
 
 namespace CommandService.CommandHandlers;
 
-public class SpotifyCommandHandler(SpotifyService spotifyService, SpotifyFileWriter spotifyFileWriter, SpotifySearchService spotifySearchService)
+public class SpotifyCommandHandler(
+    SpotifyService spotifyService, 
+    SpotifyFileWriter spotifyFileWriter, 
+    SpotifySearchService spotifySearchService)
 {
     public string HandleGetCurrentSongCommand()
     {

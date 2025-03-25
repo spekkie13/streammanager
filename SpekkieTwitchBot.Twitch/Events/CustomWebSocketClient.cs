@@ -99,7 +99,6 @@ namespace TwitchAuthService.Events
             }
         }
 
-        //TODO: FIX
         public bool Open()
         {
             try

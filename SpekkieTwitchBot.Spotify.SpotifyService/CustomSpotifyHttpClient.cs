@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Spotify.Auth;
@@ -30,7 +31,11 @@ public class CustomSpotifyHttpClient
     
     private async Task<HttpResponseMessage> GetAsync(string url)
     {
-        return await _Client.GetAsync(url);
+        HttpResponseMessage response = await _Client.GetAsync(url);
+        if (response.StatusCode != HttpStatusCode.Unauthorized) return response;
+        Setup();
+        response = await _Client.GetAsync(url);
+        return response;
     }
     
     public async Task<HttpResponseMessage> PutAsync(string url, HttpContent? content)
@@ -53,9 +58,12 @@ public class CustomSpotifyHttpClient
         try
         {
             HttpResponseMessage response = await _Client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                Setup();
+                response = await _Client.GetAsync(url);
+            }
             byte[] content = await response.Content.ReadAsByteArrayAsync();
-
             return content;
         }
         catch (HttpRequestException ex)
@@ -68,15 +76,26 @@ public class CustomSpotifyHttpClient
     public async Task<T?> DecipherData<T>(string url) where T : notnull
     {
         HttpResponseMessage message = await GetAsync(url);
+        if (message.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            Setup();
+            message = await _Client.GetAsync(url);
+        }
         string json = await message.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<T>(json);
     }
 
     public async Task<CurrentlyPlaying?> GetCurrentlyPlayingTrack(string url)
     {
-        CurrentlyPlaying item = new CurrentlyPlaying();
+        CurrentlyPlaying item = new ();
 
         HttpResponseMessage response = await GetAsync(url);
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            Setup();
+            response = await GetAsync(url);
+        }
+        
         string json = await response.Content.ReadAsStringAsync();
         if(string.IsNullOrEmpty(json))
             return null;
@@ -110,9 +129,15 @@ public class CustomSpotifyHttpClient
 
     public async Task<FullTrack?> GetFullTrack(string url)
     {
-        FullTrack item = new FullTrack();
+        FullTrack item = new ();
 
         HttpResponseMessage response = await GetAsync(url);
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            Setup();
+            response = await GetAsync(url);
+        }
+
         string json = await response.Content.ReadAsStringAsync();
         if(string.IsNullOrEmpty(json))
             return null;
@@ -195,6 +220,11 @@ public class CustomSpotifyHttpClient
     public async Task<List<Track>?> InterpretSongSearchResult(string url)
     {
         HttpResponseMessage httpResponse = await GetAsync(url);
+        if (httpResponse.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            Setup();
+            httpResponse = await GetAsync(url);
+        }
         string json = await httpResponse.Content.ReadAsStringAsync();
         JObject jsonObject = JObject.Parse(json);
         JToken? trackData = jsonObject["tracks"];
