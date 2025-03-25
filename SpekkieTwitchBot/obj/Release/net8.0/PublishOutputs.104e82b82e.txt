@@ -4,6 +4,7 @@ C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.dep
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.runtimeconfig.json
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Castle.Core.dll
+C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Macross.Json.Extensions.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Microsoft.Extensions.Configuration.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Microsoft.Extensions.Configuration.Abstractions.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Microsoft.Extensions.Configuration.Binder.dll
@@ -38,6 +39,7 @@ C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\PacketDotNet.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SharpPcap.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\System.Diagnostics.EventLog.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\System.Windows.Extensions.dll
+C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\Twitch.Net.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\TwitchLib.Api.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\TwitchLib.Api.Core.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\TwitchLib.Api.Core.Enums.dll

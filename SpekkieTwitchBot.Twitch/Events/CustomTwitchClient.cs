@@ -1153,12 +1153,11 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                 _awaitingJoins.FirstOrDefault(
                     (Func<KeyValuePair<string, DateTime>, bool>)(x => x.Key == ircMessage.Channel)));
             EventHandler<OnJoinedChannelArgs> onJoinedChannel = OnJoinedChannel;
-            if (onJoinedChannel != null)
-                onJoinedChannel(this, new OnJoinedChannelArgs
-                {
-                    BotUsername = TwitchUsername,
-                    Channel = ircMessage.Channel
-                });
+            onJoinedChannel?.Invoke(this, new OnJoinedChannelArgs
+            {
+                BotUsername = TwitchUsername,
+                Channel = ircMessage.Channel
+            });
         }
 
         EventHandler<OnChannelStateChangedArgs> channelStateChanged = OnChannelStateChanged;
