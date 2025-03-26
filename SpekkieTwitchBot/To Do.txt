@@ -1,5 +1,3 @@
 ﻿-> Add a command to add a text command
--> Event system instead of tight coupling
 -> Update most recent follower & sub file logic (on sub/follow event)
 -> Introduce database logic to allow for custom text commands
--> Build a text command interpreter
