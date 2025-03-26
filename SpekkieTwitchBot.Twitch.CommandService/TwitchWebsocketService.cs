@@ -333,7 +333,6 @@ public class TwitchWebsocketService : IHostedService
 
     private void OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
     {
-        Console.WriteLine(e.Subscriber.DisplayName);
         _GeneralLogger.LogInfo($"New subscriber: {e.Subscriber.DisplayName}");
     }
 

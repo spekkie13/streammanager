@@ -1,4 +1,5 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Timer;
+﻿using SpekkieTwitchBot.General.FileHandling;
+using SpekkieTwitchBot.General.FileHandling.Timer;
 
 namespace EventTimerService
 {
@@ -6,14 +7,16 @@ namespace EventTimerService
     {
         private readonly TimerFileWriter _timerFileWriter;
         private readonly TimerFileReader _timerFileReader;
+        private readonly Logger _logger;
         private TimeSpan _RemainingTime;
         private bool _isRunning;
         private readonly Timer _timer;
 
-        public EventTimer(TimerFileWriter timerFileWriter, TimerFileReader timerFileReader)
+        public EventTimer(TimerFileWriter timerFileWriter, TimerFileReader timerFileReader, Logger logger)
         {
             _timerFileWriter = timerFileWriter;
             _timerFileReader = timerFileReader;
+            _logger = logger;
             SetupTimer();
             _timerFileWriter.WriteRemainingTime(_RemainingTime);
             _timer = new Timer(CountDownTick, null, Timeout.Infinite, 1000); // Initially paused
@@ -47,7 +50,6 @@ namespace EventTimerService
         public void StartTimer()
         {
             if (_isRunning) return;
-            Console.WriteLine("Timer started.");
             _timer.Change(0, 1000); // Start immediately, tick every second
             _isRunning = true;
         }
@@ -55,14 +57,12 @@ namespace EventTimerService
         public void StopTimer()
         {
             if (!_isRunning) return;
-            Console.WriteLine("Timer paused.");
             _timer.Change(Timeout.Infinite, Timeout.Infinite); // Pause timer
             _isRunning = false;
         }
 
         public void RestartTimer()
         {
-            Console.WriteLine("Timer restarted.");
             StopTimer(); // Ensure it stops first
             _RemainingTime = new TimeSpan(6, 0, 0); // Reset to 6 hours
             StartTimer();
@@ -71,7 +71,7 @@ namespace EventTimerService
         public void AddTime(TimeSpan extraTime)
         {
             _RemainingTime += extraTime;
-            Console.WriteLine($"Added {extraTime}. New remaining time: {_RemainingTime}");
+            _logger.LogInfo($"Added {extraTime}, new remaining time: {_RemainingTime}");
         }
 
         public void SetRemainingTime(TimeSpan time)
