@@ -1,29 +1,24 @@
 {
-  "Commands": [
+  "TextCommands": [
     {
-      
+      "Command": "!youtube",
+      "Response": "Checkout my YouTube Channel: https://youtube.com/@SpekkieClashes"
     },
     {
-      
+      "Command": "!discord",
+      "Response": "Wanna connect off-stream? Join my discord server: https://discord.gg/8Ez2dZNxeV"
     },
     {
-      
+      "Command": "!twitter",
+      "Response": "Checkout my Twitter: https://twitter.com/CSpekkie"
     },
     {
-      
+      "Command": "!hello",
+      "Response": "Hello World"
     },
     {
-      
-    },{
-      
-    },{
-      
-    },{
-      
-    },{
-      
-    },{
-      
+      "Command": "!tag",
+      "Response": "My in-game tag is #QYCCULVY"
     }
   ]
 }
