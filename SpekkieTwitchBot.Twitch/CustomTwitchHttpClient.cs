@@ -5,7 +5,7 @@ using SpekkieClassLibrary.Twitch.Auth;
 
 namespace TwitchAuthService;
 
-public class CustomTwitchHttpClient
+public sealed class CustomTwitchHttpClient
 {
     private readonly HttpClient _Client;
     private readonly TwitchAuthService _TwitchAuthService;
@@ -27,19 +27,31 @@ public class CustomTwitchHttpClient
         _Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.UserToken);
     }
 
-    public virtual async Task<HttpResponseMessage> GetAsync(string url)
+    public async Task<HttpResponseMessage> GetAsync(string url)
     {
-        return await _Client.GetAsync(url);
+        HttpResponseMessage response = await _Client.GetAsync(url);
+        if (response.StatusCode != System.Net.HttpStatusCode.Unauthorized) return response;
+        Setup();
+        response = await _Client.GetAsync(url);
+        return response;
     }
 
     public async Task<HttpResponseMessage> PatchAsync(string url, StringContent content)
     {
-        return await _Client.PatchAsync(url, content);
+        HttpResponseMessage response = await _Client.PatchAsync(url, content);
+        if (response.StatusCode != System.Net.HttpStatusCode.Unauthorized) return response;
+        Setup();
+        response = await _Client.PatchAsync(url, content);
+        return response;
     }
 
     public async Task<HttpResponseMessage> PostAsync(string url, StringContent content)
     {
-        return await _Client.PostAsync(url, content);
+        HttpResponseMessage response = await _Client.PostAsync(url, content);
+        if (response.StatusCode != System.Net.HttpStatusCode.Unauthorized) return response;
+        Setup();
+        response = await _Client.PostAsync(url, content);
+        return response;
     }
     
     public async Task<int> UpdateFollowerInfo()  
