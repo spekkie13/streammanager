@@ -7403,35 +7403,43 @@
     ]
   },
   "packageFolders": {
-    "/Users/tomspek/.nuget/packages/": {}
+    "C:\\Users\\tomsp\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch.Tests/SpekkieTwitchBot.Twitch.Tests.csproj",
+      "projectUniqueName": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch.Tests\\SpekkieTwitchBot.Twitch.Tests.csproj",
       "projectName": "SpekkieTwitchBot.Twitch.Tests",
-      "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch.Tests/SpekkieTwitchBot.Twitch.Tests.csproj",
-      "packagesPath": "/Users/tomspek/.nuget/packages/",
-      "outputPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch.Tests/obj/",
+      "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch.Tests\\SpekkieTwitchBot.Twitch.Tests.csproj",
+      "packagesPath": "C:\\Users\\tomsp\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch.Tests\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/Users/tomspek/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\tomsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
-              "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Common.SpekkieClassLibrary/SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
+            "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
+              "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
             },
-            "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch/SpekkieTwitchBot.Twitch.csproj": {
-              "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Twitch/SpekkieTwitchBot.Twitch.csproj"
+            "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch\\SpekkieTwitchBot.Twitch.csproj": {
+              "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch\\SpekkieTwitchBot.Twitch.csproj"
             }
           }
         }
@@ -7444,7 +7452,7 @@
       "restoreAuditProperties": {
         "enableAudit": "true",
         "auditLevel": "low",
-        "auditMode": "all"
+        "auditMode": "direct"
       },
       "SdkAnalysisLevel": "9.0.100"
     },
@@ -7493,7 +7501,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/Users/tomspek/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

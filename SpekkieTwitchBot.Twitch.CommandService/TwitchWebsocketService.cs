@@ -6,6 +6,7 @@ using SpekkieClassLibrary.Twitch.Pubsub.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using SpekkieTwitchBot.General.FileHandling;
+using SpekkieTwitchBot.General.FileHandling.Twitch;
 using TwitchAuthService;
 using TwitchAuthService.Events;
 using TwitchAuthService.Events.Pubsub;
@@ -23,36 +24,43 @@ namespace CommandService;
 
 public class TwitchWebsocketService : IHostedService
 {
-    private readonly ChannelPointHandler _ChannelPointHandler;
-    private readonly CustomPubsub _CustomPubsub;
-    private readonly CustomTwitchClient _CustomTwitchClient;
-    private readonly FollowEventHandler _FollowEventHandler;
-    private readonly GeneralCommandHandler _GeneralCommandHandler;
     private readonly Logger _GeneralLogger;
-    private readonly GeneralTwitchAuth _generalTwitchAuth;
-    private readonly SpotifyCommandHandler _SpotifyCommandHandler;
+    private readonly CustomPubsub _CustomPubsub;
     private readonly CustomTwitchHttpClient _CustomTwitchHttpClient;
-
-    private readonly SubEventHandler _SubEventHandler;
+    private readonly GeneralTwitchAuth _generalTwitchAuth;
     private readonly TwitchUserAuth _twitchUserAuth;
+
+    private readonly CustomTwitchClient _CustomTwitchClient;
+    private readonly GeneralCommandHandler _GeneralCommandHandler;
+    private readonly SpotifyCommandHandler _SpotifyCommandHandler;
+    private readonly TextCommandHandler _TextCommandHandler;
+
+    private readonly ChannelPointHandler _ChannelPointHandler;
+    private readonly SubEventHandler _SubEventHandler;
+    private readonly FollowEventHandler _FollowEventHandler;
+    
+    private readonly TwitchFileWriter _TwitchFileWriter;
 
     public TwitchWebsocketService(
         Logger generalLogger,
         TwitchAuthService.TwitchAuthService twitchAuthService,
         CustomTwitchClient customTwitchClient,
         CustomPubsub customPubsub,
+        TextCommandHandler textCommandHandler,
         SpotifyCommandHandler spotifyCommandHandler,
         GeneralCommandHandler generalCommandHandler,
         SubEventHandler subEventHandler,
         FollowEventHandler followEventHandler,
         ChannelPointHandler channelPointHandler,
-        CustomTwitchHttpClient customTwitchHttpClient
+        CustomTwitchHttpClient customTwitchHttpClient,
+        TwitchFileWriter twitchFileWriter
     )
     {
         _GeneralLogger = generalLogger;
 
         _SpotifyCommandHandler = spotifyCommandHandler;
         _GeneralCommandHandler = generalCommandHandler;
+        _TextCommandHandler = textCommandHandler;
 
         _twitchUserAuth = twitchAuthService.GetTwitchUserAuth() ??
                           throw new ArgumentNullException(nameof(_twitchUserAuth));
@@ -62,12 +70,16 @@ public class TwitchWebsocketService : IHostedService
         _CustomTwitchClient = customTwitchClient ?? throw new ArgumentNullException(nameof(customTwitchClient));
         _CustomPubsub = customPubsub ?? throw new ArgumentNullException(nameof(customPubsub));
         _CustomTwitchHttpClient = customTwitchHttpClient ?? throw new ArgumentNullException(nameof(customTwitchHttpClient));
+        
         _SubEventHandler = subEventHandler;
         _FollowEventHandler = followEventHandler;
         _ChannelPointHandler = channelPointHandler;
+        
+        _TwitchFileWriter = twitchFileWriter ?? throw new ArgumentNullException(nameof(twitchFileWriter));
 
         SetupTwitchClient();
         SetupPubSub();
+        UpdateTwitchInfo();
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -76,8 +88,8 @@ public class TwitchWebsocketService : IHostedService
         {
             _CustomTwitchClient.Connect();
             _CustomPubsub.Connect();
-            await _CustomTwitchHttpClient.UpdateFollowerInfo();
-            await _CustomTwitchHttpClient.UpdateSubscriberInfo();
+            await _CustomTwitchHttpClient.GetFollowerCount();
+            await _CustomTwitchHttpClient.GetSubscriberCount();
             await Task.Delay(Timeout.Infinite, cancellationToken);
         }
         catch (TaskCanceledException)
@@ -104,8 +116,23 @@ public class TwitchWebsocketService : IHostedService
         }
         return Task.CompletedTask;
     }
-
-
+    
+    #region Setup
+    private void UpdateTwitchInfo()
+    {
+        string recentFollower = _CustomTwitchHttpClient.GetLatestFollower().Result;
+        _TwitchFileWriter.WriteMostRecentFollowerFile(recentFollower);
+        
+        int totalFollowers = _CustomTwitchHttpClient.GetFollowerCount().Result;
+        _TwitchFileWriter.WriteTotalFollowersFile(totalFollowers);
+        
+        string recentSubscriber = _CustomTwitchHttpClient.GetLatestSubscriber().Result;
+        _TwitchFileWriter.WriteMostRecentSubscriberFile(recentSubscriber);
+        
+        int totalSubscribers = _CustomTwitchHttpClient.GetSubscriberCount().Result;
+        _TwitchFileWriter.WriteTotalSubscribersFile(totalSubscribers);
+    }
+    
     private void SetupTwitchClient()
     {
         ConnectionCredentials cred = new (twitchUsername: TwitchConstants.ChannelName, _generalTwitchAuth.ImplicitOAuth);
@@ -225,17 +252,29 @@ public class TwitchWebsocketService : IHostedService
         _CustomPubsub.ListenToChannelPoints(_generalTwitchAuth.ChannelId);
         _CustomPubsub.ListenToBitsEventsV2(_generalTwitchAuth.ChannelId);
     }
+    #endregion
 
     #region TwitchClientEvents
 
     private void OnChatCommandReceived(object? sender, OnChatCommandReceivedArgs e)
     {
         string messageId = e.Command.ChatMessage.Id;
-        string message = _GeneralCommandHandler.HandleCommand(e.Command);
-        _CustomTwitchClient.SendReply(e.Command.ChatMessage.Channel, messageId, message);
+        string reply = _TextCommandHandler.HandleCommand(e.Command);
+
+        if (e.Command.CommandText == "addcom")
+        {
+            string commandText = e.Command.ArgumentsAsString.Split("|")[0];
+            string replyMessage = e.Command.ArgumentsAsString.Split("|")[1];
+            _TextCommandHandler.AddCommand(commandText, replyMessage);
+            reply = $"command {commandText} was added";
+        }
+        
+        if (reply == "Unknown Command")
+            reply = _GeneralCommandHandler.HandleCommand(e.Command);
+
+        _CustomTwitchClient.SendReply(e.Command.ChatMessage.Channel, messageId, reply);
     }
-
-
+    
     private void FailureToJoin(object? sender, OnFailureToReceiveJoinConfirmationArgs e)
     {
         _GeneralLogger.LogInfo($"Failed to join: {e.Exception.Channel} - {e.Exception.Details}");

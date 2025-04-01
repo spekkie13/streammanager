@@ -90,16 +90,9 @@ namespace TwitchAuthService.Events
         {
             Client?.Abort();
             Client = new ClientWebSocket();
-            if (_monitorTask == null)
-            {
-                _monitorTask = StartMonitorTask();
-            }
-            else
-            {
-                if (!_monitorTask.IsCompleted)
-                    return;
-                _monitorTask = StartMonitorTask();
-            }
+            if (_monitorTask is { IsCompleted: false }) return;
+
+            _monitorTask = StartMonitorTask();
         }
 
         public bool Open()
