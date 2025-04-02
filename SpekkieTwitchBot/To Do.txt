@@ -1,3 +1,2 @@
-﻿-> Add a command to add a text command
--> Update most recent follower & sub file logic (on sub/follow event)
+﻿-> Update most recent follower & sub file logic (on sub/follow event)
 -> Introduce database logic to allow for custom text commands

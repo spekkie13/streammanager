@@ -14,7 +14,7 @@ public class FollowEventHandler(
         string mostRecentFollower = twitchFileReader.ReadMostRecentFollowerFile();
         if (mostRecentFollower.Equals(followerName)) return;
 
-        int followerCount = client.UpdateFollowerInfo().Result;
+        int followerCount = client.GetFollowerCount().Result;
         twitchFileWriter.WriteMostRecentFollowerFile(e.DisplayName);
         twitchFileWriter.WriteTotalFollowersFile(followerCount);
     }

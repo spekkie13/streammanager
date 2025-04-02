@@ -14,7 +14,7 @@ public class SubEventHandler
         _TwitchHttpClient = client;
         _TwitchFileWriter = twitchFileWriter;
         _TwitchFileReader = twitchFileReader;
-        _TwitchHttpClient.UpdateSubscriberInfo().Wait();
+        _TwitchHttpClient.GetSubscriberCount().Wait();
     }
     
     public void HandleSub(object? sender, ChannelSubscriptionArgs e)
@@ -23,7 +23,7 @@ public class SubEventHandler
         string mostRecentFollower = _TwitchFileReader.ReadMostRecentFollowerFile();
         if (mostRecentFollower.Equals(subscriberName)) return;
 
-        int subscriberCount = _TwitchHttpClient.UpdateSubscriberInfo().Result;
+        int subscriberCount = _TwitchHttpClient.GetSubscriberCount().Result;
         _TwitchFileWriter.WriteMostRecentSubscriberFile(e.Subscription.DisplayName);
         _TwitchFileWriter.WriteTotalSubscribersFile(subscriberCount);
     }

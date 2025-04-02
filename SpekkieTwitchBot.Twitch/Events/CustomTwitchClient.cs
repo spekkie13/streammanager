@@ -673,8 +673,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void HandlePrivMsg(IrcMessage ircMessage)
     {
-        ChatMessage chatMessage = new ChatMessage(TwitchUsername, ircMessage, ref _channelEmotes,
-            WillReplaceEmotes);
+        ChatMessage chatMessage = new ChatMessage(TwitchUsername, ircMessage, ref _channelEmotes, WillReplaceEmotes);
         foreach (JoinedChannel joinedChannel in JoinedChannels.Where(
                      (Func<JoinedChannel, bool>)(x => string.Equals(x.Channel, ircMessage.Channel,
                          StringComparison.InvariantCultureIgnoreCase))))
