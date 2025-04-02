@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Auth;
+using SpekkieClassLibrary.Twitch.Commands;
 using SpekkieClassLibrary.Twitch.Pubsub.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
@@ -259,20 +260,24 @@ public class TwitchWebsocketService : IHostedService
     private void OnChatCommandReceived(object? sender, OnChatCommandReceivedArgs e)
     {
         string messageId = e.Command.ChatMessage.Id;
-        string reply = _TextCommandHandler.HandleCommand(e.Command);
-
-        if (e.Command.CommandText == "addcom")
+        string command = $"!{e.Command.CommandText}";
+        List<TextCommand> commands = _TextCommandHandler.GetTextCommands();
+        string reply = commands.Any(x => x.Command == command) switch
         {
-            string commandText = e.Command.ArgumentsAsString.Split("|")[0];
-            string replyMessage = e.Command.ArgumentsAsString.Split("|")[1];
-            _TextCommandHandler.AddCommand(commandText, replyMessage);
-            reply = $"command {commandText} was added";
+            true => _TextCommandHandler.HandleCommand(e.Command),
+            false => _GeneralCommandHandler.HandleCommand(e.Command)
+        };
+
+        if (e.Command.CommandText == "command")
+        {
+            string[] parts = e.Command.ArgumentsAsString.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
+            string action = parts[0];
+            string commandName = parts[1];
+            string replyMessage = parts.Length > 2 ? parts[2] : "";
+            reply = _TextCommandHandler.AddCommand(action: action, command: commandName, response: replyMessage);
         }
         
-        if (reply == "Unknown Command")
-            reply = _GeneralCommandHandler.HandleCommand(e.Command);
-
-        _CustomTwitchClient.SendReply(e.Command.ChatMessage.Channel, messageId, reply);
+        _CustomTwitchClient.SendReply(channel: e.Command.ChatMessage.Channel, replyToId: messageId, message: reply);
     }
     
     private void FailureToJoin(object? sender, OnFailureToReceiveJoinConfirmationArgs e)

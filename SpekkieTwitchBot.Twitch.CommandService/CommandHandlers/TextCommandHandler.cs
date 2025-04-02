@@ -65,16 +65,36 @@ public class TextCommandHandler
         return response;
     }
 
-    public void AddCommand(string command, string response)
+    public string AddCommand(string action, string command, string response)
     {
-        TextCommand comm = new TextCommand
+        TextCommand comm;
+        string reply = "";
+        switch (action)
         {
-            Command = $"{command}",
-            Response = response
-        };
+            case "add":
+                comm = new TextCommand
+                {
+                    Command = $"{command}",
+                    Response = response
+                };
+                reply = $"Command {command} is added.";
+                _Commands.Add(comm);
+                break;
+            case "update":
+                comm = _Commands.FirstOrDefault(c => c.Command == command) ?? new TextCommand();
+                _Commands.Remove(comm);
+                comm.Response = response;
+                _Commands.Add(comm);
+                reply = $"Command {command} is updated.";
+                break;
+            case "delete":
+                comm = _Commands.FirstOrDefault(c => c.Command == command) ?? new TextCommand();
+                _Commands.Remove(comm);
+                reply = $"Command {command} is deleted.";
+                break;
+        }
         
-        _Commands.Add(comm);
-        TextCommands commands = new TextCommands
+        TextCommands commands = new ()
         {
             Commands = _Commands
         };
@@ -82,6 +102,7 @@ public class TextCommandHandler
         string commandLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SpekkieTwitchBot/Settings/TextCommands.json";
         File.WriteAllText(commandLocation, json);
         _Commands = LoadTextCommands();
+        return reply;
     }
 
     public void AddSpecialVariable(string variable, string response)
