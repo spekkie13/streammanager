@@ -4,6 +4,7 @@ using SpekkieClassLibrary.Spotify;
 using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
+using SpotifyAuthService.General;
 
 namespace SpotifyAuthService;
 

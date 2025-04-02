@@ -5,14 +5,14 @@ using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieClassLibrary.Spotify.Song;
 
-namespace SpotifyAuthService;
+namespace SpotifyAuthService.General;
 
 public class CustomSpotifyHttpClient
 {
     private readonly HttpClient _Client;
-    private readonly SpotifyAuthService _SpotifyAuthService;
+    private readonly Auth.SpotifyAuthService _SpotifyAuthService;
 
-    public CustomSpotifyHttpClient(SpotifyAuthService spotifyAuthService)
+    public CustomSpotifyHttpClient(Auth.SpotifyAuthService spotifyAuthService)
     {
         _Client = new HttpClient();
         _SpotifyAuthService = spotifyAuthService;

@@ -2004,6 +2004,19 @@
           "bin/placeholder/SpekkieTwitchBot.OBS.OBSService.dll": {}
         }
       },
+      "SpekkieTwitchBot.Spekkiefy/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "Microsoft.Extensions.Hosting.Abstractions": "8.0.1"
+        },
+        "compile": {
+          "bin/placeholder/SpekkieTwitchBot.Spekkiefy.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SpekkieTwitchBot.Spekkiefy.dll": {}
+        }
+      },
       "SpekkieTwitchBot.Spotify.SpotifyService/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
@@ -6981,6 +6994,11 @@
       "path": "../SpekkieTwitchBot.OBS.OBSService/SpekkieTwitchBot.OBS.OBSService.csproj",
       "msbuildProject": "../SpekkieTwitchBot.OBS.OBSService/SpekkieTwitchBot.OBS.OBSService.csproj"
     },
+    "SpekkieTwitchBot.Spekkiefy/1.0.0": {
+      "type": "project",
+      "path": "../SpekkieTwitchBot.Spekkiefy/SpekkieTwitchBot.Spekkiefy.csproj",
+      "msbuildProject": "../SpekkieTwitchBot.Spekkiefy/SpekkieTwitchBot.Spekkiefy.csproj"
+    },
     "SpekkieTwitchBot.Spotify.SpotifyService/1.0.0": {
       "type": "project",
       "path": "../SpekkieTwitchBot.Spotify.SpotifyService/SpekkieTwitchBot.Spotify.SpotifyService.csproj",
@@ -7006,6 +7024,7 @@
       "SpekkieTwitchBot.Common.SpekkieClassLibrary >= 1.0.0",
       "SpekkieTwitchBot.General.EventTimerService >= 1.0.0",
       "SpekkieTwitchBot.General.FileHandling >= 1.0.0",
+      "SpekkieTwitchBot.Spekkiefy >= 1.0.0",
       "SpekkieTwitchBot.Spotify.SpotifyService >= 1.0.0",
       "SpekkieTwitchBot.Twitch >= 1.0.0",
       "SpekkieTwitchBot.Twitch.CommandService >= 1.0.0",
@@ -7052,6 +7071,9 @@
             },
             "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj": {
               "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj"
+            },
+            "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spekkiefy/SpekkieTwitchBot.Spekkiefy.csproj": {
+              "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spekkiefy/SpekkieTwitchBot.Spekkiefy.csproj"
             },
             "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spotify.SpotifyService/SpekkieTwitchBot.Spotify.SpotifyService.csproj": {
               "projectPath": "/Users/tomspek/Documents/GitHub/streammanager/SpekkieTwitchBot.Spotify.SpotifyService/SpekkieTwitchBot.Spotify.SpotifyService.csproj"

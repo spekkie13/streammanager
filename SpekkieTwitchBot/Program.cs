@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.Twitch.Auth;
+using Spekkiefy;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.General.FileHandling.General;
@@ -13,6 +14,7 @@ using SpekkieTwitchBot.General.FileHandling.Timer;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
 using SpekkieTwitchBot.OBS.OBSServiceNew;
 using SpotifyAuthService;
+using SpotifyAuthService.General;
 using TwitchAuthService;
 using TwitchAuthService.Events;
 using TwitchAuthService.Events.Pubsub;
@@ -73,7 +75,7 @@ public static class Program
                 services.AddSingleton<CustomTwitchClient>();
                 services.AddSingleton<CustomPubsub>();
 
-                services.AddSingleton<SpotifyAuthService.SpotifyAuthService>();
+                services.AddSingleton<SpotifyAuthService.Auth.SpotifyAuthService>();
                 services.AddSingleton<CustomSpotifyHttpClient>();
                 services.AddSingleton<SpotifySearchService>();
                 services.AddSingleton<SpotifyService>();
@@ -94,6 +96,7 @@ public static class Program
                 services.AddSingleton<IrcParser>();
                 
                 services.AddHostedService<SpotifyService>();
+                services.AddHostedService<SmartSpekkiefyService>();
                 services.AddHostedService<EventTimerService.EventTimerService>();
                 services.AddHostedService<ObsWebsocketService>();
                 services.AddHostedService<TwitchWebsocketService>();

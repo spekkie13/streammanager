@@ -5,7 +5,7 @@ using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
 
-namespace SpotifyAuthService;
+namespace SpotifyAuthService.Auth;
 
 public class SpotifyAuthService(SpotifyFileReader spotifyFileReader, Logger logger)
 {
