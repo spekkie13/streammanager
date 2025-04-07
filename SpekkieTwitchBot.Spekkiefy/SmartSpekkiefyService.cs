@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Hosting;
+using SpekkieClassLibrary.Spotify;
 
 namespace Spekkiefy;
 
@@ -13,6 +14,7 @@ public class SmartSpekkiefyService : BackgroundService
        -> this should increase the play count so it doesn't get requested too frequently
      */
     
+    public List<SongRequest> Requests { get; set; } = new List<SongRequest>();
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
@@ -27,5 +29,10 @@ public class SmartSpekkiefyService : BackgroundService
             
         }
         throw new NotImplementedException();
+    }
+
+    private SongRequest GetSong(string spotifyId)
+    {
+        return Requests.First(sr => sr.SpotifyId == spotifyId);
     }
 }
