@@ -1,6 +1,7 @@
 ﻿#nullable disable
 using System.Net.WebSockets;
 using System.Text;
+using SpekkieTwitchBot.General.FileHandling;
 using TwitchAuthService.Events.Pubsub;
 using TwitchLib.Communication.Enums;
 using TwitchLib.Communication.Events;
@@ -17,6 +18,7 @@ namespace TwitchAuthService.Events
         private bool _networkServicesRunning;
         private Task[] _networkTasks;
         private Task _monitorTask;
+        private readonly Logger _logger;
 
         public TimeSpan DefaultKeepAliveInterval { get; set; }
 
@@ -63,8 +65,9 @@ namespace TwitchAuthService.Events
 
         private static readonly int[] SourceArray = [25, 75, 150, 300, 600, 1200];
 
-        public CustomWebSocketClient(IClientOptions options = null)
+        public CustomWebSocketClient(Logger logger, IClientOptions options = null)
         {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             Options = options ?? new ClientOptions();
             switch (Options.ClientType)
             {
@@ -77,7 +80,7 @@ namespace TwitchAuthService.Events
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            _throttlers = new CustomThrottlers(this, Options.ThrottlingPeriod, Options.WhisperThrottlingPeriod)
+            _throttlers = new CustomThrottlers(logger, this, Options.ThrottlingPeriod, Options.WhisperThrottlingPeriod)
             {
                 TokenSource = _tokenSource
             };
@@ -87,16 +90,9 @@ namespace TwitchAuthService.Events
         {
             Client?.Abort();
             Client = new ClientWebSocket();
-            if (_monitorTask == null)
-            {
-                _monitorTask = StartMonitorTask();
-            }
-            else
-            {
-                if (!_monitorTask.IsCompleted)
-                    return;
-                _monitorTask = StartMonitorTask();
-            }
+            if (_monitorTask is { IsCompleted: false }) return;
+
+            _monitorTask = StartMonitorTask();
         }
 
         public bool Open()
@@ -136,28 +132,23 @@ namespace TwitchAuthService.Events
 
         public void Reconnect()
         {
-            Console.WriteLine("Reconnect() method called...");
             Task.Run(() =>
             {
                 try
                 {
                     Task.Delay(50).Wait();
                     Close();
-                    Console.WriteLine("Connection closed, attempting to open...");
                     if (!Open())
                     {
-                        Console.WriteLine("Reconnect failed, triggering OnError...");
                         OnError?.Invoke(this, new OnErrorEventArgs { Exception = new Exception("Reconnect failed") });
                     }
                     else
                     {
-                        Console.WriteLine("Reconnect successful!");
                         OnReconnected?.Invoke(this, new OnReconnectedEventArgs());
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Exception in Reconnect(): {ex.StackTrace}");
                     Error(new OnErrorEventArgs { Exception = ex });
                 }
             });
@@ -176,8 +167,6 @@ namespace TwitchAuthService.Events
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.StackTrace);
-                Console.WriteLine("Error in Send()");
                 Error(new OnErrorEventArgs { Exception = ex });
                 throw;
             }
@@ -195,8 +184,6 @@ namespace TwitchAuthService.Events
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.StackTrace);
-                Console.WriteLine("Error in SendWhisper()");
                 Error(new OnErrorEventArgs { Exception = ex });
                 throw;
             }
@@ -204,13 +191,11 @@ namespace TwitchAuthService.Events
     
         private void StartNetworkServices()
         {
-            Console.WriteLine("Starting network services...");
             _networkServicesRunning = true;
             _networkTasks = [StartListenerTask(), _throttlers.StartSenderTask(), _throttlers.StartWhisperSenderTask()];
 
             if (_networkTasks.Any(task => task.IsFaulted))
             {
-                Console.WriteLine("Network services encountered an error. Stopping...");
                 _networkServicesRunning = false;
                 CleanupServices();
             }
@@ -280,7 +265,6 @@ namespace TwitchAuthService.Events
             {
                 try
                 {
-                    Console.WriteLine("Starting monitor task...");
                     while (!_tokenSource.IsCancellationRequested)
                     {
                         if (!IsConnected)
@@ -288,7 +272,6 @@ namespace TwitchAuthService.Events
                             _notConnectedCounter++;
                             if (SourceArray.Contains(_notConnectedCounter))
                             {
-                                Console.WriteLine($"Attempting reconnect, counter: {_notConnectedCounter}");
                                 Reconnect();
                             }
                         }
@@ -298,8 +281,6 @@ namespace TwitchAuthService.Events
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.StackTrace);
-                    Console.WriteLine("Error in StartMonitorTask()");
                     Error(new OnErrorEventArgs { Exception = ex });
                 }
             }, _tokenSource.Token);
@@ -307,7 +288,6 @@ namespace TwitchAuthService.Events
     
         private void CleanupServices()
         {
-            Console.WriteLine("Cleaning up services...");
             _tokenSource.Cancel();
             _tokenSource = new CancellationTokenSource();
             _throttlers.TokenSource = _tokenSource;
@@ -339,13 +319,12 @@ namespace TwitchAuthService.Events
 
         public void Error(OnErrorEventArgs eventArgs)
         {
-            Console.WriteLine("On error in Error()");
+            _logger?.LogError($"Error occured in CustomWebClient: {eventArgs.Exception}");
             OnError?.Invoke(this, eventArgs);
         }
     
         public void Dispose()
         {
-            Console.WriteLine("Disposing WebSocket client...");
             Close();
             _throttlers.ShouldDispose = true;
             _tokenSource.Cancel();

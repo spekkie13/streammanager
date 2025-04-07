@@ -99,7 +99,6 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
 
     private void WebsocketMessageHandler(object sender, ResponseMessage e)
     {
-        logger.LogInfo($"{sender} has requested to handle: {e.MessageType}");
         if (e.MessageType != WebSocketMessageType.Text)
         {
             return;

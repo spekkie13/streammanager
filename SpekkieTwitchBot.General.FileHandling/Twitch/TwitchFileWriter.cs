@@ -19,7 +19,7 @@ public class TwitchFileWriter(FileWriter fileWriter)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentFollower.txt";
 
-        fileWriter.Write(dir, text);
+        fileWriter.Write(dir, $"Most recent follower: {text}");
     }
 
     public virtual void WriteTotalFollowersFile(int totalFollowers)
@@ -32,7 +32,7 @@ public class TwitchFileWriter(FileWriter fileWriter)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentSubscriber.txt";
 
-        fileWriter.Write(dir, text);
+        fileWriter.Write(dir, $"Most recent subscriber: {text}");
     }
 
     public void WriteTotalSubscribersFile(int totalSubscribers)

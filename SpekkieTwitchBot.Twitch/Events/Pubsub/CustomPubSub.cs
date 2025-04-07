@@ -56,7 +56,7 @@ public class CustomPubsub : ITwitchPubSub
     public CustomPubsub(Logger logger = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _socket = new CustomWebSocketClient(new ClientOptions
+        _socket = new CustomWebSocketClient(logger, new ClientOptions
         {
             ClientType = ClientType.PubSub
             

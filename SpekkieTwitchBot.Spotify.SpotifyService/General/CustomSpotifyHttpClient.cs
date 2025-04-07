@@ -4,17 +4,20 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieClassLibrary.Spotify.Song;
+using SpekkieTwitchBot.General.FileHandling;
 
 namespace SpotifyAuthService.General;
 
 public class CustomSpotifyHttpClient
 {
     private readonly HttpClient _Client;
+    private readonly Logger _logger;
     private readonly Auth.SpotifyAuthService _SpotifyAuthService;
 
-    public CustomSpotifyHttpClient(Auth.SpotifyAuthService spotifyAuthService)
+    public CustomSpotifyHttpClient(Auth.SpotifyAuthService spotifyAuthService, Logger logger)
     {
         _Client = new HttpClient();
+        _logger = logger;
         _SpotifyAuthService = spotifyAuthService;
         Setup();
     }
@@ -68,7 +71,7 @@ public class CustomSpotifyHttpClient
         }
         catch (HttpRequestException ex)
         {
-            Console.WriteLine($"Error retrieving data: {ex.Message}");
+            _logger.LogError($"Error occured retrieving data: {ex.Message}");
             throw;
         }
     }

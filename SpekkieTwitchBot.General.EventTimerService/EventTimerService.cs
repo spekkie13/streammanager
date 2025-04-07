@@ -1,12 +1,13 @@
 using Microsoft.Extensions.Hosting;
+using SpekkieTwitchBot.General.FileHandling;
 
 namespace EventTimerService
 {
-    public sealed class EventTimerService(EventTimer timer) : IHostedService
+    public sealed class EventTimerService(EventTimer timer, Logger logger) : IHostedService
     {
         public Task StartAsync(CancellationToken token)
         {
-            Console.WriteLine("Timer active, waiting to start.");
+            logger.LogInfo("Timer active, waiting to start.");
             return Task.CompletedTask;
         }
 
@@ -18,19 +19,19 @@ namespace EventTimerService
 
         public void StartTimer()
         {
-            Console.WriteLine("Starting timer...");
+            logger.LogInfo("Starting timer...");
             timer.StartTimer();
         }
 
         public void StopTimer()
         {
-            Console.WriteLine("Stopping timer...");
+            logger.LogInfo("Stopping timer...");
             timer.StopTimer();
         }
 
         public void RestartTimer()
         {
-            Console.WriteLine("Restarting timer...");
+            logger.LogInfo("Restarting timer...");
             timer.RestartTimer();
         }
 

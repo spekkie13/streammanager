@@ -1,13 +1,14 @@
 ﻿#nullable disable
 using System.Collections.Concurrent;
 using System.Text;
+using SpekkieTwitchBot.General.FileHandling;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Events;
 using TwitchLib.Communication.Interfaces;
 
 namespace TwitchAuthService.Events.Pubsub
 {
-    public class CustomThrottlers(IClient client, TimeSpan throttlingPeriod, TimeSpan whisperThrottlingPeriod)
+    public class CustomThrottlers(Logger logger, IClient client, TimeSpan throttlingPeriod, TimeSpan whisperThrottlingPeriod)
     {
         public readonly BlockingCollection<Tuple<DateTime, string>> SendQueue = new BlockingCollection<Tuple<DateTime, string>>();
         public readonly BlockingCollection<Tuple<DateTime, string>> WhisperQueue = new BlockingCollection<Tuple<DateTime, string>>();
@@ -182,7 +183,7 @@ namespace TwitchAuthService.Events.Pubsub
         {
             client.SendFailed(new OnSendFailedEventArgs { Data = "", Exception = ex });
             client.Error(new OnErrorEventArgs { Exception = ex });
-            Console.WriteLine($"{contextMessage} Exception: {ex}"); // Additional logging for debugging
+            logger.LogError($"{contextMessage} Exception: {ex}");
         }
     }
 }
