@@ -1,13 +1,12 @@
-﻿#nullable disable
-namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
+﻿namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class Outcome
 {
     public Guid Id { get; set; }
 
-    public string Color { get; set; }
+    public string? Color { get; set; }
 
-    public string Title { get; set; }
+    public string? Title { get; set; }
 
     public long TotalPoints { get; set; }
 
@@ -19,8 +18,8 @@ public class Outcome
     {
         public long Points { get; set; }
 
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
-        public string DisplayName { get; set; }
+        public string? DisplayName { get; set; }
     }
 }

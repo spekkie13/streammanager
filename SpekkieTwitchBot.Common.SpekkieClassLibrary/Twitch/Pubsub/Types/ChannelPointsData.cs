@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
@@ -25,7 +24,7 @@ public class ChannelPointsChannel : MessageData
 
     public ChannelPointsChannelType Type { get; private set; }
 
-    public ChannelPointsData Data { get; private set; }
+    public ChannelPointsData? Data { get; private set; }
 
-    public string RawData { get; private set; }
+    public string? RawData { get; private set; }
 }

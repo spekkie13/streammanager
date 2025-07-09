@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace SpekkieClassLibrary.OBS.Types;
@@ -16,5 +15,5 @@ public class RecordStateChanged : OutputStateChanged
     }
 
     [JsonProperty(PropertyName = "outputPath")]
-    public string OutputPath { set; get; }
+    public string? OutputPath { set; get; }
 }

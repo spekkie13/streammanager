@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.OBS.Enum;
 
@@ -22,7 +21,7 @@ public class OutputStateChanged
     public bool IsActive { get; set; }
 
     [JsonProperty(PropertyName = "outputState")]
-    public string StateStr { get; set; }
+    public string? StateStr { get; set; }
 
     public OutputState State
     {

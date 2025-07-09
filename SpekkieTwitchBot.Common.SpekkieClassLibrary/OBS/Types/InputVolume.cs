@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace SpekkieClassLibrary.OBS.Types;
@@ -16,7 +15,7 @@ public class InputVolume
     }
 
     [JsonProperty(PropertyName = "inputName")]
-    public string InputName { set; get; }
+    public string? InputName { set; get; }
 
     [JsonProperty(PropertyName = "inputVolumeMul")]
     public float InputVolumeMul { get; set; }

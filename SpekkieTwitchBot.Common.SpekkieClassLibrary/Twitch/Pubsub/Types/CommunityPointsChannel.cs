@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 
@@ -60,15 +59,15 @@ public class CommunityPointsChannel : MessageData
     }
 
     public CommunityPointsChannelType Type { get; protected set; }
-    public DateTime TimeStamp { get; protected set; }
-    public string ChannelId { get; protected set; }
-    public string Login { get; protected set; }
-    public string DisplayName { get; protected set; }
-    public string Message { get; protected set; }
+    public DateTime? TimeStamp { get; protected set; }
+    public string? ChannelId { get; protected set; }
+    public string? Login { get; protected set; }
+    public string? DisplayName { get; protected set; }
+    public string? Message { get; protected set; }
     public Guid RewardId { get; protected set; }
-    public string RewardTitle { get; protected set; }
-    public string RewardPrompt { get; protected set; }
+    public string? RewardTitle { get; protected set; }
+    public string? RewardPrompt { get; protected set; }
     public int RewardCost { get; protected set; }
-    public string Status { get; protected set; }
+    public string? Status { get; protected set; }
     public Guid RedemptionId { get; protected set; }
 }

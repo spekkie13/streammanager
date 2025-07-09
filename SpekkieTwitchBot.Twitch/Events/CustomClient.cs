@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System.Net.Security;
+﻿using System.Net.Security;
 using System.Net.Sockets;
 using SpekkieTwitchBot.General.FileHandling;
 using TwitchLib.Communication.Events;
@@ -14,16 +13,16 @@ public class CustomClient : IClient
     private const string Server = "irc.chat.twitch.tv";
     private readonly Logger _Logger;
     private readonly Throttlers _Throttlers;
-    private Task _MonitorTask;
+    private Task? _MonitorTask;
     private bool _NetworkServicesRunning;
-    private Task[] _NetworkTasks;
+    private Task[]? _NetworkTasks;
     private int _NotConnectedCounter;
-    private StreamReader _Reader;
+    private StreamReader? _Reader;
     private bool _StopServices;
     private CancellationTokenSource _TokenSource = new();
-    private StreamWriter _Writer;
+    private StreamWriter? _Writer;
 
-    public CustomClient(Logger logger, IClientOptions options = null)
+    public CustomClient(Logger logger, IClientOptions? options = null)
     {
         _Logger = logger;
         Options = options ?? new ClientOptions();
@@ -34,17 +33,9 @@ public class CustomClient : IClient
         InitializeClient();
     }
 
-    private int Port
-    {
-        get
-        {
-            if (Options == null)
-                return 0;
-            return !Options.UseSsl ? 80 : 443;
-        }
-    }
+    private int Port => !Options.UseSsl ? 80 : 443;
 
-    private TcpClient Client { get; set; }
+    private TcpClient? Client { get; set; }
 
     public TimeSpan DefaultKeepAliveInterval { get; set; }
 
@@ -56,34 +47,34 @@ public class CustomClient : IClient
     {
         get
         {
-            TcpClient client = Client;
+            TcpClient? client = Client;
             return client is { Connected: true };
         }
     }
 
     public IClientOptions Options { get; }
 
-    public event EventHandler<OnConnectedEventArgs> OnConnected;
+    public event EventHandler<OnConnectedEventArgs>? OnConnected;
 
-    public event EventHandler<OnDataEventArgs> OnData;
+    public event EventHandler<OnDataEventArgs>? OnData;
 
-    public event EventHandler<OnDisconnectedEventArgs> OnDisconnected;
+    public event EventHandler<OnDisconnectedEventArgs>? OnDisconnected;
 
-    public event EventHandler<OnErrorEventArgs> OnError;
+    public event EventHandler<OnErrorEventArgs>? OnError;
 
-    public event EventHandler<OnFatalErrorEventArgs> OnFatality;
+    public event EventHandler<OnFatalErrorEventArgs>? OnFatality;
 
-    public event EventHandler<OnMessageEventArgs> OnMessage;
+    public event EventHandler<OnMessageEventArgs>? OnMessage;
 
-    public event EventHandler<OnMessageThrottledEventArgs> OnMessageThrottled;
+    public event EventHandler<OnMessageThrottledEventArgs>? OnMessageThrottled;
 
-    public event EventHandler<OnWhisperThrottledEventArgs> OnWhisperThrottled;
+    public event EventHandler<OnWhisperThrottledEventArgs>? OnWhisperThrottled;
 
-    public event EventHandler<OnSendFailedEventArgs> OnSendFailed;
+    public event EventHandler<OnSendFailedEventArgs>? OnSendFailed;
 
-    public event EventHandler<OnStateChangedEventArgs> OnStateChanged;
+    public event EventHandler<OnStateChangedEventArgs>? OnStateChanged;
 
-    public event EventHandler<OnReconnectedEventArgs> OnReconnected;
+    public event EventHandler<OnReconnectedEventArgs>? OnReconnected;
 
     public bool Open()
     {
@@ -94,9 +85,10 @@ public class CustomClient : IClient
             Task.Run((Action)(() =>
             {
                 InitializeClient();
-                Client.Connect(Server, Port);
+                Client?.Connect(Server, Port);
                 if (Options.UseSsl)
                 {
+                    if (Client == null) return;
                     SslStream sslStream = new SslStream(Client.GetStream(), false);
                     sslStream.AuthenticateAsClient(Server);
                     _Reader = new StreamReader(sslStream);
@@ -104,6 +96,7 @@ public class CustomClient : IClient
                 }
                 else
                 {
+                    if (Client == null) return;
                     _Reader = new StreamReader(Client.GetStream());
                     _Writer = new StreamWriter(Client.GetStream());
                 }
@@ -129,7 +122,7 @@ public class CustomClient : IClient
         _StopServices = callDisconnect;
         CleanupServices();
         InitializeClient();
-        EventHandler<OnDisconnectedEventArgs> onDisconnected = OnDisconnected;
+        EventHandler<OnDisconnectedEventArgs>? onDisconnected = OnDisconnected;
         onDisconnected?.Invoke(this, new OnDisconnectedEventArgs());
     }
 
@@ -141,7 +134,7 @@ public class CustomClient : IClient
             Close();
             if (!Open())
                 return;
-            EventHandler<OnReconnectedEventArgs> onReconnected = OnReconnected;
+            EventHandler<OnReconnectedEventArgs>? onReconnected = OnReconnected;
             if (onReconnected == null)
                 return;
             onReconnected(this, new OnReconnectedEventArgs());
@@ -159,7 +152,7 @@ public class CustomClient : IClient
         }
         catch (Exception ex)
         {
-            EventHandler<OnErrorEventArgs> onError = OnError;
+            EventHandler<OnErrorEventArgs>? onError = OnError;
             onError?.Invoke(this, new OnErrorEventArgs
             {
                 Exception = ex
@@ -179,7 +172,7 @@ public class CustomClient : IClient
         }
         catch (Exception ex)
         {
-            EventHandler<OnErrorEventArgs> onError = OnError;
+            EventHandler<OnErrorEventArgs>? onError = OnError;
             onError?.Invoke(this, new OnErrorEventArgs
             {
                 Exception = ex
@@ -190,7 +183,7 @@ public class CustomClient : IClient
 
     public void WhisperThrottled(OnWhisperThrottledEventArgs eventArgs)
     {
-        EventHandler<OnWhisperThrottledEventArgs> whisperThrottled = OnWhisperThrottled;
+        EventHandler<OnWhisperThrottledEventArgs>? whisperThrottled = OnWhisperThrottled;
         if (whisperThrottled == null)
             return;
         whisperThrottled(this, eventArgs);
@@ -198,7 +191,7 @@ public class CustomClient : IClient
 
     public void MessageThrottled(OnMessageThrottledEventArgs eventArgs)
     {
-        EventHandler<OnMessageThrottledEventArgs> messageThrottled = OnMessageThrottled;
+        EventHandler<OnMessageThrottledEventArgs>? messageThrottled = OnMessageThrottled;
         if (messageThrottled == null)
             return;
         messageThrottled(this, eventArgs);
@@ -206,7 +199,7 @@ public class CustomClient : IClient
 
     public void SendFailed(OnSendFailedEventArgs eventArgs)
     {
-        EventHandler<OnSendFailedEventArgs> onSendFailed = OnSendFailed;
+        EventHandler<OnSendFailedEventArgs>? onSendFailed = OnSendFailed;
         if (onSendFailed == null)
             return;
         onSendFailed(this, eventArgs);
@@ -214,7 +207,7 @@ public class CustomClient : IClient
 
     public void Error(OnErrorEventArgs eventArgs)
     {
-        EventHandler<OnErrorEventArgs> onError = OnError;
+        EventHandler<OnErrorEventArgs>? onError = OnError;
         if (onError == null)
             return;
         onError(this, eventArgs);
@@ -265,8 +258,11 @@ public class CustomClient : IClient
     {
         return Task.Run((Func<Task>)(async () =>
         {
-            await _Writer.WriteLineAsync(message);
-            await _Writer.FlushAsync();
+            if (_Writer != null)
+            {
+                await _Writer.WriteLineAsync(message);
+                await _Writer.FlushAsync();
+            }
         }));
     }
 
@@ -281,28 +277,27 @@ public class CustomClient : IClient
                     break;
                 try
                 {
-                    string str = await sender._Reader.ReadLineAsync();
+                    if (sender._Reader == null) return;
+                    string? str = await sender._Reader.ReadLineAsync();
                     if (str == null && sender.IsConnected)
                     {
                         sender.Send("PING");
                         Task.Delay(500).Wait();
                     }
 
-                    EventHandler<OnMessageEventArgs> onMessage = sender.OnMessage;
-                    if (onMessage != null)
-                        onMessage(sender, new OnMessageEventArgs
-                        {
-                            Message = str
-                        });
+                    EventHandler<OnMessageEventArgs>? onMessage = sender.OnMessage;
+                    onMessage?.Invoke(sender, new OnMessageEventArgs
+                    {
+                        Message = str
+                    });
                 }
                 catch (Exception ex)
                 {
-                    EventHandler<OnErrorEventArgs> onError = sender.OnError;
-                    if (onError != null)
-                        onError(sender, new OnErrorEventArgs
-                        {
-                            Exception = ex
-                        });
+                    EventHandler<OnErrorEventArgs>? onError = sender.OnError;
+                    onError?.Invoke(sender, new OnErrorEventArgs
+                    {
+                        Exception = ex
+                    });
                 }
             }
         }));
@@ -342,7 +337,6 @@ public class CustomClient : IClient
                                 break;
                             default:
                                 if (_NotConnectedCounter >= 1200 && _NotConnectedCounter % 600 == 0) Reconnect();
-
                                 break;
                         }
 
@@ -351,18 +345,16 @@ public class CustomClient : IClient
                     }
                     else
                     {
-                        EventHandler<OnStateChangedEventArgs> onStateChanged = OnStateChanged;
-                        if (onStateChanged != null)
-                            onStateChanged(this, new OnStateChangedEventArgs
-                            {
-                                IsConnected = IsConnected,
-                                WasConnected = isConnected
-                            });
+                        EventHandler<OnStateChangedEventArgs>? onStateChanged = OnStateChanged;
+                        onStateChanged?.Invoke(this, new OnStateChangedEventArgs
+                        {
+                            IsConnected = IsConnected,
+                            WasConnected = isConnected
+                        });
                         if (IsConnected)
                         {
-                            EventHandler<OnConnectedEventArgs> onConnected = OnConnected;
-                            if (onConnected != null)
-                                onConnected(this, new OnConnectedEventArgs());
+                            EventHandler<OnConnectedEventArgs>? onConnected = OnConnected;
+                            onConnected?.Invoke(this, new OnConnectedEventArgs());
                         }
 
                         if (!IsConnected && !_StopServices)
@@ -374,9 +366,8 @@ public class CustomClient : IClient
                                 break;
                             }
 
-                            EventHandler<OnDisconnectedEventArgs> onDisconnected = OnDisconnected;
-                            if (onDisconnected != null)
-                                onDisconnected(this, new OnDisconnectedEventArgs());
+                            EventHandler<OnDisconnectedEventArgs>? onDisconnected = OnDisconnected;
+                            onDisconnected?.Invoke(this, new OnDisconnectedEventArgs());
                         }
 
                         isConnected = IsConnected;
@@ -384,12 +375,11 @@ public class CustomClient : IClient
             }
             catch (Exception ex)
             {
-                EventHandler<OnErrorEventArgs> onError = OnError;
-                if (onError != null)
-                    onError(this, new OnErrorEventArgs
-                    {
-                        Exception = ex
-                    });
+                EventHandler<OnErrorEventArgs>? onError = OnError;
+                onError?.Invoke(this, new OnErrorEventArgs
+                {
+                    Exception = ex
+                });
             }
 
             if (!flag || _StopServices)
@@ -405,16 +395,14 @@ public class CustomClient : IClient
         _Throttlers.TokenSource = _TokenSource;
         if (!_StopServices)
             return;
-        Task[] networkTasks = _NetworkTasks;
-        if ((networkTasks != null ? networkTasks.Length != 0 ? 1 : 0 : 0) == 0 ||
-            Task.WaitAll(_NetworkTasks, 15000))
+        Task[]? networkTasks = _NetworkTasks;
+        if (_NetworkTasks != null && ((networkTasks != null ? networkTasks.Length != 0 ? 1 : 0 : 0) == 0 || Task.WaitAll(_NetworkTasks, 15000)))
             return;
-        EventHandler<OnFatalErrorEventArgs> onFatality = OnFatality;
-        if (onFatality != null)
-            onFatality(this, new OnFatalErrorEventArgs
-            {
-                Reason = "Fatal network error. Network services fail to shut down."
-            });
+        EventHandler<OnFatalErrorEventArgs>? onFatality = OnFatality;
+        onFatality?.Invoke(this, new OnFatalErrorEventArgs
+        {
+            Reason = "Fatal network error. Network services fail to shut down."
+        });
         _StopServices = false;
         _Throttlers.Reconnecting = false;
         _NetworkServicesRunning = false;

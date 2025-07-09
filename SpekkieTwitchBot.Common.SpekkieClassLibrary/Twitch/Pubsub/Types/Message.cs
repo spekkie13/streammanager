@@ -11,22 +11,21 @@ using RaidEvents = SpekkieClassLibrary.Twitch.Pubsub.EventData.RaidEvents;
 using UserModerationNotifications = SpekkieClassLibrary.Twitch.Pubsub.EventData.UserModerationNotifications;
 using Whisper = SpekkieClassLibrary.Twitch.Pubsub.EventData.Whisper;
 
-#nullable disable
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class Message
 {
-    public readonly MessageData MessageData;
+    public readonly MessageData? MessageData;
 
     public Message(string jsonStr)
     {
-        JToken jToken = JObject.Parse(jsonStr).SelectToken("data");
+        JToken? jToken = JObject.Parse(jsonStr).SelectToken("data");
         if (jToken == null || string.IsNullOrEmpty(jToken.SelectToken("topic")?.ToString())) return;
         Topic = jToken.SelectToken("topic")?.ToString();
         if (string.IsNullOrEmpty(Topic) || string.IsNullOrEmpty(jToken.SelectToken("message")?.ToString())) return;
         string jsonStr1 = jToken.SelectToken("message")?.ToString() ?? "";
         string topic = Topic;
-        string str = topic?.Split('.')[0];
+        string? str = topic?.Split('.')[0];
         switch (ComputeStringHash(str))
         {
             case 450000440:
@@ -109,9 +108,9 @@ public class Message
         }
     }
 
-    public string Topic { get; }
+    public string? Topic { get; }
 
-    private static uint ComputeStringHash(string s)
+    private static uint ComputeStringHash(string? s)
     {
         const uint StringHash = 0;
         return s?.Aggregate(2166136261U, (current, t) => (uint)((t ^ (int)current) * 16777619)) ?? StringHash;

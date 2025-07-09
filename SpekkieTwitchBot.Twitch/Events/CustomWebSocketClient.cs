@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System.Net.WebSockets;
+﻿using System.Net.WebSockets;
 using System.Text;
 using SpekkieTwitchBot.General.FileHandling;
 using TwitchAuthService.Events.Pubsub;
@@ -16,8 +15,8 @@ namespace TwitchAuthService.Events
         private readonly CustomThrottlers _Throttlers;
         private CancellationTokenSource _TokenSource = new();
         private bool _NetworkServicesRunning;
-        private Task[] _NetworkTasks;
-        private Task _MonitorTask;
+        private Task[]? _NetworkTasks;
+        private Task? _MonitorTask;
         private readonly Logger _Logger;
 
         public TimeSpan DefaultKeepAliveInterval { get; set; }
@@ -30,56 +29,53 @@ namespace TwitchAuthService.Events
         {
             get
             {
-                ClientWebSocket client = Client;
+                ClientWebSocket? client = Client;
                 return client is { State: WebSocketState.Open };
             }
         }
 
         public IClientOptions Options { get; }
 
-        private ClientWebSocket Client { get; set; }
+        private ClientWebSocket? Client { get; set; }
 
-        public event EventHandler<OnConnectedEventArgs> OnConnected;
+        public event EventHandler<OnConnectedEventArgs>? OnConnected;
 
-        public event EventHandler<OnDataEventArgs> OnData;
+        public event EventHandler<OnDataEventArgs>? OnData;
 
-        public event EventHandler<OnDisconnectedEventArgs> OnDisconnected;
+        public event EventHandler<OnDisconnectedEventArgs>? OnDisconnected;
 
-        public event EventHandler<OnErrorEventArgs> OnError;
+        public event EventHandler<OnErrorEventArgs>? OnError;
 
-        public event EventHandler<OnFatalErrorEventArgs> OnFatality;
+        public event EventHandler<OnFatalErrorEventArgs>? OnFatality;
 
-        public event EventHandler<OnMessageEventArgs> OnMessage;
+        public event EventHandler<OnMessageEventArgs>? OnMessage;
 
-        public event EventHandler<OnMessageThrottledEventArgs> OnMessageThrottled;
+        public event EventHandler<OnMessageThrottledEventArgs>? OnMessageThrottled;
 
-        public event EventHandler<OnWhisperThrottledEventArgs> OnWhisperThrottled;
+        public event EventHandler<OnWhisperThrottledEventArgs>? OnWhisperThrottled;
 
-        public event EventHandler<OnSendFailedEventArgs> OnSendFailed;
+        public event EventHandler<OnSendFailedEventArgs>? OnSendFailed;
 
-        public event EventHandler<OnStateChangedEventArgs> OnStateChanged;
+        public event EventHandler<OnStateChangedEventArgs>? OnStateChanged;
 
-        public event EventHandler<OnReconnectedEventArgs> OnReconnected;
+        public event EventHandler<OnReconnectedEventArgs>? OnReconnected;
 
         private string Url { get; }
 
         private static readonly int[] SourceArray = [25, 75, 150, 300, 600, 1200];
 
-        public CustomWebSocketClient(Logger logger, IClientOptions options = null)
+        public CustomWebSocketClient(Logger logger, IClientOptions? options = null)
         {
             _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             Options = options ?? new ClientOptions();
-            switch (Options.ClientType)
+            Url = Options.ClientType switch
             {
-                case ClientType.Chat:
-                    Url = Options.UseSsl ? "wss://irc-ws.chat.twitch.tv:443" : "ws://irc-ws.chat.twitch.tv:80";
-                    break;
-                case ClientType.PubSub:
-                    Url = Options.UseSsl ? "wss://pubsub-edge.twitch.tv:443" : "ws://pubsub-edge.twitch.tv:80";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                ClientType.Chat => Options.UseSsl ? "wss://irc-ws.chat.twitch.tv:443" : "ws://irc-ws.chat.twitch.tv:80",
+                ClientType.PubSub => Options.UseSsl
+                    ? "wss://pubsub-edge.twitch.tv:443"
+                    : "ws://pubsub-edge.twitch.tv:80",
+                _ => throw new ArgumentOutOfRangeException()
+            };
             _Throttlers = new CustomThrottlers(logger, this, Options.ThrottlingPeriod, Options.WhisperThrottlingPeriod)
             {
                 TokenSource = _TokenSource
@@ -102,7 +98,7 @@ namespace TwitchAuthService.Events
                 if (IsConnected)
                     return true;
                 InitializeClient();
-                Client.ConnectAsync(new Uri(Url), _TokenSource.Token).Wait(10000);
+                Client?.ConnectAsync(new Uri(Url), _TokenSource.Token).Wait(10000);
                 if (!IsConnected)
                     return Open();
                 StartNetworkServices();
@@ -124,10 +120,9 @@ namespace TwitchAuthService.Events
             Client?.Abort();
             CleanupServices();
             InitializeClient();
-            EventHandler<OnDisconnectedEventArgs> onDisconnected = OnDisconnected;
-            if (onDisconnected == null)
-                return;
-            onDisconnected(this, new OnDisconnectedEventArgs());
+            EventHandler<OnDisconnectedEventArgs>? onDisconnected = OnDisconnected;
+
+            onDisconnected?.Invoke(this, new OnDisconnectedEventArgs());
         }
 
         public void Reconnect()
@@ -194,11 +189,9 @@ namespace TwitchAuthService.Events
             _NetworkServicesRunning = true;
             _NetworkTasks = [StartListenerTask(), _Throttlers.StartSenderTask(), _Throttlers.StartWhisperSenderTask()];
 
-            if (_NetworkTasks.Any(task => task.IsFaulted))
-            {
-                _NetworkServicesRunning = false;
-                CleanupServices();
-            }
+            if (!_NetworkTasks.Any(task => task.IsFaulted)) return;
+            _NetworkServicesRunning = false;
+            CleanupServices();
         }
 
         private Task StartListenerTask()
@@ -215,6 +208,7 @@ namespace TwitchAuthService.Events
                         WebSocketReceiveResult async;
                         try
                         {
+                            if (sender.Client == null) return;
                             async = await sender.Client.ReceiveAsync(new ArraySegment<byte>(buffer), sender._TokenSource.Token);
                         }
                         catch
@@ -232,14 +226,11 @@ namespace TwitchAuthService.Events
                                     continue;
                                 }
                                 message += Encoding.UTF8.GetString(buffer).TrimEnd(new char[1]);
-                                EventHandler<OnMessageEventArgs> onMessage = sender.OnMessage;
-                                if (onMessage != null)
+                                EventHandler<OnMessageEventArgs>? onMessage = sender.OnMessage;
+                                onMessage?.Invoke(sender, new OnMessageEventArgs
                                 {
-                                    onMessage(sender, new OnMessageEventArgs
-                                    {
-                                        Message = message
-                                    });
-                                }
+                                    Message = message
+                                });
 
                                 goto case WebSocketMessageType.Binary;
                             case WebSocketMessageType.Binary:
@@ -295,31 +286,25 @@ namespace TwitchAuthService.Events
     
         public void WhisperThrottled(OnWhisperThrottledEventArgs eventArgs)
         {
-            EventHandler<OnWhisperThrottledEventArgs> whisperThrottled = OnWhisperThrottled;
-            if (whisperThrottled == null)
-                return;
-            whisperThrottled(this, eventArgs);
+            EventHandler<OnWhisperThrottledEventArgs>? whisperThrottled = OnWhisperThrottled;
+            whisperThrottled?.Invoke(this, eventArgs);
         }
 
         public void MessageThrottled(OnMessageThrottledEventArgs eventArgs)
         {
-            EventHandler<OnMessageThrottledEventArgs> messageThrottled = OnMessageThrottled;
-            if (messageThrottled == null)
-                return;
-            messageThrottled(this, eventArgs);
+            EventHandler<OnMessageThrottledEventArgs>? messageThrottled = OnMessageThrottled;
+            messageThrottled?.Invoke(this, eventArgs);
         }
 
         public void SendFailed(OnSendFailedEventArgs eventArgs)
         {
-            EventHandler<OnSendFailedEventArgs> onSendFailed = OnSendFailed;
-            if (onSendFailed == null)
-                return;
-            onSendFailed(this, eventArgs);
+            EventHandler<OnSendFailedEventArgs>? onSendFailed = OnSendFailed;
+            onSendFailed?.Invoke(this, eventArgs);
         }
 
         public void Error(OnErrorEventArgs eventArgs)
         {
-            _Logger?.LogError($"Error occured in CustomWebClient: {eventArgs.Exception}");
+            _Logger.LogError($"Error occured in CustomWebClient: {eventArgs.Exception}");
             OnError?.Invoke(this, eventArgs);
         }
     

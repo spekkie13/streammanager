@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 
@@ -24,8 +23,8 @@ public class RaidEvents : MessageData
             case RaidType.RaidUpdateV2:
             case RaidType.RaidGo:
                 Id = Guid.Parse(jtoken.SelectToken("raid.id")?.ToString() ?? "");
-                ChannelId = jtoken.SelectToken("raid.source_id")?.ToString();
-                TargetChannelId = jtoken.SelectToken("raid.target_id")?.ToString();
+                ChannelId = jtoken.SelectToken("raid.source_id")?.ToString() ?? "";
+                TargetChannelId = jtoken.SelectToken("raid.target_id")?.ToString() ?? "";
                 AnnounceTime = DateTime.Parse(jtoken.SelectToken("raid.announce_time")?.ToString() ?? "");
                 RaidTime = DateTime.Parse(jtoken.SelectToken("raid.raid_time")?.ToString() ?? "");
                 RemainingDurationSeconds =
@@ -41,15 +40,15 @@ public class RaidEvents : MessageData
 
     public Guid Id { get; protected set; }
 
-    public string ChannelId { get; protected set; }
+    public string? ChannelId { get; protected set; }
 
-    public string TargetChannelId { get; protected set; }
+    public string? TargetChannelId { get; protected set; }
 
-    public string TargetLogin { get; protected set; }
+    public string? TargetLogin { get; protected set; }
 
-    public string TargetDisplayName { get; protected set; }
+    public string? TargetDisplayName { get; protected set; }
 
-    public string TargetProfileImage { get; protected set; }
+    public string? TargetProfileImage { get; protected set; }
 
     public DateTime AnnounceTime { get; protected set; }
 

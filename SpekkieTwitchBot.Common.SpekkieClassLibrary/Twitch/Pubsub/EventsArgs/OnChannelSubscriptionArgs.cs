@@ -1,10 +1,9 @@
-﻿#nullable disable
-using SpekkieClassLibrary.Twitch.Pubsub.Types;
+﻿using SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
 
 public class ChannelSubscriptionArgs : EventArgs
 {
-    public string ChannelId;
-    public ChannelSubscription Subscription;
+    public string? ChannelId;
+    public ChannelSubscription? Subscription;
 }

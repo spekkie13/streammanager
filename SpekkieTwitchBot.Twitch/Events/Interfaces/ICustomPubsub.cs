@@ -1,6 +1,7 @@
-﻿#nullable disable
-using SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
+﻿using SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
 using TwitchLib.PubSub.Events;
+using OnRaidUpdateArgs = SpekkieClassLibrary.Twitch.Pubsub.EventsArgs.OnRaidUpdateArgs;
+using OnLogArgs = SpekkieClassLibrary.Twitch.Pubsub.EventsArgs.OnLogArgs;
 
 namespace TwitchAuthService.Events.Interfaces;
 
@@ -51,6 +52,6 @@ public interface ITwitchPubSub
     void ListenToLeaderboards(string channelTwitchId);
     void ListenToRaid(string channelTwitchId);
     void ListenToPredictions(string channelTwitchId);
-    void SendTopics(string oauth = null, bool unlisten = false);
+    void SendTopics(string? oauth = null, bool unlisten = false);
     void TestMessageParser(string testJsonString);
 }

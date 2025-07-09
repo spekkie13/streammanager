@@ -19,8 +19,8 @@ public sealed class CustomTwitchHttpClient
 
     private void Setup()
     {
-        TwitchUserAuth? auth = _TwitchAuthService.GetTwitchUserAuth();
-        GeneralTwitchAuth? genAuth = _TwitchAuthService.GetGeneralTwitchAuth();
+        TwitchUserAuth auth = _TwitchAuthService.GetTwitchUserAuth();
+        GeneralTwitchAuth genAuth = _TwitchAuthService.GetGeneralTwitchAuth();
 
 
         _Client.DefaultRequestHeaders.Add("client-id", auth.ClientId);

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
@@ -24,6 +23,6 @@ public class AutomodQueue : MessageData
     }
 
     public AutomodQueueType Type { get; private set; }
-    public AutomodQueueData Data { get; private set; }
-    public string RawData { get; private set; }
+    public AutomodQueueData? Data { get; private set; }
+    public string? RawData { get; private set; }
 }

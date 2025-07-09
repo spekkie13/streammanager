@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;
@@ -7,21 +6,22 @@ namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;
 public class ChannelBitsEventsV2 : MessageData
 {
     [JsonProperty(PropertyName = "user_name")]
-    public string UserName { get; protected set; }
+    public string? UserName { get; protected set; }
 
     [JsonProperty(PropertyName = "channel_name")]
-    public string ChannelName { get; protected set; }
+    public string? ChannelName { get; protected set; }
 
     [JsonProperty(PropertyName = "user_id")]
-    public string UserId { get; protected set; }
+    public string? UserId { get; protected set; }
 
     [JsonProperty(PropertyName = "channel_id")]
-    public string ChannelId { get; protected set; }
+    public string? ChannelId { get; protected set; }
 
-    [JsonProperty(PropertyName = "time")] public DateTime Time { get; protected set; }
+    [JsonProperty(PropertyName = "time")] 
+    public DateTime Time { get; protected set; }
 
     [JsonProperty(PropertyName = "chat_message")]
-    public string ChatMessage { get; protected set; }
+    public string? ChatMessage { get; protected set; }
 
     [JsonProperty(PropertyName = "bits_used")]
     public int BitsUsed { get; protected set; }
@@ -33,5 +33,5 @@ public class ChannelBitsEventsV2 : MessageData
     public bool IsAnonymous { get; protected set; }
 
     [JsonProperty(PropertyName = "context")]
-    public string Context { get; protected set; }
+    public string? Context { get; protected set; }
 }

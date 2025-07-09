@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;

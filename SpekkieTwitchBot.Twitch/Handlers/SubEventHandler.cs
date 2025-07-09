@@ -19,11 +19,13 @@ public class SubEventHandler
     
     public void HandleSub(object? sender, ChannelSubscriptionArgs e)
     {
-        string subscriberName = e.Subscription.DisplayName;
-        string mostRecentFollower = _TwitchFileReader.ReadMostRecentFollowerFile();
-        if (mostRecentFollower.Equals(subscriberName)) return;
+        string? subscriberName = e.Subscription?.DisplayName;
+        string mostRecentSubscriber = _TwitchFileReader.ReadMostRecentSubFile();
+        if (mostRecentSubscriber.Equals(subscriberName)) return;
 
         int subscriberCount = _TwitchHttpClient.GetSubscriberCount().Result;
+
+        if (e.Subscription?.DisplayName == null) return;
         _TwitchFileWriter.WriteMostRecentSubscriberFile(e.Subscription.DisplayName);
         _TwitchFileWriter.WriteTotalSubscribersFile(subscriberCount);
     }

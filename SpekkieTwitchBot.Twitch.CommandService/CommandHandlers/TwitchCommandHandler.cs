@@ -11,11 +11,15 @@ public class TwitchCommandHandler(ChannelPointHandler channelPointHandler)
         if (string.IsNullOrEmpty(username)) return "";
         Redemption redemption = channelPointHandler.GetMostRecentRedemptionForUser(username).Result;
 
-        HttpResponseMessage message = channelPointHandler.UpdateRedemptionStatus(redemption.Id, TwitchConstants.BroadcasterId,
+        if (redemption.Reward == null) return "";
+        HttpResponseMessage? message = channelPointHandler.UpdateRedemptionStatus(redemption.Id, TwitchConstants.BroadcasterId,
             redemption.Reward.Id, TwitchConstants.ChannelPointStatusCancelled).Result;
-        return message.IsSuccessStatusCode
-            ? $"Successfully refunded most recent channel point redemption for {username}"
-            : $"Unable to refund most recent channel point redemption for {username}";
+            
+        if (message != null)   
+            return message.IsSuccessStatusCode
+                ? $"Successfully refunded most recent channel point redemption for {username}"
+                : $"Unable to refund most recent channel point redemption for {username}";
+        return "";
     }
     
     public string HandleCompleteCommand(string username)
@@ -23,11 +27,16 @@ public class TwitchCommandHandler(ChannelPointHandler channelPointHandler)
         if (string.IsNullOrEmpty(username)) return "";
         Redemption redemption = channelPointHandler.GetMostRecentRedemptionForUser(username).Result;
 
-        HttpResponseMessage message = channelPointHandler.UpdateRedemptionStatus(redemption.Id, TwitchConstants.BroadcasterId,
+        if (redemption.Reward == null) return "";
+        HttpResponseMessage? message = channelPointHandler.UpdateRedemptionStatus(redemption.Id, TwitchConstants.BroadcasterId,
             redemption.Reward.Id, TwitchConstants.ChannelPointStatusFulfilled).Result;
-        return message.IsSuccessStatusCode
-            ? $"Successfully completed most recent channel point redemption for {username}"
-            : $"Unable to complete most recent channel point redemption for {username}";
+
+        if (message != null)            
+            return message.IsSuccessStatusCode
+                ? $"Successfully completed most recent channel point redemption for {username}"
+                : $"Unable to complete most recent channel point redemption for {username}";
+        
+        return "";
     }
     
     public string HandleCreateRedemptionCommand(string commandArgs)

@@ -18,7 +18,8 @@ public class SpotifySearchService(CustomSpotifyHttpClient customSpotifyHttpClien
             return tracks?.First(t => t.Name == songName);
         }
 
+        
         return tracks?.Where(t => t.Name == songName)
-            .First(t => t.Artists.Any(a => a.Name == artist));
+            .First(t => t.Artists != null && t.Artists.Any(a => a.Name == artist));
     }
 }

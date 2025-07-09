@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 using TwitchLib.PubSub.Common;
@@ -30,42 +29,44 @@ public class ChannelSubscription : MessageData
         };
 
         SubscriptionPlanName = jobject.SelectToken("sub_plan_name")?.ToString();
-        SubMessage = new SubMessage(jobject.SelectToken("sub_message"));
-        string str1 = jobject.SelectToken("is_gift")?.ToString();
-        if (str1 != null)
+        SubMessage = new SubMessage(jobject.SelectToken("sub_message") ?? "");
+        string? str1 = jobject.SelectToken("is_gift")?.ToString();
+        if (str1 != null) 
             IsGift = Convert.ToBoolean(str1);
-        string str2 = jobject.SelectToken("multi_month_duration")?.ToString();
+        string? str2 = jobject.SelectToken("multi_month_duration")?.ToString();
         if (str2 != null)
             MultiMonthDuration = int.Parse(str2);
         Context = jobject.SelectToken("context")?.ToString();
-        JToken jtoken1 = jobject.SelectToken("months");
+        JToken? jtoken1 = jobject.SelectToken("months");
         if (jtoken1 != null)
             Months = int.Parse(jtoken1.ToString());
-        JToken jtoken2 = jobject.SelectToken("cumulative_months");
+        JToken? jtoken2 = jobject.SelectToken("cumulative_months");
         if (jtoken2 != null)
             CumulativeMonths = int.Parse(jtoken2.ToString());
-        JToken jtoken3 = jobject.SelectToken("streak_months");
+        JToken? jtoken3 = jobject.SelectToken("streak_months");
         if (jtoken3 == null)
             return;
         StreakMonths = int.Parse(jtoken3.ToString());
     }
 
-    public string Username { get; }
-    public string DisplayName { get; }
-    public string RecipientName { get; }
-    public string RecipientDisplayName { get; }
-    public string ChannelName { get; }
-    public string UserId { get; }
-    public string ChannelId { get; }
-    public string RecipientId { get; }
+    public string? Username { get; }
+    public string? DisplayName { get; }
+    public string? RecipientName { get; }
+    public string? RecipientDisplayName { get; }
+    public string? ChannelName { get; }
+    public string? UserId { get; }
+    public string? ChannelId { get; }
+    public string? RecipientId { get; }
     public DateTime Time { get; }
     private SubscriptionPlan SubscriptionPlan { get; }
-    public string SubscriptionPlanName { get; }
-    public int? Months { get; }
-    public int? CumulativeMonths { get; }
-    public int? StreakMonths { get; }
-    public string Context { get; }
-    public SubMessage SubMessage { get; }
-    public bool? IsGift { get; }
-    public int? MultiMonthDuration { get; }
+    public string? SubscriptionPlanName { get; }
+    public int Months { get; }
+    public int CumulativeMonths { get; }
+    public int StreakMonths { get; }
+    public string? Context { get; }
+    public SubMessage? SubMessage { get; }
+    public bool IsGift { get; }
+    public int MultiMonthDuration { get; }
+    
+    public static ChannelSubscription Empty => new ("");
 }

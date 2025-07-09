@@ -1,5 +1,4 @@
-﻿#nullable disable
-namespace SpekkieClassLibrary.Spotify.Song;
+﻿namespace SpekkieClassLibrary.Spotify.Song;
 
 public abstract class ExternalIds(string isrc)
 {

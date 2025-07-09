@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace SpekkieClassLibrary.OBS.Communication;
@@ -7,9 +6,10 @@ namespace SpekkieClassLibrary.OBS.Communication;
 public class ObsAuthInfo
 {
     [JsonProperty(PropertyName = "challenge")]
-    public readonly string Challenge;
+    public readonly string Challenge = null!;
 
-    [JsonProperty(PropertyName = "salt")] public readonly string PasswordSalt;
+    [JsonProperty(PropertyName = "salt")] 
+    public readonly string PasswordSalt = null!;
 
     public ObsAuthInfo(JObject data)
     {

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 
 namespace SpekkieClassLibrary.Twitch.Pubsub.EventData;
@@ -8,16 +7,16 @@ public class ChatModeratorActions : MessageData
 {
     public ChatModeratorActions(string jsonStr)
     {
-        JToken jtoken = JObject.Parse(jsonStr).SelectToken("data");
-        Type = jtoken?.SelectToken("type")?.ToString();
-        ModerationAction = jtoken?.SelectToken("moderation_action")?.ToString();
+        JToken? jtoken = JObject.Parse(jsonStr).SelectToken("data");
+        Type = jtoken?.SelectToken("type")?.ToString() ?? "";
+        ModerationAction = jtoken?.SelectToken("moderation_action")?.ToString() ?? "";
         if (jtoken?.SelectToken("args") != null)
             foreach (JToken obj in jtoken.SelectToken("args")!)
                 Args.Add(obj.ToString());
 
-        CreatedBy = jtoken?.SelectToken("created_by")?.ToString();
-        CreatedByUserId = jtoken?.SelectToken("created_by_user_id")?.ToString();
-        TargetUserId = jtoken?.SelectToken("target_user_id")?.ToString();
+        CreatedBy = jtoken?.SelectToken("created_by")?.ToString() ?? "";
+        CreatedByUserId = jtoken?.SelectToken("created_by_user_id")?.ToString() ?? "";
+        TargetUserId = jtoken?.SelectToken("target_user_id")?.ToString() ?? "";
     }
 
     public string Type { get; }

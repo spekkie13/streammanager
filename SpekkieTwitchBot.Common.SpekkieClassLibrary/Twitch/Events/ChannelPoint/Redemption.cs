@@ -1,37 +1,38 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 
 public class Redemption
 {
     [JsonProperty(PropertyName = "broadcaster_name")]
-    public string BroadcasterName { get; set; }
+    public string? BroadcasterName { get; set; }
 
     [JsonProperty(PropertyName = "broadcaster_login")]
-    public string BroadcasterLogin { get; set; }
+    public string? BroadcasterLogin { get; set; }
 
     [JsonProperty(PropertyName = "broadcaster_id")]
-    public string BroadcasterId { get; set; }
+    public string? BroadcasterId { get; set; }
 
     [JsonProperty(PropertyName = "id")] 
-    public string Id { get; set; }
+    public string? Id { get; set; }
 
     [JsonProperty(PropertyName = "user_id")]
-    public string UserId { get; set; }
+    public string? UserId { get; set; }
 
     [JsonProperty(PropertyName = "user_name")]
-    public string UserName { get; set; }
+    public string? UserName { get; set; }
 
     [JsonProperty(PropertyName = "user_input")]
-    public string UserInput { get; set; }
+    public string? UserInput { get; set; }
 
     [JsonProperty(PropertyName = "status")]
-    public string Status { get; set; }
+    public string? Status { get; set; }
 
     [JsonProperty(PropertyName = "redeemed_at")]
-    public string RedeemedAt { get; set; }
+    public string? RedeemedAt { get; set; }
 
     [JsonProperty(PropertyName = "reward")]
-    public Reward Reward { get; set; }
+    public Reward? Reward { get; set; }
+    
+    public static Redemption Empty => new Redemption();
 }

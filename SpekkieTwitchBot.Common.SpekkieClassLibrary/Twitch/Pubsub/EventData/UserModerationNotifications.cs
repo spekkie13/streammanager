@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
@@ -16,8 +15,7 @@ public class UserModerationNotifications : MessageData
         if (jtoken.SelectToken("type")?.ToString() == "automod_caught_message")
         {
             Type = UserModerationNotificationsType.AutomodCaughtMessage;
-            Data = JsonConvert.DeserializeObject<AutomodCaughtResponseMessage>(jtoken.SelectToken("data")?.ToString() ??
-                                                                               "");
+            Data = JsonConvert.DeserializeObject<AutomodCaughtResponseMessage>(jtoken.SelectToken("data")?.ToString() ?? "");
         }
         else
         {
@@ -27,7 +25,7 @@ public class UserModerationNotifications : MessageData
 
     public UserModerationNotificationsType Type { get; private set; }
 
-    public UserModerationNotificationsData Data { get; private set; }
+    public UserModerationNotificationsData? Data { get; private set; }
 
     public string RawData { get; private set; }
 }

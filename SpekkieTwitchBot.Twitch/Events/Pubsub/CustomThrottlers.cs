@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Text;
 using SpekkieTwitchBot.General.FileHandling;
 using TwitchLib.Communication.Clients;
@@ -10,20 +9,20 @@ namespace TwitchAuthService.Events.Pubsub
 {
     public class CustomThrottlers(Logger logger, IClient client, TimeSpan throttlingPeriod, TimeSpan whisperThrottlingPeriod)
     {
-        public readonly BlockingCollection<Tuple<DateTime, string>> SendQueue = new BlockingCollection<Tuple<DateTime, string>>();
-        public readonly BlockingCollection<Tuple<DateTime, string>> WhisperQueue = new BlockingCollection<Tuple<DateTime, string>>();
+        public readonly BlockingCollection<Tuple<DateTime, string>> SendQueue = new();
+        public readonly BlockingCollection<Tuple<DateTime, string>> WhisperQueue = new();
         public bool ResetThrottlerRunning;
         public bool ResetWhisperThrottlerRunning;
         private int _SentCount;
         private int _WhispersSent;
-        public Task ResetThrottler;
-        public Task ResetWhisperThrottler;
+        public Task? ResetThrottler;
+        public Task? ResetWhisperThrottler;
 
         public bool Reconnecting { get; set; }
 
         public bool ShouldDispose { get; set; }
 
-        public CancellationTokenSource TokenSource { get; set; }
+        public CancellationTokenSource? TokenSource { get; set; }
 
         private void StartThrottlingWindowReset()
         {
@@ -33,7 +32,8 @@ namespace TwitchAuthService.Events.Pubsub
                 while (!ShouldDispose && !Reconnecting)
                 {
                     Interlocked.Exchange(ref _SentCount, 0);
-                    await Task.Delay(throttlingPeriod, TokenSource.Token);
+                    if(TokenSource != null)
+                        await Task.Delay(throttlingPeriod, TokenSource.Token);
                 }
                 ResetThrottlerRunning = false;
                 return Task.CompletedTask;
@@ -48,7 +48,8 @@ namespace TwitchAuthService.Events.Pubsub
                 while (!ShouldDispose && !Reconnecting)
                 {
                     Interlocked.Exchange(ref _WhispersSent, 0);
-                    await Task.Delay(whisperThrottlingPeriod, TokenSource.Token);
+                    if (TokenSource != null)
+                        await Task.Delay(whisperThrottlingPeriod, TokenSource.Token);
                 }
                 ResetWhisperThrottlerRunning = false;
                 return Task.CompletedTask;
@@ -79,7 +80,7 @@ namespace TwitchAuthService.Events.Pubsub
                         if (!client.IsConnected || ShouldDispose)
                             continue;
                         
-                        if(!TokenSource.Token.IsCancellationRequested)
+                        if(TokenSource is { Token.IsCancellationRequested: false }) 
                             await ProcessMessage(SendQueue, IncrementSentCount);
                     }
                 }
@@ -110,7 +111,7 @@ namespace TwitchAuthService.Events.Pubsub
                         if (!client.IsConnected || ShouldDispose)
                             continue;
 
-                        if(!TokenSource.Token.IsCancellationRequested)
+                        if(TokenSource is { Token.IsCancellationRequested: false })                             
                             await ProcessMessage(WhisperQueue, IncrementWhisperCount);
                     }
                 }
@@ -136,15 +137,18 @@ namespace TwitchAuthService.Events.Pubsub
         {
             try
             {
-                if (!queue.TryTake(out var msg, 100, TokenSource.Token))
+                if (TokenSource != null)
                 {
-                    return; // No message available
-                }
+                    if (!queue.TryTake(out var msg, 100, TokenSource.Token))
+                    {
+                        return; // No message available
+                    }
 
-                if (msg.Item1.Add(client.Options.SendCacheItemTimeout) >= DateTime.UtcNow)
-                {
-                    await SendMessage(msg.Item2);
-                    incrementCounter();
+                    if (msg.Item1.Add(client.Options.SendCacheItemTimeout) >= DateTime.UtcNow)
+                    {
+                        await SendMessage(msg.Item2);
+                        incrementCounter();
+                    }
                 }
             }
             catch (OperationCanceledException)

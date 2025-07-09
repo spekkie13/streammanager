@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace SpekkieClassLibrary.OBS.Abstract;
@@ -16,8 +15,8 @@ public abstract class Input
     }
 
     [JsonProperty(PropertyName = "inputName")]
-    public string InputName { get; set; }
+    public string InputName { get; set; } = null!;
 
     [JsonProperty(PropertyName = "inputKind")]
-    public string InputKind { get; set; }
+    public string InputKind { get; set; } = null!;
 }

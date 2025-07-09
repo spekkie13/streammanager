@@ -18,7 +18,8 @@ using TwitchLib.PubSub.Events;
 using OnEmoteOnlyArgs = TwitchLib.Client.Events.OnEmoteOnlyArgs;
 using OnPubsubEmoteOnlyArgs = TwitchLib.PubSub.Events.OnEmoteOnlyArgs;
 using OnLogArgs = TwitchLib.Client.Events.OnLogArgs;
-using OnPubsubLogArgs = TwitchLib.PubSub.Events.OnLogArgs;
+using OnPubsubLogArgs = SpekkieClassLibrary.Twitch.Pubsub.EventsArgs.OnLogArgs;
+using OnRaidUpdateArgs = SpekkieClassLibrary.Twitch.Pubsub.EventsArgs.OnRaidUpdateArgs;
 
 namespace CommandService;
 
@@ -243,6 +244,7 @@ public class TwitchWebsocketService : IHostedService
 
     private void SetupTopics()
     {
+        if (string.IsNullOrEmpty(_GeneralTwitchAuth.ChannelId)) return;
         _CustomPubsub.ListenToVideoPlayback(_GeneralTwitchAuth.ChannelId);
         _CustomPubsub.ListenToFollows(_GeneralTwitchAuth.ChannelId);
         _CustomPubsub.ListenToSubscriptions(_GeneralTwitchAuth.ChannelId);
@@ -589,7 +591,7 @@ public class TwitchWebsocketService : IHostedService
     {
         _GeneralLogger.LogInfo(e.Successful
             ? $"Successfully listening to: {e.Topic}"
-            : $"Failed to listen to {e.Topic}! Error: {e.Response.Error}");
+            : $"Failed to listen to {e.Topic}! Error: {e.Response?.Error}");
     }
 
     private void OnChannelPointsRewardRedeemed(object? sender, ChannelPointsRewardRedeemedArgs e)
@@ -603,11 +605,10 @@ public class TwitchWebsocketService : IHostedService
         {
             case "Song Request":
                 bool success = _SpotifyCommandHandler.HandleAddSongToQueueCommand(reward.UserInput).Contains("Added");
-                HttpResponseMessage message = _ChannelPointHandler.HandleSongRedemption(
-                    success,
-                    reward.Id,
-                    reward.Reward.Id);
-                _GeneralLogger.LogInfo(message.ToString());
+                HttpResponseMessage? message = _ChannelPointHandler.HandleSongRedemption(success, reward.Id, reward.Reward.Id);
+                
+                if(message != null)
+                    _GeneralLogger.LogInfo(message.ToString());
                 break;
         }
 
@@ -745,7 +746,8 @@ public class TwitchWebsocketService : IHostedService
 
     private void OnPubsubLog(object? sender, OnPubsubLogArgs e)
     {
-        _GeneralLogger.LogInfo(e.Data);
+        if(!string.IsNullOrEmpty(e.Data))
+            _GeneralLogger.LogInfo(e.Data);
     }
 
     private void OnRaidUpdate(object? sender, OnRaidUpdateArgs e)

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 
@@ -42,7 +41,7 @@ public class VideoPlayback : MessageData
     }
 
     public VideoPlaybackType Type { get; }
-    public string ServerTime { get; }
+    public string? ServerTime { get; }
     public int PlayDelay { get; }
     public int Viewers { get; }
     public int Length { get; }

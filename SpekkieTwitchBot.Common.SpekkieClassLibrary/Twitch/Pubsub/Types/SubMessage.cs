@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
@@ -13,10 +12,10 @@ public class SubMessage : MessageData
             Emotes.Add(new Emote(json1));
     }
 
-    public string Message { get; }
-    public List<Emote> Emotes { get; } = new();
+    public string? Message { get; }
+    private List<Emote> Emotes { get; } = [];
 
-    public class Emote(JToken json)
+    private class Emote(JToken json)
     {
         public int Start { get; } = int.Parse(json.SelectToken("start")?.ToString()!);
         public int End { get; } = int.Parse(json.SelectToken("end")?.ToString()!);

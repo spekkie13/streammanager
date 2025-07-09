@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
@@ -14,7 +13,7 @@ public class Response
         Successful = true;
     }
 
-    public string Error { get; }
-    public string Nonce { get; }
+    public string? Error { get; }
+    public string? Nonce { get; }
     public bool Successful { get; }
 }

@@ -45,8 +45,10 @@ public class SpotifyAuthService(SpotifyFileReader spotifyFileReader, Logger logg
         return tokenData?.AccessToken ?? "";
     }
     
-    private static string GetBasicAuthHeader(string clientId, string clientSecret)
+    private static string GetBasicAuthHeader(string? clientId, string? clientSecret)
     {
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret)) return "";
+        
         string credentials = $"{clientId}:{clientSecret}";
         return "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials));
     }

@@ -9,33 +9,30 @@ namespace TwitchAuthService.Handlers;
 
 public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
 {
-    public HttpResponseMessage HandleSongRedemption(bool success, string redemptionId, string rewardId)
+    public HttpResponseMessage? HandleSongRedemption(bool success, string redemptionId, string rewardId)
     {
         string status = success
             ? TwitchConstants.ChannelPointStatusFulfilled
             : TwitchConstants.ChannelPointStatusCancelled;
-        HttpResponseMessage message =
-            UpdateRedemptionStatus(
-                redemptionId,
-                TwitchConstants.BroadcasterId,
-                rewardId,
-                status).Result;
-
+        
+        HttpResponseMessage? message = UpdateRedemptionStatus(redemptionId, TwitchConstants.BroadcasterId, rewardId, status).Result;
         return message;
     }
 
     public async Task<Redemption> GetMostRecentRedemptionForUser(string username)
     {
-        List<string> redemptionIds = await GetCustomRedemptions();
+        List<string?>? redemptionIds = await GetCustomRedemptions();
+        if (redemptionIds == null) return Redemption.Empty;
+        
         List<Redemption> outstandingRedemptions = [];
-        foreach (string id in redemptionIds)
+        foreach (string? id in redemptionIds)
         {
             Redemption[] redemptionData = await GetRedemptionsByStatus(id);
             outstandingRedemptions.AddRange(redemptionData.ToList());
         }
 
-        outstandingRedemptions.Sort((r1, r2) =>
-            DateTime.Compare(DateTime.Parse(r1.RedeemedAt), DateTime.Parse(r2.RedeemedAt)));
+        
+        outstandingRedemptions.Sort((r1, r2) => DateTime.Compare(DateTime.Parse(r1.RedeemedAt!), DateTime.Parse(r2.RedeemedAt!)));
         Redemption red = outstandingRedemptions.First(red => red.UserName == username);
         return red;
     }
@@ -51,7 +48,7 @@ public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
             isUserInputRequired = Convert.ToInt32(commandArgs.Split("|").Last()) != 0;
         string url = $"{TwitchConstants.TwitchChannelRewardsUrl}30731359";
         string rewardInfo =
-            $"{{\"title\":\"{title}\",\"cost\":{cost},\"is_user_input_required\":{isUserInputRequired.ToString().ToLower()},\"prompt\":\"{prompt.Substring(0, Math.Min(prompt.Length, 200))}\"}}";
+            $"{{\"title\":\"{title}\",\"cost\":{cost},\"is_user_input_required\":{isUserInputRequired.ToString().ToLower()},\"prompt\":\"{prompt[..Math.Min(prompt.Length, 200)]}\"}}";
         StringContent content = new (rewardInfo, Encoding.UTF8, "application/json");
 
         HttpResponseMessage response = client.PostAsync(url, content).Result;
@@ -62,7 +59,7 @@ public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
         return responseMessage;
     }
 
-    private async Task<List<string>> GetCustomRedemptions()
+    private async Task<List<string?>?> GetCustomRedemptions()
     {
         string url = $"{TwitchConstants.TwitchChannelRewardsUrl}{TwitchConstants.BroadcasterId}";
         HttpResponseMessage message = await client.GetAsync(url);
@@ -71,13 +68,14 @@ public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
         string response = await message.Content.ReadAsStringAsync();
         ChannelPointRequest redemptions =
             JsonConvert.DeserializeObject<ChannelPointRequest?>(response) ?? new ChannelPointRequest();
-        if (redemptions.Data == null) return new List<string>();
-        List<string> rewardIds = redemptions.Data.Select(x => x.Id).ToList();
+        if (redemptions.Data == null) return [];
+        List<string?>? rewardIds = redemptions.Data?.Select(x => x.Id).ToList();
         return rewardIds;
     }
 
-    private async Task<Redemption[]> GetRedemptionsByStatus(string rewardId)
+    private async Task<Redemption[]> GetRedemptionsByStatus(string? rewardId)
     {
+        if (string.IsNullOrEmpty(rewardId)) return [];
         string url =
             $"{TwitchConstants.TwitchChannelRedemptionsUrl}{TwitchConstants.BroadcasterId}&reward_id={rewardId}&status={TwitchConstants.ChannelPointStatusUncompleted}";
 
@@ -89,12 +87,15 @@ public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
         return unfulfilled?.Data ?? [];
     }
 
-    public async Task<HttpResponseMessage> UpdateRedemptionStatus(
-        string id,
-        string broadcasterId,
-        string rewardId,
-        string status)
+    public async Task<HttpResponseMessage?> UpdateRedemptionStatus(
+        string? id,
+        string? broadcasterId,
+        string? rewardId,
+        string? status)
     {
+        if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(broadcasterId) || string.IsNullOrEmpty(rewardId) || string.IsNullOrEmpty(status))
+            return null;
+        
         StringContent requestContent = new ($"{{\"status\":\"{status}\"}}",
             Encoding.UTF8, mediaType: "application/json");
 

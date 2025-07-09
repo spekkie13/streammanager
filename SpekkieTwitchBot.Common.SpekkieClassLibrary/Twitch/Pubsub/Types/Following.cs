@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Twitch.Pubsub.Abstract;
 
 namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
@@ -14,11 +13,11 @@ public class Following : MessageData
         UserId = jobject["user_id"]?.ToString();
     }
 
-    public string DisplayName { get; }
+    public string? DisplayName { get; }
 
-    public string Username { get; }
+    public string? Username { get; }
 
-    public string UserId { get; }
+    public string? UserId { get; }
 
-    public string FollowedChannelId { get; set; }
+    public string? FollowedChannelId { get; set; }
 }
