@@ -1,7 +1,7 @@
 ﻿#nullable disable
 using SpekkieClassLibrary.Twitch.Pubsub.EventData;
 
-namespace SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
+namespace SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
 
 public class WhisperArgs : EventArgs
 {

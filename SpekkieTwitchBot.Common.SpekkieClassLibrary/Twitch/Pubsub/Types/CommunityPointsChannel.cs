@@ -10,25 +10,14 @@ public class CommunityPointsChannel : MessageData
     public CommunityPointsChannel(string jsonStr)
     {
         JToken jtoken = JObject.Parse(jsonStr);
-        switch (jtoken.SelectToken("type")?.ToString())
+        Type = jtoken.SelectToken("type")?.ToString() switch
         {
-            case "reward-redeemed":
-            case "redemption-status-update":
-                Type = CommunityPointsChannelType.RewardRedeemed;
-                break;
-            case "custom-reward-created":
-                Type = CommunityPointsChannelType.CustomRewardCreated;
-                break;
-            case "custom-reward-updated":
-                Type = CommunityPointsChannelType.CustomRewardUpdated;
-                break;
-            case "custom-reward-deleted":
-                Type = CommunityPointsChannelType.CustomRewardDeleted;
-                break;
-            default:
-                Type = ~CommunityPointsChannelType.RewardRedeemed;
-                break;
-        }
+            "reward-redeemed" or "redemption-status-update" => CommunityPointsChannelType.RewardRedeemed,
+            "custom-reward-created" => CommunityPointsChannelType.CustomRewardCreated,
+            "custom-reward-updated" => CommunityPointsChannelType.CustomRewardUpdated,
+            "custom-reward-deleted" => CommunityPointsChannelType.CustomRewardDeleted,
+            _ => ~CommunityPointsChannelType.RewardRedeemed
+        };
 
         TimeStamp = DateTime.Parse(jtoken.SelectToken("data.timestamp")?.ToString() ?? "");
         switch (Type)
@@ -65,6 +54,8 @@ public class CommunityPointsChannel : MessageData
                 RewardTitle = jtoken.SelectToken("data.deleted_reward.title")?.ToString();
                 RewardPrompt = jtoken.SelectToken("data.deleted_reward.prompt")?.ToString();
                 break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 

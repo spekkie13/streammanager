@@ -32,10 +32,10 @@ public class ObsCommandHandler(ObsWebSocket socket)
         List<InputBasicInfo> inputCaptures = socket.GetInputList("wasapi_input_capture");
         List<InputBasicInfo> outputCaptures = socket.GetInputList("wasapi_output_capture");
 
-        foreach (InputBasicInfo? input in inputCaptures)
+        foreach (InputBasicInfo input in inputCaptures)
             socket.SetInputVolume(input.InputName, ObsStandards.StandardMicVolume, true);
 
-        foreach (InputBasicInfo? output in outputCaptures)
+        foreach (InputBasicInfo output in outputCaptures)
             socket.SetInputVolume(output.InputName, ObsStandards.StandardMusicVolume, true);
         
         return "Set standard volumes";
@@ -46,9 +46,9 @@ public class ObsCommandHandler(ObsWebSocket socket)
         List<InputBasicInfo> inputCaptures = socket.GetInputList("wasapi_input_capture");
         List<InputBasicInfo> outputCaptures = socket.GetInputList("wasapi_output_capture");
 
-        foreach (InputBasicInfo? input in inputCaptures) socket.SetInputVolume(input.InputName, (float)0.0);
+        foreach (InputBasicInfo input in inputCaptures) socket.SetInputVolume(input.InputName, (float)0.0);
 
-        foreach (InputBasicInfo? output in outputCaptures) socket.SetInputVolume(output.InputName, (float)0.0);
+        foreach (InputBasicInfo output in outputCaptures) socket.SetInputVolume(output.InputName, (float)0.0);
 
         return "All inputs & outputs muted";
     }

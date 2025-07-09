@@ -14,7 +14,8 @@ public class Redemption
     [JsonProperty(PropertyName = "broadcaster_id")]
     public string BroadcasterId { get; set; }
 
-    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
+    [JsonProperty(PropertyName = "id")] 
+    public string Id { get; set; }
 
     [JsonProperty(PropertyName = "user_id")]
     public string UserId { get; set; }

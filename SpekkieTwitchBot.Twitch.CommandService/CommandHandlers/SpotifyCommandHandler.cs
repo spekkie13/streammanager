@@ -81,7 +81,7 @@ public class SpotifyCommandHandler(
 
     public string HandlePlaySpecificSongCommand(string song, string username)
     {
-        if (!username.Equals("spekkie1313", StringComparison.CurrentCultureIgnoreCase)) return "";
+        if (!username.Equals("itsspekkie", StringComparison.CurrentCultureIgnoreCase)) return "";
         bool success = spotifyService.PlaySpecificSong(song).Result;
         return success ? $"started song: {song}" : $"failed to start song: {song}";
     }

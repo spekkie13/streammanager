@@ -12,19 +12,19 @@ namespace TwitchAuthService.Events
 {
     public class CustomWebSocketClient : IClient
     {
-        private int _notConnectedCounter;
-        private readonly CustomThrottlers _throttlers;
-        private CancellationTokenSource _tokenSource = new();
-        private bool _networkServicesRunning;
-        private Task[] _networkTasks;
-        private Task _monitorTask;
-        private readonly Logger _logger;
+        private int _NotConnectedCounter;
+        private readonly CustomThrottlers _Throttlers;
+        private CancellationTokenSource _TokenSource = new();
+        private bool _NetworkServicesRunning;
+        private Task[] _NetworkTasks;
+        private Task _MonitorTask;
+        private readonly Logger _Logger;
 
         public TimeSpan DefaultKeepAliveInterval { get; set; }
 
-        public int SendQueueLength => _throttlers.SendQueue.Count;
+        public int SendQueueLength => _Throttlers.SendQueue.Count;
 
-        public int WhisperQueueLength => _throttlers.WhisperQueue.Count;
+        public int WhisperQueueLength => _Throttlers.WhisperQueue.Count;
 
         public bool IsConnected
         {
@@ -67,7 +67,7 @@ namespace TwitchAuthService.Events
 
         public CustomWebSocketClient(Logger logger, IClientOptions options = null)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             Options = options ?? new ClientOptions();
             switch (Options.ClientType)
             {
@@ -80,9 +80,9 @@ namespace TwitchAuthService.Events
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            _throttlers = new CustomThrottlers(logger, this, Options.ThrottlingPeriod, Options.WhisperThrottlingPeriod)
+            _Throttlers = new CustomThrottlers(logger, this, Options.ThrottlingPeriod, Options.WhisperThrottlingPeriod)
             {
-                TokenSource = _tokenSource
+                TokenSource = _TokenSource
             };
         }
 
@@ -90,9 +90,9 @@ namespace TwitchAuthService.Events
         {
             Client?.Abort();
             Client = new ClientWebSocket();
-            if (_monitorTask is { IsCompleted: false }) return;
+            if (_MonitorTask is { IsCompleted: false }) return;
 
-            _monitorTask = StartMonitorTask();
+            _MonitorTask = StartMonitorTask();
         }
 
         public bool Open()
@@ -102,7 +102,7 @@ namespace TwitchAuthService.Events
                 if (IsConnected)
                     return true;
                 InitializeClient();
-                Client.ConnectAsync(new Uri(Url), _tokenSource.Token).Wait(10000);
+                Client.ConnectAsync(new Uri(Url), _TokenSource.Token).Wait(10000);
                 if (!IsConnected)
                     return Open();
                 StartNetworkServices();
@@ -162,7 +162,7 @@ namespace TwitchAuthService.Events
                 if (!IsConnected || SendQueueLength >= Options.SendQueueCapacity)
                     return false;
 
-                _throttlers.SendQueue.Add(new Tuple<DateTime, string>(DateTime.UtcNow, message));
+                _Throttlers.SendQueue.Add(new Tuple<DateTime, string>(DateTime.UtcNow, message));
                 return true;
             }
             catch (Exception ex)
@@ -179,7 +179,7 @@ namespace TwitchAuthService.Events
                 if (!IsConnected || WhisperQueueLength >= Options.WhisperQueueCapacity)
                     return false;
 
-                _throttlers.WhisperQueue.Add(new Tuple<DateTime, string>(DateTime.UtcNow, message));
+                _Throttlers.WhisperQueue.Add(new Tuple<DateTime, string>(DateTime.UtcNow, message));
                 return true;
             }
             catch (Exception ex)
@@ -191,12 +191,12 @@ namespace TwitchAuthService.Events
     
         private void StartNetworkServices()
         {
-            _networkServicesRunning = true;
-            _networkTasks = [StartListenerTask(), _throttlers.StartSenderTask(), _throttlers.StartWhisperSenderTask()];
+            _NetworkServicesRunning = true;
+            _NetworkTasks = [StartListenerTask(), _Throttlers.StartSenderTask(), _Throttlers.StartWhisperSenderTask()];
 
-            if (_networkTasks.Any(task => task.IsFaulted))
+            if (_NetworkTasks.Any(task => task.IsFaulted))
             {
-                _networkServicesRunning = false;
+                _NetworkServicesRunning = false;
                 CleanupServices();
             }
         }
@@ -209,13 +209,13 @@ namespace TwitchAuthService.Events
                 string message = "";
                 while (sender.IsConnected)
                 {
-                    if (sender._networkServicesRunning)
+                    if (sender._NetworkServicesRunning)
                     {
                         byte[] buffer = new byte[1024];
                         WebSocketReceiveResult async;
                         try
                         {
-                            async = await sender.Client.ReceiveAsync(new ArraySegment<byte>(buffer), sender._tokenSource.Token);
+                            async = await sender.Client.ReceiveAsync(new ArraySegment<byte>(buffer), sender._TokenSource.Token);
                         }
                         catch
                         {
@@ -265,12 +265,12 @@ namespace TwitchAuthService.Events
             {
                 try
                 {
-                    while (!_tokenSource.IsCancellationRequested)
+                    while (!_TokenSource.IsCancellationRequested)
                     {
                         if (!IsConnected)
                         {
-                            _notConnectedCounter++;
-                            if (SourceArray.Contains(_notConnectedCounter))
+                            _NotConnectedCounter++;
+                            if (SourceArray.Contains(_NotConnectedCounter))
                             {
                                 Reconnect();
                             }
@@ -283,14 +283,14 @@ namespace TwitchAuthService.Events
                 {
                     Error(new OnErrorEventArgs { Exception = ex });
                 }
-            }, _tokenSource.Token);
+            }, _TokenSource.Token);
         }
     
         private void CleanupServices()
         {
-            _tokenSource.Cancel();
-            _tokenSource = new CancellationTokenSource();
-            _throttlers.TokenSource = _tokenSource;
+            _TokenSource.Cancel();
+            _TokenSource = new CancellationTokenSource();
+            _Throttlers.TokenSource = _TokenSource;
         }
     
         public void WhisperThrottled(OnWhisperThrottledEventArgs eventArgs)
@@ -319,17 +319,17 @@ namespace TwitchAuthService.Events
 
         public void Error(OnErrorEventArgs eventArgs)
         {
-            _logger?.LogError($"Error occured in CustomWebClient: {eventArgs.Exception}");
+            _Logger?.LogError($"Error occured in CustomWebClient: {eventArgs.Exception}");
             OnError?.Invoke(this, eventArgs);
         }
     
         public void Dispose()
         {
             Close();
-            _throttlers.ShouldDispose = true;
-            _tokenSource.Cancel();
+            _Throttlers.ShouldDispose = true;
+            _TokenSource.Cancel();
             Thread.Sleep(500);
-            _tokenSource.Dispose();
+            _TokenSource.Dispose();
             Client?.Dispose();
             GC.Collect();
         }  

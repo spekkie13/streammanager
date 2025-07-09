@@ -11,15 +11,12 @@ public class LeaderboardEvents : MessageData
     public LeaderboardEvents(string jsonStr)
     {
         JToken jtoken = JObject.Parse(jsonStr);
-        switch (jtoken.SelectToken("identifier.domain")?.ToString())
+        Type = jtoken.SelectToken("identifier.domain")?.ToString() switch
         {
-            case "bits-usage-by-channel-v1":
-                Type = LeaderBoardType.BitsUsageByChannel;
-                break;
-            case "sub-gift-sent":
-                Type = LeaderBoardType.SubGiftSent;
-                break;
-        }
+            "bits-usage-by-channel-v1" => LeaderBoardType.BitsUsageByChannel,
+            "sub-gift-sent" => LeaderBoardType.SubGiftSent,
+            _ => Type
+        };
 
         switch (Type)
         {
@@ -61,6 +58,8 @@ public class LeaderboardEvents : MessageData
 
                     break;
                 }
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 

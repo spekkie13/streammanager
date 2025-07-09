@@ -1,7 +1,7 @@
 ﻿#nullable disable
 namespace SpekkieClassLibrary.Spotify.Song;
 
-public class Image
+public abstract class Image
 {
     public int Height { get; set; }
     public int Width { get; set; }

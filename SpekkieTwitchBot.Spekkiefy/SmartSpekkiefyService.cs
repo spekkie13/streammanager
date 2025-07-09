@@ -13,8 +13,8 @@ public class SmartSpekkiefyService : BackgroundService
        from the file and add it to the queue
        -> this should increase the play count so it doesn't get requested too frequently
      */
-    
-    public List<SongRequest> Requests { get; set; } = new List<SongRequest>();
+
+    private List<SongRequest> Requests { get; set; } = [];
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
@@ -26,9 +26,8 @@ public class SmartSpekkiefyService : BackgroundService
         }
         catch (TaskCanceledException)
         {
-            
+            Console.WriteLine("Stopping Spekkiefy...");
         }
-        throw new NotImplementedException();
     }
 
     private SongRequest GetSong(string spotifyId)

@@ -1,4 +1,4 @@
-﻿using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
+﻿using SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
 
 namespace TwitchAuthService.Handlers;

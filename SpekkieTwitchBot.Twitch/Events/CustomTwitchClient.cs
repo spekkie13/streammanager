@@ -20,26 +20,26 @@ namespace TwitchAuthService.Events;
 
 public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientProtocol.WebSocket, IClient client = null) : ITwitchClient
 {
-    private readonly ICollection<char> _chatCommandIdentifiers = new HashSet<char>();
-    private readonly List<string> _hasSeenJoinedChannels = [];
-    private readonly IrcParser _ircParser = new();
-    private readonly Queue<JoinedChannel> _joinChannelQueue = [];
-    private readonly JoinedChannelManager _joinedChannelManager = new();
-    private readonly ICollection<char> _whisperCommandIdentifiers = new HashSet<char>();
-    private List<KeyValuePair<string, DateTime>> _awaitingJoins;
-    private MessageEmoteCollection _channelEmotes = new();
-    private IClient _client = client;
-    private bool _currentlyJoiningChannels;
-    private Timer _joinTimer;
-    private string _lastMessageSent;
+    private readonly ICollection<char> _ChatCommandIdentifiers = new HashSet<char>();
+    private readonly List<string> _HasSeenJoinedChannels = [];
+    private readonly IrcParser _IrcParser = new();
+    private readonly Queue<JoinedChannel> _JoinChannelQueue = [];
+    private readonly JoinedChannelManager _JoinedChannelManager = new();
+    private readonly ICollection<char> _WhisperCommandIdentifiers = new HashSet<char>();
+    private List<KeyValuePair<string, DateTime>> _AwaitingJoins;
+    private MessageEmoteCollection _ChannelEmotes = new();
+    private IClient _Client = client;
+    private bool _CurrentlyJoiningChannels;
+    private Timer _JoinTimer;
+    private string _LastMessageSent;
 
     public static Version Version => Assembly.GetEntryAssembly()?.GetName().Version;
-    public bool IsInitialized => _client != null;
-    public IReadOnlyList<JoinedChannel> JoinedChannels => _joinedChannelManager.GetJoinedChannels();
+    public bool IsInitialized => _Client != null;
+    public IReadOnlyList<JoinedChannel> JoinedChannels => _JoinedChannelManager.GetJoinedChannels();
     public string TwitchUsername { get; private set; }
     public WhisperMessage PreviousWhisper { get; private set; }
-    public bool IsConnected => IsInitialized && _client is { IsConnected: true };
-    public MessageEmoteCollection ChannelEmotes => _channelEmotes;
+    public bool IsConnected => IsInitialized && _Client is { IsConnected: true };
+    public MessageEmoteCollection ChannelEmotes => _ChannelEmotes;
     public bool DisableAutoPong { get; set; }
     public bool WillReplaceEmotes { get; set; }
     public ConnectionCredentials ConnectionCredentials { get; private set; }
@@ -113,7 +113,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         if (!IsInitialized)
             HandleNotInitialized();
         logger.LogInfo("Writing: " + message);
-        _client.Send(message);
+        _Client.Send(message);
         EventHandler<OnSendReceiveDataArgs> onSendReceiveData = OnSendReceiveData;
         if (onSendReceiveData == null)
             return;
@@ -150,7 +150,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             HandleNotInitialized();
         if (dryRun)
             return;
-        _client.SendWhisper(new OutboundWhisperMessage
+        _Client.SendWhisper(new OutboundWhisperMessage
         {
             Receiver = receiver,
             Username = ConnectionCredentials.TwitchUsername,
@@ -171,8 +171,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         if (!IsInitialized)
             HandleNotInitialized();
         logger.LogInfo("Connecting to: " + ConnectionCredentials.TwitchWebsocketURI);
-        _joinedChannelManager.Clear();
-        if (!_client.Open())
+        _JoinedChannelManager.Clear();
+        if (!_Client.Open())
             return false;
         logger.LogInfo("Should be connected!");
         return true;
@@ -183,8 +183,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         logger.LogInfo("Disconnect Twitch Chat Client...");
         if (!IsInitialized)
             HandleNotInitialized();
-        _client.Close();
-        _joinedChannelManager.Clear();
+        _Client.Close();
+        _JoinedChannelManager.Clear();
         PreviousWhisper = null;
     }
 
@@ -193,35 +193,35 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         if (!IsInitialized)
             HandleNotInitialized();
         logger.LogInfo("Reconnecting to Twitch");
-        _client.Reconnect();
+        _Client.Reconnect();
     }
 
     public void AddChatCommandIdentifier(char identifier)
     {
         if (!IsInitialized)
             HandleNotInitialized();
-        _chatCommandIdentifiers.Add(identifier);
+        _ChatCommandIdentifiers.Add(identifier);
     }
 
     public void RemoveChatCommandIdentifier(char identifier)
     {
         if (!IsInitialized)
             HandleNotInitialized();
-        _chatCommandIdentifiers.Remove(identifier);
+        _ChatCommandIdentifiers.Remove(identifier);
     }
 
     public void AddWhisperCommandIdentifier(char identifier)
     {
         if (!IsInitialized)
             HandleNotInitialized();
-        _whisperCommandIdentifiers.Add(identifier);
+        _WhisperCommandIdentifiers.Add(identifier);
     }
 
     public void RemoveWhisperCommandIdentifier(char identifier)
     {
         if (!IsInitialized)
             HandleNotInitialized();
-        _whisperCommandIdentifiers.Remove(identifier);
+        _WhisperCommandIdentifiers.Remove(identifier);
     }
 
     public void SetConnectionCredentials(ConnectionCredentials credentials)
@@ -246,8 +246,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             return;
         if (channel[0] == '#')
             channel = channel.Substring(1);
-        _joinChannelQueue.Enqueue(new JoinedChannel(channel));
-        if (_currentlyJoiningChannels)
+        _JoinChannelQueue.Enqueue(new JoinedChannel(channel));
+        if (_CurrentlyJoiningChannels)
             return;
         QueueingJoinCheck();
     }
@@ -260,7 +260,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             throw new BadStateException("Must be connected to at least one channel.");
         if (channel[0] == '#')
             channel = channel.Substring(1);
-        return _joinedChannelManager.GetJoinedChannel(channel);
+        return _JoinedChannelManager.GetJoinedChannel(channel);
     }
 
     public void LeaveChannel(string channel)
@@ -271,9 +271,9 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         if (channel[0] == '#')
             channel = channel.Substring(1);
         logger.LogInfo("Leaving channel: " + channel);
-        if (_joinedChannelManager.GetJoinedChannel(channel) == null)
+        if (_JoinedChannelManager.GetJoinedChannel(channel) == null)
             return;
-        _client.Send(Rfc2812.Part("#" + channel));
+        _Client.Send(Rfc2812.Part("#" + channel));
     }
 
     public void LeaveChannel(JoinedChannel channel)
@@ -287,14 +287,14 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (!IsInitialized)
             HandleNotInitialized();
-        HandleIrcMessage(_ircParser.ParseIrcMessage(rawIrc));
+        HandleIrcMessage(_IrcParser.ParseIrcMessage(rawIrc));
     }
 
     public void SendQueuedItem(string message)
     {
         if (!IsInitialized)
             HandleNotInitialized();
-        _client.Send(message);
+        _Client.Send(message);
     }
 
     public event EventHandler<OnPrimePaidSubscriberArgs> OnPrimePaidSubscriber;
@@ -326,9 +326,9 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         ConnectionCredentials = credentials;
         TwitchUsername = ConnectionCredentials.TwitchUsername;
         if (chatCommandIdentifier != char.MinValue)
-            _chatCommandIdentifiers.Add(chatCommandIdentifier);
+            _ChatCommandIdentifiers.Add(chatCommandIdentifier);
         if (whisperCommandIdentifier != char.MinValue)
-            _whisperCommandIdentifiers.Add(whisperCommandIdentifier);
+            _WhisperCommandIdentifiers.Add(whisperCommandIdentifier);
         AutoReListenOnException = autoReListenOnExceptions;
         if (channels is { Count: > 0 })
             for (int i = 0; i < channels.Count; i++)
@@ -338,7 +338,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                 if (JoinedChannels.FirstOrDefault(
                         (Func<JoinedChannel, bool>)(x => x.Channel.ToLower() == channels[i1])) != null)
                     return;
-                _joinChannelQueue.Enqueue(new JoinedChannel(channels[i]));
+                _JoinChannelQueue.Enqueue(new JoinedChannel(channels[i]));
             }
 
         InitializeClient();
@@ -346,26 +346,26 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void InitializeClient()
     {
-        if (_client == null)
+        if (_Client == null)
             switch (protocol)
             {
                 case ClientProtocol.TCP:
-                    _client = new TcpClient();
+                    _Client = new TcpClient();
                     break;
                 case ClientProtocol.WebSocket:
-                    _client = new WebSocketClient();
+                    _Client = new WebSocketClient();
                     break;
             }
 
-        if (_client == null) return;
+        if (_Client == null) return;
 
-        _client.OnConnected += _client_OnConnected;
-        _client.OnMessage += _client_OnMessage;
-        _client.OnDisconnected += _client_OnDisconnected;
-        _client.OnFatality += _client_OnFatality;
-        _client.OnMessageThrottled += _client_OnMessageThrottled;
-        _client.OnWhisperThrottled += _client_OnWhisperThrottled;
-        _client.OnReconnected += _client_OnReconnected;
+        _Client.OnConnected += _client_OnConnected;
+        _Client.OnMessage += _client_OnMessage;
+        _Client.OnDisconnected += _client_OnDisconnected;
+        _Client.OnFatality += _client_OnFatality;
+        _Client.OnMessageThrottled += _client_OnMessageThrottled;
+        _Client.OnWhisperThrottled += _client_OnWhisperThrottled;
+        _Client.OnReconnected += _client_OnReconnected;
     }
 
     internal void RaiseEvent(string eventName, object args = null)
@@ -415,8 +415,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             };
             if (replyToId != null)
                 outboundChatMessage.ReplyToId = replyToId;
-            _lastMessageSent = message;
-            _client.Send(outboundChatMessage.ToString());
+            _LastMessageSent = message;
+            _Client.Send(outboundChatMessage.ToString());
         }
     }
 
@@ -458,13 +458,13 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void _client_OnReconnected(object sender, OnReconnectedEventArgs e)
     {
-        foreach (JoinedChannel joinedChannel in (IEnumerable<JoinedChannel>)_joinedChannelManager
+        foreach (JoinedChannel joinedChannel in (IEnumerable<JoinedChannel>)_JoinedChannelManager
                      .GetJoinedChannels())
             if (!string.Equals(joinedChannel.Channel, TwitchUsername,
                     StringComparison.CurrentCultureIgnoreCase))
-                _joinChannelQueue.Enqueue(joinedChannel);
+                _JoinChannelQueue.Enqueue(joinedChannel);
 
-        _joinedChannelManager.Clear();
+        _JoinedChannelManager.Clear();
         EventHandler<OnReconnectedEventArgs> onReconnected = OnReconnected;
         if (onReconnected == null)
             return;
@@ -485,36 +485,36 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                         Direction = SendReceiveDirection.Received,
                         Data = raw
                     });
-                HandleIrcMessage(_ircParser.ParseIrcMessage(raw));
+                HandleIrcMessage(_IrcParser.ParseIrcMessage(raw));
             }
     }
 
     private void _client_OnConnected(object sender, object e)
     {
-        _client.Send(Rfc2812.Pass(ConnectionCredentials.TwitchOAuth));
-        _client.Send(Rfc2812.Nick(ConnectionCredentials.TwitchUsername));
-        _client.Send(Rfc2812.User(ConnectionCredentials.TwitchUsername, 0,
+        _Client.Send(Rfc2812.Pass(ConnectionCredentials.TwitchOAuth));
+        _Client.Send(Rfc2812.Nick(ConnectionCredentials.TwitchUsername));
+        _Client.Send(Rfc2812.User(ConnectionCredentials.TwitchUsername, 0,
             ConnectionCredentials.TwitchUsername));
         if (ConnectionCredentials.Capabilities.Membership)
-            _client.Send("CAP REQ twitch.tv/membership");
+            _Client.Send("CAP REQ twitch.tv/membership");
         if (ConnectionCredentials.Capabilities.Commands)
-            _client.Send("CAP REQ twitch.tv/commands");
+            _Client.Send("CAP REQ twitch.tv/commands");
         if (ConnectionCredentials.Capabilities.Tags)
-            _client.Send("CAP REQ twitch.tv/tags");
-        if (_joinChannelQueue == null || _joinChannelQueue.Count <= 0)
+            _Client.Send("CAP REQ twitch.tv/tags");
+        if (_JoinChannelQueue == null || _JoinChannelQueue.Count <= 0)
             return;
         QueueingJoinCheck();
     }
 
     private void QueueingJoinCheck()
     {
-        if (_joinChannelQueue.Count > 0)
+        if (_JoinChannelQueue.Count > 0)
         {
-            _currentlyJoiningChannels = true;
-            JoinedChannel joinedChannel = _joinChannelQueue.Dequeue();
+            _CurrentlyJoiningChannels = true;
+            JoinedChannel joinedChannel = _JoinChannelQueue.Dequeue();
             logger.LogInfo("Joining channel: " + joinedChannel.Channel);
-            _client.Send(Rfc2812.Join("#" + joinedChannel.Channel.ToLower()));
-            _joinedChannelManager.AddJoinedChannel(new JoinedChannel(joinedChannel.Channel));
+            _Client.Send(Rfc2812.Join("#" + joinedChannel.Channel.ToLower()));
+            _JoinedChannelManager.AddJoinedChannel(new JoinedChannel(joinedChannel.Channel));
             StartJoinedChannelTimer(joinedChannel.Channel);
         }
         else
@@ -525,34 +525,34 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void StartJoinedChannelTimer(string channel)
     {
-        if (_joinTimer == null)
+        if (_JoinTimer == null)
         {
-            _joinTimer = new Timer(1000.0);
-            _joinTimer.Elapsed += JoinChannelTimeout;
-            _awaitingJoins = new List<KeyValuePair<string, DateTime>>();
+            _JoinTimer = new Timer(1000.0);
+            _JoinTimer.Elapsed += JoinChannelTimeout;
+            _AwaitingJoins = new List<KeyValuePair<string, DateTime>>();
         }
 
-        _awaitingJoins.Add(new KeyValuePair<string, DateTime>(channel.ToLower(), DateTime.Now));
-        if (_joinTimer.Enabled)
+        _AwaitingJoins.Add(new KeyValuePair<string, DateTime>(channel.ToLower(), DateTime.Now));
+        if (_JoinTimer.Enabled)
             return;
-        _joinTimer.Start();
+        _JoinTimer.Start();
     }
 
     private void JoinChannelTimeout(object sender, ElapsedEventArgs e)
     {
-        if (_awaitingJoins.Any())
+        if (_AwaitingJoins.Any())
         {
-            List<KeyValuePair<string, DateTime>> list = _awaitingJoins
+            List<KeyValuePair<string, DateTime>> list = _AwaitingJoins
                 .Where(
                     (Func<KeyValuePair<string, DateTime>, bool>)(x => (DateTime.Now - x.Value).TotalSeconds > 5.0))
                 .ToList();
             if (!list.Any())
                 return;
-            _awaitingJoins.RemoveAll(
+            _AwaitingJoins.RemoveAll(
                 (Predicate<KeyValuePair<string, DateTime>>)(x => (DateTime.Now - x.Value).TotalSeconds > 5.0));
             foreach (KeyValuePair<string, DateTime> keyValuePair in list)
             {
-                _joinedChannelManager.RemoveJoinedChannel(keyValuePair.Key.ToLowerInvariant());
+                _JoinedChannelManager.RemoveJoinedChannel(keyValuePair.Key.ToLowerInvariant());
                 EventHandler<OnFailureToReceiveJoinConfirmationArgs> joinConfirmation =
                     OnFailureToReceiveJoinConfirmation;
                 if (joinConfirmation != null)
@@ -564,8 +564,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
         }
         else
         {
-            _joinTimer.Stop();
-            _currentlyJoiningChannels = false;
+            _JoinTimer.Stop();
+            _CurrentlyJoiningChannels = false;
             QueueingJoinCheck();
         }
     }
@@ -673,7 +673,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void HandlePrivMsg(IrcMessage ircMessage)
     {
-        ChatMessage chatMessage = new ChatMessage(TwitchUsername, ircMessage, ref _channelEmotes, WillReplaceEmotes);
+        ChatMessage chatMessage = new ChatMessage(TwitchUsername, ircMessage, ref _ChannelEmotes, WillReplaceEmotes);
         foreach (JoinedChannel joinedChannel in JoinedChannels.Where(
                      (Func<JoinedChannel, bool>)(x => string.Equals(x.Channel, ircMessage.Channel,
                          StringComparison.InvariantCultureIgnoreCase))))
@@ -694,9 +694,9 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                 });
         }
 
-        if (_chatCommandIdentifiers == null || _chatCommandIdentifiers.Count == 0 ||
+        if (_ChatCommandIdentifiers == null || _ChatCommandIdentifiers.Count == 0 ||
             string.IsNullOrEmpty(chatMessage.Message) ||
-            !_chatCommandIdentifiers.Contains(chatMessage.Message[0]))
+            !_ChatCommandIdentifiers.Contains(chatMessage.Message[0]))
             return;
         ChatCommand chatCommand = new ChatCommand(chatMessage);
         EventHandler<OnChatCommandReceivedArgs> chatCommandReceived = OnChatCommandReceived;
@@ -768,9 +768,9 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                     });
                     break;
                 case "msg_channel_suspended":
-                    _awaitingJoins.RemoveAll(
+                    _AwaitingJoins.RemoveAll(
                         (Predicate<KeyValuePair<string, DateTime>>)(x => x.Key.ToLower() == ircMessage.Channel));
-                    _joinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
+                    _JoinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
                     QueueingJoinCheck();
                     EventHandler<OnFailureToReceiveJoinConfirmationArgs> joinConfirmation =
                         OnFailureToReceiveJoinConfirmation;
@@ -977,8 +977,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (string.Equals(TwitchUsername, ircMessage.User, StringComparison.InvariantCultureIgnoreCase))
         {
-            _joinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
-            _hasSeenJoinedChannels.Remove(ircMessage.Channel);
+            _JoinedChannelManager.RemoveJoinedChannel(ircMessage.Channel);
+            _HasSeenJoinedChannels.Remove(ircMessage.Channel);
             EventHandler<OnLeftChannelArgs> onLeftChannel = OnLeftChannel;
             if (onLeftChannel == null)
                 return;
@@ -1054,9 +1054,9 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     private void HandleUserState(IrcMessage ircMessage)
     {
         UserState state = new UserState(ircMessage);
-        if (!_hasSeenJoinedChannels.Contains(state.Channel.ToLowerInvariant()))
+        if (!_HasSeenJoinedChannels.Contains(state.Channel.ToLowerInvariant()))
         {
-            _hasSeenJoinedChannels.Add(state.Channel.ToLowerInvariant());
+            _HasSeenJoinedChannels.Add(state.Channel.ToLowerInvariant());
             EventHandler<OnUserStateChangedArgs> userStateChanged = OnUserStateChanged;
             if (userStateChanged == null)
                 return;
@@ -1072,7 +1072,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
                 return;
             onMessageSent(this, new OnMessageSentArgs
             {
-                SentMessage = new SentMessage(state, _lastMessageSent)
+                SentMessage = new SentMessage(state, _LastMessageSent)
             });
         }
     }
@@ -1102,7 +1102,7 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
 
     private void Handle366()
     {
-        _currentlyJoiningChannels = false;
+        _CurrentlyJoiningChannels = false;
         QueueingJoinCheck();
     }
 
@@ -1116,9 +1116,9 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
             {
                 WhisperMessage = whisperMessage
             });
-        if (_whisperCommandIdentifiers != null && _whisperCommandIdentifiers.Count != 0 &&
+        if (_WhisperCommandIdentifiers != null && _WhisperCommandIdentifiers.Count != 0 &&
             !string.IsNullOrEmpty(whisperMessage.Message) &&
-            _whisperCommandIdentifiers.Contains(whisperMessage.Message[0]))
+            _WhisperCommandIdentifiers.Contains(whisperMessage.Message[0]))
         {
             WhisperCommand whisperCommand = new WhisperCommand(whisperMessage);
             EventHandler<OnWhisperCommandReceivedArgs> whisperCommandReceived = OnWhisperCommandReceived;
@@ -1148,8 +1148,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (ircMessage.Tags.Count > 2)
         {
-            _awaitingJoins.Remove(
-                _awaitingJoins.FirstOrDefault(
+            _AwaitingJoins.Remove(
+                _AwaitingJoins.FirstOrDefault(
                     (Func<KeyValuePair<string, DateTime>, bool>)(x => x.Key == ircMessage.Channel)));
             EventHandler<OnJoinedChannelArgs> onJoinedChannel = OnJoinedChannel;
             onJoinedChannel?.Invoke(this, new OnJoinedChannelArgs

@@ -10,21 +10,14 @@ public class VideoPlayback : MessageData
     public VideoPlayback(string jsonStr)
     {
         JToken jtoken = JObject.Parse(jsonStr);
-        switch (jtoken.SelectToken("type")?.ToString())
+        Type = jtoken.SelectToken("type")?.ToString() switch
         {
-            case "stream-up":
-                Type = VideoPlaybackType.StreamUp;
-                break;
-            case "stream-down":
-                Type = VideoPlaybackType.StreamDown;
-                break;
-            case "viewcount":
-                Type = VideoPlaybackType.ViewCount;
-                break;
-            case "commercial":
-                Type = VideoPlaybackType.Commercial;
-                break;
-        }
+            "stream-up" => VideoPlaybackType.StreamUp,
+            "stream-down" => VideoPlaybackType.StreamDown,
+            "viewcount" => VideoPlaybackType.ViewCount,
+            "commercial" => VideoPlaybackType.Commercial,
+            _ => Type
+        };
 
         ServerTime = jtoken.SelectToken("server_time")?.ToString();
         switch (Type)
@@ -41,6 +34,10 @@ public class VideoPlayback : MessageData
                 int length = Convert.ToInt32(jtoken.SelectToken("length"));
                 Length = length;
                 break;
+            case VideoPlaybackType.StreamDown:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 

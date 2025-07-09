@@ -19,25 +19,25 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
 {
     private const string WebsocketUrlPrefix = "ws://";
     private const int SupportedRpcVersion = 1;
-    private TimeSpan _wsTimeout = TimeSpan.FromSeconds(10);
-    private string _connectionPassword;
-    private WebsocketClient _wsConnection = wsConnection;
+    private TimeSpan _WsTimeout = TimeSpan.FromSeconds(10);
+    private string _ConnectionPassword;
+    private WebsocketClient _WsConnection = wsConnection;
 
-    private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> _responseHandlers = new();
+    private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> _ResponseHandlers = new();
     private static readonly Random Random = new ();
 
     public TimeSpan WsTimeout
     {
-        get => _wsConnection.ReconnectTimeout ?? _wsTimeout;
+        get => _WsConnection.ReconnectTimeout ?? _WsTimeout;
         set
         {
-            _wsTimeout = value;
+            _WsTimeout = value;
 
-            _wsConnection.ReconnectTimeout = _wsTimeout;
+            _WsConnection.ReconnectTimeout = _WsTimeout;
         }
     }
 
-    public bool IsConnected => _wsConnection.IsRunning;
+    public bool IsConnected => _WsConnection.IsRunning;
 
     public void ConnectAsync(string url, string password)
     {
@@ -46,42 +46,42 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
             throw new ArgumentException($"Invalid url, must start with '{WebsocketUrlPrefix}'");
         }
 
-        if (_wsConnection is { IsRunning: true })
+        if (_WsConnection is { IsRunning: true })
         {
             Disconnect();
         }
 
-        _wsConnection = new WebsocketClient(new Uri(url));
-        _wsConnection.IsReconnectionEnabled = false;
-        _wsConnection.ReconnectTimeout = null;
-        _wsConnection.ErrorReconnectTimeout = null;
-        _wsConnection.MessageReceived.Subscribe(m => Task.Run(() => WebsocketMessageHandler(this, m)));
-        _wsConnection.DisconnectionHappened.Subscribe(d => Task.Run(() => OnWebsocketDisconnect(this, d)));
+        _WsConnection = new WebsocketClient(new Uri(url));
+        _WsConnection.IsReconnectionEnabled = false;
+        _WsConnection.ReconnectTimeout = null;
+        _WsConnection.ErrorReconnectTimeout = null;
+        _WsConnection.MessageReceived.Subscribe(m => Task.Run(() => WebsocketMessageHandler(this, m)));
+        _WsConnection.DisconnectionHappened.Subscribe(d => Task.Run(() => OnWebsocketDisconnect(this, d)));
 
-        _connectionPassword = password;
-        _wsConnection.StartOrFail();
+        _ConnectionPassword = password;
+        _WsConnection.StartOrFail();
     }
 
     public void Disconnect()
     {
-        _connectionPassword = null;
-        if (_wsConnection != null)
+        _ConnectionPassword = null;
+        if (_WsConnection != null)
         {
             // Attempt to both close and dispose the existing connection
             try
             {
-                _wsConnection.Stop(WebSocketCloseStatus.NormalClosure, "User requested disconnect");
-                ((IDisposable)_wsConnection).Dispose();
+                _WsConnection.Stop(WebSocketCloseStatus.NormalClosure, "User requested disconnect");
+                ((IDisposable)_WsConnection).Dispose();
             }
             catch (Exception ex)
             {
                 logger.LogError($"Error while disconnecting websocket: {ex.Message}");
             }
-            _wsConnection = null;
+            _WsConnection = null;
         }
 
-        KeyValuePair<string, TaskCompletionSource<JObject>>[] unusedHandlers = _responseHandlers.ToArray();
-        _responseHandlers.Clear();
+        KeyValuePair<string, TaskCompletionSource<JObject>>[] unusedHandlers = _ResponseHandlers.ToArray();
+        _ResponseHandlers.Clear();
         foreach (KeyValuePair<string, TaskCompletionSource<JObject>> cb in unusedHandlers)
         {
             TaskCompletionSource<JObject> tcs = cb.Value;
@@ -121,7 +121,7 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
                 {
                     string msgId = (string)value ?? "";
 
-                    if (_responseHandlers.TryRemove(msgId, out TaskCompletionSource<JObject> handler))
+                    if (_ResponseHandlers.TryRemove(msgId, out TaskCompletionSource<JObject> handler))
                     {
                         handler.SetResult(body);
                     }
@@ -143,7 +143,7 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
     private JObject SendRequest(MessageTypes operationCode, string requestType, JObject additionalFields,
         bool waitForReply = true)
     {
-        if (_wsConnection == null)
+        if (_WsConnection == null)
         {
             throw new NullReferenceException("Websocket is not initialized");
         }
@@ -153,16 +153,16 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
         do
         {
             message = MessageFactory.BuildMessage(operationCode, requestType, additionalFields, out string messageId);
-            if (!waitForReply || _responseHandlers.TryAdd(messageId, tcs))
+            if (!waitForReply || _ResponseHandlers.TryAdd(messageId, tcs))
             {
                 break;
             }
         } while (true);
 
-        _wsConnection.Send(message.ToString());
+        _WsConnection.Send(message.ToString());
         if (!waitForReply) return null;
 
-        tcs.Task.Wait(_wsTimeout.Milliseconds);
+        tcs.Task.Wait(_WsTimeout.Milliseconds);
 
         if (tcs.Task.IsCanceled)
             throw new ErrorResponseException("Request canceled", 0);
@@ -288,15 +288,15 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
 
     private void HandleHello(JObject payload)
     {
-        if (!_wsConnection.IsStarted) return;
+        if (!_WsConnection.IsStarted) return;
 
         ObsAuthInfo authInfo = new ObsAuthInfo();
         if (payload.TryGetValue("authentication", out JToken value))
             authInfo = new ObsAuthInfo((JObject)value);
         
-        SendIdentify(_connectionPassword, authInfo);
+        SendIdentify(_ConnectionPassword, authInfo);
 
-        _connectionPassword = "";
+        _ConnectionPassword = "";
     }
 
     private const string RequestFieldVolumeDb = "inputVolumeDb";

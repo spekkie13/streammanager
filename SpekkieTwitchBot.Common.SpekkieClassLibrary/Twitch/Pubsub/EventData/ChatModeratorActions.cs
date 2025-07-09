@@ -22,7 +22,7 @@ public class ChatModeratorActions : MessageData
 
     public string Type { get; }
     public string ModerationAction { get; }
-    public List<string> Args { get; } = new();
+    public List<string> Args { get; } = [];
     public string CreatedBy { get; }
     public string CreatedByUserId { get; }
     public string TargetUserId { get; }

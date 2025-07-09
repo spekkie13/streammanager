@@ -1,7 +1,7 @@
 ﻿#nullable disable
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 
-namespace SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
+namespace SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
 
 public class AutomodCaughtUserMessage
 {

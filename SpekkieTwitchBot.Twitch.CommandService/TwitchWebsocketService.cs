@@ -3,8 +3,7 @@ using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Auth;
 using SpekkieClassLibrary.Twitch.Commands;
-using SpekkieClassLibrary.Twitch.Pubsub.Args;
-using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
+using SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
@@ -28,8 +27,8 @@ public class TwitchWebsocketService : IHostedService
     private readonly Logger _GeneralLogger;
     private readonly CustomPubsub _CustomPubsub;
     private readonly CustomTwitchHttpClient _CustomTwitchHttpClient;
-    private readonly GeneralTwitchAuth _generalTwitchAuth;
-    private readonly TwitchUserAuth _twitchUserAuth;
+    private readonly GeneralTwitchAuth _GeneralTwitchAuth;
+    private readonly TwitchUserAuth _TwitchUserAuth;
 
     private readonly CustomTwitchClient _CustomTwitchClient;
     private readonly GeneralCommandHandler _GeneralCommandHandler;
@@ -63,10 +62,10 @@ public class TwitchWebsocketService : IHostedService
         _GeneralCommandHandler = generalCommandHandler;
         _TextCommandHandler = textCommandHandler;
 
-        _twitchUserAuth = twitchAuthService.GetTwitchUserAuth() ??
-                          throw new ArgumentNullException(nameof(_twitchUserAuth));
-        _generalTwitchAuth = twitchAuthService.GetGeneralTwitchAuth() ??
-                             throw new ArgumentNullException(nameof(_generalTwitchAuth));
+        _TwitchUserAuth = twitchAuthService.GetTwitchUserAuth() ??
+                          throw new ArgumentNullException(nameof(_TwitchUserAuth));
+        _GeneralTwitchAuth = twitchAuthService.GetGeneralTwitchAuth() ??
+                             throw new ArgumentNullException(nameof(_GeneralTwitchAuth));
 
         _CustomTwitchClient = customTwitchClient ?? throw new ArgumentNullException(nameof(customTwitchClient));
         _CustomPubsub = customPubsub ?? throw new ArgumentNullException(nameof(customPubsub));
@@ -136,8 +135,8 @@ public class TwitchWebsocketService : IHostedService
     
     private void SetupTwitchClient()
     {
-        ConnectionCredentials cred = new (twitchUsername: TwitchConstants.ChannelName, _generalTwitchAuth.ImplicitOAuth);
-        _CustomTwitchClient.Initialize(cred, _generalTwitchAuth.BroadcasterName);
+        ConnectionCredentials cred = new (twitchUsername: TwitchConstants.ChannelName, _GeneralTwitchAuth.ImplicitOAuth);
+        _CustomTwitchClient.Initialize(cred, _GeneralTwitchAuth.BroadcasterName);
         _CustomTwitchClient.OnChatCommandReceived += OnChatCommandReceived;
         _CustomTwitchClient.OnFailureToReceiveJoinConfirmation += FailureToJoin;
         _CustomTwitchClient.OnMessageReceived += OnMessageReceived;
@@ -244,14 +243,14 @@ public class TwitchWebsocketService : IHostedService
 
     private void SetupTopics()
     {
-        _CustomPubsub.ListenToVideoPlayback(_generalTwitchAuth.ChannelId);
-        _CustomPubsub.ListenToFollows(_generalTwitchAuth.ChannelId);
-        _CustomPubsub.ListenToSubscriptions(_generalTwitchAuth.ChannelId);
-        _CustomPubsub.ListenToLeaderboards(_generalTwitchAuth.ChannelId);
-        _CustomPubsub.ListenToPredictions(_generalTwitchAuth.ChannelId);
-        _CustomPubsub.ListenToRaid(_generalTwitchAuth.ChannelId);
-        _CustomPubsub.ListenToChannelPoints(_generalTwitchAuth.ChannelId);
-        _CustomPubsub.ListenToBitsEventsV2(_generalTwitchAuth.ChannelId);
+        _CustomPubsub.ListenToVideoPlayback(_GeneralTwitchAuth.ChannelId);
+        _CustomPubsub.ListenToFollows(_GeneralTwitchAuth.ChannelId);
+        _CustomPubsub.ListenToSubscriptions(_GeneralTwitchAuth.ChannelId);
+        _CustomPubsub.ListenToLeaderboards(_GeneralTwitchAuth.ChannelId);
+        _CustomPubsub.ListenToPredictions(_GeneralTwitchAuth.ChannelId);
+        _CustomPubsub.ListenToRaid(_GeneralTwitchAuth.ChannelId);
+        _CustomPubsub.ListenToChannelPoints(_GeneralTwitchAuth.ChannelId);
+        _CustomPubsub.ListenToBitsEventsV2(_GeneralTwitchAuth.ChannelId);
     }
     #endregion
 
@@ -576,13 +575,13 @@ public class TwitchWebsocketService : IHostedService
 
     private void OnPubSubConnected(object? sender, EventArgs e)
     {
-        if (string.IsNullOrEmpty(_twitchUserAuth.UserToken))
+        if (string.IsNullOrEmpty(_TwitchUserAuth.UserToken))
         {
             _GeneralLogger.LogInfo("User token is empty");
             return;
         }
 
-        _CustomPubsub.SendTopics(_twitchUserAuth.UserToken);
+        _CustomPubsub.SendTopics(_TwitchUserAuth.UserToken);
         _GeneralLogger.LogInfo("Pubsub Service Connected");
     }
 

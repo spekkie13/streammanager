@@ -1,7 +1,7 @@
 ﻿#nullable disable
 namespace SpekkieClassLibrary.Spotify.Song;
 
-public class Album
+public abstract class Album
 {
     public string AlbumType { get; set; }
     public List<Artist> Artists { get; set; }

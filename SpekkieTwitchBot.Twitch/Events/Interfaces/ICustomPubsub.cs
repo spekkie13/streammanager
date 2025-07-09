@@ -1,6 +1,5 @@
 ﻿#nullable disable
-using SpekkieClassLibrary.Twitch.Pubsub.Args;
-using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
+using SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
 using TwitchLib.PubSub.Events;
 
 namespace TwitchAuthService.Events.Interfaces;

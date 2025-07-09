@@ -1,7 +1,6 @@
 ﻿using System.Timers;
 using Newtonsoft.Json.Linq;
-using SpekkieClassLibrary.Twitch.Pubsub.Args;
-using SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
+using SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using SpekkieTwitchBot.General.FileHandling;
 using TwitchAuthService.Events.Interfaces;
@@ -43,31 +42,31 @@ namespace TwitchAuthService.Events.Pubsub;
 public class CustomPubsub : ITwitchPubSub
 {
     private static readonly Random Random = new();
-    private readonly Logger _logger;
-    private readonly Timer _pingTimer = new();
-    private readonly Timer _pongTimer = new();
-    private readonly List<PreviousRequest> _previousRequests = new();
-    private readonly Semaphore _previousRequestsSemaphore = new(1, 1);
-    private readonly CustomWebSocketClient _socket;
-    private readonly List<string> _topicList = [];
-    private readonly Dictionary<string, string> _topicToChannelId = new();
-    private bool _pongReceived;
+    private readonly Logger _Logger;
+    private readonly Timer _PingTimer = new();
+    private readonly Timer _PongTimer = new();
+    private readonly List<PreviousRequest> _PreviousRequests = [];
+    private readonly Semaphore _PreviousRequestsSemaphore = new(1, 1);
+    private readonly CustomWebSocketClient _Socket;
+    private readonly List<string> _TopicList = [];
+    private readonly Dictionary<string, string> _TopicToChannelId = new();
+    private bool _PongReceived;
 
     public CustomPubsub(Logger logger = null)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _socket = new CustomWebSocketClient(logger, new ClientOptions
+        _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _Socket = new CustomWebSocketClient(logger, new ClientOptions
         {
             ClientType = ClientType.PubSub
             
         });
-        _socket.OnConnected += Socket_OnConnected;
-        _socket.OnError += OnError;
-        _socket.OnMessage += OnMessage;
-        _socket.OnDisconnected += Socket_OnDisconnected;
-        _socket.DefaultKeepAliveInterval = TimeSpan.FromSeconds(30);
-        _pongTimer.Interval = 15000.0;
-        _pongTimer.Elapsed += PongTimerTick;
+        _Socket.OnConnected += Socket_OnConnected;
+        _Socket.OnError += OnError;
+        _Socket.OnMessage += OnMessage;
+        _Socket.OnDisconnected += Socket_OnDisconnected;
+        _Socket.DefaultKeepAliveInterval = TimeSpan.FromSeconds(30);
+        _PongTimer.Interval = 15000.0;
+        _PongTimer.Elapsed += PongTimerTick;
     }
 
     public event EventHandler OnPubSubServiceConnected;
@@ -114,18 +113,18 @@ public class CustomPubsub : ITwitchPubSub
             oauth = oauth.Replace("oauth:", "");
         string nonce = GenerateNonce();
         JArray content = new JArray();
-        _previousRequestsSemaphore.WaitOne();
+        _PreviousRequestsSemaphore.WaitOne();
         try
         {
-            foreach (string topic in _topicList)
+            foreach (string topic in _TopicList)
             {
-                _previousRequests.Add(new PreviousRequest(nonce, PubSubRequestType.ListenToTopic, topic));
+                _PreviousRequests.Add(new PreviousRequest(nonce, PubSubRequestType.ListenToTopic, topic));
                 content.Add(new JValue(topic));
             }
         }
         finally
         {
-            _previousRequestsSemaphore.Release();
+            _PreviousRequestsSemaphore.Release();
         }
 
         JObject jobject = new JObject(new JProperty("type", !unlisten ? "LISTEN" : (object)"UNLISTEN"),
@@ -134,49 +133,49 @@ public class CustomPubsub : ITwitchPubSub
             JContainer data = (JContainer)jobject.SelectToken("data") ?? new JConstructor();
             data.Add(new JProperty("auth_token", oauth));
         }
-        _socket.Send(jobject.ToString());
-        _topicList.Clear();
+        _Socket.Send(jobject.ToString());
+        _TopicList.Clear();
     }
 
     public void ListenToFollows(string channelId)
     {
         string str = "following." + channelId;
-        _topicToChannelId[str] = channelId;
+        _TopicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
 
     public void ListenToChatModeratorActions(string userId, string channelId)
     {
         string str = "chat_moderator_actions." + userId + "." + channelId;
-        _topicToChannelId[str] = channelId;
+        _TopicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
 
     public void ListenToChannelExtensionBroadcast(string channelId, string extensionId)
     {
         string str = "channel-ext-v1." + channelId + "-" + extensionId + "-broadcast";
-        _topicToChannelId[str] = channelId;
+        _TopicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
 
     public void ListenToVideoPlayback(string channelTwitchId)
     {
         string str = "video-playback-by-id." + channelTwitchId;
-        _topicToChannelId[str] = channelTwitchId;
+        _TopicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
     public void ListenToWhispers(string channelTwitchId)
     {
         string str = "whispers." + channelTwitchId;
-        _topicToChannelId[str] = channelTwitchId;
+        _TopicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
     
     public void ListenToChannelPoints(string channelTwitchId)
     {
         string str = "channel-points-channel-v1." + channelTwitchId;
-        _topicToChannelId[str] = channelTwitchId;
+        _TopicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
@@ -184,40 +183,40 @@ public class CustomPubsub : ITwitchPubSub
     {
         string key1 = "leaderboard-events-v1.bits-usage-by-channel-v1-" + channelTwitchId + "-WEEK";
         string key2 = "leaderboard-events-v1.sub-gift-sent-" + channelTwitchId + "-WEEK";
-        _topicToChannelId[key1] = channelTwitchId;
-        _topicToChannelId[key2] = channelTwitchId;
+        _TopicToChannelId[key1] = channelTwitchId;
+        _TopicToChannelId[key2] = channelTwitchId;
         ListenToTopics(key1, key2);
     }
 
     public void ListenToRaid(string channelTwitchId)
     {
         string str = "raid." + channelTwitchId;
-        _topicToChannelId[str] = channelTwitchId;
+        _TopicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
     public void ListenToSubscriptions(string channelId)
     {
         string str = "channel-subscribe-events-v1." + channelId;
-        _topicToChannelId[str] = channelId;
+        _TopicToChannelId[str] = channelId;
         ListenToTopic(str);
     }
 
     public void ListenToPredictions(string channelTwitchId)
     {
         string str = "predictions-channel-v1." + channelTwitchId;
-        _topicToChannelId[str] = channelTwitchId;
+        _TopicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 
     public void Connect()
     {
-        _socket.Open();
+        _Socket.Open();
     }
 
     public void Disconnect()
     {
-        _socket.Close(false);
+        _Socket.Close(false);
     }
 
     public void TestMessageParser(string testJsonString)
@@ -227,7 +226,7 @@ public class CustomPubsub : ITwitchPubSub
 
     private void OnError(object sender, OnErrorEventArgs e)
     {
-        _logger.LogError($"OnError in PubSub Websocket connection occured! Exception: {e.Exception}");
+        _Logger.LogError($"OnError in PubSub Websocket connection occured! Exception: {e.Exception}");
         EventHandler<OnPubSubServiceErrorArgs> pubSubServiceError = OnPubSubServiceError;
         if (pubSubServiceError == null)
             return;
@@ -239,7 +238,7 @@ public class CustomPubsub : ITwitchPubSub
 
     private void OnMessage(object sender, OnMessageEventArgs e)
     {
-        Logger logger = _logger;
+        Logger logger = _Logger;
         if (logger != null)
             logger.LogInfo("Received Websocket OnMessage: " + e.Message);
         EventHandler<OnLogArgs> onLog = OnLog;
@@ -253,10 +252,10 @@ public class CustomPubsub : ITwitchPubSub
 
     private void Socket_OnDisconnected(object sender, EventArgs e)
     {
-        _logger?.LogWarning("PubSub Websocket connection closed");
+        _Logger?.LogWarning("PubSub Websocket connection closed");
         Connect();
-        _pingTimer.Stop();
-        _pongTimer.Stop();
+        _PingTimer.Stop();
+        _PongTimer.Stop();
         EventHandler subServiceClosed = OnPubSubServiceClosed;
         if (subServiceClosed == null)
             return;
@@ -265,12 +264,12 @@ public class CustomPubsub : ITwitchPubSub
 
     private void Socket_OnConnected(object sender, EventArgs e)
     {
-        Logger logger = _logger;
+        Logger logger = _Logger;
         if (logger != null)
             logger.LogInfo("PubSub Websocket connection established");
-        _pingTimer.Interval = 180000.0;
-        _pingTimer.Elapsed += PingTimerTick;
-        _pingTimer.Start();
+        _PingTimer.Interval = 180000.0;
+        _PingTimer.Elapsed += PingTimerTick;
+        _PingTimer.Start();
         EventHandler serviceConnected = OnPubSubServiceConnected;
         if (serviceConnected == null)
             return;
@@ -279,18 +278,18 @@ public class CustomPubsub : ITwitchPubSub
 
     private void PingTimerTick(object sender, ElapsedEventArgs e)
     {
-        _pongReceived = false;
-        _socket.Send(new JObject(new JProperty("type", "PING")).ToString());
-        _pongTimer.Start();
+        _PongReceived = false;
+        _Socket.Send(new JObject(new JProperty("type", "PING")).ToString());
+        _PongTimer.Start();
     }
 
     private void PongTimerTick(object sender, ElapsedEventArgs e)
     {
-        _pongTimer.Stop();
-        if (_pongReceived)
-            _pongReceived = false;
+        _PongTimer.Stop();
+        if (_PongReceived)
+            _PongReceived = false;
         else
-            _socket.Close();
+            _Socket.Close();
     }
 
     private void ParseMessage(string message)
@@ -301,20 +300,20 @@ public class CustomPubsub : ITwitchPubSub
         {
             case "response":
                 Response response = new Response(message);
-                if (_previousRequests.Count != 0)
+                if (_PreviousRequests.Count != 0)
                 {
                     bool flag = false;
-                    _previousRequestsSemaphore.WaitOne();
+                    _PreviousRequestsSemaphore.WaitOne();
                     try
                     {
                         int index = 0;
-                        while (index < _previousRequests.Count)
+                        while (index < _PreviousRequests.Count)
                         {
-                            PreviousRequest previousRequest = _previousRequests[index];
+                            PreviousRequest previousRequest = _PreviousRequests[index];
                             if (string.Equals(previousRequest.Nonce, response.Nonce, StringComparison.CurrentCulture))
                             {
-                                _previousRequests.RemoveAt(index);
-                                _topicToChannelId.TryGetValue(previousRequest.Topic, out string str);
+                                _PreviousRequests.RemoveAt(index);
+                                _TopicToChannelId.TryGetValue(previousRequest.Topic, out string str);
                                 EventHandler<ListenResponseArgs> onListenResponse = OnListenResponse;
                                 if (onListenResponse != null)
                                     onListenResponse(this, new ListenResponseArgs
@@ -334,7 +333,7 @@ public class CustomPubsub : ITwitchPubSub
                     }
                     finally
                     {
-                        _previousRequestsSemaphore.Release();
+                        _PreviousRequestsSemaphore.Release();
                     }
 
                     if (flag)
@@ -344,7 +343,7 @@ public class CustomPubsub : ITwitchPubSub
                 break;
             case nameof(message):
                 Message message1 = new Message(message);
-                _topicToChannelId.TryGetValue(message1.Topic, out string str1);
+                _TopicToChannelId.TryGetValue(message1.Topic, out string str1);
                 string str2 = str1 ?? "";
                 switch (message1.Topic.Split('.')[0])
                 {
@@ -882,10 +881,10 @@ public class CustomPubsub : ITwitchPubSub
 
                 break;
             case "pong":
-                _pongReceived = true;
+                _PongReceived = true;
                 return;
             case "reconnect":
-                _socket.Close();
+                _Socket.Close();
                 break;
         }
 
@@ -900,24 +899,24 @@ public class CustomPubsub : ITwitchPubSub
 
     private void ListenToTopic(string topic)
     {
-        _topicList.Add(topic);
+        _TopicList.Add(topic);
     }
 
     private void ListenToTopics(params string[] topics)
     {
         foreach (string topic in topics)
-            _topicList.Add(topic);
+            _TopicList.Add(topic);
     }
 
     private void UnaccountedFor(string message)
     {
-        _logger.LogInfo("[TwitchPubSub] " + message);
+        _Logger.LogInfo("[TwitchPubSub] " + message);
     }
 
     public void ListenToBitsEventsV2(string channelTwitchId)
     {
         string str = "channel-bits-events-v2." + channelTwitchId;
-        _topicToChannelId[str] = channelTwitchId;
+        _TopicToChannelId[str] = channelTwitchId;
         ListenToTopic(str);
     }
 }

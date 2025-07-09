@@ -191,7 +191,7 @@ public class SpotifyService : BackgroundService
     {
         string artists = "";
         if (currentSong?.Artists == null) return "";
-        foreach (SimpleArtist? artist in currentSong.Artists)
+        foreach (SimpleArtist artist in currentSong.Artists)
             if (artist == currentSong.Artists[0])
                 artists += $"{artist.Name}";
             else

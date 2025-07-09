@@ -9,25 +9,25 @@ namespace TwitchAuthService;
 
 public class TwitchAuthService(TwitchFileReader twitchFileReader, TwitchFileWriter twitchFileWriter, Logger logger)
 {
-    private GeneralTwitchAuth _twitchGeneralAuth;
-    private TwitchUserAuth _twitchUserAuth;
+    private GeneralTwitchAuth _TwitchGeneralAuth;
+    private TwitchUserAuth _TwitchUserAuth;
 
     public TwitchUserAuth GetTwitchUserAuth()
     {
         string jsonData = twitchFileReader.ReadTwitchUserAuthFile();
-        _twitchUserAuth = JsonConvert.DeserializeObject<TwitchUserAuth>(jsonData) ?? new TwitchUserAuth();
-        AuthorizationCredentials authCred = GetUserAccessAuthCredentials(_twitchUserAuth).Result;
+        _TwitchUserAuth = JsonConvert.DeserializeObject<TwitchUserAuth>(jsonData) ?? new TwitchUserAuth();
+        AuthorizationCredentials authCred = GetUserAccessAuthCredentials(_TwitchUserAuth).Result;
 
-        UpdateTwitchSettings(_twitchUserAuth, authCred);
+        UpdateTwitchSettings(_TwitchUserAuth, authCred);
 
-        return _twitchUserAuth;
+        return _TwitchUserAuth;
     }
 
     public GeneralTwitchAuth GetGeneralTwitchAuth()
     {
         string jsonData = twitchFileReader.ReadTwitchGeneralAuthFile();
-        _twitchGeneralAuth = JsonConvert.DeserializeObject<GeneralTwitchAuth>(jsonData) ?? new GeneralTwitchAuth();
-        return _twitchGeneralAuth;
+        _TwitchGeneralAuth = JsonConvert.DeserializeObject<GeneralTwitchAuth>(jsonData) ?? new GeneralTwitchAuth();
+        return _TwitchGeneralAuth;
     }
 
     private async Task<AuthorizationCredentials> GetUserAccessAuthCredentials(TwitchUserAuth twitchUserAuth)
@@ -53,8 +53,8 @@ public class TwitchAuthService(TwitchFileReader twitchFileReader, TwitchFileWrit
                                                 new AuthorizationCredentials();
                 return cred;
             case HttpStatusCode.BadRequest:
-                cred = await RefreshAppAccessTokenAsync(_twitchUserAuth.ClientId, _twitchUserAuth.ClientSecret,
-                    _twitchUserAuth.UserRefreshToken);
+                cred = await RefreshAppAccessTokenAsync(_TwitchUserAuth.ClientId, _TwitchUserAuth.ClientSecret,
+                    _TwitchUserAuth.UserRefreshToken);
                 return cred;
             default:
                 logger.LogError($"Failed to get tokens. Status code: {response.StatusCode}");

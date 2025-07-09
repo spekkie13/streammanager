@@ -1,5 +1,5 @@
 ﻿#nullable disable
-namespace SpekkieClassLibrary.Twitch.Pubsub.Args;
+namespace SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
 
 public class BitsReceivedV2Args
 {

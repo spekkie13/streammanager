@@ -12,32 +12,32 @@ namespace SpekkieTwitchBot.Twitch.Tests;
 
 public class FollowEventHandlerTests
 {
-    private readonly Mock<TwitchFileWriter> _mockFileWriter;
-    private readonly Mock<TwitchFileReader> _mockFileReader;
-    private readonly Mock<CustomTwitchHttpClient> _mockHttpClient;
-    private readonly FollowEventHandler _handler;
+    private readonly Mock<TwitchFileWriter> _MockFileWriter;
+    private readonly Mock<TwitchFileReader> _MockFileReader;
+    private readonly Mock<CustomTwitchHttpClient> _MockHttpClient;
+    private readonly FollowEventHandler _Handler;
 
     public FollowEventHandlerTests()
     {
         Mock<FileReader> fileReaderMock = new Mock<FileReader>();
         Mock<FileWriter> fileWriterMock = new Mock<FileWriter>();
         
-        _mockFileWriter = new Mock<TwitchFileWriter>(fileWriterMock.Object);
-        _mockFileReader = new Mock<TwitchFileReader>(fileReaderMock.Object);
+        _MockFileWriter = new Mock<TwitchFileWriter>(fileWriterMock.Object);
+        _MockFileReader = new Mock<TwitchFileReader>(fileReaderMock.Object);
         Mock<GeneralFileWriter> mockGeneralFileWriter = new Mock<GeneralFileWriter>(fileWriterMock.Object);
         
         Mock<Logger> mockLogger = new Mock<Logger>(mockGeneralFileWriter.Object);
 
         Mock<TwitchAuthService.TwitchAuthService> mockTwitchAuthService = new Mock<TwitchAuthService.TwitchAuthService>(
-            _mockFileReader.Object, 
-            _mockFileWriter.Object, 
+            _MockFileReader.Object, 
+            _MockFileWriter.Object, 
             mockLogger.Object);
-        _mockHttpClient = new Mock<CustomTwitchHttpClient>(mockTwitchAuthService.Object);
+        _MockHttpClient = new Mock<CustomTwitchHttpClient>(mockTwitchAuthService.Object);
 
-        _handler = new FollowEventHandler(
-            _mockFileReader.Object,
-            _mockFileWriter.Object,
-            _mockHttpClient.Object
+        _Handler = new FollowEventHandler(
+            _MockFileReader.Object,
+            _MockFileWriter.Object,
+            _MockHttpClient.Object
         );
     }
 
@@ -54,18 +54,18 @@ public class FollowEventHandlerTests
             Content = new StringContent("{ \"total\": 100, \"data\": [{ \"userName\": \"NewFollower\" }] }")
         };
 
-        _mockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns(fakeMostRecentFollower);
-        _mockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(fakeResponse);
+        _MockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns(fakeMostRecentFollower);
+        _MockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(fakeResponse);
 
         var eventArgs = new OnFollowArgs { DisplayName = fakeFollower };
 
         // Act
-        _handler.HandleFollow(null, eventArgs);
+        _Handler.HandleFollow(null, eventArgs);
         await Task.Delay(100);
 
         // Assert
-        _mockFileWriter.Verify(w => w.WriteTotalFollowersFile(100), Times.Once);
-        _mockFileWriter.Verify(w => w.WriteMostRecentFollowerFile("NewFollower"), Times.Once);
+        _MockFileWriter.Verify(w => w.WriteTotalFollowersFile(100), Times.Once);
+        _MockFileWriter.Verify(w => w.WriteMostRecentFollowerFile("NewFollower"), Times.Once);
     }
 
     [Fact]
@@ -73,16 +73,16 @@ public class FollowEventHandlerTests
     {
         // Arrange
         var fakeFollower = "SameFollower";
-        _mockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns(fakeFollower);
+        _MockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns(fakeFollower);
 
         var eventArgs = new OnFollowArgs { DisplayName = fakeFollower };
 
         // Act
-        _handler.HandleFollow(null, eventArgs);
+        _Handler.HandleFollow(null, eventArgs);
 
         // Assert
-        _mockFileWriter.Verify(w => w.WriteTotalFollowersFile(It.IsAny<int>()), Times.Never);
-        _mockFileWriter.Verify(w => w.WriteMostRecentFollowerFile(It.IsAny<string>()), Times.Never);
+        _MockFileWriter.Verify(w => w.WriteTotalFollowersFile(It.IsAny<int>()), Times.Never);
+        _MockFileWriter.Verify(w => w.WriteMostRecentFollowerFile(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -90,18 +90,18 @@ public class FollowEventHandlerTests
     {
         // Arrange
         var fakeFollower = "NewFollower";
-        _mockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns("OldFollower");
-        _mockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>())).ThrowsAsync(new HttpRequestException());
+        _MockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns("OldFollower");
+        _MockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>())).ThrowsAsync(new HttpRequestException());
 
         var eventArgs = new OnFollowArgs { DisplayName = fakeFollower };
 
         // Act
-        _handler.HandleFollow(null, eventArgs);
+        _Handler.HandleFollow(null, eventArgs);
         await Task.Delay(100);
 
         // Assert
-        _mockFileWriter.Verify(w => w.WriteTotalFollowersFile(It.IsAny<int>()), Times.Never);
-        _mockFileWriter.Verify(w => w.WriteMostRecentFollowerFile(It.IsAny<string>()), Times.Never);
+        _MockFileWriter.Verify(w => w.WriteTotalFollowersFile(It.IsAny<int>()), Times.Never);
+        _MockFileWriter.Verify(w => w.WriteMostRecentFollowerFile(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class FollowEventHandlerTests
     {
         // Arrange
         var fakeFollower = "NewFollower";
-        _mockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns("OldFollower");
+        _MockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns("OldFollower");
 
         var fakeResponse = new HttpResponseMessage
         {
@@ -117,17 +117,17 @@ public class FollowEventHandlerTests
             Content = new StringContent("INVALID_JSON")
         };
 
-        _mockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(fakeResponse);
+        _MockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(fakeResponse);
 
         var eventArgs = new OnFollowArgs { DisplayName = fakeFollower };
 
         // Act
-        _handler.HandleFollow(null, eventArgs);
+        _Handler.HandleFollow(null, eventArgs);
         await Task.Delay(100);
 
         // Assert
-        _mockFileWriter.Verify(w => w.WriteTotalFollowersFile(0), Times.Once);
-        _mockFileWriter.Verify(w => w.WriteMostRecentFollowerFile("N/A"), Times.Once);
+        _MockFileWriter.Verify(w => w.WriteTotalFollowersFile(0), Times.Once);
+        _MockFileWriter.Verify(w => w.WriteMostRecentFollowerFile("N/A"), Times.Once);
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public class FollowEventHandlerTests
     {
         // Arrange
         var fakeFollower = "NewFollower";
-        _mockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns("OldFollower");
+        _MockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns("OldFollower");
 
         var fakeResponse = new HttpResponseMessage
         {
@@ -143,17 +143,17 @@ public class FollowEventHandlerTests
             Content = new StringContent("{ \"total\": 0, \"data\": [] }")
         };
 
-        _mockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(fakeResponse);
+        _MockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(fakeResponse);
 
         var eventArgs = new OnFollowArgs { DisplayName = fakeFollower };
 
         // Act
-        _handler.HandleFollow(null, eventArgs);
+        _Handler.HandleFollow(null, eventArgs);
         await Task.Delay(100);
 
         // Assert
-        _mockFileWriter.Verify(w => w.WriteTotalFollowersFile(0), Times.Once);
-        _mockFileWriter.Verify(w => w.WriteMostRecentFollowerFile("N/A"), Times.Once);
+        _MockFileWriter.Verify(w => w.WriteTotalFollowersFile(0), Times.Once);
+        _MockFileWriter.Verify(w => w.WriteMostRecentFollowerFile("N/A"), Times.Once);
     }
 
     [Fact]
@@ -161,20 +161,20 @@ public class FollowEventHandlerTests
     {
         // Arrange
         var fakeFollower = "NewFollower";
-        _mockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns("OldFollower");
+        _MockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns("OldFollower");
 
-        _mockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>()))
+        _MockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>()))
             .ThrowsAsync(new TaskCanceledException()); // Simulate timeout
 
         var eventArgs = new OnFollowArgs { DisplayName = fakeFollower };
 
         // Act
-        _handler.HandleFollow(null, eventArgs);
+        _Handler.HandleFollow(null, eventArgs);
         await Task.Delay(100);
 
         // Assert
-        _mockFileWriter.Verify(w => w.WriteTotalFollowersFile(It.IsAny<int>()), Times.Never);
-        _mockFileWriter.Verify(w => w.WriteMostRecentFollowerFile(It.IsAny<string>()), Times.Never);
+        _MockFileWriter.Verify(w => w.WriteTotalFollowersFile(It.IsAny<int>()), Times.Never);
+        _MockFileWriter.Verify(w => w.WriteMostRecentFollowerFile(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -182,7 +182,7 @@ public class FollowEventHandlerTests
     {
         // Arrange
         var fakeFollower = "NewFollower";
-        _mockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns("OldFollower");
+        _MockFileReader.Setup(r => r.ReadMostRecentFollowerFile()).Returns("OldFollower");
 
         var fakeResponse = new HttpResponseMessage
         {
@@ -190,16 +190,16 @@ public class FollowEventHandlerTests
             Content = new StringContent("{ \"total\": 100, \"data\": null }")
         };
 
-        _mockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(fakeResponse);
+        _MockHttpClient.Setup(c => c.GetAsync(It.IsAny<string>())).ReturnsAsync(fakeResponse);
 
         var eventArgs = new OnFollowArgs { DisplayName = fakeFollower };
 
         // Act
-        _handler.HandleFollow(null, eventArgs);
+        _Handler.HandleFollow(null, eventArgs);
         await Task.Delay(100);
 
         // Assert
-        _mockFileWriter.Verify(w => w.WriteTotalFollowersFile(100), Times.Once);
-        _mockFileWriter.Verify(w => w.WriteMostRecentFollowerFile("N/A"), Times.Once);
+        _MockFileWriter.Verify(w => w.WriteTotalFollowersFile(100), Times.Once);
+        _MockFileWriter.Verify(w => w.WriteMostRecentFollowerFile("N/A"), Times.Once);
     }
 }

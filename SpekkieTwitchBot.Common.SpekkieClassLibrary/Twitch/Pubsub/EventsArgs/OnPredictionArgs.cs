@@ -2,7 +2,7 @@
 using SpekkieClassLibrary.Twitch.Pubsub.Enums;
 using SpekkieClassLibrary.Twitch.Pubsub.Types;
 
-namespace SpekkieClassLibrary.Twitch.Pubsub.Events.Args;
+namespace SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
 
 public class PredictionArgs : EventArgs
 {

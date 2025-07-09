@@ -1,7 +1,7 @@
 ﻿#nullable disable
 namespace SpekkieClassLibrary.Spotify.Song;
 
-public class Artist
+public abstract class Artist
 {
     public ExternalUrls ExternalUrls { get; set; }
     public string Href { get; set; }

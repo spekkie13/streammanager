@@ -14,7 +14,8 @@ public class AuthorizationCredentials
     [JsonProperty(PropertyName = "refresh_token")]
     public string RefreshToken { get; set; }
 
-    [JsonProperty(PropertyName = "scope")] public List<string> Scope { get; set; }
+    [JsonProperty(PropertyName = "scope")] 
+    public List<string> Scope { get; set; }
 
     [JsonProperty(PropertyName = "token_type")]
     public string TokenType { get; set; }

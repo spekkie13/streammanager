@@ -11,13 +11,13 @@ namespace SpotifyAuthService.General;
 public class CustomSpotifyHttpClient
 {
     private readonly HttpClient _Client;
-    private readonly Logger _logger;
+    private readonly Logger _Logger;
     private readonly Auth.SpotifyAuthService _SpotifyAuthService;
 
     public CustomSpotifyHttpClient(Auth.SpotifyAuthService spotifyAuthService, Logger logger)
     {
         _Client = new HttpClient();
-        _logger = logger;
+        _Logger = logger;
         _SpotifyAuthService = spotifyAuthService;
         Setup();
     }
@@ -71,7 +71,7 @@ public class CustomSpotifyHttpClient
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError($"Error occured retrieving data: {ex.Message}");
+            _Logger.LogError($"Error occured retrieving data: {ex.Message}");
             throw;
         }
     }

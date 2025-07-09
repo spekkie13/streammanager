@@ -7,12 +7,12 @@ public class SpotifyFileSetup
     private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) +
                                              $"{Path.DirectorySeparatorChar}SpekkieTwitchBot";
 
-    private readonly FileSetup _fileSetup;
+    private readonly FileSetup _FileSetup;
     private readonly string _OutputDir = $"{Path.DirectorySeparatorChar}Output{Path.DirectorySeparatorChar}Spotify";
 
     public SpotifyFileSetup(FileSetup fileSetup)
     {
-        _fileSetup = fileSetup;
+        _FileSetup = fileSetup;
         SetupSongFiles();
     }
 
@@ -22,13 +22,13 @@ public class SpotifyFileSetup
         string artistDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentArtist.txt";
         string pictureDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentSong.png";
 
-        if (!_fileSetup.FileExists(titleDir))
-            _fileSetup.CreateFile(titleDir);
+        if (!_FileSetup.FileExists(titleDir))
+            _FileSetup.CreateFile(titleDir);
 
-        if (!_fileSetup.FileExists(artistDir))
-            _fileSetup.CreateFile(artistDir);
+        if (!_FileSetup.FileExists(artistDir))
+            _FileSetup.CreateFile(artistDir);
 
-        if (!_fileSetup.FileExists(pictureDir))
-            _fileSetup.CreateFile(pictureDir);
+        if (!_FileSetup.FileExists(pictureDir))
+            _FileSetup.CreateFile(pictureDir);
     }
 }

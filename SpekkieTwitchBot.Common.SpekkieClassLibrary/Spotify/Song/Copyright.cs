@@ -1,7 +1,7 @@
 ﻿namespace SpekkieClassLibrary.Spotify.Song;
 
-public class Copyright
+public abstract class Copyright
 {
-    public string Text { get; set; } = default!;
-    public string Type { get; set; } = default!;
+    public string Text { get; set; } = null!;
+    public string Type { get; set; } = null!;
 }

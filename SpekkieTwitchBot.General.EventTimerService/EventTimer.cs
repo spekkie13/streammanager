@@ -5,33 +5,33 @@ namespace EventTimerService
 {
     public class EventTimer
     {
-        private readonly TimerFileWriter _timerFileWriter;
-        private readonly TimerFileReader _timerFileReader;
-        private readonly Logger _logger;
+        private readonly TimerFileWriter _TimerFileWriter;
+        private readonly TimerFileReader _TimerFileReader;
+        private readonly Logger _Logger;
         private TimeSpan _RemainingTime;
-        private bool _isRunning;
-        private readonly Timer _timer;
+        private bool _IsRunning;
+        private readonly Timer _Timer;
 
         public EventTimer(TimerFileWriter timerFileWriter, TimerFileReader timerFileReader, Logger logger)
         {
-            _timerFileWriter = timerFileWriter;
-            _timerFileReader = timerFileReader;
-            _logger = logger;
+            _TimerFileWriter = timerFileWriter;
+            _TimerFileReader = timerFileReader;
+            _Logger = logger;
             SetupTimer();
-            _timerFileWriter.WriteRemainingTime(_RemainingTime);
-            _timer = new Timer(CountDownTick, null, Timeout.Infinite, 1000); // Initially paused
-            _isRunning = false;
+            _TimerFileWriter.WriteRemainingTime(_RemainingTime);
+            _Timer = new Timer(CountDownTick, null, Timeout.Infinite, 1000); // Initially paused
+            _IsRunning = false;
         }
 
         private void SetupTimer()
         {
-            string remainingTime = _timerFileReader.ReadRemainingTime();
+            string remainingTime = _TimerFileReader.ReadRemainingTime();
             _RemainingTime = TimeSpan.Parse(remainingTime);
         }
 
         private void CountDownTick(object? state)
         {
-            if (!_isRunning || _RemainingTime <= TimeSpan.Zero)
+            if (!_IsRunning || _RemainingTime <= TimeSpan.Zero)
             {
                 StopTimer(); // Stop if time runs out
                 return;
@@ -44,21 +44,21 @@ namespace EventTimerService
         private void WriteFile()
         {
             TimeSpan totalTime = new TimeSpan(_RemainingTime.Days * 24 + _RemainingTime.Hours, _RemainingTime.Minutes, _RemainingTime.Seconds);
-            _timerFileWriter.WriteRemainingTime(totalTime);
+            _TimerFileWriter.WriteRemainingTime(totalTime);
         }
 
         public void StartTimer()
         {
-            if (_isRunning) return;
-            _timer.Change(0, 1000); // Start immediately, tick every second
-            _isRunning = true;
+            if (_IsRunning) return;
+            _Timer.Change(0, 1000); // Start immediately, tick every second
+            _IsRunning = true;
         }
 
         public void StopTimer()
         {
-            if (!_isRunning) return;
-            _timer.Change(Timeout.Infinite, Timeout.Infinite); // Pause timer
-            _isRunning = false;
+            if (!_IsRunning) return;
+            _Timer.Change(Timeout.Infinite, Timeout.Infinite); // Pause timer
+            _IsRunning = false;
         }
 
         public void RestartTimer()
@@ -71,7 +71,7 @@ namespace EventTimerService
         public void AddTime(TimeSpan extraTime)
         {
             _RemainingTime += extraTime;
-            _logger.LogInfo($"Added {extraTime}, new remaining time: {_RemainingTime}");
+            _Logger.LogInfo($"Added {extraTime}, new remaining time: {_RemainingTime}");
         }
 
         public void SetRemainingTime(TimeSpan time)

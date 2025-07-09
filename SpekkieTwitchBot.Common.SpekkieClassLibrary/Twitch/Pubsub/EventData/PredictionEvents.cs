@@ -19,19 +19,19 @@ public class PredictionEvents : MessageData
         Id = Guid.Parse(jtoken1.SelectToken("id")?.ToString() ?? "");
         ChannelId = jtoken1.SelectToken("channel_id")?.ToString();
         CreatedAt = jtoken1.SelectToken("created_at").IsEmpty()
-            ? new DateTime?()
+            ? null
             : DateTime.Parse(jtoken1.SelectToken("created_at")?.ToString() ?? "");
         EndedAt = jtoken1.SelectToken("ended_at").IsEmpty()
-            ? new DateTime?()
+            ? null
             : DateTime.Parse(jtoken1.SelectToken("ended_at")?.ToString() ?? "");
         LockedAt = jtoken1.SelectToken("locked_at").IsEmpty()
-            ? new DateTime?()
+            ? null
             : DateTime.Parse(jtoken1.SelectToken("locked_at")?.ToString() ?? "");
         Status = (PredictionStatus)Enum.Parse(typeof(PredictionStatus),
             jtoken1.SelectToken("status")!.ToString().Replace("_", ""), true);
         Title = jtoken1.SelectToken("title")?.ToString();
         WinningOutcomeId = jtoken1.SelectToken("winning_outcome_id").IsEmpty()
-            ? new Guid?()
+            ? null
             : Guid.Parse(jtoken1.SelectToken("winning_outcome_id")?.ToString() ?? "");
         PredictionTime = int.Parse(jtoken1.SelectToken("prediction_window_seconds")?.ToString() ?? "");
         JToken outcomes = jtoken1.SelectToken("outcomes");

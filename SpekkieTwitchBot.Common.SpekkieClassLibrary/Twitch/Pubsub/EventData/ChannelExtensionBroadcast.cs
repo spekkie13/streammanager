@@ -12,5 +12,5 @@ public class ChannelExtensionBroadcast : MessageData
             Messages.Add(obj.ToString());
     }
 
-    public List<string> Messages { get; } = new();
+    public List<string> Messages { get; } = [];
 }

@@ -3,7 +3,7 @@
 public static class TwitchConstants
 {
     public static string BotExitMessage => "Bye! Have a beautiful time!";
-    public static string ChannelName => "spekkie1313";
+    public static string ChannelName => "itsspekkie";
     public static string BroadcasterId => "30731359";
 
     public static string TwitchChannelRedemptionsUrl =>

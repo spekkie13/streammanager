@@ -13,23 +13,23 @@ public class CustomClient : IClient
 {
     private const string Server = "irc.chat.twitch.tv";
     private readonly Logger _Logger;
-    private readonly Throttlers _throttlers;
-    private Task _monitorTask;
-    private bool _networkServicesRunning;
-    private Task[] _networkTasks;
-    private int _notConnectedCounter;
-    private StreamReader _reader;
-    private bool _stopServices;
-    private CancellationTokenSource _tokenSource = new();
-    private StreamWriter _writer;
+    private readonly Throttlers _Throttlers;
+    private Task _MonitorTask;
+    private bool _NetworkServicesRunning;
+    private Task[] _NetworkTasks;
+    private int _NotConnectedCounter;
+    private StreamReader _Reader;
+    private bool _StopServices;
+    private CancellationTokenSource _TokenSource = new();
+    private StreamWriter _Writer;
 
     public CustomClient(Logger logger, IClientOptions options = null)
     {
         _Logger = logger;
         Options = options ?? new ClientOptions();
-        _throttlers = new Throttlers(this, Options.ThrottlingPeriod, Options.WhisperThrottlingPeriod)
+        _Throttlers = new Throttlers(this, Options.ThrottlingPeriod, Options.WhisperThrottlingPeriod)
         {
-            TokenSource = _tokenSource
+            TokenSource = _TokenSource
         };
         InitializeClient();
     }
@@ -48,9 +48,9 @@ public class CustomClient : IClient
 
     public TimeSpan DefaultKeepAliveInterval { get; set; }
 
-    public int SendQueueLength => _throttlers.SendQueue.Count;
+    public int SendQueueLength => _Throttlers.SendQueue.Count;
 
-    public int WhisperQueueLength => _throttlers.WhisperQueue.Count;
+    public int WhisperQueueLength => _Throttlers.WhisperQueue.Count;
 
     public bool IsConnected
     {
@@ -99,13 +99,13 @@ public class CustomClient : IClient
                 {
                     SslStream sslStream = new SslStream(Client.GetStream(), false);
                     sslStream.AuthenticateAsClient(Server);
-                    _reader = new StreamReader(sslStream);
-                    _writer = new StreamWriter(sslStream);
+                    _Reader = new StreamReader(sslStream);
+                    _Writer = new StreamWriter(sslStream);
                 }
                 else
                 {
-                    _reader = new StreamReader(Client.GetStream());
-                    _writer = new StreamWriter(Client.GetStream());
+                    _Reader = new StreamReader(Client.GetStream());
+                    _Writer = new StreamWriter(Client.GetStream());
                 }
             })).Wait(10000);
             if (!IsConnected)
@@ -123,10 +123,10 @@ public class CustomClient : IClient
 
     public void Close(bool callDisconnect = true)
     {
-        _reader?.Dispose();
-        _writer?.Dispose();
+        _Reader?.Dispose();
+        _Writer?.Dispose();
         Client?.Close();
-        _stopServices = callDisconnect;
+        _StopServices = callDisconnect;
         CleanupServices();
         InitializeClient();
         EventHandler<OnDisconnectedEventArgs> onDisconnected = OnDisconnected;
@@ -154,7 +154,7 @@ public class CustomClient : IClient
         {
             if (!IsConnected || SendQueueLength >= Options.SendQueueCapacity)
                 return false;
-            _throttlers.SendQueue.Add(new Tuple<DateTime, string>(DateTime.UtcNow, message));
+            _Throttlers.SendQueue.Add(new Tuple<DateTime, string>(DateTime.UtcNow, message));
             return true;
         }
         catch (Exception ex)
@@ -174,7 +174,7 @@ public class CustomClient : IClient
         {
             if (!IsConnected || WhisperQueueLength >= Options.WhisperQueueCapacity)
                 return false;
-            _throttlers.WhisperQueue.Add(new Tuple<DateTime, string>(DateTime.UtcNow, message));
+            _Throttlers.WhisperQueue.Add(new Tuple<DateTime, string>(DateTime.UtcNow, message));
             return true;
         }
         catch (Exception ex)
@@ -223,10 +223,10 @@ public class CustomClient : IClient
     public void Dispose()
     {
         Close();
-        _throttlers.ShouldDispose = true;
-        _tokenSource.Cancel();
+        _Throttlers.ShouldDispose = true;
+        _TokenSource.Cancel();
         Thread.Sleep(500);
-        _tokenSource.Dispose();
+        _TokenSource.Dispose();
         Client?.Dispose();
         GC.Collect();
     }
@@ -234,30 +234,30 @@ public class CustomClient : IClient
     private void InitializeClient()
     {
         Client = new TcpClient();
-        if (_monitorTask == null)
+        if (_MonitorTask == null)
         {
-            _monitorTask = StartMonitorTask();
+            _MonitorTask = StartMonitorTask();
         }
         else
         {
-            if (!_monitorTask.IsCompleted)
+            if (!_MonitorTask.IsCompleted)
                 return;
-            _monitorTask = StartMonitorTask();
+            _MonitorTask = StartMonitorTask();
         }
     }
 
     private void StartNetworkServices()
     {
-        _networkServicesRunning = true;
-        _networkTasks = new[]
-        {
+        _NetworkServicesRunning = true;
+        _NetworkTasks =
+        [
             StartListenerTask(),
-            _throttlers.StartSenderTask(),
-            _throttlers.StartWhisperSenderTask()
-        }.ToArray();
-        if (!_networkTasks.Any((Func<Task, bool>)(c => c.IsFaulted)))
+            _Throttlers.StartSenderTask(),
+            _Throttlers.StartWhisperSenderTask()
+        ];
+        if (!_NetworkTasks.Any((Func<Task, bool>)(c => c.IsFaulted)))
             return;
-        _networkServicesRunning = false;
+        _NetworkServicesRunning = false;
         CleanupServices();
     }
 
@@ -265,8 +265,8 @@ public class CustomClient : IClient
     {
         return Task.Run((Func<Task>)(async () =>
         {
-            await _writer.WriteLineAsync(message);
-            await _writer.FlushAsync();
+            await _Writer.WriteLineAsync(message);
+            await _Writer.FlushAsync();
         }));
     }
 
@@ -277,11 +277,11 @@ public class CustomClient : IClient
             CustomClient sender = this;
             while (sender.IsConnected)
             {
-                if (!sender._networkServicesRunning)
+                if (!sender._NetworkServicesRunning)
                     break;
                 try
                 {
-                    string str = await sender._reader.ReadLineAsync();
+                    string str = await sender._Reader.ReadLineAsync();
                     if (str == null && sender.IsConnected)
                     {
                         sender.Send("PING");
@@ -317,12 +317,12 @@ public class CustomClient : IClient
             try
             {
                 bool isConnected = IsConnected;
-                while (!_tokenSource.IsCancellationRequested)
+                while (!_TokenSource.IsCancellationRequested)
                     if (isConnected == IsConnected)
                     {
                         Thread.Sleep(200);
                         if (!IsConnected)
-                            ++_notConnectedCounter;
+                            ++_NotConnectedCounter;
                         else
                             ++num;
                         if (num >= 300)
@@ -331,7 +331,7 @@ public class CustomClient : IClient
                             num = 0;
                         }
 
-                        switch (_notConnectedCounter)
+                        switch (_NotConnectedCounter)
                         {
                             case 25:
                             case 75:
@@ -341,13 +341,13 @@ public class CustomClient : IClient
                                 Reconnect();
                                 break;
                             default:
-                                if (_notConnectedCounter >= 1200 && _notConnectedCounter % 600 == 0) Reconnect();
+                                if (_NotConnectedCounter >= 1200 && _NotConnectedCounter % 600 == 0) Reconnect();
 
                                 break;
                         }
 
-                        if (_notConnectedCounter != 0 && IsConnected)
-                            _notConnectedCounter = 0;
+                        if (_NotConnectedCounter != 0 && IsConnected)
+                            _NotConnectedCounter = 0;
                     }
                     else
                     {
@@ -365,7 +365,7 @@ public class CustomClient : IClient
                                 onConnected(this, new OnConnectedEventArgs());
                         }
 
-                        if (!IsConnected && !_stopServices)
+                        if (!IsConnected && !_StopServices)
                         {
                             if (isConnected && Options.ReconnectionPolicy != null &&
                                 !Options.ReconnectionPolicy.AreAttemptsComplete())
@@ -392,22 +392,22 @@ public class CustomClient : IClient
                     });
             }
 
-            if (!flag || _stopServices)
+            if (!flag || _StopServices)
                 return;
             Reconnect();
-        }), _tokenSource.Token);
+        }), _TokenSource.Token);
     }
 
     private void CleanupServices()
     {
-        _tokenSource.Cancel();
-        _tokenSource = new CancellationTokenSource();
-        _throttlers.TokenSource = _tokenSource;
-        if (!_stopServices)
+        _TokenSource.Cancel();
+        _TokenSource = new CancellationTokenSource();
+        _Throttlers.TokenSource = _TokenSource;
+        if (!_StopServices)
             return;
-        Task[] networkTasks = _networkTasks;
+        Task[] networkTasks = _NetworkTasks;
         if ((networkTasks != null ? networkTasks.Length != 0 ? 1 : 0 : 0) == 0 ||
-            Task.WaitAll(_networkTasks, 15000))
+            Task.WaitAll(_NetworkTasks, 15000))
             return;
         EventHandler<OnFatalErrorEventArgs> onFatality = OnFatality;
         if (onFatality != null)
@@ -415,8 +415,8 @@ public class CustomClient : IClient
             {
                 Reason = "Fatal network error. Network services fail to shut down."
             });
-        _stopServices = false;
-        _throttlers.Reconnecting = false;
-        _networkServicesRunning = false;
+        _StopServices = false;
+        _Throttlers.Reconnecting = false;
+        _NetworkServicesRunning = false;
     }
 }

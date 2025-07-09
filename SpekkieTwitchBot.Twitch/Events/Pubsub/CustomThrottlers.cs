@@ -14,8 +14,8 @@ namespace TwitchAuthService.Events.Pubsub
         public readonly BlockingCollection<Tuple<DateTime, string>> WhisperQueue = new BlockingCollection<Tuple<DateTime, string>>();
         public bool ResetThrottlerRunning;
         public bool ResetWhisperThrottlerRunning;
-        private int _sentCount;
-        private int _whispersSent;
+        private int _SentCount;
+        private int _WhispersSent;
         public Task ResetThrottler;
         public Task ResetWhisperThrottler;
 
@@ -32,7 +32,7 @@ namespace TwitchAuthService.Events.Pubsub
                 ResetThrottlerRunning = true;
                 while (!ShouldDispose && !Reconnecting)
                 {
-                    Interlocked.Exchange(ref _sentCount, 0);
+                    Interlocked.Exchange(ref _SentCount, 0);
                     await Task.Delay(throttlingPeriod, TokenSource.Token);
                 }
                 ResetThrottlerRunning = false;
@@ -47,7 +47,7 @@ namespace TwitchAuthService.Events.Pubsub
                 ResetWhisperThrottlerRunning = true;
                 while (!ShouldDispose && !Reconnecting)
                 {
-                    Interlocked.Exchange(ref _whispersSent, 0);
+                    Interlocked.Exchange(ref _WhispersSent, 0);
                     await Task.Delay(whisperThrottlingPeriod, TokenSource.Token);
                 }
                 ResetWhisperThrottlerRunning = false;
@@ -55,9 +55,9 @@ namespace TwitchAuthService.Events.Pubsub
             }));
         }
 
-        private void IncrementSentCount() => Interlocked.Increment(ref _sentCount);
+        private void IncrementSentCount() => Interlocked.Increment(ref _SentCount);
 
-        private void IncrementWhisperCount() => Interlocked.Increment(ref _whispersSent);
+        private void IncrementWhisperCount() => Interlocked.Increment(ref _WhispersSent);
 
         public Task StartSenderTask()
         {
@@ -70,7 +70,7 @@ namespace TwitchAuthService.Events.Pubsub
                     {
                         await Task.Delay(client.Options.SendDelay);
                 
-                        if (_sentCount >= client.Options.MessagesAllowedInPeriod)
+                        if (_SentCount >= client.Options.MessagesAllowedInPeriod)
                         {
                             LogThrottle("Message");
                             continue;
@@ -101,7 +101,7 @@ namespace TwitchAuthService.Events.Pubsub
                     {
                         await Task.Delay(client.Options.SendDelay);
                 
-                        if (_whispersSent >= client.Options.WhispersAllowedInPeriod)
+                        if (_WhispersSent >= client.Options.WhispersAllowedInPeriod)
                         {
                             LogThrottle("Whisper");
                             continue;
@@ -128,7 +128,7 @@ namespace TwitchAuthService.Events.Pubsub
                 Message = $"{messageType} Throttle Occurred. Too many {messageType.ToLower()}s within the period specified.",
                 AllowedInPeriod = messageType == "Message" ? client.Options.MessagesAllowedInPeriod : client.Options.WhispersAllowedInPeriod,
                 Period = messageType == "Message" ? client.Options.ThrottlingPeriod : client.Options.WhisperThrottlingPeriod,
-                SentMessageCount = messageType == "Message" ? Interlocked.CompareExchange(ref _sentCount, 0, 0) : Interlocked.CompareExchange(ref _whispersSent, 0, 0)
+                SentMessageCount = messageType == "Message" ? Interlocked.CompareExchange(ref _SentCount, 0, 0) : Interlocked.CompareExchange(ref _WhispersSent, 0, 0)
             });
         }
 
