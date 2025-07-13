@@ -1,6 +1,6 @@
 ﻿namespace SpekkieClassLibrary.Spotify.Song;
 
-public abstract class SimpleShow
+public class SimpleShow
 {
     public List<string> AvailableMarkets { get; set; } = null!;
     public List<Copyright> Copyrights { get; set; } = null!;

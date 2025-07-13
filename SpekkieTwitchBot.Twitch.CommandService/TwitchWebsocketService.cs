@@ -3,8 +3,8 @@ using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Auth;
 using SpekkieClassLibrary.Twitch.Commands;
+using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieClassLibrary.Twitch.Pubsub.EventsArgs;
-using SpekkieClassLibrary.Twitch.Pubsub.Types;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
 using TwitchAuthService;
@@ -20,6 +20,7 @@ using OnPubsubEmoteOnlyArgs = TwitchLib.PubSub.Events.OnEmoteOnlyArgs;
 using OnLogArgs = TwitchLib.Client.Events.OnLogArgs;
 using OnPubsubLogArgs = SpekkieClassLibrary.Twitch.Pubsub.EventsArgs.OnLogArgs;
 using OnRaidUpdateArgs = SpekkieClassLibrary.Twitch.Pubsub.EventsArgs.OnRaidUpdateArgs;
+using Redemption = SpekkieClassLibrary.Twitch.Pubsub.Types.Redemption;
 
 namespace CommandService;
 
@@ -289,6 +290,27 @@ public class TwitchWebsocketService : IHostedService
     private void OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         _GeneralLogger.LogInfo(e.ChatMessage.Message);
+        if (string.IsNullOrEmpty(e.ChatMessage.CustomRewardId)) return;
+
+        List<ChannelPointData> redemptions = _ChannelPointHandler.GetCustomRedemptions().Result;
+        ChannelPointData? redemption = redemptions.FirstOrDefault(r => r.Id == e.ChatMessage.CustomRewardId);
+        string reply = "";
+        string messageId = e.ChatMessage.Id;
+
+        if(redemption == null) return;
+
+        reply = redemption.Title switch
+        {
+            "Base Review" => "Redeemed base review",
+            "Song Request" => _SpotifyCommandHandler.HandleAddSongToQueueCommand(e.ChatMessage.Message),
+            "Hydrate" => "Redeemed hydrate!",
+            "Pick my Army" => "Redeemed pick my army!",
+            "Name an Item" => "Redeemed name an item!",
+            "MC World Tour" => "Redeemed MC world tour!",
+            _ => reply
+        };
+
+        _CustomTwitchClient.SendReply(channel: e.ChatMessage.Channel, replyToId: messageId, message: reply);
     }
 
     private void OnAnnouncement(object? sender, OnAnnouncementArgs e)
@@ -580,7 +602,7 @@ public class TwitchWebsocketService : IHostedService
         if (string.IsNullOrEmpty(_TwitchUserAuth.UserToken))
         {
             _GeneralLogger.LogInfo("User token is empty");
-            return;
+            throw new ArgumentException("User token is empty");
         }
 
         _CustomPubsub.SendTopics(_TwitchUserAuth.UserToken);

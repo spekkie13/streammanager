@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 
 namespace SpekkieClassLibrary.OBS.Abstract;
 
-public abstract class Input
+public class Input
 {
     protected Input(JObject body)
     {

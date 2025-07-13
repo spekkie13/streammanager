@@ -1,6 +1,6 @@
 ﻿namespace SpekkieClassLibrary.Spotify.Song;
 
-public abstract class ExternalUrls
+public class ExternalUrls
 {
     public string? Spotify { get; set; }
 }

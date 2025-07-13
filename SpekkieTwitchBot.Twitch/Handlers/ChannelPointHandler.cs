@@ -21,8 +21,9 @@ public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
 
     public async Task<Redemption> GetMostRecentRedemptionForUser(string username)
     {
-        List<string?>? redemptionIds = await GetCustomRedemptions();
-        if (redemptionIds == null) return Redemption.Empty;
+        List<ChannelPointData> redemption = await GetCustomRedemptions();
+        List<string?> redemptionIds = redemption.Select(r => r.Id).ToList();
+        if (redemptionIds.Count == 0) return Redemption.Empty;
         
         List<Redemption> outstandingRedemptions = [];
         foreach (string? id in redemptionIds)
@@ -30,7 +31,6 @@ public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
             Redemption[] redemptionData = await GetRedemptionsByStatus(id);
             outstandingRedemptions.AddRange(redemptionData.ToList());
         }
-
         
         outstandingRedemptions.Sort((r1, r2) => DateTime.Compare(DateTime.Parse(r1.RedeemedAt!), DateTime.Parse(r2.RedeemedAt!)));
         Redemption red = outstandingRedemptions.First(red => red.UserName == username);
@@ -59,7 +59,7 @@ public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
         return responseMessage;
     }
 
-    private async Task<List<string?>?> GetCustomRedemptions()
+    public async Task<List<ChannelPointData>> GetCustomRedemptions()
     {
         string url = $"{TwitchConstants.TwitchChannelRewardsUrl}{TwitchConstants.BroadcasterId}";
         HttpResponseMessage message = await client.GetAsync(url);
@@ -69,7 +69,7 @@ public class ChannelPointHandler(CustomTwitchHttpClient client, Logger logger)
         ChannelPointRequest redemptions =
             JsonConvert.DeserializeObject<ChannelPointRequest?>(response) ?? new ChannelPointRequest();
         if (redemptions.Data == null) return [];
-        List<string?>? rewardIds = redemptions.Data?.Select(x => x.Id).ToList();
+        List<ChannelPointData> rewardIds = redemptions.Data.ToList();
         return rewardIds;
     }
 

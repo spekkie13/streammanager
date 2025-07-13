@@ -1,6 +1,6 @@
 ﻿namespace SpekkieClassLibrary.Spotify.Song;
 
-public abstract class Image
+public class Image
 {
     public int Height { get; set; }
     public int Width { get; set; }

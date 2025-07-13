@@ -1,6 +1,6 @@
 ﻿namespace SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 
-public abstract class ChannelPointData
+public class ChannelPointData
 {
     public string? BroadcasterName { get; set; }
     public string? BroadcasterId { get; set; }

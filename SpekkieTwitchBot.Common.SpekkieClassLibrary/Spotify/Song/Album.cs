@@ -1,6 +1,6 @@
 ﻿namespace SpekkieClassLibrary.Spotify.Song;
 
-public abstract class Album
+public class Album
 {
     public string? AlbumType { get; set; }
     public List<Artist>? Artists { get; set; }

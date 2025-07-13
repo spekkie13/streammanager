@@ -1,6 +1,6 @@
 ﻿namespace SpekkieClassLibrary.Spotify.Song;
 
-public abstract class SimpleArtist
+public class SimpleArtist
 {
     public Dictionary<string, string> ExternalUrls { get; set; } = null!;
     public string Href { get; set; } = null!;
