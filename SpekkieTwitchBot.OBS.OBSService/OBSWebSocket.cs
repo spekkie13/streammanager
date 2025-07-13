@@ -38,8 +38,13 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
 
     public bool? IsConnected => _WsConnection?.IsRunning;
 
-    public void ConnectAsync(string url, string password)
+    public void ConnectAsync(string? url, string? password)
     {
+        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(password))
+        {
+            throw new ArgumentException("url and password must not be null or empty");
+        }
+        
         if (!url.StartsWith(WebsocketUrlPrefix, StringComparison.CurrentCultureIgnoreCase))
         {
             throw new ArgumentException($"Invalid url, must start with '{WebsocketUrlPrefix}'");
@@ -66,7 +71,7 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
         _ConnectionPassword = null;
         if (_WsConnection != null)
         {
-            // Attempt to both close and dispose the existing connection
+            // Attempt to both close and dispose of the existing connection
             try
             {
                 _WsConnection.Stop(WebSocketCloseStatus.NormalClosure, "User requested disconnect");
@@ -226,7 +231,7 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
     public event EventHandler<MediaInputPlaybackEndedEventArgs>? OnMediaInputPlaybackEnded;
     public event EventHandler<MediaInputPlaybackStartedEventArgs>? OnMediaInputPlaybackStarted;
     public event EventHandler<MediaInputActionTriggeredEventArgs>? OnMediaInputActionTriggered;
-    public event EventHandler<VirtualcamStateChangedEventArgs>? OnVirtualcamStateChanged;
+    public event EventHandler<VirtualcamStateChangedEventArgs>? OnVirtualCamStateChanged;
     public event EventHandler<CurrentSceneCollectionChangingEventArgs>? OnCurrentSceneCollectionChanging;
     public event EventHandler<CurrentProfileChangingEventArgs>? OnCurrentProfileChanging;
     public event EventHandler<SourceFilterNameChangedEventArgs>? OnSourceFilterNameChanged;
@@ -1921,8 +1926,8 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
                 OnMediaInputActionTriggered?.Invoke(this,
                     new MediaInputActionTriggeredEventArgs(inputName, mediaAction));
                 break;
-            case nameof(OnVirtualcamStateChanged):
-                OnVirtualcamStateChanged?.Invoke(this, new VirtualcamStateChangedEventArgs(new OutputStateChanged(body)));
+            case nameof(OnVirtualCamStateChanged):
+                OnVirtualCamStateChanged?.Invoke(this, new VirtualcamStateChangedEventArgs(new OutputStateChanged(body)));
                 break;
             case nameof(OnCurrentSceneCollectionChanging):
                 sceneCollectionName = bodyObj["sceneCollectionName"]?.ToString() ?? "";

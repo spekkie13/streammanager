@@ -15,29 +15,54 @@ public class ObsWebsocketService : IHostedService
     private const int KeepAliveInterval = 500;
     private readonly Logger _GeneralLogger;
     private readonly CancellationTokenSource _KeepAliveTokenSource;
-    private readonly string _Password;
     private readonly ObsWebSocket _Socket;
-    private readonly string _Url;
+    private readonly string? _Url;
+    private readonly string? _Password;
 
     public ObsWebsocketService(
         Logger generalLogger,
         ObsWebSocket socket,
         TwitchFileReader twitchFileReader)
     {
-        string jsonData = twitchFileReader.ReadTwitchGeneralAuthFile();
-        GeneralTwitchAuth? auth = JsonConvert.DeserializeObject<GeneralTwitchAuth>(jsonData);
-        _Url = auth?.ObsUrl ?? "";
-        _Password = auth?.Password ?? "";
-        _KeepAliveTokenSource = new CancellationTokenSource();
-
+        _GeneralLogger = generalLogger ?? throw new ArgumentNullException(nameof(generalLogger));
         _Socket = socket ?? throw new ArgumentNullException(nameof(socket));
 
+        string jsonData = twitchFileReader.ReadTwitchGeneralAuthFile();
+        GeneralTwitchAuth? auth = JsonConvert.DeserializeObject<GeneralTwitchAuth>(jsonData);
+        int authCorrect = VerifyAuth(auth);
+        switch (authCorrect)
+        {
+            case 1:
+                _GeneralLogger.LogError("General auth file is empty.");
+                throw new ArgumentException("General auth file is empty.");
+            case 2:
+                _GeneralLogger.LogError("General auth file is missing OBS URL.");
+                throw new ArgumentException("General auth file is missing OBS URL.");
+            case 3:
+                _GeneralLogger.LogError("General auth file is missing password.");
+                throw new ArgumentException("General auth file is missing password.");
+        }
+        _Url = auth?.ObsUrl;
+        _Password = auth?.Password;
+        _KeepAliveTokenSource = new CancellationTokenSource();
+        
         _Socket.OnConnected += OnConnect;
         _Socket.OnDisconnected += OnDisconnect;
         _Socket.OnStreamStateChanged += OnStreamStateChanged;
         _Socket.OnRecordStateChanged += OnRecordStateChanged;
+    }
 
-        _GeneralLogger = generalLogger;
+    private static int VerifyAuth(GeneralTwitchAuth? auth)
+    {
+        int status = 0;
+        if (auth == null)
+            status = 1;
+        if (string.IsNullOrEmpty(auth?.ObsUrl))
+            status = 2;
+        if (string.IsNullOrEmpty(auth?.Password))
+            status = 3;
+
+        return status;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)

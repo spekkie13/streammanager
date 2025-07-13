@@ -1072,9 +1072,8 @@ public class CustomTwitchClient(Logger logger, ClientProtocol protocol = ClientP
     {
         if (ircMessage.Tags.Count > 2)
         {
-            _AwaitingJoins?.Remove(
-                _AwaitingJoins.FirstOrDefault(
-                    (Func<KeyValuePair<string, DateTime>, bool>)(x => x.Key == ircMessage.Channel)));
+            _AwaitingJoins?.RemoveAll(x => string.Equals(x.Key, ircMessage.Channel, StringComparison.Ordinal));
+
             EventHandler<OnJoinedChannelArgs>? onJoinedChannel = OnJoinedChannel;
             onJoinedChannel?.Invoke(this, new OnJoinedChannelArgs
             {

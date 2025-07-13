@@ -1,8 +1,9 @@
 ﻿using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Twitch;
 
-public class TwitchFileWriter(FileWriter fileWriter)
+public class TwitchFileWriter(FileWriter fileWriter) : ITwitchFileWriter
 {
     private const string OutputDir = "/Output/Twitch";
 
@@ -15,29 +16,27 @@ public class TwitchFileWriter(FileWriter fileWriter)
         fileWriter.Write(dir, text);
     }
 
-    public virtual void WriteMostRecentFollowerFile(string text)
+    public async Task WriteMostRecentFollowerFileAsync(string text)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentFollower.txt";
-
-        fileWriter.Write(dir, $"Most recent follower: {text}");
+        await fileWriter.WriteAsync(dir, $"Most recent follower: {text}");
     }
 
-    public virtual void WriteTotalFollowersFile(int totalFollowers)
+    public async Task WriteTotalFollowersFileAsync(int totalFollowers)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalFollowers.txt";
-        fileWriter.Write(dir, totalFollowers.ToString());
+        await fileWriter.WriteAsync(dir, totalFollowers.ToString());
     }
 
-    public void WriteMostRecentSubscriberFile(string text)
+    public async Task WriteMostRecentSubscriberFileAsync(string text)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentSubscriber.txt";
-
-        fileWriter.Write(dir, $"Most recent subscriber: {text}");
+        await fileWriter.WriteAsync(dir, $"Most recent subscriber: {text}");
     }
 
-    public void WriteTotalSubscribersFile(int totalSubscribers)
+    public async Task WriteTotalSubscribersFileAsync(int totalSubscribers)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalSubscribers.txt";
-        fileWriter.Write(dir, totalSubscribers.ToString());
+        await fileWriter.WriteAsync(dir, totalSubscribers.ToString());
     }
 }

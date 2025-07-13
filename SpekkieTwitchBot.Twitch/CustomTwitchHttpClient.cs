@@ -2,10 +2,11 @@
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Auth;
+using TwitchAuthService.Interfaces;
 
 namespace TwitchAuthService;
 
-public sealed class CustomTwitchHttpClient
+public class CustomTwitchHttpClient : ICustomTwitchHttpClient
 {
     private readonly HttpClient _Client;
     private readonly TwitchAuthService _TwitchAuthService;

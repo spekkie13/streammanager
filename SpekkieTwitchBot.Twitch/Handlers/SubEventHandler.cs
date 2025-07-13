@@ -14,19 +14,29 @@ public class SubEventHandler
         _TwitchHttpClient = client;
         _TwitchFileWriter = twitchFileWriter;
         _TwitchFileReader = twitchFileReader;
-        _TwitchHttpClient.GetSubscriberCount().Wait();
+        Task.Run(async () => await _TwitchHttpClient.GetSubscriberCount());
     }
     
-    public void HandleSub(object? sender, ChannelSubscriptionArgs e)
+    public void HandleSubAsync(object? sender, ChannelSubscriptionArgs e)
     {
-        string? subscriberName = e.Subscription?.DisplayName;
-        string mostRecentSubscriber = _TwitchFileReader.ReadMostRecentSubFile();
-        if (mostRecentSubscriber.Equals(subscriberName)) return;
+        Task.Run(async () =>
+        {
+            try
+            {
+                string? subscriberName = e.Subscription?.DisplayName;
+                string mostRecentSubscriber = await _TwitchFileReader.ReadMostRecentSubFileAsync();
+                if (mostRecentSubscriber.Equals(subscriberName)) return;
 
-        int subscriberCount = _TwitchHttpClient.GetSubscriberCount().Result;
+                int subscriberCount = _TwitchHttpClient.GetSubscriberCount().Result;
 
-        if (e.Subscription?.DisplayName == null) return;
-        _TwitchFileWriter.WriteMostRecentSubscriberFile(e.Subscription.DisplayName);
-        _TwitchFileWriter.WriteTotalSubscribersFile(subscriberCount);
+                if (e.Subscription?.DisplayName == null) return;
+                await _TwitchFileWriter.WriteMostRecentSubscriberFileAsync(e.Subscription.DisplayName);
+                await _TwitchFileWriter.WriteTotalSubscribersFileAsync(subscriberCount);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        });
     }
 }

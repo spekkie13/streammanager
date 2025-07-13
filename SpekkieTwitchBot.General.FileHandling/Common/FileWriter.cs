@@ -10,4 +10,11 @@ public class FileWriter : IFileWriter
         writer.WriteLine(data);
         writer.Flush();
     }
+
+    public async Task WriteAsync(string fileName, string data)
+    {
+        await using StreamWriter writer = new (fileName);
+        await writer.WriteLineAsync(data);
+        await writer.FlushAsync();
+    }
 }

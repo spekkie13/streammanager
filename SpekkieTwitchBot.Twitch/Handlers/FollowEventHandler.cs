@@ -1,21 +1,38 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Twitch;
+﻿using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
+using TwitchAuthService.Interfaces;
 using TwitchLib.PubSub.Events;
 
 namespace TwitchAuthService.Handlers;
 
 public class FollowEventHandler(
-    TwitchFileReader twitchFileReader,
-    TwitchFileWriter twitchFileWriter,
-    CustomTwitchHttpClient client)
+    ITwitchFileReader twitchFileReader,
+    ITwitchFileWriter twitchFileWriter,
+    ICustomTwitchHttpClient client)
 {
-    public void HandleFollow(object? sender, OnFollowArgs e)
+    public void HandleFollowAsync(object? sender, OnFollowArgs e)
+    {
+        if (string.IsNullOrEmpty(e.DisplayName))
+            return;
+        
+        _ = ProcessFollowAsync(sender, e);
+    }
+    
+    public async Task ProcessFollowAsync(object? sender, OnFollowArgs e)
     {
         string followerName = e.DisplayName;
-        string mostRecentFollower = twitchFileReader.ReadMostRecentFollowerFile();
-        if (mostRecentFollower.Equals(followerName)) return;
+        try
+        {
+            string mostRecentFollower = await twitchFileReader.ReadMostRecentFollowerFileAsync();
+            if (mostRecentFollower.Equals(followerName)) 
+                return;
 
-        int followerCount = client.GetFollowerCount().Result;
-        twitchFileWriter.WriteMostRecentFollowerFile(e.DisplayName);
-        twitchFileWriter.WriteTotalFollowersFile(followerCount);
+            int followerCount = await client.GetFollowerCount();
+            await twitchFileWriter.WriteMostRecentFollowerFileAsync(followerName);
+            await twitchFileWriter.WriteTotalFollowersFileAsync(followerCount);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 }

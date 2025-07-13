@@ -80,7 +80,7 @@ public class TwitchWebsocketService : IHostedService
 
         SetupTwitchClient();
         SetupPubSub();
-        UpdateTwitchInfo();
+        Task.Run(async () => await UpdateTwitchInfo());
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -119,19 +119,19 @@ public class TwitchWebsocketService : IHostedService
     }
     
     #region Setup
-    private void UpdateTwitchInfo()
+    private async Task UpdateTwitchInfo()
     {
-        string recentFollower = _CustomTwitchHttpClient.GetLatestFollower().Result;
-        _TwitchFileWriter.WriteMostRecentFollowerFile(recentFollower);
+        string recentFollower = await _CustomTwitchHttpClient.GetLatestFollower();
+        await _TwitchFileWriter.WriteMostRecentFollowerFileAsync(recentFollower);
         
-        int totalFollowers = _CustomTwitchHttpClient.GetFollowerCount().Result;
-        _TwitchFileWriter.WriteTotalFollowersFile(totalFollowers);
+        int totalFollowers = await _CustomTwitchHttpClient.GetFollowerCount();
+        await _TwitchFileWriter.WriteTotalFollowersFileAsync(totalFollowers);
         
-        string recentSubscriber = _CustomTwitchHttpClient.GetLatestSubscriber().Result;
-        _TwitchFileWriter.WriteMostRecentSubscriberFile(recentSubscriber);
+        string recentSubscriber = await _CustomTwitchHttpClient.GetLatestSubscriber();
+        await _TwitchFileWriter.WriteMostRecentSubscriberFileAsync(recentSubscriber);
         
-        int totalSubscribers = _CustomTwitchHttpClient.GetSubscriberCount().Result;
-        _TwitchFileWriter.WriteTotalSubscribersFile(totalSubscribers);
+        int totalSubscribers = await _CustomTwitchHttpClient.GetSubscriberCount();
+        await _TwitchFileWriter.WriteTotalSubscribersFileAsync(totalSubscribers);
     }
     
     private void SetupTwitchClient()
@@ -203,8 +203,8 @@ public class TwitchWebsocketService : IHostedService
         _CustomPubsub.OnPubSubServiceConnected += OnPubSubConnected;
         _CustomPubsub.OnListenResponse += OnListenResponse;
         _CustomPubsub.OnChannelPointsRewardRedeemed += OnChannelPointsRewardRedeemed;
-        _CustomPubsub.OnChannelSubscription += _SubEventHandler.HandleSub;
-        _CustomPubsub.OnFollow += _FollowEventHandler.HandleFollow;
+        _CustomPubsub.OnChannelSubscription += _SubEventHandler.HandleSubAsync;
+        _CustomPubsub.OnFollow += _FollowEventHandler.HandleFollowAsync;
         _CustomPubsub.OnPubSubServiceConnected += OnPubSubServiceConnected;
         _CustomPubsub.OnPubSubServiceError += OnPubSubServiceError;
         _CustomPubsub.OnPubSubServiceClosed += OnPubSubServiceClosed;
