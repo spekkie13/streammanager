@@ -14,7 +14,7 @@ public class TwitchFileReader(FileReader fileReader) : ITwitchFileReader
         string jsonData = fileReader.Read(dir);
 
         return jsonData;
-    }
+    }    
 
     public string ReadTwitchGeneralAuthFile()
     {

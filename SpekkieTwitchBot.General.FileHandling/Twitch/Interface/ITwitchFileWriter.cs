@@ -3,8 +3,8 @@ namespace SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 public interface ITwitchFileWriter
 {
     public void WriteTwitchUserAuthFile(string text);
-    public Task WriteMostRecentFollowerFileAsync(string text);
-    public Task WriteTotalFollowersFileAsync(int totalFollowers);
-    public Task WriteMostRecentSubscriberFileAsync(string text);
-    public Task WriteTotalSubscribersFileAsync(int totalSubscribers);
+    Task WriteMostRecentFollowerAsync(string username, CancellationToken ct = default);
+    Task WriteTotalFollowersAsync(int count, CancellationToken ct = default);
+    Task WriteMostRecentSubscriberAsync(string text, CancellationToken ct = default);
+    Task WriteTotalSubscribersAsync(int count, CancellationToken ct = default);
 }

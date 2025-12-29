@@ -131,94 +131,126 @@ public class CustomSpotifyHttpClient
     }
 
     public async Task<FullTrack?> GetFullTrack(string url)
+{
+    HttpResponseMessage response = await GetAsync(url);
+
+    if (response.StatusCode == HttpStatusCode.Unauthorized)
     {
-        FullTrack item = new ();
+        Setup(); // refresh token etc.
+        response = await GetAsync(url);
+    }
 
-        HttpResponseMessage response = await GetAsync(url);
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
-        {
-            Setup();
-            response = await GetAsync(url);
-        }
+    // 204/empty = normaal
+    if (response.StatusCode == HttpStatusCode.NoContent)
+        return null;
 
-        string json = await response.Content.ReadAsStringAsync();
-        if(string.IsNullOrEmpty(json))
-            return null;
-        
-        JObject jsonObject = JObject.Parse(json);
-        JToken? itemData = jsonObject["item"];
+    var json = await response.Content.ReadAsStringAsync();
+    if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null")
+        return null;
 
-        if (itemData == null)
-            return null;
-        
-        //Standard properties
-        item.Href = itemData["href"]?.ToString() ?? "";
-        item.Id = itemData["id"]?.ToString() ?? "";
-        item.Name = itemData["name"]?.ToString() ?? "";
-        item.PreviewUrl = itemData["preview_url"]?.ToString() ?? "";
-        item.Type = itemData["type"]?.ToString() ?? "";
-        item.Uri = itemData["uri"]?.ToString() ?? "";
-        item.DiscNumber = Convert.ToInt32(itemData["disc_number"]?.ToString());
-        item.DurationMs = Convert.ToInt32(itemData["duration_ms"]?.ToString());
-        item.TrackNumber = Convert.ToInt32(itemData["track_number"]?.ToString());
-        item.Popularity = Convert.ToInt32(itemData["popularity"]?.ToString());
+    JObject root;
+    try
+    {
+        root = JObject.Parse(json);
+    }
+    catch
+    {
+        return null; // slechte/lege JSON -> stil
+    }
 
-        item.Explicit = itemData["explicit"]?.ToString() != "False";
-        item.IsLocal = itemData["is_local"]?.ToString() != "False";
+    // item kan null zijn (ads/podcasts/device switch)
+    var itemData = root["item"] as JObject;
+    if (itemData is null)
+        return null;
 
-        itemData["available_markets"] = itemData["available_markets"]?.ToString().Replace("[", "").Replace("]", "")
-            .Replace("\n", "").Replace("\r", "").Trim();
-        string[] elements = itemData["available_markets"]?.ToString().Split(["\",", "\""], StringSplitOptions.RemoveEmptyEntries) ?? [];
+    var item = new FullTrack
+    {
+        Href = itemData.Value<string>("href") ?? "",
+        Id = itemData.Value<string>("id") ?? "",
+        Name = itemData.Value<string>("name") ?? "",
+        PreviewUrl = itemData.Value<string>("preview_url") ?? "",
+        Type = itemData.Value<string>("type") ?? "",
+        Uri = itemData.Value<string>("uri") ?? "",
+        DiscNumber = itemData.Value<int?>("disc_number") ?? 0,
+        DurationMs = itemData.Value<int?>("duration_ms") ?? 0,
+        TrackNumber = itemData.Value<int?>("track_number") ?? 0,
+        Popularity = itemData.Value<int?>("popularity") ?? 0,
+        Explicit = itemData.Value<bool?>("explicit") ?? false,
+        IsLocal = itemData.Value<bool?>("is_local") ?? false,
+    };
 
-        for (int i = 0; i < elements.Length; i++)
-        {
-            elements[i] = elements[i].Replace("\"", "").Trim();
-        }
+    // --- available_markets SAFE ---
+    item.AvailableMarkets = ReadStringArray(itemData["available_markets"]);
 
-        item.AvailableMarkets = new List<string>(elements).Where(x => !string.IsNullOrEmpty(x)).ToList();
-        item.ExternalIds =
-            JsonConvert.DeserializeObject<Dictionary<string, string>>(itemData["external_ids"]?.ToString() ?? "") ?? new Dictionary<string, string>();
-        item.ExternalUrls =
-            JsonConvert.DeserializeObject<Dictionary<string, string>>(itemData["external_urls"]?.ToString() ?? "") ?? new Dictionary<string, string>();
-        item.Artists = JsonConvert.DeserializeObject<List<SimpleArtist>>(itemData["artists"]?.ToString() ?? "") ?? [];
+    // Dictionaries/lists veilig deserializen
+    item.ExternalIds = SafeDeserialize<Dictionary<string, string>>(itemData["external_ids"]) ?? new();
+    item.ExternalUrls = SafeDeserialize<Dictionary<string, string>>(itemData["external_urls"]) ?? new();
+    item.Artists = SafeDeserialize<List<SimpleArtist>>(itemData["artists"]) ?? new();
 
-        //Building complex objects
-        JToken? albumData = itemData["album"];
-        SimpleAlbum album = new SimpleAlbum();
-        if(albumData == null)
-            item.Album = new SimpleAlbum();
-        else
-        {
-            album = new SimpleAlbum
-            {
-                AlbumType = albumData["album_type"]?.ToString() ?? "",
-                Href = albumData["href"]?.ToString() ?? "",
-                Id = albumData["id"]?.ToString() ?? "",
-                Name = albumData["name"]?.ToString() ?? "",
-                ReleaseDate = albumData["release_date"]?.ToString() ?? "",
-                ReleaseDatePrecision = albumData["release_date_precision"]?.ToString() ?? "",
-                Type = albumData["type"]?.ToString() ?? "",
-                Uri = albumData["uri"]?.ToString() ?? "",
-                TotalTracks = Convert.ToInt32(albumData["total_tracks"]?.ToString())
-            };
-
-            elements = albumData["available_markets"]?.ToString().Split(["\",", "\""], StringSplitOptions.RemoveEmptyEntries) ?? [];
-
-            for (int i = 0; i < elements.Length; i++)
-            {
-                elements[i] = elements[i].Replace("\"", "").Trim();
-            }
-
-            album.AvailableMarkets = new List<string>(elements).Where(x => !string.IsNullOrEmpty(x)).ToList();
-            album.ExternalUrls =
-                JsonConvert.DeserializeObject<Dictionary<string, string>>(albumData["external_urls"]?.ToString() ?? "") ?? new Dictionary<string, string>();
-            album.Artists = JsonConvert.DeserializeObject<List<SimpleArtist>>(albumData["artists"]?.ToString() ?? "") ?? [];
-            album.Images = JsonConvert.DeserializeObject<List<Image>>(albumData["images"]?.ToString() ?? "") ?? [];
-        }
-
-        item.Album = album;
+    // --- Album ---
+    var albumData = itemData["album"] as JObject;
+    if (albumData is null)
+    {
+        item.Album = new SimpleAlbum();
         return item;
     }
+
+    var album = new SimpleAlbum
+    {
+        AlbumType = albumData.Value<string>("album_type") ?? "",
+        Href = albumData.Value<string>("href") ?? "",
+        Id = albumData.Value<string>("id") ?? "",
+        Name = albumData.Value<string>("name") ?? "",
+        ReleaseDate = albumData.Value<string>("release_date") ?? "",
+        ReleaseDatePrecision = albumData.Value<string>("release_date_precision") ?? "",
+        Type = albumData.Value<string>("type") ?? "",
+        Uri = albumData.Value<string>("uri") ?? "",
+        TotalTracks = albumData.Value<int?>("total_tracks") ?? 0,
+        AvailableMarkets = ReadStringArray(albumData["available_markets"]),
+        ExternalUrls = SafeDeserialize<Dictionary<string, string>>(albumData["external_urls"]) ?? new(),
+        Artists = SafeDeserialize<List<SimpleArtist>>(albumData["artists"]) ?? new(),
+        Images = SafeDeserialize<List<Image>>(albumData["images"]) ?? new(),
+    };
+
+    item.Album = album;
+    return item;
+}
+
+private static List<string> ReadStringArray(JToken? token)
+{
+    // Spotify: meestal JArray, maar soms null / inconsistent
+    if (token is JArray arr)
+        return arr.Values<string>().Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+
+    // als het tóch als string binnenkomt (edge case), supporten we dat ook
+    if (token?.Type == JTokenType.String)
+    {
+        var s = token.Value<string>() ?? "";
+        return s.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim().Trim('"'))
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToList();
+    }
+
+    return new List<string>();
+}
+
+private static T? SafeDeserialize<T>(JToken? token)
+{
+    if (token is null || token.Type == JTokenType.Null)
+        return default;
+
+    try
+    {
+        // token.ToString() is ok, maar JToken.ToObject is cleaner:
+        return token.ToObject<T>();
+    }
+    catch
+    {
+        return default;
+    }
+}
+
 
     public async Task<List<Track>?> InterpretSongSearchResult(string url)
     {

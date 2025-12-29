@@ -7,6 +7,8 @@ namespace SpekkieClassLibrary.Twitch.Pubsub.Types;
 
 public class ChannelSubscription : MessageData
 {
+    public ChannelSubscription() { }
+    
     public ChannelSubscription(string jsonStr)
     {
         JObject jobject = JObject.Parse(jsonStr);
@@ -49,24 +51,24 @@ public class ChannelSubscription : MessageData
         StreakMonths = int.Parse(jtoken3.ToString());
     }
 
-    public string? Username { get; }
-    public string? DisplayName { get; }
-    public string? RecipientName { get; }
-    public string? RecipientDisplayName { get; }
-    public string? ChannelName { get; }
-    public string? UserId { get; }
-    public string? ChannelId { get; }
-    public string? RecipientId { get; }
-    public DateTime Time { get; }
-    private SubscriptionPlan SubscriptionPlan { get; }
-    public string? SubscriptionPlanName { get; }
-    public int Months { get; }
-    public int CumulativeMonths { get; }
-    public int StreakMonths { get; }
-    public string? Context { get; }
-    public SubMessage? SubMessage { get; }
-    public bool IsGift { get; }
-    public int MultiMonthDuration { get; }
+    public string? Username { get; set; }
+    public string? DisplayName { get; set; }
+    public string? RecipientName { get; set; }
+    public string? RecipientDisplayName { get; set; }
+    public string? ChannelName { get; set; }
+    public string? UserId { get; set; }
+    public string? ChannelId { get; set; }
+    public string? RecipientId { get; set; }
+    public DateTime Time { get; set; }
+    public SubscriptionPlan SubscriptionPlan { get; set; }
+    public string? SubscriptionPlanName { get; set; }
+    public int Months { get; set; }
+    public int CumulativeMonths { get; set; }
+    public int StreakMonths { get; set; }
+    public string? Context { get; set; }
+    public SubMessage? SubMessage { get; set; }
+    public bool IsGift { get; set; }
+    public int MultiMonthDuration { get; set; }
     
     public static ChannelSubscription Empty => new ("");
 }

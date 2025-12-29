@@ -14,27 +14,33 @@ public class TwitchFileWriter(FileWriter fileWriter) : ITwitchFileWriter
     {
         string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-User.json";
         fileWriter.Write(dir, text);
+    }    
+    
+    public void WriteTwitchGeneralAuthFile(string text)
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-User.json";
+        fileWriter.Write(dir, text);
     }
 
-    public async Task WriteMostRecentFollowerFileAsync(string text)
+    public async Task WriteMostRecentFollowerAsync(string text, CancellationToken cancellationToken)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentFollower.txt";
         await fileWriter.WriteAsync(dir, $"Most recent follower: {text}");
     }
 
-    public async Task WriteTotalFollowersFileAsync(int totalFollowers)
+    public async Task WriteTotalFollowersAsync(int totalFollowers, CancellationToken cancellationToken)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalFollowers.txt";
         await fileWriter.WriteAsync(dir, totalFollowers.ToString());
     }
 
-    public async Task WriteMostRecentSubscriberFileAsync(string text)
+    public async Task WriteMostRecentSubscriberAsync(string text, CancellationToken cancellationToken)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentSubscriber.txt";
         await fileWriter.WriteAsync(dir, $"Most recent subscriber: {text}");
     }
 
-    public async Task WriteTotalSubscribersFileAsync(int totalSubscribers)
+    public async Task WriteTotalSubscribersAsync(int totalSubscribers, CancellationToken cancellationToken)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalSubscribers.txt";
         await fileWriter.WriteAsync(dir, totalSubscribers.ToString());
