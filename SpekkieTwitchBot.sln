@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTwitchBot.Twitch", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTwitchBot.Spotify.SpotifyService", "SpekkieTwitchBot.Spotify.SpotifyService\SpekkieTwitchBot.Spotify.SpotifyService.csproj", "{EEADA625-2FA0-48DC-AAB3-E855CDB53BFC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTwitchBot.Twitch.CommandService", "SpekkieTwitchBot.Twitch.CommandService\SpekkieTwitchBot.Twitch.CommandService.csproj", "{C4223AE0-F65B-4655-93A3-ABE3FD5776BE}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{46D1340F-662B-4941-B028-8E54E4AEC091}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Spotify", "Spotify", "{64E06A7C-730E-4FC0-88B9-296F4590387F}"
@@ -28,10 +26,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTwitchBot.OBS.OBSService", "SpekkieTwitchBot.OBS.OBSService\SpekkieTwitchBot.OBS.OBSService.csproj", "{BF760CF7-4915-437E-9590-6AA2AC239E9B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTwitchBot.General.EventTimerService", "SpekkieTwitchBot.General.EventTimerService\SpekkieTwitchBot.General.EventTimerService.csproj", "{E746E996-28AA-492E-A8B4-EC7266F26652}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTwitchBot.Twitch.Tests", "SpekkieTwitchBot.Twitch.Tests\SpekkieTwitchBot.Twitch.Tests.csproj", "{C41A60D1-9C31-447E-851A-F23FE52E7E8B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpekkieTwitchBot.Spekkiefy", "SpekkieTwitchBot.Spekkiefy\SpekkieTwitchBot.Spekkiefy.csproj", "{F720DBB0-7CDE-423E-83AA-E7F39CCBADDE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,10 +53,6 @@ Global
 		{EEADA625-2FA0-48DC-AAB3-E855CDB53BFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEADA625-2FA0-48DC-AAB3-E855CDB53BFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEADA625-2FA0-48DC-AAB3-E855CDB53BFC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C4223AE0-F65B-4655-93A3-ABE3FD5776BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C4223AE0-F65B-4655-93A3-ABE3FD5776BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C4223AE0-F65B-4655-93A3-ABE3FD5776BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C4223AE0-F65B-4655-93A3-ABE3FD5776BE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BF760CF7-4915-437E-9590-6AA2AC239E9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BF760CF7-4915-437E-9590-6AA2AC239E9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF760CF7-4915-437E-9590-6AA2AC239E9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -71,14 +61,6 @@ Global
 		{E746E996-28AA-492E-A8B4-EC7266F26652}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E746E996-28AA-492E-A8B4-EC7266F26652}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E746E996-28AA-492E-A8B4-EC7266F26652}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C41A60D1-9C31-447E-851A-F23FE52E7E8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C41A60D1-9C31-447E-851A-F23FE52E7E8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C41A60D1-9C31-447E-851A-F23FE52E7E8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C41A60D1-9C31-447E-851A-F23FE52E7E8B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F720DBB0-7CDE-423E-83AA-E7F39CCBADDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F720DBB0-7CDE-423E-83AA-E7F39CCBADDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F720DBB0-7CDE-423E-83AA-E7F39CCBADDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F720DBB0-7CDE-423E-83AA-E7F39CCBADDE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -91,10 +73,7 @@ Global
 		{48B3FCAF-6E8C-4607-9A2D-498CE28E7E26} = {CD877BF6-EC4C-4B23-9165-A07580C5BD34}
 		{BF760CF7-4915-437E-9590-6AA2AC239E9B} = {50325CCA-92C2-4272-97FC-C5150A371C94}
 		{EEADA625-2FA0-48DC-AAB3-E855CDB53BFC} = {64E06A7C-730E-4FC0-88B9-296F4590387F}
-		{C4223AE0-F65B-4655-93A3-ABE3FD5776BE} = {5BC4BDF0-8362-4E86-BF4F-F2F7D1F1C5A7}
 		{7E74529D-34B0-41FB-8DBD-443F58D77EDB} = {5BC4BDF0-8362-4E86-BF4F-F2F7D1F1C5A7}
 		{E746E996-28AA-492E-A8B4-EC7266F26652} = {CD877BF6-EC4C-4B23-9165-A07580C5BD34}
-		{C41A60D1-9C31-447E-851A-F23FE52E7E8B} = {5BC4BDF0-8362-4E86-BF4F-F2F7D1F1C5A7}
-		{F720DBB0-7CDE-423E-83AA-E7F39CCBADDE} = {64E06A7C-730E-4FC0-88B9-296F4590387F}
 	EndGlobalSection
 EndGlobal

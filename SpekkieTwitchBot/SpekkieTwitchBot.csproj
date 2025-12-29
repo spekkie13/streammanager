@@ -2,9 +2,10 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<LangVersion>latestmajor</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -24,12 +25,21 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\SpekkieTwitchBot.General.EventTimerService\SpekkieTwitchBot.General.EventTimerService.csproj" />
-		<ProjectReference Include="..\SpekkieTwitchBot.Spekkiefy\SpekkieTwitchBot.Spekkiefy.csproj" />
-		<ProjectReference Include="..\SpekkieTwitchBot.Twitch.CommandService\SpekkieTwitchBot.Twitch.CommandService.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.Common.SpekkieClassLibrary\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.General.FileHandling\SpekkieTwitchBot.General.FileHandling.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.Spotify.SpotifyService\SpekkieTwitchBot.Spotify.SpotifyService.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.Twitch\SpekkieTwitchBot.Twitch.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Core\" />
+	  <Folder Include="Shared\" />
+	  <Folder Include="Systems\OBS\Abstractions\" />
+	  <Folder Include="Systems\OBS\Features\" />
+	  <Folder Include="Systems\OBS\Websocket\" />
+	  <Folder Include="Systems\Spotify\Abstractions\" />
+	  <Folder Include="Systems\Spotify\Features\" />
+	  <Folder Include="Systems\Spotify\WebApi\" />
 	</ItemGroup>
 
 </Project>

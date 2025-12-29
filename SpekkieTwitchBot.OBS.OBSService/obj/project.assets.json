@@ -1,7 +1,7 @@
 {
   "version": 3,
   "targets": {
-    "net8.0": {
+    "net9.0": {
       "Castle.Core/5.1.1": {
         "type": "package",
         "dependencies": {
@@ -14,6 +14,22 @@
         },
         "runtime": {
           "lib/net6.0/Castle.Core.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Macross.Json.Extensions/1.2.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Text.Json": "4.7.0"
+        },
+        "compile": {
+          "lib/netstandard2.1/Macross.Json.Extensions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/Macross.Json.Extensions.dll": {
             "related": ".xml"
           }
         }
@@ -1437,6 +1453,19 @@
           }
         }
       },
+      "System.Text.Json/4.7.0": {
+        "type": "package",
+        "compile": {
+          "lib/netcoreapp3.0/System.Text.Json.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netcoreapp3.0/System.Text.Json.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "System.Threading/4.3.0": {
         "type": "package",
         "dependencies": {
@@ -1485,6 +1514,19 @@
         },
         "runtime": {
           "lib/netcoreapp2.1/_._": {}
+        }
+      },
+      "TwitchApi.Net/3.2.0": {
+        "type": "package",
+        "dependencies": {
+          "Macross.Json.Extensions": "1.2.0",
+          "System.Text.Json": "4.7.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/Twitch.Net.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/Twitch.Net.dll": {}
         }
       },
       "TwitchLib/3.5.3": {
@@ -1745,7 +1787,7 @@
       },
       "SpekkieTwitchBot.Common.SpekkieClassLibrary/1.0.0": {
         "type": "project",
-        "framework": ".NETCoreApp,Version=v8.0",
+        "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
           "Moq": "4.20.72",
           "TwitchLib": "3.5.3",
@@ -1761,7 +1803,7 @@
       },
       "SpekkieTwitchBot.General.FileHandling/1.0.0": {
         "type": "project",
-        "framework": ".NETCoreApp,Version=v8.0",
+        "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
           "Moq": "4.20.72",
           "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
@@ -1772,6 +1814,25 @@
         },
         "runtime": {
           "bin/placeholder/SpekkieTwitchBot.General.FileHandling.dll": {}
+        }
+      },
+      "SpekkieTwitchBot.Twitch/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "Microsoft.Extensions.Hosting": "8.0.1",
+          "Moq": "4.20.72",
+          "SpekkieTwitchBot.Common.SpekkieClassLibrary": "1.0.0",
+          "SpekkieTwitchBot.General.FileHandling": "1.0.0",
+          "TwitchApi.Net": "3.2.0",
+          "TwitchLib.Api": "3.9.0",
+          "TwitchLib.Api.Helix": "3.9.0"
+        },
+        "compile": {
+          "bin/placeholder/SpekkieTwitchBot.Twitch.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SpekkieTwitchBot.Twitch.dll": {}
         }
       }
     }
@@ -1799,6 +1860,21 @@
         "lib/netstandard2.1/Castle.Core.dll",
         "lib/netstandard2.1/Castle.Core.xml",
         "readme.txt"
+      ]
+    },
+    "Macross.Json.Extensions/1.2.0": {
+      "sha512": "4J+UResuTuefzZeXiwfVr3yq38ATCR5HynUMBaqxp7WCmn+6fx66J7P6T4ImzMGLVoarvHRkxRPcJqME0FvG6Q==",
+      "type": "package",
+      "path": "macross.json.extensions/1.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/Macross.Json.Extensions.dll",
+        "lib/netstandard2.0/Macross.Json.Extensions.xml",
+        "lib/netstandard2.1/Macross.Json.Extensions.dll",
+        "lib/netstandard2.1/Macross.Json.Extensions.xml",
+        "macross.json.extensions.1.2.0.nupkg.sha512",
+        "macross.json.extensions.nuspec"
       ]
     },
     "Microsoft.Extensions.Configuration/8.0.0": {
@@ -4723,6 +4799,27 @@
         "system.text.encoding.nuspec"
       ]
     },
+    "System.Text.Json/4.7.0": {
+      "sha512": "IPq/x/d5nAcnD3vIyM3AbPOaTgcqrh0AqPSx7U53UFu3M6k1TH1u/eXc9/h4jm/3mpP1WRUpevlPY4PACd7AWw==",
+      "type": "package",
+      "path": "system.text.json/4.7.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net461/System.Text.Json.dll",
+        "lib/net461/System.Text.Json.xml",
+        "lib/netcoreapp3.0/System.Text.Json.dll",
+        "lib/netcoreapp3.0/System.Text.Json.xml",
+        "lib/netstandard2.0/System.Text.Json.dll",
+        "lib/netstandard2.0/System.Text.Json.xml",
+        "system.text.json.4.7.0.nupkg.sha512",
+        "system.text.json.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    },
     "System.Threading/4.3.0": {
       "sha512": "VkUS0kOBcUf3Wwm0TSbrevDDZ6BlM+b/HRiapRFWjM5O0NS0LviG0glKmFK+hhPDd1XFeSdU1GmlLhb2CoVpIw==",
       "type": "package",
@@ -4918,6 +5015,18 @@
         "system.threading.tasks.extensions.nuspec",
         "useSharedDesignerContext.txt",
         "version.txt"
+      ]
+    },
+    "TwitchApi.Net/3.2.0": {
+      "sha512": "ZtczfbcPKDergOCGZ7QbFDVfnLZG8Jz/kJpB/coPlay/7nFY6dp08OO10LfPRr+SvpAzwuSSDifZFA5X7jjbQw==",
+      "type": "package",
+      "path": "twitchapi.net/3.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/Twitch.Net.dll",
+        "twitchapi.net.3.2.0.nupkg.sha512",
+        "twitchapi.net.nuspec"
       ]
     },
     "TwitchLib/3.5.3": {
@@ -6386,14 +6495,20 @@
       "type": "project",
       "path": "../SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj",
       "msbuildProject": "../SpekkieTwitchBot.General.FileHandling/SpekkieTwitchBot.General.FileHandling.csproj"
+    },
+    "SpekkieTwitchBot.Twitch/1.0.0": {
+      "type": "project",
+      "path": "../SpekkieTwitchBot.Twitch/SpekkieTwitchBot.Twitch.csproj",
+      "msbuildProject": "../SpekkieTwitchBot.Twitch/SpekkieTwitchBot.Twitch.csproj"
     }
   },
   "projectFileDependencyGroups": {
-    "net8.0": [
+    "net9.0": [
       "Microsoft.Extensions.Hosting >= 8.0.1",
       "Moq >= 4.20.72",
       "SpekkieTwitchBot.Common.SpekkieClassLibrary >= 1.0.0",
       "SpekkieTwitchBot.General.FileHandling >= 1.0.0",
+      "SpekkieTwitchBot.Twitch >= 1.0.0",
       "TwitchLib.Api >= 3.9.0"
     ]
   },
@@ -6419,7 +6534,7 @@
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
-        "net8.0"
+        "net9.0"
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
@@ -6427,14 +6542,17 @@
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net8.0": {
-          "targetAlias": "net8.0",
+        "net9.0": {
+          "targetAlias": "net9.0",
           "projectReferences": {
             "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj": {
               "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj"
             },
             "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj": {
               "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.General.FileHandling\\SpekkieTwitchBot.General.FileHandling.csproj"
+            },
+            "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch\\SpekkieTwitchBot.Twitch.csproj": {
+              "projectPath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Twitch\\SpekkieTwitchBot.Twitch.csproj"
             }
           }
         }
@@ -6452,8 +6570,8 @@
       "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
-      "net8.0": {
-        "targetAlias": "net8.0",
+      "net9.0": {
+        "targetAlias": "net9.0",
         "dependencies": {
           "Microsoft.Extensions.Hosting": {
             "target": "Package",

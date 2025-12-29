@@ -63,11 +63,13 @@ C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Com
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.General.EventTimerService.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.General.FileHandling.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.OBS.OBSService.dll
+C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Spekkiefy.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Spotify.SpotifyService.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Twitch.CommandService.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Twitch.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\System.Reactive.dll
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.General.EventTimerService.pdb
+C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Spekkiefy.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Twitch.CommandService.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.Common.SpekkieClassLibrary.pdb
 C:\Users\tomsp\OneDrive\Bureaublad\SpekkieTwitchBot\Project\SpekkieTwitchBot.General.FileHandling.pdb
