@@ -7,7 +7,7 @@ using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Models;
 
-namespace SpekkieTwitchBot.Systems.Twitch.Features;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
 public class ChannelPointsFeature
 {

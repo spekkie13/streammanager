@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "72cIoUVSrTg=",
+  "dgSpecHash": "0yFpqZ4YHsI=",
   "success": true,
-  "projectFilePath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj",
+  "projectFilePath": "C:\\Users\\tomsp\\RiderProjects\\streammanager\\SpekkieTwitchBot.Common.SpekkieClassLibrary\\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\tomsp\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\6.0.0\\microsoft.extensions.dependencyinjection.6.0.0.nupkg.sha512",

@@ -5,7 +5,7 @@ using SpekkieTwitchBot.General.FileHandling.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 
-namespace SpekkieTwitchBot.Systems.Twitch;
+namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Auth;
 
 public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
 {
@@ -52,8 +52,8 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
     {
         TwitchUserFile auth = await ReadTokensAsync(cancellationToken);
         
-        if (!string.IsNullOrWhiteSpace(auth.UserToken))
-            return auth.UserToken;
+//        if (!string.IsNullOrWhiteSpace(auth.UserToken))
+//            return auth.UserToken;
 
         if (!string.IsNullOrWhiteSpace(auth.UserRefreshToken))
         {

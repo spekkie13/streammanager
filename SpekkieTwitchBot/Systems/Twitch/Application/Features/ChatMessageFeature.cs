@@ -1,6 +1,7 @@
 ﻿using CommandService.CommandHandlers;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Features;
 

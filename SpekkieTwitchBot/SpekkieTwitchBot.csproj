@@ -32,14 +32,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Core\" />
-	  <Folder Include="Shared\" />
 	  <Folder Include="Systems\OBS\Abstractions\" />
 	  <Folder Include="Systems\OBS\Features\" />
 	  <Folder Include="Systems\OBS\Websocket\" />
-	  <Folder Include="Systems\Spotify\Abstractions\" />
-	  <Folder Include="Systems\Spotify\Features\" />
-	  <Folder Include="Systems\Spotify\WebApi\" />
 	</ItemGroup>
 
 </Project>

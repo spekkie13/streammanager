@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "OE0ElAqCykQ=",
+  "dgSpecHash": "d6Vi4bwlavo=",
   "success": true,
-  "projectFilePath": "C:\\Users\\tomsp\\OneDrive\\Bureaublad\\Projecten\\Rider\\StreamManager\\streammanager\\SpekkieTwitchBot\\SpekkieTwitchBot.csproj",
+  "projectFilePath": "C:\\Users\\tomsp\\RiderProjects\\streammanager\\SpekkieTwitchBot\\SpekkieTwitchBot.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\tomsp\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
     "C:\\Users\\tomsp\\.nuget\\packages\\macross.json.extensions\\1.2.0\\macross.json.extensions.1.2.0.nupkg.sha512",

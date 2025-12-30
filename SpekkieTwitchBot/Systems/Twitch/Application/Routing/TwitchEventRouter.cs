@@ -1,5 +1,6 @@
 ﻿using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features;
 using SpekkieTwitchBot.Systems.Twitch.Features;
 using SpekkieTwitchBot.Systems.Twitch.Models;
 

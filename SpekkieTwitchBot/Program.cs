@@ -14,13 +14,15 @@ using SpekkieTwitchBot.OBS.OBSServiceNew;
 using SpekkieTwitchBot.Systems.OBS;
 using SpekkieTwitchBot.Systems.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features;
 using SpekkieTwitchBot.Systems.Twitch.Features;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Auth;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using SpekkieTwitchBot.Systems.Twitch.TwitchLib;
 using SpotifyAuthService;
 using SpotifyAuthService.General;
 using TwitchAuthService.Events;
-using TwitchAuthService.Events.Pubsub;
 using TwitchAuthService.General;
 using TwitchAuthService.Interfaces;
 using TwitchLib.EventSub.Websockets.Extensions;
@@ -40,79 +42,125 @@ public static class Program
         return Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration(configure =>
             {
-                configure.AddJsonFile(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) +
-                                      "/SpekkieTwitchBot/Settings/appsettings.json");
+                configure.AddJsonFile(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop) +
+                    "/SpekkieTwitchBot/Settings/appsettings.json"
+                );
             })
             .ConfigureServices(services =>
             {
                 services.AddLogging();
                 services.AddTwitchLibEventSubWebsockets();
+
+                // -----------------------
+                // Core
+                // -----------------------
                 services.AddSingleton<HttpClient>();
                 services.AddSingleton<WebsocketClient>(_ => new WebsocketClient(new Uri("ws://localhost:4455")));
                 services.AddSingleton<Logger>();
 
+                // -----------------------
+                // Files
+                // -----------------------
                 services.AddSingleton<FileSetup>();
                 services.AddSingleton<FileReader>();
                 services.AddSingleton<FileWriter>();
+
                 services.AddSingleton<SpotifyFileSetup>();
                 services.AddSingleton<SpotifyFileReader>();
                 services.AddSingleton<SpotifyFileWriter>();
-                services.AddSingleton<ITwitchFileReader, TwitchFileReader>();
-                services.AddSingleton<TwitchFileReader>();
-                services.AddSingleton<ITwitchFileWriter, TwitchFileWriter>();
-                services.AddSingleton<TwitchFileWriter>();
+
                 services.AddSingleton<TwitchFileSetup>();
+                services.AddSingleton<TwitchFileReader>();
+                services.AddSingleton<ITwitchFileReader>(sp => sp.GetRequiredService<TwitchFileReader>());
+
+                services.AddSingleton<TwitchFileWriter>();
+                services.AddSingleton<ITwitchFileWriter>(sp => sp.GetRequiredService<TwitchFileWriter>());
+
+                services.AddSingleton<TimerFileSetup>();
                 services.AddSingleton<TimerFileReader>();
                 services.AddSingleton<TimerFileWriter>();
-                services.AddSingleton<TimerFileSetup>();
+
+                services.AddSingleton<GeneralFileSetup>();
                 services.AddSingleton<GeneralFileReader>();
                 services.AddSingleton<GeneralFileWriter>();
-                services.AddSingleton<GeneralFileSetup>();
 
+                // -----------------------
+                // Twitch core
+                // -----------------------
+                // (Laat staan als je dit echt gebruikt; anders kan hij eruit)
                 services.AddSingleton<CustomClient>();
 
-                services.AddSingleton<ICustomTwitchHttpClient, CustomTwitchHttpClient>();
                 services.AddSingleton<CustomTwitchHttpClient>();
-                services.AddSingleton<FollowSubFeature>();
-                services.AddSingleton<CustomTwitchClient>();
-                services.AddSingleton<CustomPubsub>();
+                services.AddSingleton<ICustomTwitchHttpClient>(sp => sp.GetRequiredService<CustomTwitchHttpClient>());
+
+                services.AddSingleton<CustomTwitchClient>(); // nodig voor TwitchLibChatAdapter
 
                 services.AddSingleton<TwitchUserFile>();
                 services.AddSingleton<TwitchGeneralFile>();
                 services.AddSingleton<TwitchEventRouter>();
 
+                services.AddSingleton<ITwitchAuthTokenProvider, FileBackedTwitchAuthTokenProvider>();
+
+                // -----------------------
+                // Adapters
+                // -----------------------
+                services.AddSingleton<ITwitchChat, TwitchLibChatAdapter>();
+
+                // -----------------------
+                // PubSub (Route A - your own)
+                // -----------------------
+                services.AddSingleton<PubSubWebSocketClient>();
+                services.AddSingleton<PubSubMessageBuilder>();
+                services.AddSingleton<PubSubMessageParser>();
+                services.AddSingleton<PubSubReconnectPolicy>();
+
+                services.AddSingleton<TwitchPubSubClient>();
+                services.AddSingleton<ITwitchEvents>(sp => sp.GetRequiredService<TwitchPubSubClient>());
+
+                // -----------------------
+                // Spotify
+                // -----------------------
                 services.AddSingleton<SpotifyAuthService.Auth.SpotifyAuthService>();
                 services.AddSingleton<CustomSpotifyHttpClient>();
-                services.AddSingleton<SpotifySearchService>();
                 services.AddSingleton<SpotifyService>();
-                services.AddSingleton<CustomWebSocketClient>();
-                services.AddSingleton<System.Net.WebSockets.ClientWebSocket>();
+                services.AddSingleton<SpotifySearchService>();
+
+                // -----------------------
+                // OBS / Timer
+                // -----------------------
                 services.AddSingleton<ObsWebSocket>();
                 services.AddSingleton<EventTimer>();
                 services.AddSingleton<EventTimerService.EventTimerService>();
-                services.AddSingleton<ITwitchChat, TwitchLibChatAdapter>();
-                services.AddSingleton<ITwitchAuthTokenProvider, FileBackedTwitchAuthTokenProvider>();
-                services.AddSingleton<ITwitchEvents, TwitchLibPubSubAdapter>();
-                
+
+                // -----------------------
+                // Command handlers
+                // -----------------------
                 services.AddSingleton<SpotifyCommandHandler>();
                 services.AddSingleton<ObsCommandHandler>();
                 services.AddSingleton<TextCommandHandler>();
                 services.AddSingleton<TimerCommandHandler>();
                 services.AddSingleton<TwitchCommandHandler>();
                 services.AddSingleton<GeneralCommandHandler>();
-                
+
+                // Chat parsing helpers
                 services.AddSingleton<JoinedChannelManager>();
                 services.AddSingleton<IrcParser>();
-                
-                services.AddSingleton<TwitchLibPubSubAdapter>();
+
+                // -----------------------
+                // Features (1x elk)
+                // -----------------------
                 services.AddSingleton<ChannelPointsFeature>();
                 services.AddSingleton<FollowSubFeature>();
                 services.AddSingleton<ChatCommandFeature>();
                 services.AddSingleton<ChatMessageFeature>();
                 services.AddSingleton<TwitchEventsFeature>();
-                
-                services.AddHostedService<SpotifyService>();
-                services.AddHostedService<EventTimerService.EventTimerService>();
+
+                // -----------------------
+                // Hosted Services
+                // -----------------------
+                services.AddHostedService(sp => sp.GetRequiredService<SpotifyService>());
+                services.AddHostedService(sp => sp.GetRequiredService<EventTimerService.EventTimerService>());
                 services.AddHostedService<ObsWebsocketService>();
                 services.AddHostedService<TwitchHostedService>();
             });

@@ -1,4 +1,5 @@
-﻿using SpekkieTwitchBot.Systems.Twitch.Features;
+﻿using SpekkieTwitchBot.Systems.Twitch.Application.Features;
+using SpekkieTwitchBot.Systems.Twitch.Features;
 
 namespace SpekkieTwitchBot.Systems.Twitch;
 
