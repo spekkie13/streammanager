@@ -16,10 +16,8 @@ public class TwitchPubSubClient : ITwitchEvents
     private readonly PubSubMessageParser _Parser;
     private readonly PubSubReconnectPolicy _Reconnect;
 
-    // From files / identity
     private readonly TwitchGeneralFile _Identity;
 
-    // Topics you want (hard requirements)
     private readonly string[] _Topics;
 
     private CancellationToken _RunCt;
@@ -46,14 +44,13 @@ public class TwitchPubSubClient : ITwitchEvents
         _Parser = parser;
         _Reconnect = reconnect;
 
-        var identityJson = twitchFileReader.ReadTwitchGeneralAuthFile();
+        string identityJson = twitchFileReader.ReadTwitchGeneralAuthFile();
         _Identity = JsonConvert.DeserializeObject<TwitchGeneralFile>(identityJson) 
                     ?? throw new InvalidOperationException("TwitchGeneralFile missing/invalid");
 
         if (string.IsNullOrWhiteSpace(_Identity.ChannelId))
             throw new InvalidOperationException("ChannelId is empty in TwitchGeneralFile");
 
-        // ✅ Your 4 topics as “hard requirements”
         _Topics =
         [
             $"following.{_Identity.ChannelId}",
@@ -62,7 +59,6 @@ public class TwitchPubSubClient : ITwitchEvents
             $"community-points-channel-v1.{_Identity.ChannelId}"
         ];
 
-        // Wire transport callbacks
         _Ws.OnConnected += HandleConnected;
         _Ws.OnMessage += HandleMessage;
         _Ws.OnDisconnected += HandleDisconnected;
@@ -76,8 +72,6 @@ public class TwitchPubSubClient : ITwitchEvents
 
         _Log.LogWarning("[PubSub] ConnectAsync starting");
         await _Ws.ConnectAsync(_RunCt);
-
-        // keepalive + health: start ping loop in ws or here (shown in ws section)
     }
 
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
@@ -92,15 +86,14 @@ public class TwitchPubSubClient : ITwitchEvents
         {
             _Log.LogWarning("[PubSub] Connected -> sending LISTEN");
 
-            // IMPORTANT: use a USER access token for PubSub LISTEN (not app token)
-            var userToken = await _TokenProvider.GetUserAccessTokenAsync(_RunCt);
+            string userToken = await _TokenProvider.GetUserAccessTokenAsync(_RunCt);
             if (string.IsNullOrWhiteSpace(userToken))
             {
                 _Log.LogError("[PubSub] User token empty -> cannot LISTEN.");
                 return;
             }
 
-            var listenJson = _Builder.BuildListen(topics: _Topics, userAccessToken: userToken);
+            string listenJson = _Builder.BuildListen(topics: _Topics, userAccessToken: userToken);
             _Ws.Send(listenJson);
 
             _ListenSent = true;
@@ -115,12 +108,10 @@ public class TwitchPubSubClient : ITwitchEvents
     private void HandleDisconnected(string? reason)
     {
         _Log.LogWarning($"[PubSub] Disconnected. Reason={reason ?? "unknown"}");
-
-        // If Twitch says “session unused”, it usually means no LISTEN or no activity.
-        // We already send LISTEN on connect. Reconnect with backoff:
+        
         _ = Task.Run(async () =>
         {
-            var delay = _Reconnect.NextDelay();
+            TimeSpan delay = _Reconnect.NextDelay();
             _Log.LogWarning($"[PubSub] Reconnect scheduled in {delay.TotalMilliseconds:0}ms");
             await Task.Delay(delay, _RunCt).ConfigureAwait(false);
             await _Ws.ConnectAsync(_RunCt).ConfigureAwait(false);
@@ -132,12 +123,11 @@ public class TwitchPubSubClient : ITwitchEvents
         _LastInboundUtc = DateTimeOffset.UtcNow;
 
         _Log.LogWarning(raw);
-        var msg = _Parser.Parse(raw);
+        PubSubInboundMessage msg = _Parser.Parse(raw);
         switch (msg.Kind)
         {
             case PubSubInboundKind.Response:
                 _Log.LogWarning($"[PubSub][RESPONSE] nonce={msg.Nonce} ok={msg.Success} error={msg.Error}");
-                // If BadAuth -> your token flow is broken (wrong token type/expired/missing scopes)
                 return;
 
             case PubSubInboundKind.Pong:
@@ -161,12 +151,9 @@ public class TwitchPubSubClient : ITwitchEvents
 
     private void DispatchDomainEvent(PubSubInboundMessage msg)
     {
-        // Keep it dumb first: only implement the 3 events you need.
-        // Later you can add topic-based dispatch.
-
         if (msg.Topic.StartsWith("following."))
         {
-            var model = new FollowHappened(
+            FollowHappened model = new FollowHappened(
                 UserId: msg.UserId ?? "",
                 UserName: msg.UserName ?? "",
                 FollowedAt: DateTimeOffset.UtcNow
@@ -193,7 +180,7 @@ public class TwitchPubSubClient : ITwitchEvents
     private static async Task RaiseAsync<T>(Func<T, CancellationToken, Task>? evt, T payload, CancellationToken ct)
     {
         if (evt is null) return;
-        foreach (var h in evt.GetInvocationList().Cast<Func<T, CancellationToken, Task>>())
+        foreach (Func<T, CancellationToken, Task> h in evt.GetInvocationList().Cast<Func<T, CancellationToken, Task>>())
             await h(payload, ct);
     }
 

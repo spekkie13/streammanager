@@ -39,14 +39,14 @@ public class ChannelPointsFeature
             case "Song Request":
             {
                 // De user input is je track request
-                var input = e.UserInput ?? "";
+                string input = e.UserInput ?? "";
                 if (string.IsNullOrWhiteSpace(input))
                     return;
 
-                var result = _Spotify.HandleAddSongToQueueCommand(input);
-                var success = result.Contains("Added", StringComparison.OrdinalIgnoreCase);
+                string result = _Spotify.HandleAddSongToQueueCommand(input);
+                bool success = result.Contains("Added", StringComparison.OrdinalIgnoreCase);
 
-                var msg = await UpdateRedemptionStatus(
+                HttpResponseMessage? msg = await UpdateRedemptionStatus(
                     id: e.RedemptionId,
                     broadcasterId: TwitchConstants.BroadcasterId,
                     rewardId: e.RewardId,

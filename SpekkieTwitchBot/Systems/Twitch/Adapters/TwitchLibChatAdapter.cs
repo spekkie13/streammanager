@@ -6,7 +6,7 @@ using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using TwitchAuthService.Events;
 using TwitchLib.Client.Models;
 
-namespace SpekkieTwitchBot.Systems.Twitch.TwitchLib;
+namespace SpekkieTwitchBot.Systems.Twitch.Adapters;
 
 public class TwitchLibChatAdapter : ITwitchChat
 {

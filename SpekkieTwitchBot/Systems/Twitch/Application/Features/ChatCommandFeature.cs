@@ -1,8 +1,8 @@
-﻿using CommandService.CommandHandlers;
+﻿using SpekkieClassLibrary.Twitch.Commands;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
-namespace SpekkieTwitchBot.Systems.Twitch.Features;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
 public sealed class ChatCommandFeature
 {
@@ -22,20 +22,20 @@ public sealed class ChatCommandFeature
 
     public async Task OnCommandAsync(ChatCommandReceived e, CancellationToken cancellationToken = default)
     {
-        var cmdText = (e.CommandText ?? "").Trim();
+        string cmdText = (e.CommandText ?? "").Trim();
         if (cmdText.Length == 0) return;
 
-        var command = "!" + cmdText.ToLowerInvariant();
+        string command = "!" + cmdText.ToLowerInvariant();
 
         // 1) Special: !command
         if (string.Equals(cmdText, "command", StringComparison.OrdinalIgnoreCase))
         {
-            var parts = (e.ArgumentsAsString ?? "")
+            string[] parts = (e.ArgumentsAsString ?? "")
                 .Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
 
-            var action = parts.ElementAtOrDefault(0) ?? "";
-            var commandName = parts.ElementAtOrDefault(1) ?? "";
-            var replyMessage = parts.Length > 2 ? parts[2] : "";
+            string action = parts.ElementAtOrDefault(0) ?? "";
+            string commandName = parts.ElementAtOrDefault(1) ?? "";
+            string replyMessage = parts.Length > 2 ? parts[2] : "";
 
             if (string.IsNullOrWhiteSpace(action) || string.IsNullOrWhiteSpace(commandName))
             {
@@ -47,15 +47,15 @@ public sealed class ChatCommandFeature
                 return;
             }
 
-            var adminReply = _Text.AddCommand(action, commandName, replyMessage);
+            string adminReply = _Text.AddCommand(action, commandName, replyMessage);
             if (!string.IsNullOrWhiteSpace(adminReply))
                 await _Chat.ReplyAsync(e.MessageId, adminReply, cancellationToken);
 
             return;
         }
 
-        var commands = _Text.GetTextCommands();
-        var reply = commands.Any(x => string.Equals(x.Command, command, StringComparison.OrdinalIgnoreCase))
+        List<TextCommand> commands = _Text.GetTextCommands();
+        string reply = commands.Any(x => string.Equals(x.Command, command, StringComparison.OrdinalIgnoreCase))
             ? _Text.HandleCommand(e)
             : _General.HandleCommand(e);
 

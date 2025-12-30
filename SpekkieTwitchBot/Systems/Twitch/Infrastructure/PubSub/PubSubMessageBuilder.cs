@@ -7,7 +7,7 @@ public sealed class PubSubMessageBuilder
     public string BuildListen(IEnumerable<string> topics, string userAccessToken)
     {
         // PubSub expects token without "oauth:" prefix
-        var token = userAccessToken.StartsWith("oauth:", StringComparison.OrdinalIgnoreCase)
+        string token = userAccessToken.StartsWith("oauth:", StringComparison.OrdinalIgnoreCase)
             ? userAccessToken["oauth:".Length..]
             : userAccessToken;
 

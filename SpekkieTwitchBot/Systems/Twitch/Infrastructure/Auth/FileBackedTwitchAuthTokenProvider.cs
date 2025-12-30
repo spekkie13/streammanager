@@ -91,14 +91,14 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
         TwitchUserFile userAuth,
         CancellationToken ct
     ) {
-        using var content = new FormUrlEncodedContent([
+        using FormUrlEncodedContent content = new FormUrlEncodedContent([
             new KeyValuePair<string, string>("client_id", userAuth.ClientId ?? ""),
             new KeyValuePair<string, string>("client_secret", userAuth.ClientSecret ?? ""),
             new KeyValuePair<string, string>("grant_type", "refresh_token"),
             new KeyValuePair<string, string>("refresh_token", userAuth.UserRefreshToken ?? "")
         ]);
 
-        var response = await _HttpClient.PostAsync("https://id.twitch.tv/oauth2/token", content, ct);
+        HttpResponseMessage response = await _HttpClient.PostAsync("https://id.twitch.tv/oauth2/token", content, ct);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -106,10 +106,10 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
             return userAuth;
         }
 
-        var payload = await response.Content.ReadAsStringAsync(ct);
+        string payload = await response.Content.ReadAsStringAsync(ct);
         _Logger.LogInfo($"Refreshed token successfully: {payload}");
 
-        var cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(payload) ?? AuthorizationCredentials.Empty;
+        AuthorizationCredentials cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(payload) ?? AuthorizationCredentials.Empty;
 
         userAuth.UserToken = cred.AccessToken;
         if (!string.IsNullOrWhiteSpace(cred.RefreshToken))
@@ -118,12 +118,11 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
         return userAuth;
     }
 
-    // --- oude GetUserAccessAuthCredentials() (authorization_code flow) ---
     private async Task<TwitchUserFile> ExchangeCodeAsync(
         TwitchUserFile userAuth,
         CancellationToken ct
     ) {
-        using var content = new FormUrlEncodedContent([
+        using FormUrlEncodedContent content = new FormUrlEncodedContent([
             new KeyValuePair<string, string>("client_id", userAuth.ClientId ?? ""),
             new KeyValuePair<string, string>("client_secret", userAuth.ClientSecret ?? ""),
             new KeyValuePair<string, string>("code", userAuth.Code ?? ""),
@@ -131,11 +130,10 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
             new KeyValuePair<string, string>("redirect_uri", "http://localhost:3000/")
         ]);
 
-        var response = await _HttpClient.PostAsync("https://id.twitch.tv/oauth2/token", content, ct);
+        HttpResponseMessage response = await _HttpClient.PostAsync("https://id.twitch.tv/oauth2/token", content, ct);
 
         if (response.StatusCode == HttpStatusCode.BadRequest)
         {
-            // bij jou: BadRequest -> refresh
             if (!string.IsNullOrWhiteSpace(userAuth.UserRefreshToken))
                 return await RefreshUserAccessTokenAsync(userAuth, ct);
 
@@ -149,21 +147,19 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
             return userAuth;
         }
 
-        var payload = await response.Content.ReadAsStringAsync(ct);
+        string payload = await response.Content.ReadAsStringAsync(ct);
         _Logger.LogInfo(payload);
 
         AuthorizationCredentials cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(payload) ?? AuthorizationCredentials.Empty;
 
         userAuth.UserToken = cred.AccessToken;
         userAuth.UserRefreshToken = cred.RefreshToken;
-
-        // optioneel: code weggooien nadat je hem gebruikt hebt
+        
         userAuth.Code = null;
 
         return userAuth;
     }
 
-    // --- oude UpdateTwitchSettings() ---
     private Task PersistAuthAsync(TwitchUserFile userAuth, CancellationToken ct)
     {
         _UserFileCache = userAuth;
