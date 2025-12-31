@@ -12,7 +12,7 @@ using SpekkieTwitchBot.General.FileHandling;
 using Websocket.Client;
 using Monitor = SpekkieClassLibrary.OBS.Types.Monitor;
 
-namespace SpekkieTwitchBot.OBS.OBSServiceNew;
+namespace SpekkieTwitchBot.Systems.OBS;
 
 public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
 {

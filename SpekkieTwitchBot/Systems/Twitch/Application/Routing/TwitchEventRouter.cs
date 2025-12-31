@@ -1,10 +1,9 @@
 ﻿using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
-using SpekkieTwitchBot.Systems.Twitch.Features;
-using SpekkieTwitchBot.Systems.Twitch.Models;
+using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
-namespace SpekkieTwitchBot.Systems.Twitch;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Routing;
 
 public class TwitchEventRouter
 {

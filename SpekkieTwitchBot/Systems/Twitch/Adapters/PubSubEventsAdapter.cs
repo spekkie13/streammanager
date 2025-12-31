@@ -1,5 +1,5 @@
 ﻿using SpekkieTwitchBot.Systems.Twitch.Abstractions;
-using SpekkieTwitchBot.Systems.Twitch.Models;
+using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Adapters;
 

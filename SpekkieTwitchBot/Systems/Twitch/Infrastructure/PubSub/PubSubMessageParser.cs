@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using SpekkieTwitchBot.Systems.Twitch.Models;
+using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
 

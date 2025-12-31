@@ -1,9 +1,8 @@
-﻿using CommandService.CommandHandlers;
-using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+﻿using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
-using SpekkieTwitchBot.Systems.Twitch.Application.Features;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
-namespace SpekkieTwitchBot.Systems.Twitch.Features;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
 public sealed class ChatMessageFeature
 {

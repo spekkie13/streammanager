@@ -3,9 +3,8 @@ using System.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Constants;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
-using TwitchAuthService.Interfaces;
 
-namespace SpekkieTwitchBot.Systems.Twitch;
+namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 
 public class CustomTwitchHttpClient : ICustomTwitchHttpClient
 {

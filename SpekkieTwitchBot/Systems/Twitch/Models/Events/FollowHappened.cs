@@ -1,4 +1,4 @@
-﻿namespace SpekkieTwitchBot.Systems.Twitch.Models;
+﻿namespace SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
 public sealed record FollowHappened(
     string UserId,

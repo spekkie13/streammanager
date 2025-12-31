@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.Hosting;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 
-namespace SpekkieTwitchBot.Systems.Twitch.Features;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
 public class TwitchInfoJob : BackgroundService
 {

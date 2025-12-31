@@ -5,7 +5,6 @@ using SpekkieClassLibrary.OBS.Enum;
 using SpekkieClassLibrary.OBS.Events;
 using SpekkieClassLibrary.OBS.Types;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
-using SpekkieTwitchBot.OBS.OBSServiceNew;
 using SpekkieTwitchBot.Systems.OBS.Models;
 using Logger = SpekkieTwitchBot.General.FileHandling.Logger;
 

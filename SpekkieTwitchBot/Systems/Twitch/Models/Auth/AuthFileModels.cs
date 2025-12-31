@@ -8,7 +8,8 @@ public sealed class TwitchGeneralFile
     public string? BroadcasterName { get; set; }
     public string? ChannelId { get; set; }
 
-    public string? Obs_Url { get; set; }
+    [JsonProperty(PropertyName = "Obs_Url")]
+    public string? ObsUrl { get; set; }
     public string? Password { get; set; }
 
     [JsonProperty(PropertyName = "Implicit_OAuth")]

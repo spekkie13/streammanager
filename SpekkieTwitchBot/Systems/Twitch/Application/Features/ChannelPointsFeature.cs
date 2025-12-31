@@ -1,11 +1,12 @@
 ﻿using System.Text;
-using CommandService.CommandHandlers;
 using Newtonsoft.Json;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
-using SpekkieTwitchBot.Systems.Twitch.Models;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
+using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 

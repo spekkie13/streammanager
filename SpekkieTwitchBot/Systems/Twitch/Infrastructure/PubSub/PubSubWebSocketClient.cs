@@ -9,8 +9,6 @@ public sealed class PubSubWebSocketClient
     private readonly Logger _Log;
     private ClientWebSocket? _Ws;
     private CancellationTokenSource? _Cts;
-    private Task? _RecvLoop;
-    private Task? _PingLoop;
 
     private readonly Uri _Uri = new("wss://pubsub-edge.twitch.tv");
 
@@ -38,8 +36,8 @@ public sealed class PubSubWebSocketClient
             _Log.LogWarning("[WS] Connected");
             OnConnected?.Invoke();
 
-            _RecvLoop = Task.Run(() => ReceiveLoop(_Cts.Token));
-            _PingLoop = Task.Run(() => PingLoop(_Cts.Token));
+            Task _RecvLoop = Task.Run(() => ReceiveLoop(_Cts.Token));
+            Task _PingLoop = Task.Run(() => PingLoop(_Cts.Token));
         }
         catch (Exception ex)
         {

@@ -1,6 +1,6 @@
 ﻿using SpekkieTwitchBot.General.FileHandling.Timer;
 
-namespace CommandService.CommandHandlers;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class TimerCommandHandler(EventTimerService.EventTimerService eventTimerService, TimerFileWriter timerFileWriter)
 {

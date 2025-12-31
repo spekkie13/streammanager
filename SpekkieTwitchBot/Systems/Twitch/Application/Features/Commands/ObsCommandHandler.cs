@@ -1,8 +1,8 @@
 ﻿using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.OBS.Types;
-using SpekkieTwitchBot.OBS.OBSServiceNew;
+using SpekkieTwitchBot.Systems.OBS;
 
-namespace CommandService.CommandHandlers;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class ObsCommandHandler(ObsWebSocket socket)
 {

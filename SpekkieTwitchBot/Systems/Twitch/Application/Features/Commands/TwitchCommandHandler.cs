@@ -1,7 +1,4 @@
-﻿using SpekkieTwitchBot.Systems.Twitch.Application.Features;
-using SpekkieTwitchBot.Systems.Twitch.Features;
-
-namespace SpekkieTwitchBot.Systems.Twitch;
+﻿namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class TwitchCommandHandler(ChannelPointsFeature channelPointsFeature)
 {

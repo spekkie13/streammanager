@@ -2,7 +2,7 @@
 using SpekkieTwitchBot.General.FileHandling.Spotify;
 using SpotifyAuthService;
 
-namespace CommandService.CommandHandlers;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class SpotifyCommandHandler(
     SpotifyService spotifyService, 

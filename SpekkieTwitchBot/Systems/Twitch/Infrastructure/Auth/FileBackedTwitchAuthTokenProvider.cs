@@ -51,9 +51,6 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
     public async Task<string> GetUserAccessTokenAsync(CancellationToken cancellationToken)
     {
         TwitchUserFile auth = await ReadTokensAsync(cancellationToken);
-        
-//        if (!string.IsNullOrWhiteSpace(auth.UserToken))
-//            return auth.UserToken;
 
         if (!string.IsNullOrWhiteSpace(auth.UserRefreshToken))
         {

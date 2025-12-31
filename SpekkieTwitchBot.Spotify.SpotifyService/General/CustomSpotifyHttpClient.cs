@@ -131,125 +131,124 @@ public class CustomSpotifyHttpClient
     }
 
     public async Task<FullTrack?> GetFullTrack(string url)
-{
-    HttpResponseMessage response = await GetAsync(url);
-
-    if (response.StatusCode == HttpStatusCode.Unauthorized)
     {
-        Setup(); // refresh token etc.
-        response = await GetAsync(url);
-    }
+        HttpResponseMessage response = await GetAsync(url);
 
-    // 204/empty = normaal
-    if (response.StatusCode == HttpStatusCode.NoContent)
-        return null;
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            Setup(); // refresh token etc.
+            response = await GetAsync(url);
+        }
 
-    var json = await response.Content.ReadAsStringAsync();
-    if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null")
-        return null;
+        // 204/empty = normaal
+        if (response.StatusCode == HttpStatusCode.NoContent)
+            return null;
 
-    JObject root;
-    try
-    {
-        root = JObject.Parse(json);
-    }
-    catch
-    {
-        return null; // slechte/lege JSON -> stil
-    }
+        var json = await response.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null")
+            return null;
 
-    // item kan null zijn (ads/podcasts/device switch)
-    var itemData = root["item"] as JObject;
-    if (itemData is null)
-        return null;
+        JObject root;
+        try
+        {
+            root = JObject.Parse(json);
+        }
+        catch
+        {
+            return null; // slechte/lege JSON -> stil
+        }
 
-    var item = new FullTrack
-    {
-        Href = itemData.Value<string>("href") ?? "",
-        Id = itemData.Value<string>("id") ?? "",
-        Name = itemData.Value<string>("name") ?? "",
-        PreviewUrl = itemData.Value<string>("preview_url") ?? "",
-        Type = itemData.Value<string>("type") ?? "",
-        Uri = itemData.Value<string>("uri") ?? "",
-        DiscNumber = itemData.Value<int?>("disc_number") ?? 0,
-        DurationMs = itemData.Value<int?>("duration_ms") ?? 0,
-        TrackNumber = itemData.Value<int?>("track_number") ?? 0,
-        Popularity = itemData.Value<int?>("popularity") ?? 0,
-        Explicit = itemData.Value<bool?>("explicit") ?? false,
-        IsLocal = itemData.Value<bool?>("is_local") ?? false,
-    };
+        // item kan null zijn (ads/podcasts/device switch)
+        var itemData = root["item"] as JObject;
+        if (itemData is null)
+            return null;
 
-    // --- available_markets SAFE ---
-    item.AvailableMarkets = ReadStringArray(itemData["available_markets"]);
+        var item = new FullTrack
+        {
+            Href = itemData.Value<string>("href") ?? "",
+            Id = itemData.Value<string>("id") ?? "",
+            Name = itemData.Value<string>("name") ?? "",
+            PreviewUrl = itemData.Value<string>("preview_url") ?? "",
+            Type = itemData.Value<string>("type") ?? "",
+            Uri = itemData.Value<string>("uri") ?? "",
+            DiscNumber = itemData.Value<int?>("disc_number") ?? 0,
+            DurationMs = itemData.Value<int?>("duration_ms") ?? 0,
+            TrackNumber = itemData.Value<int?>("track_number") ?? 0,
+            Popularity = itemData.Value<int?>("popularity") ?? 0,
+            Explicit = itemData.Value<bool?>("explicit") ?? false,
+            IsLocal = itemData.Value<bool?>("is_local") ?? false,
+        };
 
-    // Dictionaries/lists veilig deserializen
-    item.ExternalIds = SafeDeserialize<Dictionary<string, string>>(itemData["external_ids"]) ?? new();
-    item.ExternalUrls = SafeDeserialize<Dictionary<string, string>>(itemData["external_urls"]) ?? new();
-    item.Artists = SafeDeserialize<List<SimpleArtist>>(itemData["artists"]) ?? new();
+        // --- available_markets SAFE ---
+        item.AvailableMarkets = ReadStringArray(itemData["available_markets"]);
 
-    // --- Album ---
-    var albumData = itemData["album"] as JObject;
-    if (albumData is null)
-    {
-        item.Album = new SimpleAlbum();
+        // Dictionaries/lists veilig deserializen
+        item.ExternalIds = SafeDeserialize<Dictionary<string, string>>(itemData["external_ids"]) ?? new();
+        item.ExternalUrls = SafeDeserialize<Dictionary<string, string>>(itemData["external_urls"]) ?? new();
+        item.Artists = SafeDeserialize<List<SimpleArtist>>(itemData["artists"]) ?? new();
+
+        // --- Album ---
+        var albumData = itemData["album"] as JObject;
+        if (albumData is null)
+        {
+            item.Album = new SimpleAlbum();
+            return item;
+        }
+
+        var album = new SimpleAlbum
+        {
+            AlbumType = albumData.Value<string>("album_type") ?? "",
+            Href = albumData.Value<string>("href") ?? "",
+            Id = albumData.Value<string>("id") ?? "",
+            Name = albumData.Value<string>("name") ?? "",
+            ReleaseDate = albumData.Value<string>("release_date") ?? "",
+            ReleaseDatePrecision = albumData.Value<string>("release_date_precision") ?? "",
+            Type = albumData.Value<string>("type") ?? "",
+            Uri = albumData.Value<string>("uri") ?? "",
+            TotalTracks = albumData.Value<int?>("total_tracks") ?? 0,
+            AvailableMarkets = ReadStringArray(albumData["available_markets"]),
+            ExternalUrls = SafeDeserialize<Dictionary<string, string>>(albumData["external_urls"]) ?? new(),
+            Artists = SafeDeserialize<List<SimpleArtist>>(albumData["artists"]) ?? new(),
+            Images = SafeDeserialize<List<Image>>(albumData["images"]) ?? new(),
+        };
+
+        item.Album = album;
         return item;
     }
 
-    var album = new SimpleAlbum
+    private static List<string> ReadStringArray(JToken? token)
     {
-        AlbumType = albumData.Value<string>("album_type") ?? "",
-        Href = albumData.Value<string>("href") ?? "",
-        Id = albumData.Value<string>("id") ?? "",
-        Name = albumData.Value<string>("name") ?? "",
-        ReleaseDate = albumData.Value<string>("release_date") ?? "",
-        ReleaseDatePrecision = albumData.Value<string>("release_date_precision") ?? "",
-        Type = albumData.Value<string>("type") ?? "",
-        Uri = albumData.Value<string>("uri") ?? "",
-        TotalTracks = albumData.Value<int?>("total_tracks") ?? 0,
-        AvailableMarkets = ReadStringArray(albumData["available_markets"]),
-        ExternalUrls = SafeDeserialize<Dictionary<string, string>>(albumData["external_urls"]) ?? new(),
-        Artists = SafeDeserialize<List<SimpleArtist>>(albumData["artists"]) ?? new(),
-        Images = SafeDeserialize<List<Image>>(albumData["images"]) ?? new(),
-    };
+        // Spotify: meestal JArray, maar soms null / inconsistent
+        if (token is JArray arr)
+            return arr.Values<string>().Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
 
-    item.Album = album;
-    return item;
-}
-
-private static List<string> ReadStringArray(JToken? token)
-{
-    // Spotify: meestal JArray, maar soms null / inconsistent
-    if (token is JArray arr)
-        return arr.Values<string>().Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
-
-    // als het tóch als string binnenkomt (edge case), supporten we dat ook
-    if (token?.Type == JTokenType.String)
-    {
-        var s = token.Value<string>() ?? "";
-        return s.Split(',', StringSplitOptions.RemoveEmptyEntries)
+        // als het tóch als string binnenkomt (edge case), supporten we dat ook
+        if (token?.Type != JTokenType.String) return [];
+        {
+            var s = token.Value<string>() ?? "";
+            return s.Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => x.Trim().Trim('"'))
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .ToList();
+        }
+
     }
 
-    return new List<string>();
-}
-
-private static T? SafeDeserialize<T>(JToken? token)
-{
-    if (token is null || token.Type == JTokenType.Null)
-        return default;
-
-    try
+    private static T? SafeDeserialize<T>(JToken? token)
     {
-        // token.ToString() is ok, maar JToken.ToObject is cleaner:
-        return token.ToObject<T>();
+        if (token is null || token.Type == JTokenType.Null)
+            return default;
+
+        try
+        {
+            // token.ToString() is ok, maar JToken.ToObject is cleaner:
+            return token.ToObject<T>();
+        }
+        catch
+        {
+            return default;
+        }
     }
-    catch
-    {
-        return default;
-    }
-}
 
 
     public async Task<List<Track>?> InterpretSongSearchResult(string url)

@@ -1,6 +1,7 @@
 ﻿using SpekkieClassLibrary.Twitch.Commands;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
@@ -27,7 +28,6 @@ public sealed class ChatCommandFeature
 
         string command = "!" + cmdText.ToLowerInvariant();
 
-        // 1) Special: !command
         if (string.Equals(cmdText, "command", StringComparison.OrdinalIgnoreCase))
         {
             string[] parts = (e.ArgumentsAsString ?? "")

@@ -2,7 +2,7 @@
 using SpekkieClassLibrary.Twitch.Commands;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
-namespace SpekkieTwitchBot.Systems.Twitch;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class TextCommandHandler
 {

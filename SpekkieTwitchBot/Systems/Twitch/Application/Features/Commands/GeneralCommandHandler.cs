@@ -1,8 +1,7 @@
-﻿using CommandService.CommandHandlers;
-using SpekkieTwitchBot.General.FileHandling.General;
+﻿using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
-namespace SpekkieTwitchBot.Systems.Twitch;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class GeneralCommandHandler(
     GeneralFileReader generalFileReader,
@@ -19,7 +18,7 @@ public class GeneralCommandHandler(
     {
         string username = command.Username;
         string commandText = $"!{command.CommandText}";
-        string commandArgs = command.ArgumentsAsString;
+        string commandArgs = command.ArgumentsAsString ?? "";
 
         _CommandHandlers = new Dictionary<string, Func<string>>
         { 

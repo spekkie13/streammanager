@@ -51,7 +51,8 @@ public class SpotifyService : BackgroundService
         catch (Exception ex)
         {
             _Logger.LogError("An error occured in spotify Service: " + ex.Message);
-            _Logger.LogError(ex.StackTrace);
+            if (ex.StackTrace != null)
+                _Logger.LogError(ex.StackTrace);
         }
     }
     

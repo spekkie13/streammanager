@@ -52,7 +52,7 @@ public class TwitchLibChatAdapter : ITwitchChat
             if (channel.StartsWith("#"))
                 channel = channel[1..];
             
-            var token = (_Identity.ImplicitOAuth ?? "").Trim();
+            var token = (_Identity?.ImplicitOAuth ?? "").Trim();
             
             if (string.IsNullOrWhiteSpace(token))
                 throw new InvalidOperationException("No OAuth Token found. Expected ImplicitOAuth Token");
@@ -60,7 +60,7 @@ public class TwitchLibChatAdapter : ITwitchChat
             if (!token.StartsWith("oauth:", StringComparison.OrdinalIgnoreCase))
                 token = "oauth:" + token;
             
-            var creds = new ConnectionCredentials(_Identity.BroadcasterName, token);
+            var creds = new ConnectionCredentials(_Identity?.BroadcasterName, token);
             
             _Client.Initialize(creds, channel);
         }
@@ -77,12 +77,16 @@ public class TwitchLibChatAdapter : ITwitchChat
 
     public Task ReplyAsync(string replyToMessageId, string message, CancellationToken ct)
     {
+        if (string.IsNullOrEmpty(_Identity?.ChannelId)) return Task.CompletedTask;
+        
         _Client.SendReply(_Identity.ChannelId, replyToMessageId, message);
         return Task.CompletedTask;
     }
 
     public Task SendAsync(string message, CancellationToken ct)
     {
+        if (string.IsNullOrEmpty(_Identity?.ChannelId)) return Task.CompletedTask;
+
         _Client.SendMessage(_Identity.ChannelId, message);
         return Task.CompletedTask;
     }

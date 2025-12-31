@@ -2,8 +2,8 @@
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
-using SpekkieTwitchBot.Systems.Twitch.Models;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
+using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
 
@@ -16,13 +16,11 @@ public class TwitchPubSubClient : ITwitchEvents
     private readonly PubSubMessageParser _Parser;
     private readonly PubSubReconnectPolicy _Reconnect;
 
-    private readonly TwitchGeneralFile _Identity;
-
     private readonly string[] _Topics;
 
     private CancellationToken _RunCt;
     private bool _ListenSent;
-    private DateTimeOffset _LastInboundUtc = DateTimeOffset.MinValue;
+    private DateTimeOffset _LastInboundUtc;
     
     public event Func<FollowHappened, CancellationToken, Task>? OnFollow;
     public event Func<SubHappened, CancellationToken, Task>? OnSub;
@@ -45,18 +43,18 @@ public class TwitchPubSubClient : ITwitchEvents
         _Reconnect = reconnect;
 
         string identityJson = twitchFileReader.ReadTwitchGeneralAuthFile();
-        _Identity = JsonConvert.DeserializeObject<TwitchGeneralFile>(identityJson) 
-                    ?? throw new InvalidOperationException("TwitchGeneralFile missing/invalid");
+        var identity = JsonConvert.DeserializeObject<TwitchGeneralFile>(identityJson) 
+                       ?? throw new InvalidOperationException("TwitchGeneralFile missing/invalid");
 
-        if (string.IsNullOrWhiteSpace(_Identity.ChannelId))
+        if (string.IsNullOrWhiteSpace(identity.ChannelId))
             throw new InvalidOperationException("ChannelId is empty in TwitchGeneralFile");
 
         _Topics =
         [
-            $"following.{_Identity.ChannelId}",
-            $"channel-subscribe-events-v1.{_Identity.ChannelId}",
-            $"channel-points-channel-v1.{_Identity.ChannelId}",
-            $"community-points-channel-v1.{_Identity.ChannelId}"
+            $"following.{identity.ChannelId}",
+            $"channel-subscribe-events-v1.{identity.ChannelId}",
+            $"channel-points-channel-v1.{identity.ChannelId}",
+            $"community-points-channel-v1.{identity.ChannelId}"
         ];
 
         _Ws.OnConnected += HandleConnected;
@@ -151,6 +149,8 @@ public class TwitchPubSubClient : ITwitchEvents
 
     private void DispatchDomainEvent(PubSubInboundMessage msg)
     {
+        if (string.IsNullOrEmpty(msg.Topic)) return;
+        
         if (msg.Topic.StartsWith("following."))
         {
             FollowHappened model = new FollowHappened(

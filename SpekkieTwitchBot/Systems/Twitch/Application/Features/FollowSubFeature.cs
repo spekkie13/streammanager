@@ -1,8 +1,9 @@
 ﻿using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
-using SpekkieTwitchBot.Systems.Twitch.Models;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
+using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
-namespace SpekkieTwitchBot.Systems.Twitch.Features;
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
 public class FollowSubFeature
 {

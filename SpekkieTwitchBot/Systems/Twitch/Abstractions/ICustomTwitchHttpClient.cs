@@ -1,4 +1,4 @@
-namespace TwitchAuthService.Interfaces;
+namespace SpekkieTwitchBot.Systems.Twitch.Abstractions;
 
 public interface ICustomTwitchHttpClient
 {

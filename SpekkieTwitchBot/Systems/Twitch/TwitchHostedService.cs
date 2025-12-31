@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+using SpekkieTwitchBot.Systems.Twitch.Application.Routing;
 
 namespace SpekkieTwitchBot.Systems.Twitch;
 
