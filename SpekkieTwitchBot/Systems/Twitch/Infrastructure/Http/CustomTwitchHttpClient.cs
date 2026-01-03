@@ -6,22 +6,14 @@ using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 
-public class CustomTwitchHttpClient : ICustomTwitchHttpClient
+public class CustomTwitchHttpClient(ITwitchAuthTokenProvider tokens) : ICustomTwitchHttpClient
 {
-    private readonly HttpClient _Client;
-    private readonly ITwitchAuthTokenProvider _Tokens;
-
-    public CustomTwitchHttpClient(
-        ITwitchAuthTokenProvider tokens
-    ) {
-        _Client = new HttpClient();
-        _Tokens = tokens;
-    }
+    private readonly HttpClient _Client = new();
 
     private async Task EnsureHeadersAsync(CancellationToken cancellationToken)
     {
-        var clientId = await _Tokens.GetClientIdAsync(cancellationToken);
-        var accessToken = await _Tokens.GetUserAccessTokenAsync(cancellationToken);
+        string clientId = await tokens.GetClientIdAsync(cancellationToken);
+        string accessToken = await tokens.GetUserAccessTokenAsync(cancellationToken);
         
         _Client.DefaultRequestHeaders.Remove("client-id");
         _Client.DefaultRequestHeaders.Remove("broadcaster_id");
@@ -35,10 +27,10 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient
     {
         await EnsureHeadersAsync(ct);
         
-        var response = await send();
+        HttpResponseMessage response = await send();
         if (response.StatusCode != HttpStatusCode.Unauthorized) return response;
         
-        await _Tokens.ForceRefreshAsync(ct);
+        await tokens.ForceRefreshAsync(ct);
         await EnsureHeadersAsync(ct);
         
         response.Dispose();
@@ -56,33 +48,33 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient
 
     public async Task<int> GetFollowerCount(CancellationToken ct = default)
     {
-        var url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
-        using var msg = await GetAsync(url, ct);
-        var json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
+        string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
+        using HttpResponseMessage msg = await GetAsync(url, ct);
+        JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
         return Convert.ToInt32(json["total"]);
     }
 
     public async Task<string> GetLatestFollower(CancellationToken ct = default)
     {
-        var url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
-        using var msg = await GetAsync(url, ct);
-        var json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
+        string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
+        using HttpResponseMessage msg = await GetAsync(url, ct);
+        JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
         return json["data"]?[0]?["user_name"]?.ToString() ?? "N/A";
     }
 
     public async Task<int> GetSubscriberCount(CancellationToken ct = default)
     {
-        var url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
-        using var msg = await GetAsync(url, ct);
-        var json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
+        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
+        using HttpResponseMessage msg = await GetAsync(url, ct);
+        JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
         return Convert.ToInt32(json["total"]);
     }
 
     public async Task<string> GetLatestSubscriber(CancellationToken ct = default)
     {
-        var url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
-        using var msg = await GetAsync(url, ct);
-        var json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
+        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={TwitchConstants.BroadcasterId}";
+        using HttpResponseMessage msg = await GetAsync(url, ct);
+        JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
         return json["data"]?[0]?["user_name"]?.ToString() ?? "N/A";
     }
 }

@@ -21,42 +21,76 @@ public sealed record PubSubInboundMessage(
 
 public sealed class PubSubMessageParser
 {
-    public PubSubInboundMessage Parse(string raw)
+    public static PubSubInboundMessage Parse(string raw)
     {
-        using var doc = JsonDocument.Parse(raw);
-        var root = doc.RootElement;
+        using JsonDocument doc = JsonDocument.Parse(raw);
+        JsonElement root = doc.RootElement;
 
-        var type = root.TryGetProperty("type", out var t) ? t.GetString() : null;
-        if (type is null) return new(PubSubInboundKind.Unknown);
+        string? type = root.TryGetProperty("type", out JsonElement t) ? t.GetString() : null;
+        if (type is null) return new PubSubInboundMessage(PubSubInboundKind.Unknown);
 
         switch (type)
         {
             case "PONG":
-                return new(PubSubInboundKind.Pong);
+                return new PubSubInboundMessage(PubSubInboundKind.Pong);
 
             case "RECONNECT":
-                return new(PubSubInboundKind.Reconnect);
+                return new PubSubInboundMessage(PubSubInboundKind.Reconnect);
 
             case "RESPONSE":
             {
-                var nonce = root.GetProperty("nonce").GetString();
-                var err = root.GetProperty("error").GetString();
-                var ok = string.IsNullOrEmpty(err);
-                return new(PubSubInboundKind.Response, Nonce: nonce, Success: ok, Error: err);
+                string? nonce = root.GetProperty("nonce").GetString();
+                string? err = root.GetProperty("error").GetString();
+                bool ok = string.IsNullOrEmpty(err);
+                return new PubSubInboundMessage(PubSubInboundKind.Response, Nonce: nonce, Success: ok, Error: err);
             }
 
             case "MESSAGE":
             {
                 // MVP: only expose topic; later parse message.data.message JSON per topic
-                var data = root.GetProperty("data");
-                var topic = data.GetProperty("topic").GetString();
+                JsonElement data = root.GetProperty("data");
+                string? topic = data.GetProperty("topic").GetString();
+                
+                JsonElement inner = ParseInnerMessage(data);
+                
+                JsonElement redemptionElement = inner.GetProperty("data").GetProperty("redemption");
+                JsonElement rewardElement = redemptionElement.GetProperty("reward");
 
-                // Later: decode data.message (stringified JSON)
-                return new(PubSubInboundKind.Message, Topic: topic);
+                string rewardId = rewardElement.GetProperty("id").GetString() ?? "";
+                string rewardTitle = rewardElement.GetProperty("title").GetString() ?? "";
+                string userId = redemptionElement.GetProperty("user").GetProperty("id").GetString() ?? "";
+                string userName = redemptionElement.GetProperty("user").GetProperty("login").GetString() ?? "";
+                string redemptionId = redemptionElement.GetProperty("id").GetString() ?? "";
+                DateTimeOffset redemptionTime = DateTimeOffset.Parse(redemptionElement.GetProperty("redeemed_at").GetString() ?? DateTimeOffset.UtcNow.ToString("O"));
+                string userInput = "";
+                if (redemptionElement.TryGetProperty("user_input", out JsonElement userInputStr))
+                    userInput = userInputStr.GetString() ?? "";
+                
+                var redemption = new ChannelPointRedeemed(
+                    RewardId: rewardId,
+                    RewardTitle: rewardTitle,
+                    UserId: userId,
+                    UserName: userName,
+                    RedemptionId: redemptionId,
+                    RedeemedAt: redemptionTime,
+                    UserInput: userInput
+                );
+                
+                return new PubSubInboundMessage(PubSubInboundKind.Message, Topic: topic, Redemption: redemption);
             }
 
             default:
-                return new(PubSubInboundKind.Unknown);
+                return new PubSubInboundMessage(PubSubInboundKind.Unknown);
         }
+    }
+    
+    private static JsonElement ParseInnerMessage(JsonElement outer)
+    {
+        var innerJson = outer.GetProperty("message").GetString();
+        if (string.IsNullOrWhiteSpace(innerJson))
+            throw new InvalidOperationException("data.message was empty");
+
+        using var innerDoc = JsonDocument.Parse(innerJson);
+        return innerDoc.RootElement.Clone(); // Clone zodat je hem buiten using kan gebruiken
     }
 }

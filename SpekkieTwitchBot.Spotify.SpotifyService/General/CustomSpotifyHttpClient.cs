@@ -136,15 +136,14 @@ public class CustomSpotifyHttpClient
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            Setup(); // refresh token etc.
+            Setup();
             response = await GetAsync(url);
         }
 
-        // 204/empty = normaal
         if (response.StatusCode == HttpStatusCode.NoContent)
             return null;
 
-        var json = await response.Content.ReadAsStringAsync();
+        string json = await response.Content.ReadAsStringAsync();
         if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null")
             return null;
 
@@ -155,15 +154,13 @@ public class CustomSpotifyHttpClient
         }
         catch
         {
-            return null; // slechte/lege JSON -> stil
+            return null; 
         }
 
-        // item kan null zijn (ads/podcasts/device switch)
-        var itemData = root["item"] as JObject;
-        if (itemData is null)
+        if (root["item"] is not JObject itemData)
             return null;
 
-        var item = new FullTrack
+        FullTrack item = new FullTrack
         {
             Href = itemData.Value<string>("href") ?? "",
             Id = itemData.Value<string>("id") ?? "",
@@ -177,25 +174,20 @@ public class CustomSpotifyHttpClient
             Popularity = itemData.Value<int?>("popularity") ?? 0,
             Explicit = itemData.Value<bool?>("explicit") ?? false,
             IsLocal = itemData.Value<bool?>("is_local") ?? false,
+            AvailableMarkets = ReadStringArray(itemData["available_markets"]),
+            ExternalIds = SafeDeserialize<Dictionary<string, string>>(itemData["external_ids"]) ?? new Dictionary<string, string>(),
+            ExternalUrls = SafeDeserialize<Dictionary<string, string>>(itemData["external_urls"]) ?? new Dictionary<string, string>(),
+            Artists = SafeDeserialize<List<SimpleArtist>>(itemData["artists"]) ?? []
         };
 
-        // --- available_markets SAFE ---
-        item.AvailableMarkets = ReadStringArray(itemData["available_markets"]);
-
-        // Dictionaries/lists veilig deserializen
-        item.ExternalIds = SafeDeserialize<Dictionary<string, string>>(itemData["external_ids"]) ?? new();
-        item.ExternalUrls = SafeDeserialize<Dictionary<string, string>>(itemData["external_urls"]) ?? new();
-        item.Artists = SafeDeserialize<List<SimpleArtist>>(itemData["artists"]) ?? new();
-
         // --- Album ---
-        var albumData = itemData["album"] as JObject;
-        if (albumData is null)
+        if (itemData["album"] is not JObject albumData)
         {
             item.Album = new SimpleAlbum();
             return item;
         }
 
-        var album = new SimpleAlbum
+        SimpleAlbum album = new SimpleAlbum
         {
             AlbumType = albumData.Value<string>("album_type") ?? "",
             Href = albumData.Value<string>("href") ?? "",
@@ -207,9 +199,9 @@ public class CustomSpotifyHttpClient
             Uri = albumData.Value<string>("uri") ?? "",
             TotalTracks = albumData.Value<int?>("total_tracks") ?? 0,
             AvailableMarkets = ReadStringArray(albumData["available_markets"]),
-            ExternalUrls = SafeDeserialize<Dictionary<string, string>>(albumData["external_urls"]) ?? new(),
-            Artists = SafeDeserialize<List<SimpleArtist>>(albumData["artists"]) ?? new(),
-            Images = SafeDeserialize<List<Image>>(albumData["images"]) ?? new(),
+            ExternalUrls = SafeDeserialize<Dictionary<string, string>>(albumData["external_urls"]) ?? new Dictionary<string, string>(),
+            Artists = SafeDeserialize<List<SimpleArtist>>(albumData["artists"]) ?? [],
+            Images = SafeDeserialize<List<Image>>(albumData["images"]) ?? [],
         };
 
         item.Album = album;
@@ -218,14 +210,12 @@ public class CustomSpotifyHttpClient
 
     private static List<string> ReadStringArray(JToken? token)
     {
-        // Spotify: meestal JArray, maar soms null / inconsistent
         if (token is JArray arr)
             return arr.Values<string>().Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
 
-        // als het tóch als string binnenkomt (edge case), supporten we dat ook
         if (token?.Type != JTokenType.String) return [];
         {
-            var s = token.Value<string>() ?? "";
+            string s = token.Value<string>() ?? "";
             return s.Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => x.Trim().Trim('"'))
                 .Where(x => !string.IsNullOrWhiteSpace(x))

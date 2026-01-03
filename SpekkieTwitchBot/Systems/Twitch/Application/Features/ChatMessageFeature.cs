@@ -1,4 +1,5 @@
-﻿using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+﻿using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
@@ -13,12 +14,12 @@ public sealed class ChatMessageFeature
     public async Task OnMessageAsync(ChatMessageReceived e, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(e.CustomRewardId)) return;
-
-        var redemptions = await _ChannelPoints.GetCustomRedemptions();
-        var redemption = redemptions.FirstOrDefault(r => r.Id == e.CustomRewardId);
+        
+        List<ChannelPointData> redemptions = await _ChannelPoints.GetCustomRedemptions();
+        ChannelPointData? redemption = redemptions.FirstOrDefault(r => r.Id == e.CustomRewardId);
         if (redemption == null) return;
 
-        var reply = redemption.Title switch
+        string reply = redemption.Title switch
         {
             "Song request" => _Spotify.HandleAddSongToQueueCommand(e.Text),
             "Hydrate" => "Take a Sip Spekkie!",

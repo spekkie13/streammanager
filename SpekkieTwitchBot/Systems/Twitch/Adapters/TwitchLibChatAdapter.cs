@@ -44,7 +44,7 @@ public class TwitchLibChatAdapter : ITwitchChat
     {
         if (!_Client.IsInitialized)
         {
-            var channel = (_Identity?.BroadcasterName ?? _Identity?.BotName ?? "").Trim();
+            string channel = (_Identity?.BroadcasterName ?? _Identity?.BotName ?? "").Trim();
 
             if (string.IsNullOrWhiteSpace(channel))
                 throw new InvalidOperationException("No Channel Name found. Expected BroadcasterName or BotName");
@@ -52,7 +52,7 @@ public class TwitchLibChatAdapter : ITwitchChat
             if (channel.StartsWith("#"))
                 channel = channel[1..];
             
-            var token = (_Identity?.ImplicitOAuth ?? "").Trim();
+            string token = (_Identity?.ImplicitOAuth ?? "").Trim();
             
             if (string.IsNullOrWhiteSpace(token))
                 throw new InvalidOperationException("No OAuth Token found. Expected ImplicitOAuth Token");
@@ -60,7 +60,7 @@ public class TwitchLibChatAdapter : ITwitchChat
             if (!token.StartsWith("oauth:", StringComparison.OrdinalIgnoreCase))
                 token = "oauth:" + token;
             
-            var creds = new ConnectionCredentials(_Identity?.BroadcasterName, token);
+            ConnectionCredentials creds = new ConnectionCredentials(twitchUsername: _Identity?.BroadcasterName, twitchOAuth: token);
             
             _Client.Initialize(creds, channel);
         }

@@ -27,7 +27,7 @@ public class FollowSubFeature
         
         await _Files.WriteMostRecentFollowerAsync(e.UserName, cancellationToken);
         
-        var totalFollowers = await _Api.GetFollowerCount(cancellationToken);
+        int totalFollowers = await _Api.GetFollowerCount(cancellationToken);
         await _Files.WriteTotalFollowersAsync(totalFollowers, cancellationToken);
         
         await _Chat.SendAsync(message: $"Thanks for the follow {e.UserName}", cancellationToken);
@@ -37,10 +37,10 @@ public class FollowSubFeature
     {
         if (string.IsNullOrEmpty(e.RecipientUserName)) return;
 
-        var latestSubscriber = FormatLatestSub(e);
+        string latestSubscriber = FormatLatestSub(e);
         await _Files.WriteMostRecentSubscriberAsync(latestSubscriber, cancellationToken);
         
-        var totalSubs = await _Api.GetSubscriberCount(cancellationToken);
+        int totalSubs = await _Api.GetSubscriberCount(cancellationToken);
         await _Files.WriteTotalSubscribersAsync(totalSubs, cancellationToken);
         
         await _Chat.SendAsync(message: FormatChatThanks(e), cancellationToken);
