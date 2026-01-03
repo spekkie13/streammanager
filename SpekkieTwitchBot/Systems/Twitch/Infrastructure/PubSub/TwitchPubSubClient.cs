@@ -12,15 +12,12 @@ public class TwitchPubSubClient : ITwitchEvents
     private readonly Logger _Log;
     private readonly ITwitchAuthTokenProvider _TokenProvider;
     private readonly PubSubWebSocketClient _Ws;
-    private readonly PubSubMessageBuilder _Builder;
-    private readonly PubSubMessageParser _Parser;
     private readonly PubSubReconnectPolicy _Reconnect;
 
     private readonly string[] _Topics;
 
     private CancellationToken _RunCt;
     private bool _ListenSent;
-    private DateTimeOffset _LastInboundUtc;
     
     public event Func<FollowHappened, CancellationToken, Task>? OnFollow;
     public event Func<SubHappened, CancellationToken, Task>? OnSub;
@@ -31,19 +28,15 @@ public class TwitchPubSubClient : ITwitchEvents
         ITwitchAuthTokenProvider tokenProvider,
         TwitchFileReader twitchFileReader,
         PubSubWebSocketClient ws,
-        PubSubMessageBuilder builder,
-        PubSubMessageParser parser,
         PubSubReconnectPolicy reconnect)
     {
         _Log = log;
         _TokenProvider = tokenProvider;
         _Ws = ws;
-        _Builder = builder;
-        _Parser = parser;
         _Reconnect = reconnect;
 
         string identityJson = twitchFileReader.ReadTwitchGeneralAuthFile();
-        var identity = JsonConvert.DeserializeObject<TwitchGeneralFile>(identityJson) 
+        TwitchGeneralFile identity = JsonConvert.DeserializeObject<TwitchGeneralFile>(identityJson) 
                        ?? throw new InvalidOperationException("TwitchGeneralFile missing/invalid");
 
         if (string.IsNullOrWhiteSpace(identity.ChannelId))
@@ -82,6 +75,7 @@ public class TwitchPubSubClient : ITwitchEvents
     {
         try
         {
+            if (_ListenSent) return;
             _Log.LogWarning("[PubSub] Connected -> sending LISTEN");
 
             string userToken = await _TokenProvider.GetUserAccessTokenAsync(_RunCt);
@@ -91,7 +85,7 @@ public class TwitchPubSubClient : ITwitchEvents
                 return;
             }
 
-            string listenJson = _Builder.BuildListen(topics: _Topics, userAccessToken: userToken);
+            string listenJson = PubSubMessageBuilder.BuildListen(topics: _Topics, userAccessToken: userToken);
             _Ws.Send(listenJson);
 
             _ListenSent = true;
@@ -118,10 +112,7 @@ public class TwitchPubSubClient : ITwitchEvents
 
     private void HandleMessage(string raw)
     {
-        _LastInboundUtc = DateTimeOffset.UtcNow;
-
-        _Log.LogWarning(raw);
-        PubSubInboundMessage msg = _Parser.Parse(raw);
+        PubSubInboundMessage msg = PubSubMessageParser.Parse(raw);
         switch (msg.Kind)
         {
             case PubSubInboundKind.Response:
@@ -141,6 +132,7 @@ public class TwitchPubSubClient : ITwitchEvents
                 DispatchDomainEvent(msg);
                 return;
 
+            case PubSubInboundKind.Unknown:
             default:
                 _Log.LogWarning($"[PubSub] Unhandled inbound: {raw}");
                 return;
@@ -173,7 +165,6 @@ public class TwitchPubSubClient : ITwitchEvents
         {
             if (msg.Redemption is null) return;
             FireAndForget(RaiseAsync(OnChannelPointRedeemed, msg.Redemption, _RunCt));
-            return;
         }
     }
 

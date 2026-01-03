@@ -4,7 +4,7 @@ namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
 
 public sealed class PubSubMessageBuilder
 {
-    public string BuildListen(IEnumerable<string> topics, string userAccessToken)
+    public static string BuildListen(IEnumerable<string> topics, string userAccessToken)
     {
         // PubSub expects token without "oauth:" prefix
         string token = userAccessToken.StartsWith("oauth:", StringComparison.OrdinalIgnoreCase)
