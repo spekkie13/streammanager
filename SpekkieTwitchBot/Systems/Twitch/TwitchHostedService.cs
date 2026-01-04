@@ -4,35 +4,25 @@ using SpekkieTwitchBot.Systems.Twitch.Application.Routing;
 
 namespace SpekkieTwitchBot.Systems.Twitch;
 
-public class TwitchHostedService : IHostedService
+public class TwitchHostedService(
+    ITwitchChat chat,
+    ITwitchEvents events,
+    TwitchEventRouter router
+    ) : IHostedService
 {
-    private readonly ITwitchChat _Chat;
-    private readonly ITwitchEvents _Events;
-    private readonly TwitchEventRouter _Router;
-    
-    public TwitchHostedService(
-        ITwitchChat chat,
-        ITwitchEvents events,
-        TwitchEventRouter router) 
-    {
-        _Chat = chat;
-        _Events = events;
-        _Router = router;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _Router.Wire(cancellationToken);
+        router.Wire(cancellationToken);
         
-        await _Chat.ConnectAsync(cancellationToken);
-        await _Events.ConnectAsync(cancellationToken);
+        await chat.ConnectAsync(cancellationToken);
+        await events.ConnectAsync(cancellationToken);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _Router.Unwire();
+        router.Unwire();
         
-        await _Chat.DisconnectAsync(cancellationToken);
-        await _Events.DisconnectAsync(cancellationToken);
+        await chat.DisconnectAsync(cancellationToken);
+        await events.DisconnectAsync(cancellationToken);
     }
 }

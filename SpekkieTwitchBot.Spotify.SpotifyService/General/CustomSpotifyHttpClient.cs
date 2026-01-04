@@ -211,7 +211,7 @@ public class CustomSpotifyHttpClient
     private static List<string> ReadStringArray(JToken? token)
     {
         if (token is JArray arr)
-            return arr.Values<string>().Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+            return arr.Values<string>().Where(s => !string.IsNullOrWhiteSpace(s)).ToList()!;
 
         if (token?.Type != JTokenType.String) return [];
         {

@@ -87,13 +87,12 @@ public static class Program
                 // -----------------------
                 // Twitch core
                 // -----------------------
-                // (Laat staan als je dit echt gebruikt; anders kan hij eruit)
                 services.AddSingleton<CustomClient>();
 
                 services.AddSingleton<CustomTwitchHttpClient>();
                 services.AddSingleton<ICustomTwitchHttpClient>(sp => sp.GetRequiredService<CustomTwitchHttpClient>());
 
-                services.AddSingleton<CustomTwitchClient>(); // nodig voor TwitchLibChatAdapter
+                services.AddSingleton<CustomTwitchClient>();
 
                 services.AddSingleton<TwitchUserFile>();
                 services.AddSingleton<TwitchGeneralFile>();
@@ -107,7 +106,7 @@ public static class Program
                 services.AddSingleton<ITwitchChat, TwitchLibChatAdapter>();
 
                 // -----------------------
-                // PubSub (Route A - your own)
+                // PubSub
                 // -----------------------
                 services.AddSingleton<PubSubWebSocketClient>();
                 services.AddSingleton<PubSubMessageBuilder>();
@@ -147,7 +146,7 @@ public static class Program
                 services.AddSingleton<IrcParser>();
 
                 // -----------------------
-                // Features (1x elk)
+                // Features
                 // -----------------------
                 services.AddSingleton<ChannelPointsFeature>();
                 services.AddSingleton<FollowSubFeature>();

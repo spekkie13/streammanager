@@ -101,7 +101,7 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
                 : new ObsDisconnectionInfo((ObsCloseCodes)d.CloseStatus, d.CloseStatusDescription, d));
     }
 
-    private void WebsocketMessageHandler(object sender, ResponseMessage e)
+    private void WebsocketMessageHandler(object? sender, ResponseMessage e)
     {
         if (e.MessageType != WebSocketMessageType.Text)
         {
