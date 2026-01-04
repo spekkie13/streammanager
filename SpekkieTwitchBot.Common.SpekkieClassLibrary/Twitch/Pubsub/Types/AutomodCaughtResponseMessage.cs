@@ -10,6 +10,4 @@ public class AutomodCaughtResponseMessage : UserModerationNotificationsData
 
     [JsonProperty(PropertyName = "status")]
     public string? Status { get; protected set; }
-    
-    public static AutomodCaughtResponseMessage Empty => new AutomodCaughtResponseMessage();
 }
