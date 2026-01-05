@@ -23,10 +23,10 @@ public class TwitchLibChatAdapter : ITwitchChat
         
         _Client.OnChatCommandReceived += async (_, e) =>
         {
-            var cmd = e.Command;
-            var msg = cmd.ChatMessage;
+            ChatCommand? cmd = e.Command;
+            ChatMessage? msg = cmd.ChatMessage;
 
-            var ev = new ChatCommandReceived(
+            ChatCommandReceived ev = new ChatCommandReceived(
                 MessageId: msg.Id,
                 UserId: msg.UserId,
                 Username: msg.Username,
@@ -77,9 +77,9 @@ public class TwitchLibChatAdapter : ITwitchChat
 
     public Task ReplyAsync(string replyToMessageId, string message, CancellationToken ct)
     {
-        if (string.IsNullOrEmpty(_Identity?.ChannelId)) return Task.CompletedTask;
+        if (string.IsNullOrEmpty(_Identity?.BroadcasterName)) return Task.CompletedTask;
         
-        _Client.SendReply(_Identity.ChannelId, replyToMessageId, message);
+        _Client.SendReply(_Identity.BroadcasterName, replyToMessageId, message);
         return Task.CompletedTask;
     }
 

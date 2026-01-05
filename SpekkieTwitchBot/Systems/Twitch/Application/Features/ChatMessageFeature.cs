@@ -11,9 +11,19 @@ public sealed class ChatMessageFeature
     private readonly ChannelPointsFeature _ChannelPoints;
     private readonly SpotifyCommandHandler _Spotify;
 
+    public ChatMessageFeature(ITwitchChat chat, ChannelPointsFeature channelPoints, SpotifyCommandHandler spotify)
+    {
+        _Chat = chat;
+        _ChannelPoints = channelPoints;
+        _Spotify = spotify;
+    }
+
     public async Task OnMessageAsync(ChatMessageReceived e, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(e.CustomRewardId)) return;
+//        if (!string.IsNullOrEmpty(e.CustomRewardId))
+//        {
+//            await _ChannelPoints.OnRedeemedAsync(e, cancellationToken);
+//        }
         
         List<ChannelPointData> redemptions = await _ChannelPoints.GetCustomRedemptions();
         ChannelPointData? redemption = redemptions.FirstOrDefault(r => r.Id == e.CustomRewardId);

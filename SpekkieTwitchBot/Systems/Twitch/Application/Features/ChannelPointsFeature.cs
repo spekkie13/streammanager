@@ -39,26 +39,13 @@ public class ChannelPointsFeature
         {
             case "Song Request":
             {
-                // De user input is je track request
                 string input = e.UserInput ?? "";
                 if (string.IsNullOrWhiteSpace(input))
                     return;
+                
+                string result = await HandleSongRedemption(input, e.RedemptionId, e.RewardId, ct);
 
-                string result = _Spotify.HandleAddSongToQueueCommand(input);
-                bool success = result.Contains("Added", StringComparison.OrdinalIgnoreCase);
-
-                HttpResponseMessage? msg = await UpdateRedemptionStatus(
-                    id: e.RedemptionId,
-                    broadcasterId: TwitchConstants.BroadcasterId,
-                    rewardId: e.RewardId,
-                    status: success
-                        ? TwitchConstants.ChannelPointStatusFulfilled
-                        : TwitchConstants.ChannelPointStatusCancelled,
-                    ct: ct
-                );
-
-                if (msg != null)
-                    _Logger.LogInfo(msg.ToString());
+                _Logger.LogInfo(result);
 
                 await _Chat.SendAsync(result, ct);
 
@@ -72,34 +59,20 @@ public class ChannelPointsFeature
         }
     }
     
-    public HttpResponseMessage? HandleSongRedemption(bool success, string redemptionId, string rewardId, CancellationToken ct)
+    private async Task<string> HandleSongRedemption(string input, string redemptionId, string rewardId, CancellationToken ct)
     {
+        string result = _Spotify.HandleAddSongToQueueCommand(input);
+        bool success = result.Contains("Added", StringComparison.OrdinalIgnoreCase);
+        
         string status = success
             ? TwitchConstants.ChannelPointStatusFulfilled
             : TwitchConstants.ChannelPointStatusCancelled;
         
-        HttpResponseMessage? message = UpdateRedemptionStatus(redemptionId, TwitchConstants.BroadcasterId, rewardId, status, ct).Result;
-        return message;
-    }
-
-    public async Task<Redemption> GetMostRecentRedemptionForUser(string username)
-    {
-        List<ChannelPointData> redemption = await GetCustomRedemptions();
-        List<string?> redemptionIds = redemption.Select(r => r.Id).ToList();
-        if (redemptionIds.Count == 0) return Redemption.Empty;
+        await UpdateRedemptionStatus(redemptionId, TwitchConstants.BroadcasterId, rewardId, status, ct);
         
-        List<Redemption> outstandingRedemptions = [];
-        foreach (string? id in redemptionIds)
-        {
-            Redemption[] redemptionData = await GetRedemptionsByStatus(id);
-            outstandingRedemptions.AddRange(redemptionData.ToList());
-        }
-        
-        outstandingRedemptions.Sort((r1, r2) => DateTime.Compare(DateTime.Parse(r1.RedeemedAt!), DateTime.Parse(r2.RedeemedAt!)));
-        Redemption red = outstandingRedemptions.First(red => red.UserName == username);
-        return red;
+        return success ? $"successfully added {input} to queue" : $"failed to add {input} to queue";
     }
-
+    
     public string CreateRedemption(string commandArgs)
     {
         string title = commandArgs.Split("|")[0];
@@ -136,21 +109,7 @@ public class ChannelPointsFeature
         return rewardIds;
     }
 
-    private async Task<Redemption[]> GetRedemptionsByStatus(string? rewardId)
-    {
-        if (string.IsNullOrEmpty(rewardId)) return [];
-        string url =
-            $"{TwitchConstants.TwitchChannelRedemptionsUrl}{TwitchConstants.BroadcasterId}&reward_id={rewardId}&status={TwitchConstants.ChannelPointStatusUncompleted}";
-
-        HttpResponseMessage message = await _Client.GetAsync(url);
-        if (!message.IsSuccessStatusCode) return [];
-
-        string response = await message.Content.ReadAsStringAsync();
-        CpRewardRequest? unfulfilled = JsonConvert.DeserializeObject<CpRewardRequest>(response);
-        return unfulfilled?.Data ?? [];
-    }
-
-    public async Task<HttpResponseMessage?> UpdateRedemptionStatus(
+    private async Task UpdateRedemptionStatus(
         string? id,
         string? broadcasterId,
         string? rewardId,
@@ -158,13 +117,12 @@ public class ChannelPointsFeature
         CancellationToken ct)
     {
         if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(broadcasterId) || string.IsNullOrEmpty(rewardId) || string.IsNullOrEmpty(status))
-            return null;
+            return;
         
         StringContent requestContent = new ($"{{\"status\":\"{status}\"}}",
             Encoding.UTF8, mediaType: "application/json");
 
         string requestUrl = $"{TwitchConstants.TwitchChannelRedemptionsUrl}{broadcasterId}&reward_id={rewardId}&id={id}";
-        HttpResponseMessage message = await _Client.PatchAsync(requestUrl, requestContent, ct);
-        return message;
+        await _Client.PatchAsync(requestUrl, requestContent, ct);
     }
 }

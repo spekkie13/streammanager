@@ -47,7 +47,6 @@ public sealed class PubSubMessageParser
 
             case "MESSAGE":
             {
-                // MVP: only expose topic; later parse message.data.message JSON per topic
                 JsonElement data = root.GetProperty("data");
                 string? topic = data.GetProperty("topic").GetString();
                 
@@ -66,7 +65,7 @@ public sealed class PubSubMessageParser
                 if (redemptionElement.TryGetProperty("user_input", out JsonElement userInputStr))
                     userInput = userInputStr.GetString() ?? "";
                 
-                var redemption = new ChannelPointRedeemed(
+                ChannelPointRedeemed redemption = new ChannelPointRedeemed(
                     RewardId: rewardId,
                     RewardTitle: rewardTitle,
                     UserId: userId,
@@ -86,11 +85,11 @@ public sealed class PubSubMessageParser
     
     private static JsonElement ParseInnerMessage(JsonElement outer)
     {
-        var innerJson = outer.GetProperty("message").GetString();
+        string? innerJson = outer.GetProperty("message").GetString();
         if (string.IsNullOrWhiteSpace(innerJson))
             throw new InvalidOperationException("data.message was empty");
 
-        using var innerDoc = JsonDocument.Parse(innerJson);
+        using JsonDocument innerDoc = JsonDocument.Parse(innerJson);
         return innerDoc.RootElement.Clone(); // Clone zodat je hem buiten using kan gebruiken
     }
 }

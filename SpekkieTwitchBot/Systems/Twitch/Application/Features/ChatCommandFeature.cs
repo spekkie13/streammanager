@@ -59,7 +59,6 @@ public sealed class ChatCommandFeature
             ? _Text.HandleCommand(e)
             : _General.HandleCommand(e);
 
-        if (!string.IsNullOrWhiteSpace(reply))
-            await _Chat.ReplyAsync(e.MessageId, reply, cancellationToken);
+        await _Chat.ReplyAsync(e.MessageId, reply, cancellationToken);
     }
 }

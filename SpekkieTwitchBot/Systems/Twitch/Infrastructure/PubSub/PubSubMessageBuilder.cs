@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
 
@@ -11,7 +12,7 @@ public sealed class PubSubMessageBuilder
             ? userAccessToken["oauth:".Length..]
             : userAccessToken;
 
-        var payload = new
+        PubSubPayload payload = new PubSubPayload
         {
             type = "LISTEN",
             nonce = Guid.NewGuid().ToString("N")[..8],
