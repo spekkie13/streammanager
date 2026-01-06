@@ -2,6 +2,7 @@
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
@@ -71,35 +72,39 @@ public class TwitchPubSubClient : ITwitchEvents
         await _Ws.CloseAsync(cancellationToken);
     }
 
-    private async void HandleConnected()
+    private void HandleConnected()
     {
-        try
+        _ = Task.Run(async () =>
         {
-            if (_ListenSent) return;
-            _Log.LogWarning("[PubSub] Connected -> sending LISTEN");
-
-            string userToken = await _TokenProvider.GetUserAccessTokenAsync(_RunCt);
-            if (string.IsNullOrWhiteSpace(userToken))
+            try
             {
-                _Log.LogError("[PubSub] User token empty -> cannot LISTEN.");
-                return;
+                if (_ListenSent) return;
+                _Log.LogWarning("[PubSub] Connected -> sending LISTEN");
+
+                string userToken = await _TokenProvider.GetUserAccessTokenAsync(_RunCt);
+                if (string.IsNullOrWhiteSpace(userToken))
+                {
+                    _Log.LogError("[PubSub] User token empty -> cannot LISTEN.");
+                    return;
+                }
+
+                string listenJson = PubSubMessageBuilder.BuildListen(topics: _Topics, userAccessToken: userToken);
+                _Ws.Send(listenJson);
+
+                _ListenSent = true;
+                _Log.LogWarning($"[PubSub] LISTEN sent topics={_Topics.Length}");
             }
-
-            string listenJson = PubSubMessageBuilder.BuildListen(topics: _Topics, userAccessToken: userToken);
-            _Ws.Send(listenJson);
-
-            _ListenSent = true;
-            _Log.LogWarning($"[PubSub] LISTEN sent topics={_Topics.Length}");
-        }
-        catch (Exception ex)
-        {
-            _Log.LogError($"[PubSub] HandleConnected failed: {ex}");
-        }
+            catch (Exception ex)
+            {
+                _Log.LogError($"[PubSub] HandleConnected failed: {ex}");
+            }
+        }, _RunCt);
     }
 
     private void HandleDisconnected(string? reason)
     {
         _Log.LogWarning($"[PubSub] Disconnected. Reason={reason ?? "unknown"}");
+        _ListenSent = false;
         
         _ = Task.Run(async () =>
         {

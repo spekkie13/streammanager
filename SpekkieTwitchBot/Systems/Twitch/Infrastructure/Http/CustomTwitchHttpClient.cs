@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Constants;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 

@@ -12,6 +12,7 @@ using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.OBS;
 using SpekkieTwitchBot.Systems.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Adapters;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;

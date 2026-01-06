@@ -5,61 +5,41 @@ using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Routing;
 
-public class TwitchEventRouter
+public class TwitchEventRouter(
+    ITwitchChat chat,
+    ITwitchEvents events,
+    ChatCommandFeature chatCommands,
+    FollowSubFeature followSub,
+    ChannelPointsFeature channelPoints,
+    CancellationToken ct) 
 {
-    private readonly ITwitchChat _Chat;
-    private readonly ITwitchEvents _Events;
-
-    private readonly ChatCommandFeature _ChatCommands;
-    private readonly FollowSubFeature _FollowSub;
-    private readonly ChannelPointsFeature _ChannelPoints;
-
-    private CancellationToken _Ct;
-
-    public TwitchEventRouter(
-        ITwitchChat chat,
-        ITwitchEvents events,
-        ChatCommandFeature chatCommands,
-        FollowSubFeature followSub,
-        ChannelPointsFeature channelPoints
-    )
+    public void Wire()
     {
-        _Chat = chat;
-        _Events = events;
-        _ChatCommands = chatCommands;
-        _FollowSub = followSub;
-        _ChannelPoints = channelPoints;
-    }
+        chat.OnChatCommandReceived += OnChatCommandReceived;
 
-    public void Wire(CancellationToken ct)
-    {
-        _Ct = ct;
-
-        _Chat.OnChatCommandReceived += OnChatCommandReceived;
-
-        _Events.OnFollow += OnFollow;
-        _Events.OnSub += OnSub;
-        _Events.OnChannelPointRedeemed += OnChannelPointRedeemed;
+        events.OnFollow += OnFollow;
+        events.OnSub += OnSub;
+        events.OnChannelPointRedeemed += OnChannelPointRedeemed;
     }
 
     public void Unwire()
     {
-        _Chat.OnChatCommandReceived -= OnChatCommandReceived;
+        chat.OnChatCommandReceived -= OnChatCommandReceived;
 
-        _Events.OnFollow -= OnFollow;
-        _Events.OnSub -= OnSub;
-        _Events.OnChannelPointRedeemed -= OnChannelPointRedeemed;
+        events.OnFollow -= OnFollow;
+        events.OnSub -= OnSub;
+        events.OnChannelPointRedeemed -= OnChannelPointRedeemed;
     }
     
     private Task OnChatCommandReceived(ChatCommandReceived ev)
-        => _ChatCommands.OnCommandAsync(ev, _Ct);
+        => chatCommands.OnCommandAsync(ev, ct);
 
     private Task OnFollow(FollowHappened ev, CancellationToken _)
-        => _FollowSub.HandleFollowAsync(ev, _Ct);
+        => followSub.HandleFollowAsync(ev, ct);
 
     private Task OnSub(SubHappened ev, CancellationToken _)
-        => _FollowSub.HandleSubAsync(ev, _Ct);
+        => followSub.HandleSubAsync(ev, ct);
 
     private Task OnChannelPointRedeemed(ChannelPointRedeemed ev, CancellationToken _)
-        => _ChannelPoints.OnRedeemedAsync(ev, _Ct);
+        => channelPoints.OnRedeemedAsync(ev, ct);
 }

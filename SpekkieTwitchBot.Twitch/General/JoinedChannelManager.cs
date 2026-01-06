@@ -5,12 +5,7 @@ namespace TwitchAuthService.General;
 
 public class JoinedChannelManager
 {
-    private readonly ConcurrentDictionary<string, JoinedChannel> _JoinedChannels;
-
-    public JoinedChannelManager()
-    {
-        _JoinedChannels = new ConcurrentDictionary<string, JoinedChannel>(StringComparer.OrdinalIgnoreCase);
-    }
+    private readonly ConcurrentDictionary<string, JoinedChannel> _JoinedChannels = new(StringComparer.OrdinalIgnoreCase);
 
     public void AddJoinedChannel(JoinedChannel channel)
     {

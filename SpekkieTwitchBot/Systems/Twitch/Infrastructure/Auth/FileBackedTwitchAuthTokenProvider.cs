@@ -2,77 +2,64 @@
 using Newtonsoft.Json;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
-using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Auth;
 
-public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
+public class FileBackedTwitchAuthTokenProvider(
+    TwitchFileReader reader,
+    TwitchFileWriter writer,
+    HttpClient httpClient,
+    Logger logger
+) : ITwitchAuthTokenProvider
 {
-    private readonly TwitchFileReader _Reader;
-    private readonly TwitchFileWriter _Writer;
-    private readonly HttpClient _HttpClient;
-    private readonly Logger _Logger;
-
     private TwitchGeneralFile? _GeneralFileCache;
     private TwitchUserFile? _UserFileCache;
-
-    public FileBackedTwitchAuthTokenProvider(
-        TwitchFileReader reader,
-        TwitchFileWriter writer,
-        HttpClient httpClient,
-        Logger logger
-    )
-    {
-        _Reader = reader;
-        _Writer = writer;
-        _HttpClient = httpClient;
-        _Logger = logger;
-    }
     
     public async Task<string> GetClientIdAsync(CancellationToken cancellationToken)
     {
-        TwitchUserFile auth = await ReadTokensAsync(cancellationToken);
+        TwitchUserFile auth = await ReadTokensAsync();
         return auth.ClientId ?? "";
     }
 
     public async Task<string> GetChannelIdAsync(CancellationToken cancellationToken)
     {
-        TwitchGeneralFile identity = await ReadIdentityAsync(cancellationToken);
+        TwitchGeneralFile identity = await ReadIdentityAsync();
         return identity.ChannelId ?? "";
     }
     
     public async Task<string> GetBroadcasterNameAsync(CancellationToken cancellationToken)
     {
-        TwitchGeneralFile identity = await ReadIdentityAsync(cancellationToken);
+        TwitchGeneralFile identity = await ReadIdentityAsync();
         return identity.BroadcasterName ?? "";
     }
     
     public async Task<string> GetUserAccessTokenAsync(CancellationToken cancellationToken)
     {
-        TwitchUserFile auth = await ReadTokensAsync(cancellationToken);
+        TwitchUserFile auth = await ReadTokensAsync();
 
         if (!string.IsNullOrWhiteSpace(auth.UserRefreshToken))
         {
             TwitchUserFile refreshed = await RefreshUserAccessTokenAsync(auth, cancellationToken);
-            await PersistAuthAsync(refreshed, cancellationToken);
+            await PersistAuthAsync(refreshed);
             return refreshed.UserToken ?? "";
         }
 
         if (!string.IsNullOrWhiteSpace(auth.Code))
         {
             TwitchUserFile exchanged = await ExchangeCodeAsync(auth, cancellationToken);
-            await PersistAuthAsync(exchanged, cancellationToken);
+            await PersistAuthAsync(exchanged);
             return exchanged.UserToken ?? "";
         }
 
-        _Logger.LogError("No usable Twitch token: missing access token and refresh token");
+        logger.LogError("No usable Twitch token: missing access token and refresh token");
         return "";
     }
 
     public async Task ForceRefreshAsync(CancellationToken cancellationToken)
     {
-        TwitchUserFile auth = await ReadTokensAsync(cancellationToken);
+        TwitchUserFile auth = await ReadTokensAsync();
 
         if (string.IsNullOrWhiteSpace(auth.UserRefreshToken))
             throw new InvalidOperationException(
@@ -81,7 +68,7 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
         TwitchUserFile refreshed =
             await RefreshUserAccessTokenAsync(auth, cancellationToken);
 
-        await PersistAuthAsync(refreshed, cancellationToken);
+        await PersistAuthAsync(refreshed);
     }
     
     private async Task<TwitchUserFile> RefreshUserAccessTokenAsync(
@@ -95,16 +82,16 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
             new KeyValuePair<string, string>("refresh_token", userAuth.UserRefreshToken ?? "")
         ]);
 
-        HttpResponseMessage response = await _HttpClient.PostAsync("https://id.twitch.tv/oauth2/token", content, ct);
+        HttpResponseMessage response = await httpClient.PostAsync("https://id.twitch.tv/oauth2/token", content, ct);
 
         if (!response.IsSuccessStatusCode)
         {
-            _Logger.LogError($"Error refreshing token: {(int)response.StatusCode} {response.StatusCode}");
+            logger.LogError($"Error refreshing token: {(int)response.StatusCode} {response.StatusCode}");
             return userAuth;
         }
 
         string payload = await response.Content.ReadAsStringAsync(ct);
-        _Logger.LogInfo($"Refreshed token successfully: {payload}");
+        logger.LogInfo($"Refreshed token successfully: {payload}");
 
         AuthorizationCredentials cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(payload) ?? AuthorizationCredentials.Empty;
 
@@ -127,25 +114,25 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
             new KeyValuePair<string, string>("redirect_uri", "http://localhost:3000/")
         ]);
 
-        HttpResponseMessage response = await _HttpClient.PostAsync("https://id.twitch.tv/oauth2/token", content, ct);
+        HttpResponseMessage response = await httpClient.PostAsync("https://id.twitch.tv/oauth2/token", content, ct);
 
         if (response.StatusCode == HttpStatusCode.BadRequest)
         {
             if (!string.IsNullOrWhiteSpace(userAuth.UserRefreshToken))
                 return await RefreshUserAccessTokenAsync(userAuth, ct);
 
-            _Logger.LogError("Code exchange failed (BadRequest) and no refresh token available.");
+            logger.LogError("Code exchange failed (BadRequest) and no refresh token available.");
             return userAuth;
         }
 
         if (!response.IsSuccessStatusCode)
         {
-            _Logger.LogError($"Failed to exchange code. Status code: {response.StatusCode}");
+            logger.LogError($"Failed to exchange code. Status code: {response.StatusCode}");
             return userAuth;
         }
 
         string payload = await response.Content.ReadAsStringAsync(ct);
-        _Logger.LogInfo(payload);
+        logger.LogInfo(payload);
 
         AuthorizationCredentials cred = JsonConvert.DeserializeObject<AuthorizationCredentials>(payload) ?? AuthorizationCredentials.Empty;
 
@@ -157,28 +144,28 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
         return userAuth;
     }
 
-    private Task PersistAuthAsync(TwitchUserFile userAuth, CancellationToken ct)
+    private Task PersistAuthAsync(TwitchUserFile userAuth)
     {
         _UserFileCache = userAuth;
         string json = JsonConvert.SerializeObject(userAuth, Formatting.Indented);
-        _Writer.WriteTwitchUserAuthFile(json);
+        writer.WriteTwitchUserAuthFile(json);
         return Task.CompletedTask;
     }
     
-    private Task<TwitchGeneralFile> ReadIdentityAsync(CancellationToken ct)
+    private Task<TwitchGeneralFile> ReadIdentityAsync()
     {
         if (_GeneralFileCache is not null) return Task.FromResult(_GeneralFileCache);
 
-        string json = _Reader.ReadTwitchGeneralAuthFile(); 
+        string json = reader.ReadTwitchGeneralAuthFile(); 
         _GeneralFileCache = JsonConvert.DeserializeObject<TwitchGeneralFile>(json) ?? new TwitchGeneralFile();
         return Task.FromResult(_GeneralFileCache);
     }
 
-    private Task<TwitchUserFile> ReadTokensAsync(CancellationToken ct)
+    private Task<TwitchUserFile> ReadTokensAsync()
     {
         if (_UserFileCache is not null) return Task.FromResult(_UserFileCache);
 
-        string json = _Reader.ReadTwitchUserAuthFile();
+        string json = reader.ReadTwitchUserAuthFile();
         _UserFileCache = JsonConvert.DeserializeObject<TwitchUserFile>(json) ?? new TwitchUserFile();
         return Task.FromResult(_UserFileCache);
     }

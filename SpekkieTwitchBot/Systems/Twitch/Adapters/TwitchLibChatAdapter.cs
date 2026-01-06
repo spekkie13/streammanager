@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json;
+using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using TwitchAuthService.Events;
+using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Adapters;
@@ -12,32 +14,23 @@ public class TwitchLibChatAdapter : ITwitchChat
 {
     private readonly CustomTwitchClient _Client;
     private readonly TwitchGeneralFile? _Identity;
+    private readonly Logger _Logger;
     
     public event Func<ChatCommandReceived, Task>? OnChatCommandReceived;
-
-    public TwitchLibChatAdapter(CustomTwitchClient client, TwitchFileReader reader)
-    {
+    public event Func<ChatMessageReceived, Task>? OnChatMessageReceived;
+    
+    public TwitchLibChatAdapter(
+        CustomTwitchClient client, 
+        TwitchFileReader reader,
+        Logger logger
+    ) {
         _Client = client;
+        _Logger = logger;
+        
         string json = reader.ReadTwitchGeneralAuthFile();
         _Identity = JsonConvert.DeserializeObject<TwitchGeneralFile>(json);
-        
-        _Client.OnChatCommandReceived += async (_, e) =>
-        {
-            ChatCommand? cmd = e.Command;
-            ChatMessage? msg = cmd.ChatMessage;
 
-            ChatCommandReceived ev = new ChatCommandReceived(
-                MessageId: msg.Id,
-                UserId: msg.UserId,
-                Username: msg.Username,
-                RawMessage: msg.Message,
-                CommandText: cmd.CommandText,             // zonder "!"
-                ArgumentsAsString: cmd.ArgumentsAsString  // "a b c"
-            );
-
-            if (OnChatCommandReceived is not null)
-                await OnChatCommandReceived.Invoke(ev);
-        };
+        _Client.OnChatCommandReceived += HandleChatCommandReceived;
     }
     
     public Task ConnectAsync(CancellationToken ct)
@@ -89,5 +82,35 @@ public class TwitchLibChatAdapter : ITwitchChat
 
         _Client.SendMessage(_Identity.ChannelId, message);
         return Task.CompletedTask;
+    }
+
+    private async Task HandleChatCommandReceivedAsync(ChatCommandReceived ev)
+    {
+        try
+        {
+            if (OnChatCommandReceived is not null)
+                await OnChatCommandReceived.Invoke(ev);
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogError($"Error handling chat command received, {ex.Message}");
+        }
+    }
+
+    private void HandleChatCommandReceived(object? sender, OnChatCommandReceivedArgs e)
+    {
+        ChatCommand? cmd = e.Command;
+        ChatMessage? msg = cmd.ChatMessage;
+
+        ChatCommandReceived ev = new ChatCommandReceived(
+            MessageId: msg.Id,
+            UserId: msg.UserId,
+            Username: msg.Username,
+            RawMessage: msg.Message,
+            CommandText: cmd.CommandText,             
+            ArgumentsAsString: cmd.ArgumentsAsString
+        );
+        
+        _ = HandleChatCommandReceivedAsync(ev);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace SpekkieTwitchBot.Systems.Twitch.Abstractions;
+﻿namespace SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 
 public interface ITwitchAuthTokenProvider
 {

@@ -12,7 +12,7 @@ public class TwitchHostedService(
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        router.Wire(cancellationToken);
+        router.Wire();
         
         await chat.ConnectAsync(cancellationToken);
         await events.ConnectAsync(cancellationToken);

@@ -14,9 +14,9 @@ public sealed class PubSubMessageBuilder
 
         PubSubPayload payload = new PubSubPayload
         {
-            type = "LISTEN",
-            nonce = Guid.NewGuid().ToString("N")[..8],
-            data = new
+            Type = "LISTEN",
+            Nonce = Guid.NewGuid().ToString("N")[..8],
+            Data = new
             {
                 topics = topics.ToArray(),
                 auth_token = token
