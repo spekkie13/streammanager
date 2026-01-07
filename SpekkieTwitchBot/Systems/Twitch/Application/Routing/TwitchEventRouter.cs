@@ -9,6 +9,7 @@ public class TwitchEventRouter(
     ITwitchChat chat,
     ITwitchEvents events,
     ChatCommandFeature chatCommands,
+    ChatMessageFeature chatMessages,
     FollowSubFeature followSub,
     ChannelPointsFeature channelPoints,
     CancellationToken ct) 
@@ -16,6 +17,7 @@ public class TwitchEventRouter(
     public void Wire()
     {
         chat.OnChatCommandReceived += OnChatCommandReceived;
+        chat.OnChatMessageReceived += OnChatMessageReceived;
 
         events.OnFollow += OnFollow;
         events.OnSub += OnSub;
@@ -33,6 +35,9 @@ public class TwitchEventRouter(
     
     private Task OnChatCommandReceived(ChatCommandReceived ev)
         => chatCommands.OnCommandAsync(ev, ct);
+
+    private Task OnChatMessageReceived(ChatMessageReceived ev)
+        => chatMessages.OnMessageAsync(ev, ct);
 
     private Task OnFollow(FollowHappened ev, CancellationToken _)
         => followSub.HandleFollowAsync(ev, ct);

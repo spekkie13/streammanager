@@ -31,6 +31,7 @@ public class TwitchLibChatAdapter : ITwitchChat
         _Identity = JsonConvert.DeserializeObject<TwitchGeneralFile>(json);
 
         _Client.OnChatCommandReceived += HandleChatCommandReceived;
+        _Client.OnMessageReceived += HandleChatMessageReceived;
     }
     
     public Task ConnectAsync(CancellationToken ct)
@@ -53,9 +54,9 @@ public class TwitchLibChatAdapter : ITwitchChat
             if (!token.StartsWith("oauth:", StringComparison.OrdinalIgnoreCase))
                 token = "oauth:" + token;
             
-            ConnectionCredentials creds = new ConnectionCredentials(twitchUsername: _Identity?.BroadcasterName, twitchOAuth: token);
+            ConnectionCredentials credentials = new (twitchUsername: _Identity?.BroadcasterName, twitchOAuth: token);
             
-            _Client.Initialize(creds, channel);
+            _Client.Initialize(credentials, channel);
         }
         
         _Client.Connect();
@@ -83,7 +84,24 @@ public class TwitchLibChatAdapter : ITwitchChat
         _Client.SendMessage(_Identity.ChannelId, message);
         return Task.CompletedTask;
     }
+    
+    private void HandleChatCommandReceived(object? sender, OnChatCommandReceivedArgs e)
+    {
+        ChatCommand? cmd = e.Command;
+        ChatMessage? msg = cmd.ChatMessage;
 
+        ChatCommandReceived ev = new (
+            MessageId: msg.Id,
+            UserId: msg.UserId,
+            Username: msg.Username,
+            RawMessage: msg.Message,
+            CommandText: cmd.CommandText,             
+            ArgumentsAsString: cmd.ArgumentsAsString
+        );
+        
+        _ = HandleChatCommandReceivedAsync(ev);
+    }
+    
     private async Task HandleChatCommandReceivedAsync(ChatCommandReceived ev)
     {
         try
@@ -97,20 +115,32 @@ public class TwitchLibChatAdapter : ITwitchChat
         }
     }
 
-    private void HandleChatCommandReceived(object? sender, OnChatCommandReceivedArgs e)
+    private void HandleChatMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
-        ChatCommand? cmd = e.Command;
-        ChatMessage? msg = cmd.ChatMessage;
+        ChatMessage msg = e.ChatMessage;
 
-        ChatCommandReceived ev = new ChatCommandReceived(
+        ChatMessageReceived ev = new 
+        ( 
             MessageId: msg.Id,
             UserId: msg.UserId,
             Username: msg.Username,
-            RawMessage: msg.Message,
-            CommandText: cmd.CommandText,             
-            ArgumentsAsString: cmd.ArgumentsAsString
+            Text: msg.Message,
+            CustomRewardId: msg.CustomRewardId ?? ""
         );
         
-        _ = HandleChatCommandReceivedAsync(ev);
+        _ = HandleChatMessageReceivedAsync(ev);
+    }
+
+    private async Task HandleChatMessageReceivedAsync(ChatMessageReceived ev)
+    {
+        try
+        {
+            if (OnChatMessageReceived is not null)
+                await OnChatMessageReceived.Invoke(ev);
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogError($"Error handling chat message received, {ex.Message}");
+        }
     }
 }
