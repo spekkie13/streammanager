@@ -3,7 +3,6 @@ using SpekkieClassLibrary.OBS.Communication;
 using SpekkieClassLibrary.OBS.Enum;
 using SpekkieClassLibrary.OBS.Events;
 using SpekkieClassLibrary.OBS.Types;
-using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using Logger = SpekkieTwitchBot.General.FileHandling.Logger;

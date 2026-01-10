@@ -1,7 +1,6 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.General.FileHandling.General;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat.Irc;
 

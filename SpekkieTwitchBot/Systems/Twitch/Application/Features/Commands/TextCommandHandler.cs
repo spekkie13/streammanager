@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Commands;
-using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;

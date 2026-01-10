@@ -1,6 +1,4 @@
-﻿using SpekkieTwitchBot.General.FileHandling.General;
-
-namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
+﻿namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class TwitchCommandHandler
 {

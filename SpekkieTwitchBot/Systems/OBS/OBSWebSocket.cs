@@ -9,7 +9,6 @@ using SpekkieClassLibrary.OBS.Enum;
 using SpekkieClassLibrary.OBS.Events;
 using SpekkieClassLibrary.OBS.Types;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.General.FileHandling.General;
 using Websocket.Client;
 using Monitor = SpekkieClassLibrary.OBS.Types.Monitor;
 

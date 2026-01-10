@@ -1,5 +1,4 @@
-﻿using SpekkieTwitchBot.General.FileHandling.General;
-using SpekkieTwitchBot.Systems.Twitch.Models.Events;
+﻿using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
@@ -12,6 +11,7 @@ public sealed class TwitchEventsFeature
         _FollowSub = followSub;
     }
 
+    //TODO: Hook Up Events
     public Task OnSubAsync(SubHappened e, CancellationToken cancellationToken = default) =>
         _FollowSub.HandleSubAsync(e, cancellationToken);
 

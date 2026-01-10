@@ -1,5 +1,4 @@
-﻿using SpekkieTwitchBot.General.FileHandling.General;
-using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
+﻿using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;

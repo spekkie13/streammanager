@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
@@ -125,7 +124,7 @@ public sealed class TwitchIrcChatClient : ITwitchChat
 
         if (!string.IsNullOrWhiteSpace(chat.CustomRewardId))
         {
-            List<ChannelPointData> redemptions = await _ChannelPoints.GetCustomRedemptions();
+            List<ChannelPointData> redemptions = await _ChannelPoints.GetCustomRedemptions(CancellationToken.None).ConfigureAwait(false);
             ChannelPointData? redemption = redemptions.FirstOrDefault(r => r.Id == chat.CustomRewardId);
             if (redemption == null) return;
         }

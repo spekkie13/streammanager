@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using SpekkieClassLibrary.Spotify;
 using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
 
 namespace SpotifyAuthService.Auth;

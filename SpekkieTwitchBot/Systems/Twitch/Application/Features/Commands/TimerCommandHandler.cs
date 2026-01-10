@@ -1,5 +1,4 @@
-﻿using SpekkieTwitchBot.General.FileHandling.General;
-using SpekkieTwitchBot.General.FileHandling.Timer;
+﻿using SpekkieTwitchBot.General.FileHandling.Timer;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
