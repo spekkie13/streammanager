@@ -3,61 +3,88 @@ using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
-public class GeneralCommandHandler(
-    GeneralFileReader generalFileReader,
-    GeneralFileWriter generalFileWriter,
-    TextCommandHandler textCommandHandler,
-    SpotifyCommandHandler spotifyCommandHandler,
-    ObsCommandHandler obsCommandHandler,
-    TimerCommandHandler timerCommandHandler,
-    TwitchCommandHandler twitchCommandHandler)
+public class GeneralCommandHandler
 {
-    private Dictionary<string, Func<string>> _CommandHandlers = new();
+    private readonly GeneralFileReader _GeneralFileReader;
+    private readonly GeneralFileWriter _GeneralFileWriter;
+    private readonly TextCommandHandler _TextCommandHandler;
+    private readonly SpotifyCommandHandler _SpotifyCommandHandler;
+    private readonly ObsCommandHandler _ObsCommandHandler;
+    private readonly TimerCommandHandler _TimerCommandHandler;
+    private readonly TwitchCommandHandler _TwitchCommandHandler;
+    
+    public GeneralCommandHandler(
+        GeneralFileReader generalFileReader,
+        GeneralFileWriter generalFileWriter,
+        TextCommandHandler textCommandHandler,
+        SpotifyCommandHandler spotifyCommandHandler,
+        ObsCommandHandler obsCommandHandler,
+        TimerCommandHandler timerCommandHandler,
+        TwitchCommandHandler twitchCommandHandler
+    )
+    {
+        _GeneralFileReader = generalFileReader;
+        _GeneralFileWriter = generalFileWriter;
+        _TextCommandHandler = textCommandHandler;
+        _SpotifyCommandHandler = spotifyCommandHandler;
+        _ObsCommandHandler = obsCommandHandler;
+        _TimerCommandHandler = timerCommandHandler;
+        _TwitchCommandHandler = twitchCommandHandler;
+    }
+    
+    private Dictionary<string, Func<CancellationToken, Task<string>>> _CommandHandlers = new();
 
-    public string HandleCommand(ChatCommandReceived command)
+    public async Task<string> HandleCommand(ChatCommandReceived command, CancellationToken ct)
     {
         string username = command.Username;
         string commandText = $"!{command.CommandText}";
         string commandArgs = command.ArgumentsAsString ?? "";
 
-        _CommandHandlers = new Dictionary<string, Func<string>>
-        { 
-            { "!commands", HandleCommandsCommand },
-            { "!afgeleid", HandleAfgeleidCommand },
-            
-            { "!song", spotifyCommandHandler.HandleGetCurrentSongCommand },
-            { "!playlist", spotifyCommandHandler.HandleGetCurrentPlaylistCommand },
-            { "!pausemusic", spotifyCommandHandler.HandlePauseMusicCommand },
-            { "!resumemusic", spotifyCommandHandler.HandleResumeMusicCommand },
-            { "!next", spotifyCommandHandler.HandleNextSongCommand },
-            { "!prev", spotifyCommandHandler.HandlePrevSongCommand },
-            { "!queue", spotifyCommandHandler.HandleGetQueueCommand },
-            { "!addsong", () => spotifyCommandHandler.HandleAddSongToQueueCommand(commandArgs) },
-            { "!playsong", () => spotifyCommandHandler.HandlePlaySpecificSongCommand(commandArgs, username) },
-            { "!createredemption", () => twitchCommandHandler.HandleCreateRedemptionCommand(commandArgs) },
+        _CommandHandlers = new Dictionary<string, Func<CancellationToken, Task<string>>>(StringComparer.OrdinalIgnoreCase)
+        {
+            // sync handlers -> wrap
+            ["!commands"] = _ => Task.FromResult(HandleCommandsCommand()),
+            ["!afgeleid"] = _ => Task.FromResult(HandleAfgeleidCommand()),
 
-            { "!setscene", () => obsCommandHandler.HandleSetSceneCommand(commandArgs) },
-            { "!mutemic", () => obsCommandHandler.HandleSetInputMute("microphone") },
-            { "!mutemusic", () => obsCommandHandler.HandleSetInputMute("spotify") },
-            { "!standardvolumes", obsCommandHandler.HandleSetStandardVolumes },
-            { "!volumezero", obsCommandHandler.HandleVolumeZero },
-            
-            { "!pausetimer", timerCommandHandler.HandlePauseTimerCommand },
-            { "!starttimer", timerCommandHandler.HandleStartTimerCommand },
-            { "!addtime", () => timerCommandHandler.HandleAddTimeToTimerCommand(commandArgs) },
-            { "!settime", () => timerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs) }
+            // Spotify (async)
+            ["!song"]        = _SpotifyCommandHandler.HandleGetCurrentSongCommand,
+            ["!playlist"]    = _SpotifyCommandHandler.HandleGetCurrentPlaylistCommand,
+            ["!pausemusic"]  = _SpotifyCommandHandler.HandlePauseMusicCommand,
+            ["!resumemusic"] = _SpotifyCommandHandler.HandleResumeMusicCommand,
+            ["!next"]       = _SpotifyCommandHandler.HandleNextSongCommand,
+            ["!prev"]       = _SpotifyCommandHandler.HandlePrevSongCommand,
+            ["!queue"]      = _SpotifyCommandHandler.HandleGetQueueCommand,
+            ["!addsong"]    = t => _SpotifyCommandHandler.HandleAddSongToQueueCommand(commandArgs, t),
+            ["!playsong"]   = t => _SpotifyCommandHandler.HandlePlaySpecificSongCommand(commandArgs, username, t),
+
+            // Twitch (als deze sync zijn -> Task.FromResult)
+            ["!createredemption"] = _ => _TwitchCommandHandler.HandleCreateRedemptionCommand(commandArgs),
+
+            // OBS (idem)
+            ["!setscene"]        = _ => Task.FromResult(_ObsCommandHandler.HandleSetSceneCommand(commandArgs)),
+            ["!mutemic"]         = _ => Task.FromResult(_ObsCommandHandler.HandleSetInputMute("microphone")),
+            ["!mutemusic"]       = _ => Task.FromResult(_ObsCommandHandler.HandleSetInputMute("spotify")),
+            ["!standardvolumes"] = _ => Task.FromResult(_ObsCommandHandler.HandleSetStandardVolumes()),
+            ["!volumezero"]      = _ => Task.FromResult(_ObsCommandHandler.HandleVolumeZero()),
+
+            // Timer (maak async als hij async is geworden, anders Task.FromResult)
+            ["!pausetimer"] = _ => Task.FromResult(_TimerCommandHandler.HandlePauseTimerCommand()),
+            ["!starttimer"] = _ => Task.FromResult(_TimerCommandHandler.HandleStartTimerCommand()),
+            ["!addtime"]    = _ => Task.FromResult(_TimerCommandHandler.HandleAddTimeToTimerCommand(commandArgs)),
+            ["!settime"]    = _ => Task.FromResult(_TimerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs)),
         };
 
-        return _CommandHandlers.TryGetValue(commandText, out Func<string>? handler)
-            ? handler.Invoke()
-            : "Unknown command";
-    }
+        if (!_CommandHandlers.TryGetValue(commandText, out var handler))
+            return "Unknown command";
 
+        return await handler(ct).ConfigureAwait(false);
+    }
+    
     private string HandleCommandsCommand()
     {
         string commands = "";
         
-        List<string> textCommands = textCommandHandler.GetTextCommands().Select(x => x.Command ?? "").ToList();
+        List<string> textCommands = _TextCommandHandler.GetTextCommands().Select(x => x.Command ?? "").ToList();
         textCommands.AddRange(_CommandHandlers.Keys);
         
         foreach (string command in textCommands)
@@ -70,10 +97,10 @@ public class GeneralCommandHandler(
 
     private string HandleAfgeleidCommand()
     {
-        string afgeleidtext = generalFileReader.ReadAfgeleidCounter();
+        string afgeleidtext = _GeneralFileReader.ReadAfgeleidCounter();
         int afgeleid = Convert.ToInt32(afgeleidtext);
         afgeleid++;
-        generalFileWriter.WriteAfgeleidCounter(afgeleid.ToString());
+        _GeneralFileWriter.WriteAfgeleidCounter(afgeleid.ToString());
         return $"Spekkie is {afgeleid}x afgeleid geweest";
     }
 }

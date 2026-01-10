@@ -1,23 +1,30 @@
 ﻿using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.General.FileHandling.General;
 
 namespace SpekkieTwitchBot.General.FileHandling.Spotify;
 
-public class SpotifyFileWriter(FileWriter fileWriter)
+public class SpotifyFileWriter
 {
+    private readonly FileWriter _FileWriter;
     private const string OutputDir = "/Output/Spotify";
-
+    
     private static readonly string BaseDir =
         Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
 
+    public SpotifyFileWriter(FileWriter fileWriter)
+    {
+        _FileWriter = fileWriter;
+    }
+    
     public void WriteSongFile(string text)
     {
         string title = text.Split(" by ")[0];
         string titleDir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}currentTitle.txt";
-        fileWriter.Write(titleDir, title);
+        _FileWriter.Write(titleDir, title);
 
         string artist = text.Split(" by ")[1];
         string artistDir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}currentArtist.txt";
-        fileWriter.Write(artistDir, artist);
+        _FileWriter.Write(artistDir, artist);
     }
 
     public void WriteCurrentSongImage(byte[] imgBytes)

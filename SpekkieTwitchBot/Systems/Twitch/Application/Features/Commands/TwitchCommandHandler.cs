@@ -1,9 +1,17 @@
-﻿namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
+﻿using SpekkieTwitchBot.General.FileHandling.General;
 
-public class TwitchCommandHandler(ChannelPointsFeature channelPointsFeature)
+namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
+
+public class TwitchCommandHandler
 {
-    public string HandleCreateRedemptionCommand(string commandArgs)
+    private readonly ChannelPointsFeature _ChannelPointsFeature;
+    public TwitchCommandHandler(ChannelPointsFeature channelPointsFeature)
     {
-        return channelPointsFeature.CreateRedemption(commandArgs);
+        _ChannelPointsFeature = channelPointsFeature;
+    }
+    
+    public async Task<string> HandleCreateRedemptionCommand(string commandArgs)
+    {
+        return await _ChannelPointsFeature.CreateRedemption(commandArgs);
     }
 }

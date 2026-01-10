@@ -1,4 +1,4 @@
-namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure;
+namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat.Irc;
 
 public sealed class IrcMessage
 {

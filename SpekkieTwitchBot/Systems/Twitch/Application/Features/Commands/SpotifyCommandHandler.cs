@@ -1,94 +1,107 @@
 ﻿using SpekkieClassLibrary.Spotify.Song;
+using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
 using SpotifyAuthService;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
-public class SpotifyCommandHandler(
-    SpotifyService spotifyService, 
-    SpotifyFileWriter spotifyFileWriter, 
-    SpotifySearchService spotifySearchService)
+public class SpotifyCommandHandler
 {
-    public string HandleGetCurrentSongCommand()
+    private readonly SpotifyService _SpotifyService;
+    private readonly SpotifyFileWriter _SpotifyFileWriter;
+    private readonly SpotifySearchService _SpotifySearchService;
+    
+    public SpotifyCommandHandler(
+        SpotifyService spotifyService,
+        SpotifyFileWriter spotifyFileWriter,
+        SpotifySearchService spotifySearchService
+    )
     {
-        string currentSong = spotifyService.GetNowPlaying();
+        _SpotifyService = spotifyService;
+        _SpotifyFileWriter = spotifyFileWriter;
+        _SpotifySearchService = spotifySearchService;
+    }
+    
+    public async Task<string> HandleGetCurrentSongCommand(CancellationToken cancellationToken = default)
+    {
+        string currentSong = await _SpotifyService.GetNowPlayingAsync(cancellationToken).ConfigureAwait(false);
         return $"The current song is {currentSong}";
     }
 
-    public string HandleGetCurrentPlaylistCommand()
+    public async Task<string> HandleGetCurrentPlaylistCommand(CancellationToken cancellationToken = default)
     {
-        string currentPlaylistUrl = spotifyService.GetCurrentlyPlayingPlaylist();
+        string currentPlaylistUrl = await _SpotifyService.GetCurrentlyPlayingPlaylistAsync(cancellationToken).ConfigureAwait(false);
         return $"The current playlist is {currentPlaylistUrl}";
     }
 
-    public string HandlePauseMusicCommand()
+    public async Task<string> HandlePauseMusicCommand(CancellationToken cancellationToken = default)
     {
-        bool success = spotifyService.PausePlayer().Result;
+        bool success = await _SpotifyService.PausePlayerAsync(cancellationToken).ConfigureAwait(false);
         return success ? "Player paused..." : "Player not paused due to an error...";
     }
 
-    public string HandleResumeMusicCommand()
+    public async Task<string> HandleResumeMusicCommand(CancellationToken cancellationToken = default)
     {
-        bool success = spotifyService.ResumePlayer().Result;
+        bool success = await _SpotifyService.ResumePlayerAsync(cancellationToken).ConfigureAwait(false);
         return success ? "Player resumed..." : "Player not resumed due to an error...";
     }
 
-    public string HandleNextSongCommand()
+    public async Task<string> HandleNextSongCommand(CancellationToken cancellationToken = default)
     {
-        bool success = spotifyService.SkipNextSong().Result;
-        string currentSong = spotifyService.GetNowPlaying();
-        spotifyFileWriter.WriteSongFile(currentSong);
+        bool success = await _SpotifyService.SkipNextSongAsync(cancellationToken).ConfigureAwait(false);
+        string currentSong = await _SpotifyService.GetNowPlayingAsync(cancellationToken).ConfigureAwait(false);
+        _SpotifyFileWriter.WriteSongFile(currentSong);
 
         return success
             ? "Skipped to the next song..."
             : "Failed to skip to the next song...";
     }
 
-    public string HandlePrevSongCommand()
+    public async Task<string> HandlePrevSongCommand(CancellationToken cancellationToken = default)
     {
-        bool success = spotifyService.SkipPrevSong().Result;
-        string currentSong = spotifyService.GetNowPlaying();
-        spotifyFileWriter.WriteSongFile(currentSong);
+        bool success = await _SpotifyService.SkipPrevSongAsync(cancellationToken).ConfigureAwait(false);
+        string currentSong = await _SpotifyService.GetNowPlayingAsync(cancellationToken).ConfigureAwait(false);
+        _SpotifyFileWriter.WriteSongFile(currentSong);
 
         return success
             ? "Skipped to the previous song..."
             : "Failed to skip to the previous song...";
     }
 
-    public string HandleAddSongToQueueCommand(string songData)
+    public async Task<string> HandleAddSongToQueueCommand(string songData, CancellationToken cancellationToken = default)
     {
-        bool success;
+        string result;
         if (songData.Split("|").Length == 2)
         {
             string title = songData.Split("|")[0];
             string artist = songData.Split("|")[1];
-            Track? song = spotifySearchService.GetSongsByName(title, artist).Result;
+            Track? song = _SpotifySearchService.GetSongsByName(title, artist).GetAwaiter().GetResult();
             if (song != null)
             {
                 string uri = song.Uri ?? "";
-                success = spotifyService.AddSongToQueue(uri).Result;
-                return success ? "Added song to the queue..." : "Could not add song to the queue...";
+                result = await _SpotifyService.AddSongToQueueAsync(uri, cancellationToken).ConfigureAwait(false);
+                return result == "Success" ? "Added song to the queue..." : "Could not add song to the queue...";
             }
         }
         else if (songData.Contains("open.spotify.com"))
         {
-            success = spotifyService.AddSongToQueue(songData).Result;
-            return success ? "Added song to the queue..." : "Could not add song to the queue...";
+            result = await _SpotifyService.AddSongToQueueAsync(songData, cancellationToken).ConfigureAwait(false);
+            return result == "Success" ? "Added song to the queue..." : "Could not add song to the queue...";
         }
 
         return "Please provide a valid spotify link";
     }
 
-    public string HandlePlaySpecificSongCommand(string song, string username)
+    public async Task<string> HandlePlaySpecificSongCommand(string song, string username, CancellationToken cancellationToken = default)
     {
         if (!username.Equals("itsspekkie", StringComparison.CurrentCultureIgnoreCase)) return "";
-        bool success = spotifyService.PlaySpecificSong(song).Result;
+        bool success = await _SpotifyService.PlaySpecificSongAsync(song, cancellationToken);
         return success ? $"started song: {song}" : $"failed to start song: {song}";
     }
 
-    public string HandleGetQueueCommand()
+    public async Task<string> HandleGetQueueCommand(CancellationToken cancellationToken = default)
     {
-        string queue = spotifyService.GetQueue();
+        string queue = await _SpotifyService.GetQueueAsync(cancellationToken);
         return $"current queue: {queue}";
     }
 }

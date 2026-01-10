@@ -2,19 +2,26 @@
 using System.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Constants;
+using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 
-public class CustomTwitchHttpClient(ITwitchAuthTokenProvider tokens) : ICustomTwitchHttpClient
+public class CustomTwitchHttpClient : ICustomTwitchHttpClient
 {
     private readonly HttpClient _Client = new();
+    private readonly ITwitchAuthTokenProvider _Tokens;
+    
+    public CustomTwitchHttpClient(ITwitchAuthTokenProvider tokens)
+    {
+        _Tokens = tokens;
+    }
 
     private async Task EnsureHeadersAsync(CancellationToken cancellationToken)
     {
-        string clientId = await tokens.GetClientIdAsync(cancellationToken);
-        string accessToken = await tokens.GetUserAccessTokenAsync(cancellationToken);
+        string clientId = await _Tokens.GetClientIdAsync(cancellationToken);
+        string accessToken = await _Tokens.GetUserAccessTokenAsync(cancellationToken);
         
         _Client.DefaultRequestHeaders.Remove("client-id");
         _Client.DefaultRequestHeaders.Remove("broadcaster_id");
@@ -31,7 +38,7 @@ public class CustomTwitchHttpClient(ITwitchAuthTokenProvider tokens) : ICustomTw
         HttpResponseMessage response = await send();
         if (response.StatusCode != HttpStatusCode.Unauthorized) return response;
         
-        await tokens.ForceRefreshAsync(ct);
+        await _Tokens.ForceRefreshAsync(ct);
         await EnsureHeadersAsync(ct);
         
         response.Dispose();

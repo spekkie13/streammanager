@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub.Models;
+﻿using SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub.Models;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
 
@@ -14,9 +14,9 @@ public sealed class PubSubMessageBuilder
 
         PubSubPayload payload = new PubSubPayload
         {
-            Type = "LISTEN",
-            Nonce = Guid.NewGuid().ToString("N")[..8],
-            Data = new
+            type = "LISTEN",
+            nonce = Guid.NewGuid().ToString("N")[..8],
+            data = new
             {
                 topics = topics.ToArray(),
                 auth_token = token

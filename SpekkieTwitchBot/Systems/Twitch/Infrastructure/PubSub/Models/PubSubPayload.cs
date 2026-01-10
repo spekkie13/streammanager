@@ -2,7 +2,7 @@
 
 public class PubSubPayload
 {
-    public required string Type { get; set; }
-    public required string Nonce { get; set; }
-    public required object Data { get; set; }
+    public required string type { get; set; }
+    public required string nonce { get; set; }
+    public required object data { get; set; }
 }

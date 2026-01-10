@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using SpekkieTwitchBot.General.FileHandling;
+using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
@@ -112,7 +113,7 @@ public class TwitchPubSubClient : ITwitchEvents
             _Log.LogWarning($"[PubSub] Reconnect scheduled in {delay.TotalMilliseconds:0}ms");
             await Task.Delay(delay, _RunCt).ConfigureAwait(false);
             await _Ws.ConnectAsync(_RunCt).ConfigureAwait(false);
-        });
+        }, _RunCt);
     }
 
     private void HandleMessage(string raw)

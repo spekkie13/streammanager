@@ -1,12 +1,18 @@
 ﻿using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Commands;
+using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class TextCommandHandler
 {
-    private List<TextCommand> _Commands = LoadTextCommands();
+    private List<TextCommand> _Commands;
+
+    public TextCommandHandler()
+    {
+        _Commands = LoadTextCommands();
+    }
 
     private static List<TextCommand> LoadTextCommands()
     {

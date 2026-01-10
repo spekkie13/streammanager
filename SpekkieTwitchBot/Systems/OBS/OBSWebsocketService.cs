@@ -1,37 +1,58 @@
 ﻿using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 using SpekkieClassLibrary.OBS.Communication;
 using SpekkieClassLibrary.OBS.Enum;
 using SpekkieClassLibrary.OBS.Events;
 using SpekkieClassLibrary.OBS.Types;
-using SpekkieTwitchBot.General.FileHandling.Twitch;
-using SpekkieTwitchBot.Systems.OBS.Models;
+using SpekkieTwitchBot.General.FileHandling.General;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
+using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using Logger = SpekkieTwitchBot.General.FileHandling.Logger;
 
 namespace SpekkieTwitchBot.Systems.OBS;
 
 public class ObsWebsocketService : IHostedService
 {
-    private const int KeepAliveInterval = 500;
+    private readonly ITwitchAuthTokenProvider _TwitchAuthTokenProvider;
+    private readonly ObsWebSocket _Socket;
     private readonly Logger _GeneralLogger;
     private readonly CancellationTokenSource _KeepAliveTokenSource;
-    private readonly ObsWebSocket _Socket;
-    private readonly string? _Url;
-    private readonly string? _Password;
+    
+    private const int KeepAliveInterval = 500;
+    private string? _Url;
+    private string? _Password;
 
     public ObsWebsocketService(
         Logger generalLogger,
         ObsWebSocket socket,
-        TwitchFileReader twitchFileReader)
-    {
+        ITwitchAuthTokenProvider twitchAuthTokenProvider
+    ) {
         _GeneralLogger = generalLogger ?? throw new ArgumentNullException(nameof(generalLogger));
         _Socket = socket ?? throw new ArgumentNullException(nameof(socket));
+        _TwitchAuthTokenProvider = twitchAuthTokenProvider ?? throw new ArgumentNullException(nameof(twitchAuthTokenProvider));
+        _KeepAliveTokenSource = new CancellationTokenSource();
+        
+        _Socket.OnConnected += OnConnect;
+        _Socket.OnDisconnected += OnDisconnect;
+        _Socket.OnStreamStateChanged += OnStreamStateChanged;
+        _Socket.OnRecordStateChanged += OnRecordStateChanged;
+    }
 
-        string jsonData = twitchFileReader.ReadTwitchGeneralAuthFile();
-        ObsConnectionOptions? auth = JsonConvert.DeserializeObject<ObsConnectionOptions>(jsonData);
-        int authCorrect = VerifyAuth(auth);
-        switch (authCorrect)
+    private void VerifyAuth(TwitchGeneralFile? auth)
+    {
+        int status = 0;
+        if (auth == null)
+            status = 1;
+        if (string.IsNullOrEmpty(auth?.ObsUrl))
+            status = 2;
+        if (string.IsNullOrEmpty(auth?.Password))
+            status = 3;
+
+        switch (status)
         {
+            case 0:
+                _Url = auth?.ObsUrl;
+                _Password = auth?.Password;
+                break;
             case 1:
                 _GeneralLogger.LogError("General auth file is empty.");
                 throw new ArgumentException("General auth file is empty.");
@@ -42,37 +63,20 @@ public class ObsWebsocketService : IHostedService
                 _GeneralLogger.LogError("General auth file is missing password.");
                 throw new ArgumentException("General auth file is missing password.");
         }
-        _Url = auth?.ObsUrl;
-        _Password = auth?.Password;
-        _KeepAliveTokenSource = new CancellationTokenSource();
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        TwitchGeneralFile twitchGeneralFile = await _TwitchAuthTokenProvider.ReadIdentityAsync(cancellationToken);
+        VerifyAuth(twitchGeneralFile);
         
-        _Socket.OnConnected += OnConnect;
-        _Socket.OnDisconnected += OnDisconnect;
-        _Socket.OnStreamStateChanged += OnStreamStateChanged;
-        _Socket.OnRecordStateChanged += OnRecordStateChanged;
-    }
-
-    private static int VerifyAuth(ObsConnectionOptions? auth)
-    {
-        int status = 0;
-        if (auth == null)
-            status = 1;
-        if (string.IsNullOrEmpty(auth?.ObsUrl))
-            status = 2;
-        if (string.IsNullOrEmpty(auth?.Password))
-            status = 3;
-
-        return status;
-    }
-
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
+        _GeneralLogger.LogInfo("[BOOT] OBSWebSocketService starting.");
         _Socket.ConnectAsync(_Url, _Password);
-        return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
+        _GeneralLogger.LogInfo("[BOOT] OBSWebSocketService stopping.");
         _Socket.Disconnect();
         return Task.CompletedTask;
     }

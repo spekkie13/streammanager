@@ -3,19 +3,28 @@ using Newtonsoft.Json;
 using SpekkieClassLibrary.Spotify;
 using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieTwitchBot.General.FileHandling;
+using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
 
 namespace SpotifyAuthService.Auth;
 
-public class SpotifyAuthService(SpotifyFileReader spotifyFileReader, Logger logger)
+public class SpotifyAuthService
 {
+    private readonly SpotifyFileReader _SpotifyFileReader;
+    private readonly Logger _Logger;
     private static SpotifyAuth? _SpotifyAuth;
+
+    public SpotifyAuthService(SpotifyFileReader spotifyFileReader, Logger logger)
+    {
+        _SpotifyFileReader = spotifyFileReader;
+        _Logger = logger;
+    }
     
     public SpotifyAuth GetSpotifyAuth()
     {
-        string jsonData = spotifyFileReader.ReadSpotifyAuthFile();
+        string jsonData = _SpotifyFileReader.ReadSpotifyAuthFile();
         _SpotifyAuth = JsonConvert.DeserializeObject<SpotifyAuth>(jsonData) ?? new SpotifyAuth();
-        logger.LogInfo($"Spotify Auth: {_SpotifyAuth}");
+        _Logger.LogInfo($"Spotify Auth: {JsonConvert.SerializeObject(_SpotifyAuth)}");
         return _SpotifyAuth;
     }
     

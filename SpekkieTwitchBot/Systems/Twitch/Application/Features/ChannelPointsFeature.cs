@@ -3,37 +3,34 @@ using Newtonsoft.Json;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.Systems.Twitch.Abstractions;
-using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
+using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
+using SpotifyAuthService;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
 public class ChannelPointsFeature
 {
     private readonly CustomTwitchHttpClient _Client;
-    private readonly SpotifyCommandHandler _Spotify;
-    private readonly ITwitchChat _Chat;
+    private readonly SpotifyService _SpotifyService;
     private readonly Logger _Logger;
 
     public ChannelPointsFeature(
         CustomTwitchHttpClient client,
-        SpotifyCommandHandler spotify,
-        ITwitchChat chat,
+        SpotifyService spotify,
         Logger logger)
     {
         _Client = client;
-        _Spotify = spotify;
-        _Chat = chat;
+        _SpotifyService = spotify;
         _Logger = logger;
     }
     
-    public async Task OnRedeemedAsync(ChannelPointRedeemed e, CancellationToken ct)
+    public async Task<string> OnRedeemedAsync(ChannelPointRedeemed e, CancellationToken ct)
     {
         // Guardrails
         if (string.IsNullOrWhiteSpace(e.RewardTitle))
-            return;
+            return "No reward title found";
 
         switch (e.RewardTitle)
         {
@@ -41,27 +38,28 @@ public class ChannelPointsFeature
             {
                 string input = e.UserInput ?? "";
                 if (string.IsNullOrWhiteSpace(input))
-                    return;
+                    return "User input is required for this reward";
                 
                 string result = await HandleSongRedemption(input, e.RedemptionId, e.RewardId, ct);
 
                 _Logger.LogInfo(result);
-
-                await _Chat.SendAsync(result, ct);
-
                 _Logger.LogInfo($"Redeemed: {e.RewardTitle} by {e.UserName}");
-                break;
+                return result;
+            }
+            case "Hydrate":
+            {
+                return "Hydrate reward redeemed";
             }
 
             default:
                 _Logger.LogInfo($"Redeemed: {e.RewardTitle} (ignored)");
-                break;
+                return "Ignored";
         }
     }
     
     private async Task<string> HandleSongRedemption(string input, string redemptionId, string rewardId, CancellationToken ct)
     {
-        string result = _Spotify.HandleAddSongToQueueCommand(input);
+        string result = await _SpotifyService.AddSongToQueueAsync(input, ct);
         bool success = result.Contains("Added", StringComparison.OrdinalIgnoreCase);
         
         string status = success
@@ -73,7 +71,7 @@ public class ChannelPointsFeature
         return success ? $"successfully added {input} to queue" : $"failed to add {input} to queue";
     }
     
-    public string CreateRedemption(string commandArgs)
+    public async Task<string> CreateRedemption(string commandArgs)
     {
         string title = commandArgs.Split("|")[0];
         string prompt = commandArgs.Split("|")[1];
@@ -87,7 +85,7 @@ public class ChannelPointsFeature
             $"{{\"title\":\"{title}\",\"cost\":{cost},\"is_user_input_required\":{isUserInputRequired.ToString().ToLower()},\"prompt\":\"{prompt[..Math.Min(prompt.Length, 200)]}\"}}";
         StringContent content = new (rewardInfo, Encoding.UTF8, "application/json");
 
-        HttpResponseMessage response = _Client.PostAsync(url, content).Result;
+        HttpResponseMessage response = await _Client.PostAsync(url, content).ConfigureAwait(false);
         string responseMessage = response.IsSuccessStatusCode
             ? "Custom reward created successfully!"
             : $"Failed to create custom reward. Status code: {response.StatusCode}";

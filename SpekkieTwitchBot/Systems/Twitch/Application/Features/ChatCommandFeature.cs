@@ -1,4 +1,5 @@
 ﻿using SpekkieClassLibrary.Twitch.Commands;
+using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
@@ -57,7 +58,7 @@ public sealed class ChatCommandFeature
         List<TextCommand> commands = _Text.GetTextCommands();
         string reply = commands.Any(x => string.Equals(x.Command, command, StringComparison.OrdinalIgnoreCase))
             ? _Text.HandleCommand(e)
-            : _General.HandleCommand(e);
+            : await _General.HandleCommand(e, cancellationToken);
 
         await _Chat.ReplyAsync(e.MessageId, reply, cancellationToken);
     }
