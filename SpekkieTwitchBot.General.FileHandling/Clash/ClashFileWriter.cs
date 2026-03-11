@@ -1,22 +1,17 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common.Interface;
+using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 
-namespace SpekkieTwitchBot.General.FileHandling.Common;
+namespace SpekkieTwitchBot.General.FileHandling.Clash;
 
-public class FileWriter : IFileWriter
+public class ClashFileWriter : IFileWriter
 {
     public void Write(string fileName, string data)
     {
-        using StreamWriter writer = new (fileName);
+        using StreamWriter writer = new StreamWriter(fileName);
         writer.WriteLine(data);
         writer.Flush();
     }
 
-    public async Task WriteAsync(string fileName, string data)
-    {
-        await using StreamWriter writer = new (fileName);
-        await writer.WriteLineAsync(data);
-        await writer.FlushAsync();
-    }
+    public Task WriteAsync(string fileName, string data) => Task.Run(() => Write(fileName, data));
 
     public async Task WriteTeamNames(string file, string teamName)
     {
