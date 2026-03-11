@@ -15,6 +15,8 @@ using SpekkieTwitchBot.Systems.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
+using SpekkieTwitchBot.ClashOfClans.StatsBot;
+using SpekkieTwitchBot.General.FileHandling.Clash;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 using SpekkieTwitchBot.Systems.Twitch.Application.Routing;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Auth;
@@ -182,6 +184,18 @@ public static class Program
                 services.AddSingleton<ITwitchAuthTokenProvider, FileBackedTwitchAuthTokenProvider>();
                 
                 // -----------------------
+                // Clash of Clans
+                // -----------------------
+                services.AddSingleton<ClashFileSetup>();
+                services.AddSingleton<ClashFileReader>();
+                services.AddSingleton<ClashFileWriter>();
+                services.AddSingleton<ClashFileManager>();
+                services.AddSingleton<CocHttpClient>();
+                services.AddSingleton<WarStatus>();
+                services.AddSingleton<WarService>();
+                services.AddHostedService(sp => sp.GetRequiredService<WarService>());
+
+                // -----------------------
                 // Command handlers
                 // -----------------------
                 services.AddSingleton<SpotifyCommandHandler>();
@@ -189,6 +203,7 @@ public static class Program
                 services.AddSingleton<TextCommandHandler>();
                 services.AddSingleton<TimerCommandHandler>();
                 services.AddSingleton<TwitchCommandHandler>();
+                services.AddSingleton<ClashCommandHandler>();
                 services.AddSingleton<GeneralCommandHandler>();
 
                 // -----------------------

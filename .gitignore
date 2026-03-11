@@ -8,6 +8,12 @@ obj/
 *.suo
 *.userosscache
 *.sln.docstates
+*.DotSettings.user
+*.pubxml.user
+*.dtbcache.v2
+*.futdcache.v2
+*.vsidx
+*.vssscc
 
 ############################################
 # Rider / JetBrains
@@ -90,3 +96,44 @@ coverage/
 
 packages/
 .nuget/
+*.nupkg
+*.nuget.dgspec.json
+*.nuget.g.props
+*.nuget.g.targets
+project.assets.json
+project.nuget.cache
+project.packagespec.json
+
+############################################
+# Rider project files
+############################################
+
+rider.project.model.nuget.info
+rider.project.restore.info
+
+############################################
+# Generated / intermediate build files
+############################################
+
+*.AssemblyInfo.cs
+*.AssemblyInfoInputs.cache
+*.csproj.CoreCompileInputs.cache
+*.csproj.AssemblyReference.cache
+*.csproj.FileListAbsolute.txt
+*.sourcelink.json
+*.GeneratedMSBuildEditorConfig.editorconfig
+*.assets.cache
+*.Up2Date
+*AssemblyAttributes.cs
+*.GlobalUsings.g.cs
+apphost
+apphost.exe
+
+############################################
+# Binary / compiled output
+############################################
+
+*.dll
+*.pdb
+*.exe
+*.xml

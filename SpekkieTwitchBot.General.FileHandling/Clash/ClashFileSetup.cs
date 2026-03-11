@@ -1,4 +1,4 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common.Interface;
+using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Clash;
 
@@ -23,7 +23,7 @@ public class ClashFileSetup : IFileSetup
     {
         try
         {
-            using FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            using FileStream fs = new(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             fs.Flush();
         }
         catch (Exception ex)

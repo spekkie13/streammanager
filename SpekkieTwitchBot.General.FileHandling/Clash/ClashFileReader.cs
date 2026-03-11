@@ -1,4 +1,4 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common.Interface;
+using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Clash;
 
@@ -16,6 +16,8 @@ public class ClashFileReader : IFileReader
         string content = reader.ReadToEnd();
         return content;
     }
+
+    public Task<string> ReadAsync(string filePath) => Task.FromResult(Read(filePath));
 
     public string ReadPlayerTag(string filePath)
     {

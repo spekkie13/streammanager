@@ -1,8 +1,8 @@
-﻿namespace SpekkieClassLibrary.Constants;
+namespace SpekkieClassLibrary.Constants;
 
 public class ClashConstants
 {
-    private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    public static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
     public static string OutputDir = $"{BaseDir}/Output/ClashOfClans";
     public static string HomeFolder = $"{OutputDir}{Path.DirectorySeparatorChar}home";
     public static string AwayFolder = $"{OutputDir}{Path.DirectorySeparatorChar}away";

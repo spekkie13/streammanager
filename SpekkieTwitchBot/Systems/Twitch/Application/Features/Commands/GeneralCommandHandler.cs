@@ -12,7 +12,8 @@ public class GeneralCommandHandler
     private readonly ObsCommandHandler _ObsCommandHandler;
     private readonly TimerCommandHandler _TimerCommandHandler;
     private readonly TwitchCommandHandler _TwitchCommandHandler;
-    
+    private readonly ClashCommandHandler _ClashCommandHandler;
+
     public GeneralCommandHandler(
         GeneralFileReader generalFileReader,
         GeneralFileWriter generalFileWriter,
@@ -20,7 +21,8 @@ public class GeneralCommandHandler
         SpotifyCommandHandler spotifyCommandHandler,
         ObsCommandHandler obsCommandHandler,
         TimerCommandHandler timerCommandHandler,
-        TwitchCommandHandler twitchCommandHandler
+        TwitchCommandHandler twitchCommandHandler,
+        ClashCommandHandler clashCommandHandler
     )
     {
         _GeneralFileReader = generalFileReader;
@@ -30,6 +32,7 @@ public class GeneralCommandHandler
         _ObsCommandHandler = obsCommandHandler;
         _TimerCommandHandler = timerCommandHandler;
         _TwitchCommandHandler = twitchCommandHandler;
+        _ClashCommandHandler = clashCommandHandler;
     }
     
     private Dictionary<string, Func<CancellationToken, Task<string>>> _CommandHandlers = new();
@@ -72,6 +75,10 @@ public class GeneralCommandHandler
             ["!starttimer"] = _ => Task.FromResult(_TimerCommandHandler.HandleStartTimerCommand()),
             ["!addtime"]    = _ => Task.FromResult(_TimerCommandHandler.HandleAddTimeToTimerCommand(commandArgs)),
             ["!settime"]    = _ => Task.FromResult(_TimerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs)),
+
+            // Clash of Clans
+            ["!war"]          = _ => Task.FromResult(_ClashCommandHandler.HandleToggleWarStatsCommand()),
+            ["!setplayertag"] = _ => Task.FromResult(_ClashCommandHandler.HandleAddPlayerTagCommand(commandArgs)),
         };
 
         if (!_CommandHandlers.TryGetValue(commandText, out var handler))
