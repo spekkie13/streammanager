@@ -6,28 +6,19 @@ using SpekkieTwitchBot.General.FileHandling.Clash;
 
 namespace SpekkieTwitchBot.ClashOfClans.StatsBot;
 
-public class WarService : BackgroundService
+public class WarService(
+    ClashFileReader reader,
+    ClashFileWriter writer,
+    ClashFileManager manager,
+    CocHttpClient client,
+    WarStatus warStatus)
+    : BackgroundService
 {
-    private readonly WarStatus _WarStatus;
-    private readonly ClashFileReader _FileReader;
-    private readonly ClashFileWriter _FileWriter;
-    private readonly ClashFileManager _FileManager;
-    private readonly CocHttpClient _CocHttpClient;
-
-    public WarService(ClashFileReader reader, ClashFileWriter writer, ClashFileManager manager, CocHttpClient client, WarStatus warStatus)
-    {
-        _WarStatus = warStatus;
-        _FileManager = manager;
-        _FileReader = reader;
-        _FileWriter = writer;
-        _CocHttpClient = client;
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (_WarStatus.GetStatus())
+            if (warStatus.GetStatus())
                 FetchWar();
             else
                 Console.WriteLine("War stats inactive");
@@ -40,13 +31,13 @@ public class WarService : BackgroundService
     {
         try
         {
-            bool status = _WarStatus.GetStatus();
-            _WarStatus.SetStatus(!status);
+            bool status = warStatus.GetStatus();
+            warStatus.SetStatus(!status);
             Console.WriteLine($"War stats active: {!status}");
-            string playerFile = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}player tag.txt";
-            string playerTag = _FileReader.Read(playerFile);
-            string clanTag = await _CocHttpClient.GetPlayerClan(playerTag);
-            _FileWriter.Write($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt", clanTag);
+            // string playerFile = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}player tag.txt";
+            // string playerTag = await reader.ReadAsync(playerFile);
+            // string clanTag = await client.GetPlayerClan(playerTag);
+            // await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt", clanTag);
         }
         catch (Exception e)
         {
@@ -59,7 +50,7 @@ public class WarService : BackgroundService
         try
         {
             string clanTagPath = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt";
-            string clanTag = _FileReader.Read(clanTagPath);
+            string clanTag = await reader.ReadAsync(clanTagPath);
             clanTag = clanTag.Replace("\r", "").Replace("\n", "");
             if (string.IsNullOrEmpty(clanTag))
             {
@@ -67,7 +58,7 @@ public class WarService : BackgroundService
                 return;
             }
 
-            RunTimeWar? runTimeWar = await _CocHttpClient.FetchWar(clanTag);
+            RunTimeWar? runTimeWar = await client.FetchWar(clanTag);
             if (runTimeWar != null)
                 await ProcessWar(runTimeWar);
         }
@@ -97,20 +88,27 @@ public class WarService : BackgroundService
         }
         Console.WriteLine("Updated: " + DateTime.Now);
 
+        if (runTimeWar.State == "preparation" && manager.IsNewWar(runTimeWar.PreparationStartTime))
+        {
+            Console.WriteLine("New war detected, resetting war files...");
+            manager.ResetWarFiles();
+            manager.SaveWarId(runTimeWar.PreparationStartTime);
+        }
+
         await ProcessTeam(clan: runTimeWar.Clan, team: "home", teamFolder: ClashConstants.HomeFolder);
         await ProcessTeam(clan: runTimeWar.Opponent, team: "away", teamFolder: ClashConstants.AwayFolder);
     }
 
     private async Task ProcessTeam(RunTimeClan clan, string team, string teamFolder)
     {
-        byte[] logo = await _CocHttpClient.GetByteArrayAsync(clan.BadgeUrls.Large);
-        _FileManager.CreateTeamLogoFile(logo, team);
-        _FileWriter.Write($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} name.txt", clan.Name);
-        await _FileManager.WritePlayerNames(clan, teamFolder);
+        byte[] logo = await client.GetByteArrayAsync(clan.BadgeUrls.Large);
+        manager.CreateTeamLogoFile(logo, team);
+        await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} name.txt", clan.Name);
+        await manager.WritePlayerNames(clan, teamFolder);
 
-        _FileWriter.Write($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} score.txt", clan.Stars.ToString());
+        await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} score.txt", clan.Stars.ToString());
         string percentage = Math.Round(clan.DestructionPercentage, 2).ToString("F2");
-        _FileWriter.Write($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} percentage.txt", percentage + "%");
+        await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} percentage.txt", percentage + "%");
 
         foreach (RunTimeMember member in clan.Members)
         {
@@ -127,13 +125,13 @@ public class WarService : BackgroundService
 
             CocHttpClient.LoadImage(picToCopy, pictureName);
             string fileName = $"{teamFolder}{Path.DirectorySeparatorChar}hit {member.MapPosition}.txt";
-            _FileWriter.Write(fileName, member.Attacks.First().DestructionPercentage + "%");
+            await writer.WriteAsync(fileName, member.Attacks.First().DestructionPercentage + "%");
 
             double minutes = member.Attacks.First().Duration / 60;
             double seconds = member.Attacks.First().Duration % 60;
 
             fileName = teamFolder + $"{Path.DirectorySeparatorChar}hit " + member.MapPosition + " time.txt";
-            _FileWriter.Write(fileName, $"{minutes}:{seconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0')}");
+            await writer.WriteAsync(fileName, $"{minutes}:{seconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0')}");
         }
 
         List<double> times = (from member in clan.Members
@@ -148,12 +146,12 @@ public class WarService : BackgroundService
         int min = (int)avgTime / 60;
 
         string averageTime = $"{min}:{sec.ToString().PadLeft(2, '0')}";
-        _FileWriter.Write($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} avg time.txt", averageTime);
+        await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} avg time.txt", averageTime);
     }
 
     public bool GetWarStatus()
     {
-        return _WarStatus.GetStatus();
+        return warStatus.GetStatus();
     }
 
     public async void UpdatePlayerTag(string playerTag)
@@ -161,9 +159,9 @@ public class WarService : BackgroundService
         try
         {
             string playerFile = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}player tag.txt";
-            _FileWriter.Write(playerFile, playerTag);
-            string clanTag = await _CocHttpClient.GetPlayerClan(playerTag);
-            _FileWriter.Write($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt", clanTag);
+            await writer.WriteAsync(playerFile, playerTag);
+            string clanTag = await client.GetPlayerClan(playerTag);
+            await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt", clanTag);
         }
         catch (Exception e)
         {

@@ -42,6 +42,10 @@ public class ClashFileManager
         fileName = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clash api token.txt";
         if (!_FileSetup.FileExists(fileName))
             _FileSetup.CreateFile(fileName);
+
+        fileName = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}current war id.txt";
+        if (!_FileSetup.FileExists(fileName))
+            _FileSetup.CreateFile(fileName);
     }
 
     private void SetupOutputFolder()
@@ -103,6 +107,34 @@ public class ClashFileManager
         string fileName = $"{team}{Path.DirectorySeparatorChar}{identifier} {mapPosition}.txt";
         if (!_FileSetup.FileExists(fileName))
             _FileSetup.CreateFile(fileName);
+    }
+
+    public bool IsNewWar(string preparationStartTime)
+    {
+        string warIdFile = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}current war id.txt";
+        string storedId = File.ReadAllText(warIdFile).Trim();
+        return storedId != preparationStartTime;
+    }
+
+    public void SaveWarId(string preparationStartTime)
+    {
+        string warIdFile = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}current war id.txt";
+        _FileWriter.Write(warIdFile, preparationStartTime);
+    }
+
+    public void ResetWarFiles()
+    {
+        string unhitBase = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}BaseImages{Path.DirectorySeparatorChar}Unhit_Base.png";
+        foreach (string teamFolder in new[] { ClashConstants.HomeFolder, ClashConstants.AwayFolder })
+        {
+            for (int i = 1; i <= 50; i++)
+            {
+                File.Copy(unhitBase, $"{teamFolder}{Path.DirectorySeparatorChar}hit {i}.png", overwrite: true);
+                _FileWriter.Write($"{teamFolder}{Path.DirectorySeparatorChar}hit {i}.txt", "");
+                _FileWriter.Write($"{teamFolder}{Path.DirectorySeparatorChar}hit {i} time.txt", "");
+                _FileWriter.Write($"{teamFolder}{Path.DirectorySeparatorChar}name {i}.txt", "");
+            }
+        }
     }
 
     public async Task WritePlayerNames(RunTimeClan runTimeClan, string teamFolder)
