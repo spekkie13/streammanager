@@ -77,7 +77,7 @@ public class GeneralCommandHandler
             ["!settime"]    = _ => Task.FromResult(_TimerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs)),
 
             // Clash of Clans
-            ["!war"]          = _ => Task.FromResult(_ClashCommandHandler.HandleToggleWarStatsCommand()),
+            ["!war"]          = _ => Task.FromResult(_ClashCommandHandler.HandleSetWarStatsCommand(commandArgs)),
             ["!setplayertag"] = _ => Task.FromResult(_ClashCommandHandler.HandleAddPlayerTagCommand(commandArgs)),
         };
 

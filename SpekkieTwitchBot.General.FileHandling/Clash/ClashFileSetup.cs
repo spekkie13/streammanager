@@ -30,7 +30,5 @@ public class ClashFileSetup : IFileSetup
         {
             Console.WriteLine($"Error: {ex.Message}");
         }
-        
-        File.Create(filePath);
     }
 }

@@ -3,35 +3,29 @@ using SpekkieTwitchBot.Systems.OBS;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
-public class ClashCommandHandler
+public class ClashCommandHandler(WarService warService, ObsWebSocket obsWebSocket)
 {
-    private readonly WarService _WarService;
-    private readonly ObsWebSocket _ObsWebSocket;
-
-    public ClashCommandHandler(WarService warService, ObsWebSocket obsWebSocket)
+    public string HandleSetWarStatsCommand(string argument)
     {
-        _WarService = warService;
-        _ObsWebSocket = obsWebSocket;
-    }
+        if (argument.ToLower() is not ("on" or "off"))
+            return "Usage: !war on | !war off";
 
-    public string HandleToggleWarStatsCommand()
-    {
-        _WarService.ToggleWarStats();
-        bool status = _WarService.GetWarStatus();
+        bool enable = argument.Equals("on", StringComparison.CurrentCultureIgnoreCase);
+        warService.SetWarStats(enable);
 
-        string sceneName = _ObsWebSocket.GetCurrentProgramScene();
-        int chatBoxId = _ObsWebSocket.GetSceneItemId(sceneName: sceneName, sourceName: "Chatbox", searchOffset: 0);
-        _ObsWebSocket.SetSceneItemEnabled(sceneName: sceneName, sceneItemId: chatBoxId, sceneItemEnabled: !status);
+        string sceneName = obsWebSocket.GetCurrentProgramScene();
+        int chatBoxId = obsWebSocket.GetSceneItemId(sceneName: sceneName, sourceName: "Chatbox", searchOffset: 0);
+        obsWebSocket.SetSceneItemEnabled(sceneName: sceneName, sceneItemId: chatBoxId, sceneItemEnabled: !enable);
 
-        int warStatsId = _ObsWebSocket.GetSceneItemId(sceneName: sceneName, sourceName: "Browser", searchOffset: 0);
-        _ObsWebSocket.SetSceneItemEnabled(sceneName: sceneName, sceneItemId: warStatsId, sceneItemEnabled: status);
+        int warStatsId = obsWebSocket.GetSceneItemId(sceneName: sceneName, sourceName: "War Stats", searchOffset: 0);
+        obsWebSocket.SetSceneItemEnabled(sceneName: sceneName, sceneItemId: warStatsId, sceneItemEnabled: enable);
 
-        return status ? "War service has been turned on" : "War service has been turned off";
+        return enable ? "War service has been turned on" : "War service has been turned off";
     }
 
     public string HandleAddPlayerTagCommand(string playerTag)
     {
-        _WarService.UpdatePlayerTag(playerTag);
+        warService.UpdatePlayerTag(playerTag);
         return $"Updated player tag to: {playerTag}";
     }
 }

@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Constants;
+using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Clash;
 
 namespace SpekkieTwitchBot.ClashOfClans.StatsBot;
@@ -11,7 +12,8 @@ public class WarService(
     ClashFileWriter writer,
     ClashFileManager manager,
     CocHttpClient client,
-    WarStatus warStatus)
+    WarStatus warStatus,
+    Logger logger)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -21,28 +23,16 @@ public class WarService(
             if (warStatus.GetStatus())
                 FetchWar();
             else
-                Console.WriteLine("War stats inactive");
+                logger.LogInfo("War stats inactive");
 
             await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
         }
     }
 
-    public async void ToggleWarStats()
+    public void SetWarStats(bool enable)
     {
-        try
-        {
-            bool status = warStatus.GetStatus();
-            warStatus.SetStatus(!status);
-            Console.WriteLine($"War stats active: {!status}");
-            // string playerFile = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}player tag.txt";
-            // string playerTag = await reader.ReadAsync(playerFile);
-            // string clanTag = await client.GetPlayerClan(playerTag);
-            // await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt", clanTag);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.StackTrace);
-        }
+        warStatus.SetStatus(enable);
+        Console.WriteLine($"War stats active: {enable}");
     }
 
     private async void FetchWar()
@@ -54,7 +44,7 @@ public class WarService(
             clanTag = clanTag.Replace("\r", "").Replace("\n", "");
             if (string.IsNullOrEmpty(clanTag))
             {
-                Console.WriteLine("Clan tag is empty");
+                logger.LogWarning("Clan tag is empty");
                 return;
             }
 
@@ -64,7 +54,7 @@ public class WarService(
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.StackTrace);
+            logger.LogError(e.StackTrace ?? e.Message);
         }
     }
 
@@ -72,7 +62,7 @@ public class WarService(
     {
         if (runTimeWar.Clan == null || runTimeWar.Opponent == null)
         {
-            Console.WriteLine("No war detected...");
+            logger.LogWarning("No war detected...");
             return;
         }
 
@@ -80,13 +70,13 @@ public class WarService(
         {
             case "preparation":
             case "inWar":
-                Console.WriteLine($"Tracking war: {runTimeWar.Clan.Name} vs {runTimeWar.Opponent.Name}, Status: {ClashConstants.WarStatus[runTimeWar.State.ToUpper()]}");
+                logger.LogInfo($"Tracking war: {runTimeWar.Clan.Name} vs {runTimeWar.Opponent.Name}, Status: {ClashConstants.WarStatus[runTimeWar.State.ToUpper()]}");
                 break;
             default:
-                Console.WriteLine($"{runTimeWar.Clan.Name} is currently not in war");
+                logger.LogInfo($"{runTimeWar.Clan.Name} is currently not in war");
                 break;
         }
-        Console.WriteLine("Updated: " + DateTime.Now);
+        logger.LogInfo("Updated: " + DateTime.Now);
 
         if (runTimeWar.State == "preparation" && manager.IsNewWar(runTimeWar.PreparationStartTime))
         {
@@ -113,7 +103,13 @@ public class WarService(
         foreach (RunTimeMember member in clan.Members)
         {
             string pictureName = teamFolder + $"{Path.DirectorySeparatorChar}hit " + member.MapPosition + ".png";
-            if (member.Attacks == null) continue;
+            if (member.Attacks == null)
+            {
+                CocHttpClient.LoadImage($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}BaseImages{Path.DirectorySeparatorChar}Unhit_Base.png", pictureName);
+                await writer.WriteAsync($"{teamFolder}{Path.DirectorySeparatorChar}hit {member.MapPosition}.txt", "0%");
+                await writer.WriteAsync(teamFolder + $"{Path.DirectorySeparatorChar}hit " + member.MapPosition + " time.txt", "");
+                continue;
+            }
             string picToCopy = member.Attacks.First().Stars switch
             {
                 0 => $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}BaseImages{Path.DirectorySeparatorChar}0_star.png",
@@ -165,7 +161,7 @@ public class WarService(
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.StackTrace);
+            logger.LogError(e.StackTrace ?? e.Message);
         }
     }
 }
