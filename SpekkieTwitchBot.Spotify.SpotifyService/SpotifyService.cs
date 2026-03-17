@@ -65,7 +65,7 @@ public class SpotifyService : ISpotifyService
     {
         string successAdded = await AddSongToQueueAsync(song, ct).ConfigureAwait(false);
         bool successSkipped = await SkipNextSongAsync(ct).ConfigureAwait(false);
-        return successAdded == "Success" && successSkipped;
+        return !successAdded.Equals("Error", StringComparison.OrdinalIgnoreCase) && successSkipped;
     }
 
     public async Task<bool> PausePlayerAsync(CancellationToken ct = default)
@@ -132,7 +132,12 @@ public class SpotifyService : ISpotifyService
         HttpRequestMessage request = new(HttpMethod.Post, $"{SpotifyConstants.AddToQueueUrl}{songId}");
         HttpResponseMessage response = await _Client.SendAsync(request, ct).ConfigureAwait(false);
 
-        if (response.IsSuccessStatusCode) return "Success";
+        if (response.IsSuccessStatusCode)
+        {
+            string trackId = songId.Replace("spotify:track:", "", StringComparison.OrdinalIgnoreCase);
+            string displayName = await _Client.GetTrackDisplayNameAsync(trackId, ct).ConfigureAwait(false);
+            return string.IsNullOrWhiteSpace(displayName) ? "Success" : displayName;
+        }
 
         _Logger.LogError($"Error adding the requested song to the queue: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
         return "Error";

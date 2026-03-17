@@ -1,4 +1,3 @@
 ﻿-> add !sr command to allow for song requests
--> build a system to fetch clan logos for stats
 -> investigate redemptions not working
 -> Fix time formatting

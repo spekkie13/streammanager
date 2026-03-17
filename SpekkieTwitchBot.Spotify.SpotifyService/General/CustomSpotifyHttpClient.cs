@@ -214,6 +214,26 @@ public sealed class CustomSpotifyHttpClient
         return item;
     }
 
+    public async Task<string> GetTrackDisplayNameAsync(string trackId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await GetAsync($"https://api.spotify.com/v1/tracks/{trackId}", ct).ConfigureAwait(false);
+        string json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(json)) return "";
+
+        JObject root;
+        try { root = JObject.Parse(json); }
+        catch { return ""; }
+
+        string name = root["name"]?.ToString() ?? "";
+        if (root["artists"] is not JArray artistsArray) return name;
+
+        string artists = string.Join(" & ", artistsArray
+            .Select(a => a["name"]?.ToString())
+            .Where(n => !string.IsNullOrWhiteSpace(n)));
+
+        return string.IsNullOrWhiteSpace(artists) ? name : $"{name} by {artists}";
+    }
+
     public async Task<List<Track>?> InterpretSongSearchResult(string url, CancellationToken ct = default)
     {
         HttpResponseMessage httpResponse = await GetAsync(url, ct).ConfigureAwait(false);

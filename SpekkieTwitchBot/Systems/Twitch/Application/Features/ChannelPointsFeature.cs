@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Newtonsoft.Json;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
@@ -43,12 +43,12 @@ public class ChannelPointsFeature
                 string input = e.UserInput ?? "";
                 if (string.IsNullOrWhiteSpace(input))
                     return "User input is required for this reward";
-                
+
                 string result = await HandleSongRedemption(input, e.RedemptionId, e.RewardId, ct);
 
                 _Logger.LogInfo(result);
                 _Logger.LogInfo($"Redeemed: {e.RewardTitle} by {e.UserName}");
-                return result;
+                return $"@{e.UserName} {result}";
             }
             case "Hydrate":
             {
@@ -64,15 +64,15 @@ public class ChannelPointsFeature
     private async Task<string> HandleSongRedemption(string input, string redemptionId, string rewardId, CancellationToken ct)
     {
         string result = await _SpotifyService.AddSongToQueueAsync(input, ct);
-        bool success = result.Contains("Added", StringComparison.OrdinalIgnoreCase);
-        
+        bool success = !result.Equals("Error", StringComparison.OrdinalIgnoreCase);
+
         string status = success
             ? TwitchConstants.ChannelPointStatusFulfilled
             : TwitchConstants.ChannelPointStatusCancelled;
-        
+
         await UpdateRedemptionStatus(redemptionId, rewardId, status, ct);
-        
-        return success ? $"successfully added {input} to queue" : $"failed to add {input} to queue";
+
+        return success ? $"Successfully added {result} to the queue" : $"Failed to add song to the queue";
     }
     
     public async Task<string> CreateRedemption(string commandArgs)
