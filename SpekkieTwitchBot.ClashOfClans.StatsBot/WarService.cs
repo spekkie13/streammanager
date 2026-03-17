@@ -14,7 +14,7 @@ public class WarService(
     CocHttpClient client,
     WarStatus warStatus,
     Logger logger)
-    : BackgroundService
+    : BackgroundService, IWarService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

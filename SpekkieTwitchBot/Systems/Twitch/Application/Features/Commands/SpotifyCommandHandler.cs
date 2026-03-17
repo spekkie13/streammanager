@@ -6,14 +6,14 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class SpotifyCommandHandler
 {
-    private readonly SpotifyService _SpotifyService;
+    private readonly ISpotifyService _SpotifyService;
     private readonly SpotifyFileWriter _SpotifyFileWriter;
-    private readonly SpotifySearchService _SpotifySearchService;
-    
+    private readonly ISpotifySearchService _SpotifySearchService;
+
     public SpotifyCommandHandler(
-        SpotifyService spotifyService,
+        ISpotifyService spotifyService,
         SpotifyFileWriter spotifyFileWriter,
-        SpotifySearchService spotifySearchService
+        ISpotifySearchService spotifySearchService
     )
     {
         _SpotifyService = spotifyService;

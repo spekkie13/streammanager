@@ -4,7 +4,7 @@ using SpotifyAuthService.General;
 
 namespace SpotifyAuthService;
 
-public class SpotifySearchService
+public class SpotifySearchService : ISpotifySearchService
 {
     private readonly CustomSpotifyHttpClient _CustomSpotifyHttpClient;
 

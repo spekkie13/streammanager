@@ -4,7 +4,7 @@ using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
-public class TextCommandHandler
+public class TextCommandHandler : ITextCommandHandler
 {
     private List<TextCommand> _Commands;
 

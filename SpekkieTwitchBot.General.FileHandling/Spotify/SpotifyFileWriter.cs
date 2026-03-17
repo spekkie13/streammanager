@@ -15,7 +15,7 @@ public class SpotifyFileWriter
         _FileWriter = fileWriter;
     }
     
-    public void WriteSongFile(string text)
+    public virtual void WriteSongFile(string text)
     {
         string title = text.Split(" by ")[0];
         string titleDir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}currentTitle.txt";

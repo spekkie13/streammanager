@@ -29,7 +29,7 @@ public class GeneralFileWriter
         }
     }
 
-    public void WriteAfgeleidCounter(string text)
+    public virtual void WriteAfgeleidCounter(string text)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Counters";
         _FileWriter.Write(dir + "/afgeleid.txt", text);

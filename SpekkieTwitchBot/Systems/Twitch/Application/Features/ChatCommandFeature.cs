@@ -8,13 +8,13 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 public sealed class ChatCommandFeature
 {
     private readonly ITwitchChat _Chat;
-    private readonly TextCommandHandler _Text;
-    private readonly GeneralCommandHandler _General;
-    
+    private readonly ITextCommandHandler _Text;
+    private readonly IGeneralCommandHandler _General;
+
     public ChatCommandFeature(
-        ITwitchChat chat, 
-        TextCommandHandler text, 
-        GeneralCommandHandler general
+        ITwitchChat chat,
+        ITextCommandHandler text,
+        IGeneralCommandHandler general
     ) {
         _Chat = chat;
         _Text = text;

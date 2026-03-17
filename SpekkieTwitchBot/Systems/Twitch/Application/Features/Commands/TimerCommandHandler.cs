@@ -1,13 +1,14 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Timer;
+﻿using EventTimerService;
+using SpekkieTwitchBot.General.FileHandling.Timer;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class TimerCommandHandler
 {
-    private readonly EventTimerService.EventTimerService _EventTimerService;
-    private readonly TimerFileWriter _TimerFileWriter;
-    
-    public TimerCommandHandler(EventTimerService.EventTimerService eventTimerService, TimerFileWriter timerFileWriter)
+    private readonly IEventTimerService _EventTimerService;
+    private readonly ITimerFileWriter _TimerFileWriter;
+
+    public TimerCommandHandler(IEventTimerService eventTimerService, ITimerFileWriter timerFileWriter)
     {
         _EventTimerService = eventTimerService;
         _TimerFileWriter = timerFileWriter;

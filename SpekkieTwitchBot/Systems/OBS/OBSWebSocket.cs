@@ -14,7 +14,7 @@ using Monitor = SpekkieClassLibrary.OBS.Types.Monitor;
 
 namespace SpekkieTwitchBot.Systems.OBS;
 
-public class ObsWebSocket(WebsocketClient wsConnection, Logger logger)
+public class ObsWebSocket(WebsocketClient wsConnection, Logger logger) : IObsWebSocket
 {
     private const string WebsocketUrlPrefix = "ws://";
     private const int SupportedRpcVersion = 1;

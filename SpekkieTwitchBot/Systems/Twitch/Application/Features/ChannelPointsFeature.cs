@@ -4,7 +4,7 @@ using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
-using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 using SpotifyAuthService;
@@ -13,15 +13,15 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
 public class ChannelPointsFeature
 {
-    private readonly CustomTwitchHttpClient _Client;
+    private readonly ICustomTwitchHttpClient _Client;
     private readonly ITwitchAuthTokenProvider _Tokens;
-    private readonly SpotifyService _SpotifyService;
+    private readonly ISpotifyService _SpotifyService;
     private readonly Logger _Logger;
 
     public ChannelPointsFeature(
-        CustomTwitchHttpClient client,
+        ICustomTwitchHttpClient client,
         ITwitchAuthTokenProvider tokens,
-        SpotifyService spotify,
+        ISpotifyService spotify,
         Logger logger)
     {
         _Client = client;

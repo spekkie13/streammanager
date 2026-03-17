@@ -6,7 +6,7 @@ using SpotifyAuthService.General;
 
 namespace SpotifyAuthService;
 
-public sealed class SpotifyService
+public class SpotifyService : ISpotifyService
 {
     private readonly CustomSpotifyHttpClient _Client;
     private readonly Logger _Logger;

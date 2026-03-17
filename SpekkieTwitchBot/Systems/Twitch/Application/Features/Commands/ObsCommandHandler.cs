@@ -6,9 +6,9 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class ObsCommandHandler
 {
-    private readonly ObsWebSocket _Socket;
-    
-    public ObsCommandHandler(ObsWebSocket socket)
+    private readonly IObsWebSocket _Socket;
+
+    public ObsCommandHandler(IObsWebSocket socket)
     {
         _Socket = socket;
     }

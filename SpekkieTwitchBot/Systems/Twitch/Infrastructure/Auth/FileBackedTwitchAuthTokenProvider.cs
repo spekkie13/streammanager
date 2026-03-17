@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.General.FileHandling.Twitch;
+using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 
@@ -9,8 +9,8 @@ namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Auth;
 
 public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
 {
-    private readonly TwitchFileReader _Reader;
-    private readonly TwitchFileWriter _Writer;
+    private readonly ITwitchFileReader _Reader;
+    private readonly ITwitchFileWriter _Writer;
     private readonly HttpClient _HttpClient;
     private readonly Logger _Logger;
     
@@ -18,8 +18,8 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
     private TwitchUserFile? _UserFileCache;
 
     public FileBackedTwitchAuthTokenProvider(
-        TwitchFileReader reader,
-        TwitchFileWriter writer,
+        ITwitchFileReader reader,
+        ITwitchFileWriter writer,
         HttpClient httpClient,
         Logger logger
     ) {

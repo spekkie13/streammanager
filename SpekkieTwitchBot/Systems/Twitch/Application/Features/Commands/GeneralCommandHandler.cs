@@ -3,11 +3,11 @@ using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
-public class GeneralCommandHandler
+public class GeneralCommandHandler : IGeneralCommandHandler
 {
     private readonly GeneralFileReader _GeneralFileReader;
     private readonly GeneralFileWriter _GeneralFileWriter;
-    private readonly TextCommandHandler _TextCommandHandler;
+    private readonly ITextCommandHandler _TextCommandHandler;
     private readonly SpotifyCommandHandler _SpotifyCommandHandler;
     private readonly ObsCommandHandler _ObsCommandHandler;
     private readonly TimerCommandHandler _TimerCommandHandler;
@@ -17,7 +17,7 @@ public class GeneralCommandHandler
     public GeneralCommandHandler(
         GeneralFileReader generalFileReader,
         GeneralFileWriter generalFileWriter,
-        TextCommandHandler textCommandHandler,
+        ITextCommandHandler textCommandHandler,
         SpotifyCommandHandler spotifyCommandHandler,
         ObsCommandHandler obsCommandHandler,
         TimerCommandHandler timerCommandHandler,

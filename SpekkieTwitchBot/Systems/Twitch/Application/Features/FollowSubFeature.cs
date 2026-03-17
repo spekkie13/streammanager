@@ -1,6 +1,5 @@
 ﻿using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
-using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
@@ -9,11 +8,11 @@ public class FollowSubFeature
 {
     private readonly ITwitchChat _Chat;
     private readonly ITwitchFileWriter _Files;
-    private readonly CustomTwitchHttpClient _Api;
+    private readonly ICustomTwitchHttpClient _Api;
     
     public FollowSubFeature(
         ITwitchChat chat,
-        CustomTwitchHttpClient api,
+        ICustomTwitchHttpClient api,
         ITwitchFileWriter files
     ) {
         _Chat = chat;

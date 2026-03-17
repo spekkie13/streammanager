@@ -3,7 +3,7 @@ using SpekkieTwitchBot.General.FileHandling;
 
 namespace EventTimerService
 {
-    public sealed class EventTimerService(EventTimer timer, Logger logger) : IHostedService
+    public class EventTimerService(EventTimer timer, Logger logger) : IHostedService, IEventTimerService
     {
         public Task StartAsync(CancellationToken token)
         {

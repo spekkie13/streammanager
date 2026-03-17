@@ -9,7 +9,7 @@ public class GeneralFileReader(FileReader fileReader)
     private static readonly string BaseDir =
         Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
 
-    public string ReadAfgeleidCounter()
+    public virtual string ReadAfgeleidCounter()
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Counters";
         string text = fileReader.Read(dir + "/afgeleid.txt");

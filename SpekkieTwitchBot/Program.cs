@@ -157,6 +157,7 @@ public static class Program
                 services.AddSingleton<TimerFileSetup>();
                 services.AddSingleton<TimerFileReader>();
                 services.AddSingleton<TimerFileWriter>();
+                services.AddSingleton<ITimerFileWriter>(sp => sp.GetRequiredService<TimerFileWriter>());
 
                 services.AddSingleton<GeneralFileSetup>();
                 services.AddSingleton<GeneralFileReader>();
@@ -193,6 +194,7 @@ public static class Program
                 services.AddSingleton<CocHttpClient>();
                 services.AddSingleton<WarStatus>();
                 services.AddSingleton<WarService>();
+                services.AddSingleton<IWarService>(sp => sp.GetRequiredService<WarService>());
                 services.AddHostedService(sp => sp.GetRequiredService<WarService>());
 
                 // -----------------------
@@ -201,10 +203,12 @@ public static class Program
                 services.AddSingleton<SpotifyCommandHandler>();
                 services.AddSingleton<ObsCommandHandler>();
                 services.AddSingleton<TextCommandHandler>();
+                services.AddSingleton<ITextCommandHandler>(sp => sp.GetRequiredService<TextCommandHandler>());
                 services.AddSingleton<TimerCommandHandler>();
                 services.AddSingleton<TwitchCommandHandler>();
                 services.AddSingleton<ClashCommandHandler>();
                 services.AddSingleton<GeneralCommandHandler>();
+                services.AddSingleton<IGeneralCommandHandler>(sp => sp.GetRequiredService<GeneralCommandHandler>());
 
                 // -----------------------
                 // Chat (IRC)
@@ -220,9 +224,11 @@ public static class Program
 
                 services.AddSingleton<SpotifyAuthService.General.CustomSpotifyHttpClient>();
                 services.AddSingleton<SpotifySearchService>();
+                services.AddSingleton<ISpotifySearchService>(sp => sp.GetRequiredService<SpotifySearchService>());
 
                 // Spotify core
                 services.AddSingleton<SpotifyService>();
+                services.AddSingleton<ISpotifyService>(sp => sp.GetRequiredService<SpotifyService>());
                 services.AddHostedService<SpotifyHostedService>();
                 
                 // -----------------------
@@ -240,6 +246,7 @@ public static class Program
                 // OBS / Timer
                 // -----------------------
                 services.AddSingleton<ObsWebSocket>();
+                services.AddSingleton<IObsWebSocket>(sp => sp.GetRequiredService<ObsWebSocket>());
                 services.AddHostedService<ObsWebsocketService>();
 
                 // Timer domain object (used by your timer hosted service)
@@ -247,6 +254,7 @@ public static class Program
 
                 // EventTimerService is HostedService (single instance)
                 services.AddSingleton<EventTimerService.EventTimerService>();
+                services.AddSingleton<IEventTimerService>(sp => sp.GetRequiredService<EventTimerService.EventTimerService>());
                 services.AddHostedService(sp => sp.GetRequiredService<EventTimerService.EventTimerService>());
 
                 // -----------------------
