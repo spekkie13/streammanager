@@ -1,59 +1,57 @@
 ﻿using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Twitch;
 
-public class TwitchFileReader(FileReader fileReader)
+public class TwitchFileReader : ITwitchFileReader
 {
+    private readonly FileReader _FileReader;
+    
     private const string OutputDir = "/Output/Twitch";
+    private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
 
-    private static readonly string BaseDir =
-        Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
-
+    public TwitchFileReader(FileReader fileReader)
+    {
+        _FileReader = fileReader;
+    }
+    
     public string ReadTwitchUserAuthFile()
     {
         string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-User.json";
-        string jsonData = fileReader.Read(dir);
+        string jsonData = _FileReader.Read(dir);
 
         return jsonData;
-    }
+    }    
 
     public string ReadTwitchGeneralAuthFile()
     {
         string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-General.json";
-        string jsonData = fileReader.Read(dir);
+        string jsonData = _FileReader.Read(dir);
 
         return jsonData;
     }
 
-    public virtual string ReadMostRecentFollowerFile()
+    public async Task<string> ReadMostRecentFollowerFileAsync()
     {
         string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentFollower.txt";
-        string text = fileReader.Read(file);
-
-        return text;
+        return await _FileReader.ReadAsync(file);
     }
 
-    public string ReadMostRecentSubFile()
+    public async Task<string> ReadMostRecentSubFileAsync()
     {
         string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentSub.txt";
-        string text = fileReader.Read(file);
-
-        return text;
+        return await _FileReader.ReadAsync(file);
     }
 
-    public string ReadSubGoalFile()
+    public async Task<string> ReadSubGoalFileAsync()
     {
         string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}FollowerGoal.txt";
-        string text = fileReader.Read(file);
-
-        return text;
+        return await _FileReader.ReadAsync(file);
     }
 
-    public string ReadFollowerGoalFile()
+    public async Task<string> ReadFollowerGoalFileAsync()
     {
         string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}SubGoal.txt";
-        string text = fileReader.Read(file);
-
-        return text;
+        return await _FileReader.ReadAsync(file);
     }
 }

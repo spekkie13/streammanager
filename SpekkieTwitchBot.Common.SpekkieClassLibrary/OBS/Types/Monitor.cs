@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace SpekkieClassLibrary.OBS.Types;
@@ -22,7 +21,7 @@ public class Monitor
     public int Width { get; set; }
 
     [JsonProperty(PropertyName = "monitorName")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     [JsonProperty(PropertyName = "monitorIndex")]
     public int Index { get; set; }

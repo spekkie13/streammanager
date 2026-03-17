@@ -9,11 +9,11 @@ public class TwitchFileSetup
     private static readonly string BaseDir =
         Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
 
-    private readonly FileSetup _fileSetup;
+    private readonly FileSetup _FileSetup;
 
     public TwitchFileSetup(FileSetup fileSetup)
     {
-        _fileSetup = fileSetup;
+        _FileSetup = fileSetup;
         SetupRecentFollowerFile();
         SetupRecentSubFile();
         SetupFollowerGoalFile();
@@ -26,13 +26,13 @@ public class TwitchFileSetup
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
         string file = $"{dir}RecentFollower.txt";
 
-        bool dirExists = _fileSetup.DirExists(dir);
+        bool dirExists = _FileSetup.DirExists(dir);
         if (!dirExists)
-            _fileSetup.CreateDir(dir);
+            _FileSetup.CreateDir(dir);
 
-        bool fileExists = _fileSetup.FileExists(file);
+        bool fileExists = _FileSetup.FileExists(file);
         if (!fileExists)
-            _fileSetup.CreateFile(file);
+            _FileSetup.CreateFile(file);
 
         File.WriteAllText(file, "");
     }
@@ -42,13 +42,13 @@ public class TwitchFileSetup
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
         string file = $"{dir}RecentSub.txt";
 
-        bool dirExists = _fileSetup.DirExists(dir);
+        bool dirExists = _FileSetup.DirExists(dir);
         if (!dirExists)
-            _fileSetup.CreateDir(dir);
+            _FileSetup.CreateDir(dir);
 
-        bool fileExists = _fileSetup.FileExists(file);
+        bool fileExists = _FileSetup.FileExists(file);
         if (!fileExists)
-            _fileSetup.CreateFile(file);
+            _FileSetup.CreateFile(file);
 
         File.WriteAllText(file, "");
     }
@@ -58,13 +58,13 @@ public class TwitchFileSetup
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
         string file = $"{dir}FollowerGoal.txt";
 
-        bool dirExists = _fileSetup.DirExists(dir);
+        bool dirExists = _FileSetup.DirExists(dir);
         if (!dirExists)
-            _fileSetup.CreateDir(dir);
+            _FileSetup.CreateDir(dir);
 
-        bool fileExists = _fileSetup.FileExists(file);
+        bool fileExists = _FileSetup.FileExists(file);
         if (!fileExists)
-            _fileSetup.CreateFile(file);
+            _FileSetup.CreateFile(file);
 
         File.WriteAllText(file, "");
     }
@@ -74,13 +74,13 @@ public class TwitchFileSetup
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
         string file = $"{dir}SubGoal.txt";
 
-        bool dirExists = _fileSetup.DirExists(dir);
+        bool dirExists = _FileSetup.DirExists(dir);
         if (!dirExists)
-            _fileSetup.CreateDir(dir);
+            _FileSetup.CreateDir(dir);
 
-        bool fileExists = _fileSetup.FileExists(file);
+        bool fileExists = _FileSetup.FileExists(file);
         if (!fileExists)
-            _fileSetup.CreateFile(file);
+            _FileSetup.CreateFile(file);
 
         File.WriteAllText(file, "");
     }

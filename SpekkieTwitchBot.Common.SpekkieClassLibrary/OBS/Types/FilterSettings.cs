@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace SpekkieClassLibrary.OBS.Types;
@@ -7,10 +6,10 @@ namespace SpekkieClassLibrary.OBS.Types;
 public class FilterSettings
 {
     [JsonProperty(PropertyName = "filterName")]
-    public string Name { set; get; }
+    public string? Name { set; get; }
 
     [JsonProperty(PropertyName = "filterKind")]
-    public string Kind { set; get; }
+    public string? Kind { set; get; }
 
     [JsonProperty(PropertyName = "filterIndex")]
     public int Index { get; set; }
@@ -19,5 +18,5 @@ public class FilterSettings
     public bool IsEnabled { set; get; }
 
     [JsonProperty(PropertyName = "filterSettings")]
-    public JObject Settings { set; get; }
+    public JObject? Settings { set; get; }
 }

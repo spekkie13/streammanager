@@ -1,8 +1,9 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common;
+﻿using SpekkieTwitchBot.General.FileHandling.Common.Interface;
+using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Twitch;
 
-public class TwitchFileWriter(FileWriter fileWriter)
+public class TwitchFileWriter(ITextFileWriter fileWriter) : ITwitchFileWriter
 {
     private const string OutputDir = "/Output/Twitch";
 
@@ -13,31 +14,35 @@ public class TwitchFileWriter(FileWriter fileWriter)
     {
         string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-User.json";
         fileWriter.Write(dir, text);
+    }    
+    
+    public void WriteTwitchGeneralAuthFile(string text)
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Twitch-User.json";
+        fileWriter.Write(dir, text);
     }
 
-    public virtual void WriteMostRecentFollowerFile(string text)
+    public async Task WriteMostRecentFollowerAsync(string text, CancellationToken cancellationToken)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentFollower.txt";
-
-        fileWriter.Write(dir, $"Most recent follower: {text}");
+        await fileWriter.WriteAsync(dir, $"Most recent follower: {text}");
     }
 
-    public virtual void WriteTotalFollowersFile(int totalFollowers)
+    public async Task WriteTotalFollowersAsync(int totalFollowers, CancellationToken cancellationToken)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalFollowers.txt";
-        fileWriter.Write(dir, totalFollowers.ToString());
+        await fileWriter.WriteAsync(dir, totalFollowers.ToString());
     }
 
-    public void WriteMostRecentSubscriberFile(string text)
+    public async Task WriteMostRecentSubscriberAsync(string text, CancellationToken cancellationToken)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentSubscriber.txt";
-
-        fileWriter.Write(dir, $"Most recent subscriber: {text}");
+        await fileWriter.WriteAsync(dir, $"Most recent subscriber: {text}");
     }
 
-    public void WriteTotalSubscribersFile(int totalSubscribers)
+    public async Task WriteTotalSubscribersAsync(int totalSubscribers, CancellationToken cancellationToken)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}TotalSubscribers.txt";
-        fileWriter.Write(dir, totalSubscribers.ToString());
+        await fileWriter.WriteAsync(dir, totalSubscribers.ToString());
     }
 }

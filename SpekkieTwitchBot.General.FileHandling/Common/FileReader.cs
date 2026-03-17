@@ -16,4 +16,11 @@ public class FileReader : IFileReader
         string content = reader.ReadToEnd();
         return content;
     }
+
+    public async Task<string> ReadAsync(string fileName)
+    {
+        if (!File.Exists(fileName)) return string.Empty;
+        return await File.ReadAllTextAsync(fileName);
+    }
+        
 }

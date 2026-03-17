@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.OBS.Enum;
 
@@ -20,10 +19,10 @@ public class SceneItemDetails
     public int ItemId { set; get; }
 
     [JsonProperty(PropertyName = "inputKind")]
-    public string SourceKind { set; get; }
+    public string? SourceKind { set; get; }
 
     [JsonProperty(PropertyName = "sourceName")]
-    public string SourceName { set; get; }
+    public string? SourceName { set; get; }
 
     [JsonProperty(PropertyName = "sourceType")]
     public SceneItemSourceType SourceType { set; get; }

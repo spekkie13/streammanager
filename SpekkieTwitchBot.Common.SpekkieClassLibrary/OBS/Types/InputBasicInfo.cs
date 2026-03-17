@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.OBS.Abstract;
 
@@ -17,5 +16,5 @@ public class InputBasicInfo : Input
     }
 
     [JsonProperty(PropertyName = "unversionedInputKind")]
-    public string UnversionedKind { get; set; }
+    public string? UnversionedKind { get; set; }
 }

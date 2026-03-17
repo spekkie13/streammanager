@@ -2,9 +2,10 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<LangVersion>latestmajor</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -14,21 +15,22 @@
 		<PackageReference Include="obs-websocket-dotnet" Version="5.0.0.3" />
 		<PackageReference Include="SharpPcap" Version="6.3.0" />
 		<PackageReference Include="System.Windows.Extensions" Version="8.0.0" />
-		<PackageReference Include="TwitchLib" Version="3.5.3" />
-		<PackageReference Include="TwitchLib.Api" Version="3.9.0" />
-		<PackageReference Include="TwitchLib.Client" Version="3.3.1" />
-		<PackageReference Include="TwitchLib.EventSub.Websockets" Version="0.4.0" />
-		<PackageReference Include="TwitchLib.PubSub" Version="3.2.6" />
-		<PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
+<PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\SpekkieTwitchBot.ClashOfClans.StatsBot\SpekkieTwitchBot.ClashOfClans.StatsBot.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.General.EventTimerService\SpekkieTwitchBot.General.EventTimerService.csproj" />
-		<ProjectReference Include="..\SpekkieTwitchBot.Twitch.CommandService\SpekkieTwitchBot.Twitch.CommandService.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.Common.SpekkieClassLibrary\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.General.FileHandling\SpekkieTwitchBot.General.FileHandling.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.Spotify.SpotifyService\SpekkieTwitchBot.Spotify.SpotifyService.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.Twitch\SpekkieTwitchBot.Twitch.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Systems\OBS\Abstractions\" />
+	  <Folder Include="Systems\OBS\Features\" />
+	  <Folder Include="Systems\OBS\Websocket\" />
 	</ItemGroup>
 
 </Project>

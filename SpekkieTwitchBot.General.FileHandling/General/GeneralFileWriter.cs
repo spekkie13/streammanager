@@ -1,14 +1,20 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common;
+﻿using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.General;
 
-public class GeneralFileWriter(FileWriter fileWriter)
+public class GeneralFileWriter
 {
+    private readonly ITextFileWriter _FileWriter;
     private const string OutputDir = "/Output/General";
 
     private static readonly string BaseDir =
         Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
 
+    public GeneralFileWriter(ITextFileWriter fileWriter)
+    {
+        _FileWriter = fileWriter;
+    }
+    
     public void WriteLogText(string text)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Log{Path.DirectorySeparatorChar}Log.txt";
@@ -23,9 +29,9 @@ public class GeneralFileWriter(FileWriter fileWriter)
         }
     }
 
-    public void WriteAfgeleidCounter(string text)
+    public virtual void WriteAfgeleidCounter(string text)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Counters";
-        fileWriter.Write(dir + "/afgeleid.txt", text);
+        _FileWriter.Write(dir + "/afgeleid.txt", text);
     }
 }

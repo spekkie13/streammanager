@@ -1,102 +1,275 @@
-﻿using CommandService;
-using CommandService.CommandHandlers;
-using EventTimerService;
+﻿using EventTimerService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SpekkieClassLibrary.Twitch.Auth;
+using Microsoft.Extensions.Logging;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
 using SpekkieTwitchBot.General.FileHandling.Timer;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
-using SpekkieTwitchBot.OBS.OBSServiceNew;
+using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
+using SpekkieTwitchBot.Systems.OBS;
+using SpekkieTwitchBot.Systems.Twitch;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features;
+using SpekkieTwitchBot.ClashOfClans.StatsBot;
+using SpekkieTwitchBot.General.FileHandling.Clash;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
+using SpekkieTwitchBot.Systems.Twitch.Application.Routing;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Auth;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat.Irc;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
+using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using SpotifyAuthService;
-using TwitchAuthService;
-using TwitchAuthService.Events;
-using TwitchAuthService.Events.Pubsub;
-using TwitchAuthService.General;
-using TwitchAuthService.Handlers;
-using TwitchLib.EventSub.Websockets.Extensions;
 using WebsocketClient = Websocket.Client.WebsocketClient;
 
 namespace SpekkieTwitchBot;
 
 public static class Program
 {
-    private static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        CreateHostBuilder(args).Build().Run();
+        Console.WriteLine("[BOOT] Main started");
+
+        IHost host;
+        try
+        {
+            Console.WriteLine("[BOOT] About to Build()");
+            host = CreateHostBuilder(args).Build();
+            Console.WriteLine("[BOOT] Build() returned");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[BOOT] FATAL during host build:");
+            Console.WriteLine(ex);
+            return;
+        }
+
+        using (host)
+        {
+            Console.WriteLine("[BOOT] Starting host...");
+
+            try
+            {
+                await WithTimeout(host.StartAsync, TimeSpan.FromSeconds(10), "host.StartAsync");
+                Console.WriteLine("[BOOT] Host started");
+
+                await host.WaitForShutdownAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[BOOT] FATAL during host build:");
+                Console.WriteLine(ex);
+
+                if (ex is AggregateException aex)
+                {
+                    Console.WriteLine("[BOOT] AggregateException inner exceptions:");
+                    foreach (var inner in aex.Flatten().InnerExceptions)
+                    {
+                        Console.WriteLine("---- INNER ----");
+                        Console.WriteLine(inner);
+                    }
+                }
+            }
+        }
+    }
+
+    private static async Task WithTimeout(Func<CancellationToken, Task> action, TimeSpan timeout, string name)
+    {
+        Probe.Log($"WithTimeout ENTER: {name} timeout={timeout.TotalSeconds:0}s");
+
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(timeout);
+
+        // Start op background thread zodat sync-blokkades ook zichtbaar worden
+        Task op = Task.Run(() => action(cts.Token), CancellationToken.None);
+
+        Probe.Log($"WithTimeout STARTED (Task.Run): {name}");
+
+        Task winner = await Task.WhenAny(op, Task.Delay(timeout)).ConfigureAwait(false);
+
+        if (winner != op)
+        {
+            Probe.Log($"WithTimeout TIMEOUT: {name}");
+            // Let op: op draait mogelijk nog door (non-cooperative). Dit is OK; je hebt nu wél diagnose.
+            throw new TimeoutException($"{name} timed out after {timeout.TotalSeconds:0}s");
+        }
+
+        // propagate exceptions
+        await op.ConfigureAwait(false);
+
+        Probe.Log($"WithTimeout SUCCESS: {name}");
     }
 
     private static IHostBuilder CreateHostBuilder(string[] args)
     {
         return Host.CreateDefaultBuilder(args)
+            .UseDefaultServiceProvider(options =>
+            {
+                options.ValidateScopes = true;
+                options.ValidateOnBuild = true;
+            })
             .ConfigureAppConfiguration(configure =>
             {
-                configure.AddJsonFile(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) +
-                                      "/SpekkieTwitchBot/Settings/appsettings.json");
+                configure.AddJsonFile(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop) +
+                    "/SpekkieTwitchBot/Settings/appsettings.json"
+                );
+            })
+            .ConfigureLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.AddConsole();
+                logging.SetMinimumLevel(LogLevel.Information);
             })
             .ConfigureServices(services =>
             {
-                services.AddLogging();
-                services.AddTwitchLibEventSubWebsockets();
+                // -----------------------
+                // Core
+                // -----------------------
                 services.AddSingleton<HttpClient>();
                 services.AddSingleton<WebsocketClient>(_ => new WebsocketClient(new Uri("ws://localhost:4455")));
                 services.AddSingleton<Logger>();
 
+                // -----------------------
+                // Files
+                // -----------------------
                 services.AddSingleton<FileSetup>();
                 services.AddSingleton<FileReader>();
                 services.AddSingleton<FileWriter>();
+                services.AddSingleton<ITextFileWriter>(sp => sp.GetRequiredService<FileWriter>());
+                services.AddSingleton<IClashFileWriter>(sp => sp.GetRequiredService<ClashFileWriter>());
+
                 services.AddSingleton<SpotifyFileSetup>();
                 services.AddSingleton<SpotifyFileReader>();
                 services.AddSingleton<SpotifyFileWriter>();
-                services.AddSingleton<TwitchFileReader>();
-                services.AddSingleton<TwitchFileWriter>();
+
                 services.AddSingleton<TwitchFileSetup>();
+                services.AddSingleton<TwitchFileReader>();
+                services.AddSingleton<ITwitchFileReader>(sp => sp.GetRequiredService<TwitchFileReader>());
+
+                services.AddSingleton<TwitchFileWriter>();
+                services.AddSingleton<ITwitchFileWriter>(sp => sp.GetRequiredService<TwitchFileWriter>());
+
+                services.AddSingleton<TimerFileSetup>();
                 services.AddSingleton<TimerFileReader>();
                 services.AddSingleton<TimerFileWriter>();
-                services.AddSingleton<TimerFileSetup>();
+                services.AddSingleton<ITimerFileWriter>(sp => sp.GetRequiredService<TimerFileWriter>());
+
+                services.AddSingleton<GeneralFileSetup>();
                 services.AddSingleton<GeneralFileReader>();
                 services.AddSingleton<GeneralFileWriter>();
-                services.AddSingleton<GeneralFileSetup>();
-                services.AddSingleton<TwitchUserAuth>();
 
-                services.AddSingleton<CustomClient>();
-
-                services.AddSingleton<TwitchAuthService.TwitchAuthService>();
+                // -----------------------
+                // Features + Router
+                // -----------------------
+                services.AddSingleton<ChannelPointsFeature>();
+                services.AddSingleton<FollowSubFeature>();
+                services.AddSingleton<ChatCommandFeature>();
+                services.AddSingleton<ChatMessageFeature>();
+                services.AddSingleton<TwitchEventsFeature>();
+                services.AddSingleton<TwitchEventRouter>();
+                
+                // -----------------------
+                // Twitch core
+                // -----------------------
                 services.AddSingleton<CustomTwitchHttpClient>();
-                services.AddSingleton<SubEventHandler>();
-                services.AddSingleton<FollowEventHandler>();
-                services.AddSingleton<ChannelPointHandler>();
-                services.AddSingleton<CustomTwitchClient>();
-                services.AddSingleton<CustomPubsub>();
+                services.AddSingleton<ICustomTwitchHttpClient>(sp => sp.GetRequiredService<CustomTwitchHttpClient>());
+                services.AddSingleton<ITwitchChannelInfoClient>(sp => sp.GetRequiredService<CustomTwitchHttpClient>());
 
-                services.AddSingleton<SpotifyAuthService.SpotifyAuthService>();
-                services.AddSingleton<CustomSpotifyHttpClient>();
-                services.AddSingleton<SpotifySearchService>();
-                services.AddSingleton<SpotifyService>();
-                services.AddSingleton<CustomWebSocketClient>();
-                services.AddSingleton<System.Net.WebSockets.ClientWebSocket>();
-                services.AddSingleton<ObsWebSocket>();
-                services.AddSingleton<EventTimer>();
-                services.AddSingleton<EventTimerService.EventTimerService>();
+                services.AddSingleton<TwitchUserFile>();
+                services.AddSingleton<TwitchGeneralFile>();
+
+                services.AddSingleton<ITwitchAuthTokenProvider, FileBackedTwitchAuthTokenProvider>();
                 
+                // -----------------------
+                // Clash of Clans
+                // -----------------------
+                services.AddSingleton<ClashFileSetup>();
+                services.AddSingleton<ClashFileReader>();
+                services.AddSingleton<ClashFileWriter>();
+                services.AddSingleton<ClashFileManager>();
+                services.AddSingleton<CocHttpClient>();
+                services.AddSingleton<WarStatus>();
+                services.AddSingleton<WarService>();
+                services.AddSingleton<IWarService>(sp => sp.GetRequiredService<WarService>());
+                services.AddHostedService(sp => sp.GetRequiredService<WarService>());
+
+                // -----------------------
+                // Command handlers
+                // -----------------------
                 services.AddSingleton<SpotifyCommandHandler>();
+                services.AddSingleton<ISpotifyCommandHandler>(sp => sp.GetRequiredService<SpotifyCommandHandler>());
                 services.AddSingleton<ObsCommandHandler>();
+                services.AddSingleton<IObsCommandHandler>(sp => sp.GetRequiredService<ObsCommandHandler>());
                 services.AddSingleton<TextCommandHandler>();
+                services.AddSingleton<ITextCommandHandler>(sp => sp.GetRequiredService<TextCommandHandler>());
                 services.AddSingleton<TimerCommandHandler>();
+                services.AddSingleton<ITimerCommandHandler>(sp => sp.GetRequiredService<TimerCommandHandler>());
                 services.AddSingleton<TwitchCommandHandler>();
+                services.AddSingleton<ITwitchCommandHandler>(sp => sp.GetRequiredService<TwitchCommandHandler>());
+                services.AddSingleton<ClashCommandHandler>();
+                services.AddSingleton<IClashCommandHandler>(sp => sp.GetRequiredService<ClashCommandHandler>());
                 services.AddSingleton<GeneralCommandHandler>();
+                services.AddSingleton<IGeneralCommandHandler>(sp => sp.GetRequiredService<GeneralCommandHandler>());
+
+                // -----------------------
+                // Chat (IRC)
+                // -----------------------
+                services.AddSingleton<TwitchIrcWebSocketTransport>();
+                services.AddSingleton<TwitchIrcChatClient>();
+                services.AddSingleton<ITwitchChat>(sp => sp.GetRequiredService<TwitchIrcChatClient>());
+
+                // -----------------------
+                // Spotify
+                // -----------------------
+                services.AddSingleton<SpotifyAuthService.Auth.SpotifyAuthService>();
+
+                services.AddSingleton<SpotifyAuthService.General.CustomSpotifyHttpClient>();
+                services.AddSingleton<SpotifySearchService>();
+                services.AddSingleton<ISpotifySearchService>(sp => sp.GetRequiredService<SpotifySearchService>());
+
+                // Spotify core
+                services.AddSingleton<SpotifyService>();
+                services.AddSingleton<ISpotifyService>(sp => sp.GetRequiredService<SpotifyService>());
+                services.AddHostedService<SpotifyHostedService>();
                 
-                services.AddSingleton<JoinedChannelManager>();
-                services.AddSingleton<IrcParser>();
-                
-                services.AddHostedService<SpotifyService>();
-                services.AddHostedService<EventTimerService.EventTimerService>();
+                // -----------------------
+                // PubSub
+                // -----------------------
+                services.AddSingleton<PubSubWebSocketClient>();
+                services.AddSingleton<PubSubReconnectPolicy>();
+                services.AddSingleton<PubSubMessageBuilder>();
+                services.AddSingleton<PubSubMessageParser>();
+
+                services.AddSingleton<TwitchPubSubClient>();
+                services.AddSingleton<ITwitchEvents>(sp => sp.GetRequiredService<TwitchPubSubClient>());
+
+                // -----------------------
+                // OBS / Timer
+                // -----------------------
+                services.AddSingleton<ObsWebSocket>();
+                services.AddSingleton<IObsWebSocket>(sp => sp.GetRequiredService<ObsWebSocket>());
                 services.AddHostedService<ObsWebsocketService>();
-                services.AddHostedService<TwitchWebsocketService>();
+
+                // Timer domain object (used by your timer hosted service)
+                services.AddSingleton<EventTimer>();
+
+                // EventTimerService is HostedService (single instance)
+                services.AddSingleton<EventTimerService.EventTimerService>();
+                services.AddSingleton<IEventTimerService>(sp => sp.GetRequiredService<EventTimerService.EventTimerService>());
+                services.AddHostedService(sp => sp.GetRequiredService<EventTimerService.EventTimerService>());
+
+                // -----------------------
+                // Hosted Services (Twitch)
+                // -----------------------
+                services.AddHostedService<TwitchHostedService>();
             });
     }
 }

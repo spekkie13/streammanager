@@ -9,11 +9,11 @@ public class GeneralFileSetup
     private static readonly string BaseDir =
         Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
 
-    private readonly FileSetup _fileSetup;
+    private readonly FileSetup _FileSetup;
 
     public GeneralFileSetup(FileSetup fileSetup)
     {
-        _fileSetup = fileSetup;
+        _FileSetup = fileSetup;
         SetupCounterFiles();
         SetupLogFile();
     }
@@ -21,12 +21,12 @@ public class GeneralFileSetup
     private void SetupCounterFiles()
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Counters";
-        if (!_fileSetup.DirExists(dir))
-            _fileSetup.CreateDir(dir);
+        if (!_FileSetup.DirExists(dir))
+            _FileSetup.CreateDir(dir);
 
         string file = $"{dir}/afgeleid.txt";
-        if (!_fileSetup.FileExists(file))
-            _fileSetup.CreateFile(file);
+        if (!_FileSetup.FileExists(file))
+            _FileSetup.CreateFile(file);
     }
 
     private void SetupLogFile()
@@ -34,10 +34,10 @@ public class GeneralFileSetup
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Log";
         string file = $"{dir}/log.txt";
 
-        if (!_fileSetup.DirExists(dir))
-            _fileSetup.CreateDir(dir);
+        if (!_FileSetup.DirExists(dir))
+            _FileSetup.CreateDir(dir);
 
-        if (!_fileSetup.FileExists(file))
-            _fileSetup.CreateFile(file);
+        if (!_FileSetup.FileExists(file))
+            _FileSetup.CreateFile(file);
     }
 }

@@ -1,0 +1,145 @@
+﻿############################################
+# .NET / C#
+############################################
+
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+*.pubxml.user
+*.dtbcache.v2
+*.futdcache.v2
+*.vsidx
+*.vssscc
+
+############################################
+# Claude Code
+############################################
+
+.claude/
+
+############################################
+# Rider / JetBrains
+############################################
+
+.idea/
+*.sln.iml
+
+############################################
+# Visual Studio / VS Code
+############################################
+
+.vs/
+.vscode/
+
+############################################
+# Build / publish output
+############################################
+
+**/Debug/
+**/Release/
+**/publish/
+**/artifacts/
+
+############################################
+# Logs
+############################################
+
+*.log
+logs/
+Logs/
+
+############################################
+# OS files
+############################################
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+############################################
+# Environment & secrets
+############################################
+
+.env
+.env.*
+secrets.json
+
+############################################
+# Twitch / Spotify auth files (CRITICAL)
+############################################
+
+**/Twitch-General*.json
+**/Twitch-User*.json
+**/twitch*.json
+**/spotify*.json
+**/*auth*.json
+
+############################################
+# Temporary / cache files
+############################################
+
+*.tmp
+*.cache
+*.bak
+*.old
+
+############################################
+# Test output
+############################################
+
+TestResults/
+coverage/
+*.coverage
+*.trx
+
+############################################
+# NuGet
+############################################
+
+packages/
+.nuget/
+*.nupkg
+*.nuget.dgspec.json
+*.nuget.g.props
+*.nuget.g.targets
+project.assets.json
+project.nuget.cache
+project.packagespec.json
+
+############################################
+# Rider project files
+############################################
+
+rider.project.model.nuget.info
+rider.project.restore.info
+
+############################################
+# Generated / intermediate build files
+############################################
+
+*.AssemblyInfo.cs
+*.AssemblyInfoInputs.cache
+*.csproj.CoreCompileInputs.cache
+*.csproj.AssemblyReference.cache
+*.csproj.FileListAbsolute.txt
+*.sourcelink.json
+*.GeneratedMSBuildEditorConfig.editorconfig
+*.assets.cache
+*.Up2Date
+*AssemblyAttributes.cs
+*.GlobalUsings.g.cs
+apphost
+apphost.exe
+
+############################################
+# Binary / compiled output
+############################################
+
+*.dll
+*.pdb
+*.exe
+*.xml
