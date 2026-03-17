@@ -1,3 +1,2 @@
 ﻿-> add !sr command to allow for song requests
--> investigate redemptions not working
 -> Fix time formatting

@@ -18,14 +18,12 @@ public class PubSubReconnectPolicyTests
     public void NextDelay_EachCall_ReturnsSameOrHigherDelay()
     {
         PubSubReconnectPolicy policy = new PubSubReconnectPolicy();
-        TimeSpan previous = TimeSpan.Zero;
 
         for (int i = 0; i < 8; i++)
         {
             TimeSpan current = policy.NextDelay();
             // base delay grows; even with zero jitter it should be >= previous base
             Assert.True(current >= TimeSpan.FromMilliseconds(250));
-            previous = current;
         }
     }
 

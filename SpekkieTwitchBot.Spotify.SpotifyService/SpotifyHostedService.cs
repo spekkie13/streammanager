@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Hosting;
-using SpekkieClassLibrary.Spotify;
 using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.General;
@@ -65,7 +64,7 @@ public sealed class SpotifyHostedService : BackgroundService
         Probe.Log("SpotifyHostedService ExecuteAsync END");
     }
 
-    private static string GetArtists(SpekkieClassLibrary.Spotify.Song.FullTrack? song)
+    private static string GetArtists(FullTrack? song)
     {
         if (song?.Artists == null || song.Artists.Count == 0) return "";
         return string.Join(" & ", song.Artists.Select(a => a.Name).Where(n => !string.IsNullOrWhiteSpace(n)));

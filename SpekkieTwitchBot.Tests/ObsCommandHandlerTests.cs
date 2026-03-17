@@ -7,8 +7,8 @@ namespace SpekkieTwitchBot.Tests;
 
 public class ObsCommandHandlerTests
 {
-    private readonly Mock<IObsWebSocket> _obs = new();
-    private ObsCommandHandler CreateHandler() => new(_obs.Object);
+    private readonly Mock<IObsWebSocket> _Obs = new();
+    private ObsCommandHandler CreateHandler() => new(_Obs.Object);
 
     // ── HandleSetSceneCommand ────────────────────────────────────────────────
 
@@ -16,7 +16,7 @@ public class ObsCommandHandlerTests
     public void SetScene_CapitalisesFirstLetter()
     {
         string? sceneSent = null;
-        _obs.Setup(o => o.SetCurrentProgramScene(It.IsAny<string>()))
+        _Obs.Setup(o => o.SetCurrentProgramScene(It.IsAny<string>()))
             .Callback<string>(s => sceneSent = s);
 
         CreateHandler().HandleSetSceneCommand("gaming");
@@ -36,7 +36,7 @@ public class ObsCommandHandlerTests
     public void SetScene_AlreadyCapitalised_StaysUnchanged()
     {
         string? sceneSent = null;
-        _obs.Setup(o => o.SetCurrentProgramScene(It.IsAny<string>()))
+        _Obs.Setup(o => o.SetCurrentProgramScene(It.IsAny<string>()))
             .Callback<string>(s => sceneSent = s);
 
         CreateHandler().HandleSetSceneCommand("Gaming");
@@ -49,22 +49,22 @@ public class ObsCommandHandlerTests
     [Fact]
     public void SetInputMute_WhenCurrentlyMuted_ReturnsUnmutedMessage()
     {
-        _obs.Setup(o => o.GetInputMute("Microphone")).Returns(true);
+        _Obs.Setup(o => o.GetInputMute("Microphone")).Returns(true);
 
         string result = CreateHandler().HandleSetInputMute("microphone");
 
-        _obs.Verify(o => o.SetInputMute("Microphone", false));
+        _Obs.Verify(o => o.SetInputMute("Microphone", false));
         Assert.Equal("Microphone set to unmuted", result);
     }
 
     [Fact]
     public void SetInputMute_WhenCurrentlyUnmuted_ReturnsMutedMessage()
     {
-        _obs.Setup(o => o.GetInputMute("Microphone")).Returns(false);
+        _Obs.Setup(o => o.GetInputMute("Microphone")).Returns(false);
 
         string result = CreateHandler().HandleSetInputMute("microphone");
 
-        _obs.Verify(o => o.SetInputMute("Microphone", true));
+        _Obs.Verify(o => o.SetInputMute("Microphone", true));
         Assert.Equal("Microphone set to muted", result);
     }
 
@@ -73,15 +73,15 @@ public class ObsCommandHandlerTests
     [Fact]
     public void SetStandardVolumes_CallsSetVolumeForAllInputsAndOutputs()
     {
-        _obs.Setup(o => o.GetInputList("wasapi_input_capture"))
+        _Obs.Setup(o => o.GetInputList("wasapi_input_capture"))
             .Returns([new InputBasicInfo { InputName = "Mic" }]);
-        _obs.Setup(o => o.GetInputList("wasapi_output_capture"))
+        _Obs.Setup(o => o.GetInputList("wasapi_output_capture"))
             .Returns([new InputBasicInfo { InputName = "Desktop" }]);
 
         string result = CreateHandler().HandleSetStandardVolumes();
 
-        _obs.Verify(o => o.SetInputVolume("Mic", It.IsAny<float>(), true));
-        _obs.Verify(o => o.SetInputVolume("Desktop", It.IsAny<float>(), true));
+        _Obs.Verify(o => o.SetInputVolume("Mic", It.IsAny<float>(), true));
+        _Obs.Verify(o => o.SetInputVolume("Desktop", It.IsAny<float>(), true));
         Assert.Equal("Set standard volumes", result);
     }
 
@@ -90,15 +90,15 @@ public class ObsCommandHandlerTests
     [Fact]
     public void VolumeZero_SetsAllInputsToZero()
     {
-        _obs.Setup(o => o.GetInputList("wasapi_input_capture"))
+        _Obs.Setup(o => o.GetInputList("wasapi_input_capture"))
             .Returns([new InputBasicInfo { InputName = "Mic" }]);
-        _obs.Setup(o => o.GetInputList("wasapi_output_capture"))
+        _Obs.Setup(o => o.GetInputList("wasapi_output_capture"))
             .Returns([new InputBasicInfo { InputName = "Desktop" }]);
 
         string result = CreateHandler().HandleVolumeZero();
 
-        _obs.Verify(o => o.SetInputVolume("Mic", 0.0f, false));
-        _obs.Verify(o => o.SetInputVolume("Desktop", 0.0f, false));
+        _Obs.Verify(o => o.SetInputVolume("Mic", 0.0f, false));
+        _Obs.Verify(o => o.SetInputVolume("Desktop", 0.0f, false));
         Assert.Equal("All inputs & outputs muted", result);
     }
 }
