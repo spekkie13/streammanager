@@ -196,6 +196,7 @@ public static class Program
                 services.AddSingleton<ClashFileWriter>();
                 services.AddSingleton<ClashFileManager>();
                 services.AddSingleton<CocHttpClient>();
+                services.AddSingleton<CcnHttpClient>();
                 services.AddSingleton<WarStatus>();
                 services.AddSingleton<WarService>();
                 services.AddSingleton<IWarService>(sp => sp.GetRequiredService<WarService>());

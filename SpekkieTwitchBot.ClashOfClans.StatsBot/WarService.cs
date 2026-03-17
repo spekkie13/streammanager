@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.Extensions.Hosting;
+using SpekkieClassLibrary.ClashOfClans.Ccn;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Constants;
 using SpekkieTwitchBot.General.FileHandling;
@@ -12,6 +13,7 @@ public class WarService(
     ClashFileWriter writer,
     ClashFileManager manager,
     CocHttpClient client,
+    CcnHttpClient ccnClient,
     WarStatus warStatus,
     Logger logger)
     : BackgroundService, IWarService
@@ -89,9 +91,22 @@ public class WarService(
         await ProcessTeam(clan: runTimeWar.Opponent, team: "away", teamFolder: ClashConstants.AwayFolder);
     }
 
+    private async Task<byte[]> GetTeamLogoAsync(RunTimeClan clan)
+    {
+        CcnClanInfo? ccnInfo = await ccnClient.GetClanInfoAsync(clan.Tag);
+        if (!string.IsNullOrEmpty(ccnInfo?.LogoUrl))
+        {
+            logger.LogInfo($"[CCN] Using CCN logo for '{clan.Name}'");
+            return await client.GetByteArrayAsync(ccnInfo.LogoUrl);
+        }
+
+        logger.LogInfo($"[CCN] '{clan.Name}' not found on CCN, using CoC badge");
+        return await client.GetByteArrayAsync(clan.BadgeUrls.Large);
+    }
+
     private async Task ProcessTeam(RunTimeClan clan, string team, string teamFolder)
     {
-        byte[] logo = await client.GetByteArrayAsync(clan.BadgeUrls.Large);
+        byte[] logo = await GetTeamLogoAsync(clan);
         manager.CreateTeamLogoFile(logo, team);
         await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} name.txt", clan.Name);
         await manager.WritePlayerNames(clan, teamFolder);
