@@ -1,2 +1,3 @@
-﻿-> Update most recent follower & sub file logic (on sub/follow event)
--> Introduce database logic to allow for custom text commands
+﻿-> add !sr command to allow for song requests
+-> build a system to fetch clan logos for stats
+-> investigate redemptions not working
