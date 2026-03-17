@@ -47,7 +47,7 @@ public class FileBackedTwitchAuthTokenProviderTests
         _reader.Setup(r => r.ReadTwitchUserAuthFile()).Returns(UserFileJson(userFile));
 
         AuthorizationCredentials creds = new() { AccessToken = "new-access", RefreshToken = "new-refresh" };
-        var provider = CreateProvider(OkHandler(creds));
+        FileBackedTwitchAuthTokenProvider provider = CreateProvider(OkHandler(creds));
 
         string token = await provider.GetUserAccessTokenAsync(CancellationToken.None);
 
@@ -61,7 +61,7 @@ public class FileBackedTwitchAuthTokenProviderTests
         _reader.Setup(r => r.ReadTwitchUserAuthFile()).Returns(UserFileJson(userFile));
 
         AuthorizationCredentials creds = new() { AccessToken = "new-access", RefreshToken = "new-refresh" };
-        var provider = CreateProvider(OkHandler(creds));
+        FileBackedTwitchAuthTokenProvider provider = CreateProvider(OkHandler(creds));
 
         await provider.GetUserAccessTokenAsync(CancellationToken.None);
 
@@ -75,7 +75,7 @@ public class FileBackedTwitchAuthTokenProviderTests
         _reader.Setup(r => r.ReadTwitchUserAuthFile()).Returns(UserFileJson(userFile));
 
         AuthorizationCredentials creds = new() { AccessToken = "exchanged-token", RefreshToken = "new-refresh" };
-        var provider = CreateProvider(OkHandler(creds));
+        FileBackedTwitchAuthTokenProvider provider = CreateProvider(OkHandler(creds));
 
         string token = await provider.GetUserAccessTokenAsync(CancellationToken.None);
 
@@ -89,7 +89,7 @@ public class FileBackedTwitchAuthTokenProviderTests
         TwitchUserFile userFile = new() { ClientId = "cid", ClientSecret = "cs", Code = "stale-code" };
         _reader.Setup(r => r.ReadTwitchUserAuthFile()).Returns(UserFileJson(userFile));
 
-        var provider = CreateProvider(StatusHandler(HttpStatusCode.BadRequest));
+        FileBackedTwitchAuthTokenProvider provider = CreateProvider(StatusHandler(HttpStatusCode.BadRequest));
 
         string token = await provider.GetUserAccessTokenAsync(CancellationToken.None);
 
@@ -103,7 +103,7 @@ public class FileBackedTwitchAuthTokenProviderTests
         TwitchUserFile userFile = new() { ClientId = "cid", ClientSecret = "cs" };
         _reader.Setup(r => r.ReadTwitchUserAuthFile()).Returns(UserFileJson(userFile));
 
-        var provider = CreateProvider(StatusHandler(HttpStatusCode.OK));
+        FileBackedTwitchAuthTokenProvider provider = CreateProvider(StatusHandler(HttpStatusCode.OK));
 
         string token = await provider.GetUserAccessTokenAsync(CancellationToken.None);
 
@@ -119,7 +119,7 @@ public class FileBackedTwitchAuthTokenProviderTests
         TwitchUserFile userFile = new() { ClientId = "cid", ClientSecret = "cs" };
         _reader.Setup(r => r.ReadTwitchUserAuthFile()).Returns(UserFileJson(userFile));
 
-        var provider = CreateProvider(StatusHandler(HttpStatusCode.OK));
+        FileBackedTwitchAuthTokenProvider provider = CreateProvider(StatusHandler(HttpStatusCode.OK));
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => provider.ForceRefreshAsync(CancellationToken.None));
@@ -133,7 +133,7 @@ public class FileBackedTwitchAuthTokenProviderTests
         TwitchGeneralFile generalFile = new() { BotName = "spekkie", BroadcasterName = "tomspek" };
         _reader.Setup(r => r.ReadTwitchGeneralAuthFile()).Returns(JsonConvert.SerializeObject(generalFile));
 
-        var provider = CreateProvider(StatusHandler(HttpStatusCode.OK));
+        FileBackedTwitchAuthTokenProvider provider = CreateProvider(StatusHandler(HttpStatusCode.OK));
 
         TwitchGeneralFile first = await provider.ReadIdentityAsync(CancellationToken.None);
         TwitchGeneralFile second = await provider.ReadIdentityAsync(CancellationToken.None);

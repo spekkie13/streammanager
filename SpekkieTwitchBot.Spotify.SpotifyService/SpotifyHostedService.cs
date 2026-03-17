@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting;
+using SpekkieClassLibrary.Spotify;
+using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
@@ -33,10 +35,10 @@ public sealed class SpotifyHostedService : BackgroundService
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                var (playable, song) = await _Spotify.GetCurrentPlayableAsync(stoppingToken).ConfigureAwait(false);
+                (CurrentlyPlaying? playable, FullTrack? song) = await _Spotify.GetCurrentPlayableAsync(stoppingToken).ConfigureAwait(false);
 
                 // album art -> file
-                var artBytes = await _Spotify.GetCurrentAlbumArtBytesAsync(playable, stoppingToken).ConfigureAwait(false);
+                byte[]? artBytes = await _Spotify.GetCurrentAlbumArtBytesAsync(playable, stoppingToken).ConfigureAwait(false);
                 if (artBytes is { Length: > 0 })
                     _SpotifyFileWriter.WriteCurrentSongImage(artBytes);
 

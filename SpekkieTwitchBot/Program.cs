@@ -1,4 +1,4 @@
-﻿using EventTimerService;
+using EventTimerService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -70,7 +70,7 @@ public static class Program
                 if (ex is AggregateException aex)
                 {
                     Console.WriteLine("[BOOT] AggregateException inner exceptions:");
-                    foreach (var inner in aex.Flatten().InnerExceptions)
+                    foreach (Exception inner in aex.Flatten().InnerExceptions)
                     {
                         Console.WriteLine("---- INNER ----");
                         Console.WriteLine(inner);
@@ -84,7 +84,7 @@ public static class Program
     {
         Probe.Log($"WithTimeout ENTER: {name} timeout={timeout.TotalSeconds:0}s");
 
-        using var cts = new CancellationTokenSource();
+        using CancellationTokenSource cts = new CancellationTokenSource();
         cts.CancelAfter(timeout);
 
         // Start op background thread zodat sync-blokkades ook zichtbaar worden

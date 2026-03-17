@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -95,7 +95,7 @@ public sealed class CustomSpotifyHttpClient
     {
         try
         {
-            var response = await GetAsync(url, ct).ConfigureAwait(false);
+            HttpResponseMessage response = await GetAsync(url, ct).ConfigureAwait(false);
             return await response.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)
@@ -122,7 +122,7 @@ public sealed class CustomSpotifyHttpClient
 
         JObject jsonObject = JObject.Parse(json);
 
-        var item = new CurrentlyPlaying();
+        CurrentlyPlaying item = new CurrentlyPlaying();
         item.CurrentlyPlayingType = jsonObject["currently_playing_type"]?.ToString() ?? "";
         item.IsPlaying = jsonObject["is_playing"]?.ToString() != "False";
         item.ProgressMs = int.Parse(jsonObject["progress_ms"]?.ToString() ?? "0");

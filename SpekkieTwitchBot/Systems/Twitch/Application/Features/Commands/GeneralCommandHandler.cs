@@ -1,4 +1,4 @@
-﻿using SpekkieTwitchBot.General.FileHandling.General;
+using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
@@ -81,7 +81,7 @@ public class GeneralCommandHandler : IGeneralCommandHandler
             ["!setplayertag"] = _ => Task.FromResult(_ClashCommandHandler.HandleAddPlayerTagCommand(commandArgs)),
         };
 
-        if (!_CommandHandlers.TryGetValue(commandText, out var handler))
+        if (!_CommandHandlers.TryGetValue(commandText, out Func<CancellationToken, Task<string>>? handler))
             return "Unknown command";
 
         return await handler(ct).ConfigureAwait(false);

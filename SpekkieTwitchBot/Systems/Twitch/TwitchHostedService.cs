@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
@@ -55,7 +55,7 @@ public sealed class TwitchHostedService : IHostedService
         {
             if (t.IsFaulted)
             {
-                var ex = t.Exception?.GetBaseException() ?? t.Exception;
+                Exception? ex = t.Exception?.GetBaseException() ?? t.Exception;
                 _Logger.LogError("[BOOT] TwitchHostedService RunAsync FAULTED: " + ex);
             }
             else if (t.IsCanceled)
@@ -124,7 +124,7 @@ public sealed class TwitchHostedService : IHostedService
         TimeSpan timeout,
         string name)
     {
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(outerCt);
+        using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(outerCt);
         cts.CancelAfter(timeout);
 
         Task? op = null;

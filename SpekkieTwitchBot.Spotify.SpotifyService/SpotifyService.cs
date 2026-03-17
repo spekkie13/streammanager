@@ -1,4 +1,4 @@
-﻿using SpekkieClassLibrary.Constants;
+using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Spotify;
 using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.General.FileHandling;
@@ -19,21 +19,21 @@ public class SpotifyService : ISpotifyService
 
     public async Task<(CurrentlyPlaying? playable, FullTrack? song)> GetCurrentPlayableAsync(CancellationToken ct = default)
     {
-        var playable = await _Client.GetCurrentlyPlayingTrack(SpotifyConstants.CurrentlyPlayingUrl, ct).ConfigureAwait(false);
-        var song = await _Client.GetFullTrack(SpotifyConstants.CurrentlyPlayingUrl, ct).ConfigureAwait(false);
+        CurrentlyPlaying? playable = await _Client.GetCurrentlyPlayingTrack(SpotifyConstants.CurrentlyPlayingUrl, ct).ConfigureAwait(false);
+        FullTrack? song = await _Client.GetFullTrack(SpotifyConstants.CurrentlyPlayingUrl, ct).ConfigureAwait(false);
         return (playable, song);
     }
 
     public async Task<string> GetNowPlayingAsync(CancellationToken ct = default)
     {
-        var (_, song) = await GetCurrentPlayableAsync(ct).ConfigureAwait(false);
+        (CurrentlyPlaying? _, FullTrack? song) = await GetCurrentPlayableAsync(ct).ConfigureAwait(false);
         string artists = JoinArtists(song);
         return $"{song?.Name} by {artists}";
     }
 
     public async Task<string> GetCurrentlyPlayingPlaylistAsync(CancellationToken ct = default)
     {
-        var currentlyPlaying = await _Client.DecipherData<CurrentlyPlaying>(SpotifyConstants.CurrentlyPlayingUrl, ct)
+        CurrentlyPlaying? currentlyPlaying = await _Client.DecipherData<CurrentlyPlaying>(SpotifyConstants.CurrentlyPlayingUrl, ct)
             .ConfigureAwait(false);
 
         Context? ctx = currentlyPlaying?.Context;
@@ -51,7 +51,7 @@ public class SpotifyService : ISpotifyService
         int take = Math.Min(10, songQueue.Queue.Count);
         if (take == 0) return string.Empty;
 
-        var parts = new List<string>(take);
+        List<string> parts = new List<string>(take);
         for (int i = 0; i < take; i++)
         {
             FullTrack track = songQueue.Queue.ElementAt(i);

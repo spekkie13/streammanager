@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
@@ -113,7 +113,7 @@ public sealed class TwitchIrcChatClient : ITwitchChat
         // 3) Parse IRC -> domein event
         IrcMessage msg = IrcMessage.Parse(line);
 
-        var chat = new ChatMessageReceived(
+        ChatMessageReceived chat = new ChatMessageReceived(
             MessageId: msg.Tags.GetValueOrDefault("id", ""),
             UserId: msg.Tags.GetValueOrDefault("user-id", ""),
             Username: msg.Tags.GetValueOrDefault("display-name", msg.Username),
@@ -139,7 +139,7 @@ public sealed class TwitchIrcChatClient : ITwitchChat
         if (!string.IsNullOrWhiteSpace(chat.Text) && chat.Text.StartsWith('!'))
         {
             string[] parts = chat.Text[1..].Split(' ', 2);
-            var cmd = new ChatCommandReceived(
+            ChatCommandReceived cmd = new ChatCommandReceived(
                 MessageId: chat.MessageId,
                 UserId: chat.UserId,
                 Username: chat.Username,
