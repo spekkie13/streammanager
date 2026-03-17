@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 using SpekkieTwitchBot.General.FileHandling.General;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
 using SpekkieTwitchBot.General.FileHandling.Timer;
@@ -142,6 +143,8 @@ public static class Program
                 services.AddSingleton<FileSetup>();
                 services.AddSingleton<FileReader>();
                 services.AddSingleton<FileWriter>();
+                services.AddSingleton<ITextFileWriter>(sp => sp.GetRequiredService<FileWriter>());
+                services.AddSingleton<IClashFileWriter>(sp => sp.GetRequiredService<ClashFileWriter>());
 
                 services.AddSingleton<SpotifyFileSetup>();
                 services.AddSingleton<SpotifyFileReader>();
@@ -178,6 +181,7 @@ public static class Program
                 // -----------------------
                 services.AddSingleton<CustomTwitchHttpClient>();
                 services.AddSingleton<ICustomTwitchHttpClient>(sp => sp.GetRequiredService<CustomTwitchHttpClient>());
+                services.AddSingleton<ITwitchChannelInfoClient>(sp => sp.GetRequiredService<CustomTwitchHttpClient>());
 
                 services.AddSingleton<TwitchUserFile>();
                 services.AddSingleton<TwitchGeneralFile>();
@@ -201,12 +205,17 @@ public static class Program
                 // Command handlers
                 // -----------------------
                 services.AddSingleton<SpotifyCommandHandler>();
+                services.AddSingleton<ISpotifyCommandHandler>(sp => sp.GetRequiredService<SpotifyCommandHandler>());
                 services.AddSingleton<ObsCommandHandler>();
+                services.AddSingleton<IObsCommandHandler>(sp => sp.GetRequiredService<ObsCommandHandler>());
                 services.AddSingleton<TextCommandHandler>();
                 services.AddSingleton<ITextCommandHandler>(sp => sp.GetRequiredService<TextCommandHandler>());
                 services.AddSingleton<TimerCommandHandler>();
+                services.AddSingleton<ITimerCommandHandler>(sp => sp.GetRequiredService<TimerCommandHandler>());
                 services.AddSingleton<TwitchCommandHandler>();
+                services.AddSingleton<ITwitchCommandHandler>(sp => sp.GetRequiredService<TwitchCommandHandler>());
                 services.AddSingleton<ClashCommandHandler>();
+                services.AddSingleton<IClashCommandHandler>(sp => sp.GetRequiredService<ClashCommandHandler>());
                 services.AddSingleton<GeneralCommandHandler>();
                 services.AddSingleton<IGeneralCommandHandler>(sp => sp.GetRequiredService<GeneralCommandHandler>());
 

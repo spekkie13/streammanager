@@ -2,7 +2,7 @@
 
 namespace SpekkieTwitchBot.General.FileHandling.Common;
 
-public class FileWriter : IFileWriter
+public class FileWriter : ITextFileWriter
 {
     public void Write(string fileName, string data)
     {
@@ -16,25 +16,5 @@ public class FileWriter : IFileWriter
         await using StreamWriter writer = new (fileName);
         await writer.WriteLineAsync(data);
         await writer.FlushAsync();
-    }
-
-    public async Task WriteTeamNames(string file, string teamName)
-    {
-        await using StreamWriter writer = new(file);
-        await writer.WriteLineAsync(teamName);
-        await writer.FlushAsync();
-    }
-
-    public void CreateTeamLogo(string file, byte[] data)
-    {
-        try
-        {
-            using FileStream fileStream = new(file, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
-            fileStream.Write(data, 0, data.Length);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error writing to the file: {ex.Message}");
-        }
     }
 }

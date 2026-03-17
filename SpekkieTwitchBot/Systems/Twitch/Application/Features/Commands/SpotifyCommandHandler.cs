@@ -4,7 +4,7 @@ using SpotifyAuthService;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
-public class SpotifyCommandHandler
+public class SpotifyCommandHandler : ISpotifyCommandHandler
 {
     private readonly ISpotifyService _SpotifyService;
     private readonly SpotifyFileWriter _SpotifyFileWriter;

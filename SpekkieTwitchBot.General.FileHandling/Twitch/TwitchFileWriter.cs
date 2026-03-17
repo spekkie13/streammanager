@@ -1,9 +1,9 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common;
+﻿using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Twitch;
 
-public class TwitchFileWriter(FileWriter fileWriter) : ITwitchFileWriter
+public class TwitchFileWriter(ITextFileWriter fileWriter) : ITwitchFileWriter
 {
     private const string OutputDir = "/Output/Twitch";
 

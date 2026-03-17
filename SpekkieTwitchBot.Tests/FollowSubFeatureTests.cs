@@ -9,7 +9,7 @@ namespace SpekkieTwitchBot.Tests;
 public class FollowSubFeatureTests
 {
     private readonly Mock<ITwitchChat> _chat = new();
-    private readonly Mock<ICustomTwitchHttpClient> _api = new();
+    private readonly Mock<ITwitchChannelInfoClient> _api = new();
     private readonly Mock<ITwitchFileWriter> _files = new();
 
     private FollowSubFeature CreateFeature() => new(_chat.Object, _api.Object, _files.Object);

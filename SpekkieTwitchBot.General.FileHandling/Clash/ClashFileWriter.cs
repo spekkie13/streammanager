@@ -2,7 +2,7 @@ using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Clash;
 
-public class ClashFileWriter : IFileWriter
+public class ClashFileWriter : IClashFileWriter
 {
     public void Write(string fileName, string data)
     {

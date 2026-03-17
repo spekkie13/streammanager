@@ -3,7 +3,7 @@ using SpekkieTwitchBot.General.FileHandling.Timer;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
-public class TimerCommandHandler
+public class TimerCommandHandler : ITimerCommandHandler
 {
     private readonly IEventTimerService _EventTimerService;
     private readonly ITimerFileWriter _TimerFileWriter;

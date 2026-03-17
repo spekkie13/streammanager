@@ -8,11 +8,11 @@ public class FollowSubFeature
 {
     private readonly ITwitchChat _Chat;
     private readonly ITwitchFileWriter _Files;
-    private readonly ICustomTwitchHttpClient _Api;
-    
+    private readonly ITwitchChannelInfoClient _Api;
+
     public FollowSubFeature(
         ITwitchChat chat,
-        ICustomTwitchHttpClient api,
+        ITwitchChannelInfoClient api,
         ITwitchFileWriter files
     ) {
         _Chat = chat;

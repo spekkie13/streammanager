@@ -8,21 +8,21 @@ public class GeneralCommandHandler : IGeneralCommandHandler
     private readonly GeneralFileReader _GeneralFileReader;
     private readonly GeneralFileWriter _GeneralFileWriter;
     private readonly ITextCommandHandler _TextCommandHandler;
-    private readonly SpotifyCommandHandler _SpotifyCommandHandler;
-    private readonly ObsCommandHandler _ObsCommandHandler;
-    private readonly TimerCommandHandler _TimerCommandHandler;
-    private readonly TwitchCommandHandler _TwitchCommandHandler;
-    private readonly ClashCommandHandler _ClashCommandHandler;
+    private readonly ISpotifyCommandHandler _SpotifyCommandHandler;
+    private readonly IObsCommandHandler _ObsCommandHandler;
+    private readonly ITimerCommandHandler _TimerCommandHandler;
+    private readonly ITwitchCommandHandler _TwitchCommandHandler;
+    private readonly IClashCommandHandler _ClashCommandHandler;
 
     public GeneralCommandHandler(
         GeneralFileReader generalFileReader,
         GeneralFileWriter generalFileWriter,
         ITextCommandHandler textCommandHandler,
-        SpotifyCommandHandler spotifyCommandHandler,
-        ObsCommandHandler obsCommandHandler,
-        TimerCommandHandler timerCommandHandler,
-        TwitchCommandHandler twitchCommandHandler,
-        ClashCommandHandler clashCommandHandler
+        ISpotifyCommandHandler spotifyCommandHandler,
+        IObsCommandHandler obsCommandHandler,
+        ITimerCommandHandler timerCommandHandler,
+        ITwitchCommandHandler twitchCommandHandler,
+        IClashCommandHandler clashCommandHandler
     )
     {
         _GeneralFileReader = generalFileReader;

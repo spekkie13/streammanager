@@ -8,7 +8,7 @@ using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 
-public class CustomTwitchHttpClient : ICustomTwitchHttpClient
+public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInfoClient
 {
     private readonly HttpClient _Client = new();
     private readonly ITwitchAuthTokenProvider _Tokens;

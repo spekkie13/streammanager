@@ -3,7 +3,7 @@ using SpekkieTwitchBot.Systems.OBS;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
-public class ClashCommandHandler(IWarService warService, IObsWebSocket obsWebSocket)
+public class ClashCommandHandler(IWarService warService, IObsWebSocket obsWebSocket) : IClashCommandHandler
 {
     public string HandleSetWarStatsCommand(string argument)
     {

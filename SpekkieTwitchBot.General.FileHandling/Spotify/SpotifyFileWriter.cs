@@ -1,16 +1,16 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common;
+﻿using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Spotify;
 
 public class SpotifyFileWriter
 {
-    private readonly FileWriter _FileWriter;
+    private readonly ITextFileWriter _FileWriter;
     private const string OutputDir = "/Output/Spotify";
     
     private static readonly string BaseDir =
         Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
 
-    public SpotifyFileWriter(FileWriter fileWriter)
+    public SpotifyFileWriter(ITextFileWriter fileWriter)
     {
         _FileWriter = fileWriter;
     }
