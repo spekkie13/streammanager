@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
@@ -49,9 +49,13 @@ public sealed class PubSubMessageParser
             {
                 JsonElement data = root.GetProperty("data");
                 string? topic = data.GetProperty("topic").GetString();
-                
+
                 JsonElement inner = ParseInnerMessage(data);
-                
+
+                string? innerType = inner.TryGetProperty("type", out JsonElement innerT) ? innerT.GetString() : null;
+                if (innerType != "reward-redeemed")
+                    return new PubSubInboundMessage(PubSubInboundKind.Unknown);
+
                 JsonElement redemptionElement = inner.GetProperty("data").GetProperty("redemption");
                 JsonElement rewardElement = redemptionElement.GetProperty("reward");
 
@@ -64,7 +68,7 @@ public sealed class PubSubMessageParser
                 string userInput = "";
                 if (redemptionElement.TryGetProperty("user_input", out JsonElement userInputStr))
                     userInput = userInputStr.GetString() ?? "";
-                
+
                 ChannelPointRedeemed redemption = new ChannelPointRedeemed(
                     RewardId: rewardId,
                     RewardTitle: rewardTitle,
@@ -74,7 +78,7 @@ public sealed class PubSubMessageParser
                     RedeemedAt: redemptionTime,
                     UserInput: userInput
                 );
-                
+
                 return new PubSubInboundMessage(PubSubInboundKind.Message, Topic: topic, Redemption: redemption);
             }
 

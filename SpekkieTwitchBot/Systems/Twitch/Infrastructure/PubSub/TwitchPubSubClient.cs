@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
@@ -47,8 +47,7 @@ public class TwitchPubSubClient : ITwitchEvents
         [
             $"following.{identity.ChannelId}",
             $"channel-subscribe-events-v1.{identity.ChannelId}",
-            $"channel-points-channel-v1.{identity.ChannelId}",
-            $"community-points-channel-v1.{identity.ChannelId}"
+            $"channel-points-channel-v1.{identity.ChannelId}"
         ];
 
         _Ws.OnConnected += HandleConnected;
@@ -117,30 +116,36 @@ public class TwitchPubSubClient : ITwitchEvents
 
     private void HandleMessage(string raw)
     {
-        PubSubInboundMessage msg = PubSubMessageParser.Parse(raw);
-        switch (msg.Kind)
+        try
         {
-            case PubSubInboundKind.Response:
-                _Log.LogWarning($"[PubSub][RESPONSE] nonce={msg.Nonce} ok={msg.Success} error={msg.Error}");
-                return;
+            PubSubInboundMessage msg = PubSubMessageParser.Parse(raw);
+            switch (msg.Kind)
+            {
+                case PubSubInboundKind.Response:
+                    _Log.LogWarning($"[PubSub][RESPONSE] nonce={msg.Nonce} ok={msg.Success} error={msg.Error}");
+                    return;
 
-            case PubSubInboundKind.Pong:
-                _Log.LogWarning("[PubSub][PONG]");
-                return;
+                case PubSubInboundKind.Pong:
+                    _Log.LogWarning("[PubSub][PONG]");
+                    return;
 
-            case PubSubInboundKind.Reconnect:
-                _Log.LogWarning("[PubSub][RECONNECT] server requested");
-                _Ws.ForceReconnect("Server RECONNECT");
-                return;
+                case PubSubInboundKind.Reconnect:
+                    _Log.LogWarning("[PubSub][RECONNECT] server requested");
+                    _Ws.ForceReconnect("Server RECONNECT");
+                    return;
 
-            case PubSubInboundKind.Message:
-                DispatchDomainEvent(msg);
-                return;
+                case PubSubInboundKind.Message:
+                    DispatchDomainEvent(msg);
+                    return;
 
-            case PubSubInboundKind.Unknown:
-            default:
-                _Log.LogWarning($"[PubSub] Unhandled inbound: {raw}");
-                return;
+                case PubSubInboundKind.Unknown:
+                default:
+                    return;
+            }
+        }
+        catch (Exception ex)
+        {
+            _Log.LogError($"[PubSub] HandleMessage failed: {ex.Message} raw={raw}");
         }
     }
 
