@@ -6,4 +6,5 @@ public interface ITwitchChannelInfoClient
     Task<string> GetLatestFollower(CancellationToken cancellationToken = default);
     Task<int> GetSubscriberCount(CancellationToken cancellationToken = default);
     Task<string> GetLatestSubscriber(CancellationToken cancellationToken = default);
+    Task<string?> GetCurrentStreamIdAsync(CancellationToken cancellationToken = default);
 }

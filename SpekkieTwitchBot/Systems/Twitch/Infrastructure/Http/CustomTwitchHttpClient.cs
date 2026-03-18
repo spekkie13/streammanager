@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Constants;
@@ -87,5 +87,14 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
         using HttpResponseMessage msg = await GetAsync(url, ct);
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
         return json["data"]?[0]?["user_name"]?.ToString() ?? "N/A";
+    }
+
+    public async Task<string?> GetCurrentStreamIdAsync(CancellationToken ct = default)
+    {
+        string url = $"{TwitchConstants.TwitchStreamsUrl}?user_id={_ChannelId}";
+        using HttpResponseMessage msg = await GetAsync(url, ct);
+        if (!msg.IsSuccessStatusCode) return null;
+        JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
+        return json["data"]?[0]?["id"]?.ToString();
     }
 }

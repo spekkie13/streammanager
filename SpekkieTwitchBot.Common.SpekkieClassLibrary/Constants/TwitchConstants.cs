@@ -10,6 +10,7 @@ public static class TwitchConstants
     public static string TwitchChannelRewardsUrl =>
         "https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=";
 
+    public static string TwitchStreamsUrl => "https://api.twitch.tv/helix/streams";
     public static string TwitchFollowersUrl => "https://api.twitch.tv/helix/channels/followers";
     public static string TwitchSubscribersUrl => "https://api.twitch.tv/helix/subscriptions";
     public static string ChannelPointStatusCancelled => "CANCELED";

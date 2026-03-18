@@ -1,25 +1,31 @@
-﻿using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
-public sealed class ChatMessageFeature(ITwitchChat chat)
+public sealed class ChatMessageFeature(ITwitchChat chat, ITwitchChannelInfoClient channelInfo)
 {
-    private readonly HashSet<string> _SeenToday = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    private DateOnly _SeenDate = DateOnly.MinValue;
+    private readonly HashSet<string> _SeenThisStream = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private string? _CurrentStreamId;
+    private DateTime _LastStreamIdFetch = DateTime.MinValue;
+    private static readonly TimeSpan StreamIdCacheDuration = TimeSpan.FromMinutes(5);
 
     public async Task OnMessageAsync(ChatMessageReceived e, CancellationToken cancellationToken = default)
     {
         if (e.Text.StartsWith('!')) return;
 
-        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
-        if (_SeenDate != today)
+        if (DateTime.UtcNow - _LastStreamIdFetch >= StreamIdCacheDuration)
         {
-            _SeenDate = today;
-            _SeenToday.Clear();
+            string? streamId = await channelInfo.GetCurrentStreamIdAsync(cancellationToken);
+            _LastStreamIdFetch = DateTime.UtcNow;
+            if (streamId != _CurrentStreamId)
+            {
+                _CurrentStreamId = streamId;
+                _SeenThisStream.Clear();
+            }
         }
 
-        if (!_SeenToday.Add(e.UserId)) return;
+        if (!_SeenThisStream.Add(e.UserId)) return;
 
         string reply = $"hi {e.Username}!";
 
