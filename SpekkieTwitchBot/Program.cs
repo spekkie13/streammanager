@@ -23,8 +23,10 @@ using SpekkieTwitchBot.Systems.Twitch.Application.Routing;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat.Irc;
+using SpekkieTwitchBot.Events;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
+using SpekkieClassLibrary.Events;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using SpotifyAuthService;
 using WebsocketClient = Websocket.Client.WebsocketClient;
@@ -53,6 +55,8 @@ public static class Program
 
         using (host)
         {
+            host.Services.GetRequiredService<WarObsHandler>().Register();
+
             Console.WriteLine("[BOOT] Starting host...");
 
             try
@@ -188,6 +192,14 @@ public static class Program
 
                 services.AddSingleton<ITwitchAuthTokenProvider, FileBackedTwitchAuthTokenProvider>();
                 
+                // -----------------------
+                // -----------------------
+                // Event bus
+                // -----------------------
+                services.AddSingleton<StreamEventBus>();
+                services.AddSingleton<IStreamEventBus>(sp => sp.GetRequiredService<StreamEventBus>());
+                services.AddSingleton<WarObsHandler>();
+
                 // -----------------------
                 // Clash of Clans
                 // -----------------------

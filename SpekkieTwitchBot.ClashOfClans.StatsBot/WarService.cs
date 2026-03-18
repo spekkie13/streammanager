@@ -1,8 +1,8 @@
-using System.Globalization;
 using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.ClashOfClans.Ccn;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Constants;
+using SpekkieClassLibrary.Events;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Clash;
 
@@ -15,12 +15,16 @@ public class WarService(
     CocHttpClient client,
     CcnHttpClient ccnClient,
     WarStatus warStatus,
+    IStreamEventBus eventBus,
     Logger logger)
     : BackgroundService, IWarService
 {
     private readonly Dictionary<string, byte[]> _LogoCache = new();
+    private string? _lastWarState = null;
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await FetchWar();
+
         while (!stoppingToken.IsCancellationRequested)
         {
             if (warStatus.GetStatus())
@@ -66,6 +70,11 @@ public class WarService(
         if (runTimeWar.Clan == null || runTimeWar.Opponent == null)
         {
             logger.LogWarning("No war detected...");
+            if (_lastWarState != "notInWar")
+            {
+                _lastWarState = "notInWar";
+                await eventBus.PublishAsync(new WarStateChangedEvent("notInWar", null, null));
+            }
             return;
         }
 
@@ -80,6 +89,12 @@ public class WarService(
                 break;
         }
         logger.LogInfo("Updated: " + DateTime.Now);
+
+        if (runTimeWar.State != _lastWarState)
+        {
+            _lastWarState = runTimeWar.State;
+            await eventBus.PublishAsync(new WarStateChangedEvent(runTimeWar.State, runTimeWar.Clan.Name, runTimeWar.Opponent.Name));
+        }
 
         if (runTimeWar.State == "preparation" && manager.IsNewWar(runTimeWar.PreparationStartTime))
         {
