@@ -1,3 +1,5 @@
+using SpekkieClassLibrary.Twitch;
+
 namespace SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 
 public interface ITwitchFileReader
@@ -8,4 +10,5 @@ public interface ITwitchFileReader
     public Task<string> ReadMostRecentSubFileAsync();
     public Task<string> ReadSubGoalFileAsync();
     public Task<string> ReadFollowerGoalFileAsync();
+    public Task<SubGoalConfig?> ReadSubGoalConfigAsync();
 }

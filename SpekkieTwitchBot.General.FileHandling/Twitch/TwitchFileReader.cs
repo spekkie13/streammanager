@@ -1,4 +1,6 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common;
+using System.Text.Json;
+using SpekkieClassLibrary.Twitch;
+using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Twitch;
@@ -53,5 +55,13 @@ public class TwitchFileReader : ITwitchFileReader
     {
         string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}SubGoal.txt";
         return await _FileReader.ReadAsync(file);
+    }
+
+    public async Task<SubGoalConfig?> ReadSubGoalConfigAsync()
+    {
+        string file = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}subgoal.json";
+        string json = await _FileReader.ReadAsync(file);
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        return JsonSerializer.Deserialize<SubGoalConfig>(json);
     }
 }
