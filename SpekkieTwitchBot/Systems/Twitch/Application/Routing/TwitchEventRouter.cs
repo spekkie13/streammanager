@@ -13,6 +13,8 @@ public sealed class TwitchEventRouter(
     FollowSubFeature followSub,
     ChannelPointsFeature channelPoints)
 {
+    public Task InitializeAsync(CancellationToken ct) => followSub.InitializeAsync(ct);
+
     public void Wire()
     {
         chat.OnChatCommandReceived += OnChatCommandReceived;

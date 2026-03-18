@@ -59,6 +59,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<int> GetFollowerCount(CancellationToken ct = default)
     {
+        await EnsureHeadersAsync(ct);
         string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={_ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
@@ -67,6 +68,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<string> GetLatestFollower(CancellationToken ct = default)
     {
+        await EnsureHeadersAsync(ct);
         string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={_ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
@@ -75,6 +77,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<int> GetSubscriberCount(CancellationToken ct = default)
     {
+        await EnsureHeadersAsync(ct);
         string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={_ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
@@ -83,6 +86,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<string> GetLatestSubscriber(CancellationToken ct = default)
     {
+        await EnsureHeadersAsync(ct);
         string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={_ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
@@ -91,6 +95,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<string?> GetCurrentStreamIdAsync(CancellationToken ct = default)
     {
+        await EnsureHeadersAsync(ct);
         string url = $"{TwitchConstants.TwitchStreamsUrl}?user_id={_ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return null;
