@@ -21,8 +21,7 @@ public sealed class SpotifyHostedService : BackgroundService
         _Spotify = spotify;
         _SpotifyFileWriter = spotifyFileWriter;
         _Logger = logger;
-
-        spotifyFileSetup.SetupSongFiles();
+        _ = spotifyFileSetup; // resolved to run file setup on boot
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

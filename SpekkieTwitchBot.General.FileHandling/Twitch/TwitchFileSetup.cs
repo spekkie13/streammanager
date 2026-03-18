@@ -1,4 +1,4 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.General.FileHandling.Common;
 
 namespace SpekkieTwitchBot.General.FileHandling.Twitch;
 
@@ -14,74 +14,44 @@ public class TwitchFileSetup
     public TwitchFileSetup(FileSetup fileSetup)
     {
         _FileSetup = fileSetup;
-        SetupRecentFollowerFile();
-        SetupRecentSubFile();
-        SetupFollowerGoalFile();
-        SetupRecentSubFile();
-        SetupSubGoalFile();
+        SetupFile("RecentFollower.txt", clearOnBoot: true);
+        SetupFile("RecentSub.txt", clearOnBoot: true);
+        SetupFile("FollowerGoal.txt", clearOnBoot: true);
+        SetupFile("SubGoal.txt", clearOnBoot: true);
+        SetupFile("latestactivity.html", clearOnBoot: false);
+        SetupFile("subgoal.html", clearOnBoot: false);
+        SetupSubGoalConfig();
     }
 
-    private void SetupRecentFollowerFile()
+    private void SetupSubGoalConfig()
     {
-        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
-        string file = $"{dir}RecentFollower.txt";
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}";
+        string file = $"{dir}subgoal.json";
 
-        bool dirExists = _FileSetup.DirExists(dir);
-        if (!dirExists)
+        if (!_FileSetup.DirExists(dir))
             _FileSetup.CreateDir(dir);
 
-        bool fileExists = _FileSetup.FileExists(file);
-        if (!fileExists)
-            _FileSetup.CreateFile(file);
-
-        File.WriteAllText(file, "");
+        if (!_FileSetup.FileExists(file))
+            File.WriteAllText(file, """
+                {
+                  "goal": 25,
+                  "endDate": "2026-12-31"
+                }
+                """);
     }
 
-    private void SetupRecentSubFile()
+    private void SetupFile(string filename, bool clearOnBoot)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
-        string file = $"{dir}RecentSub.txt";
+        string file = $"{dir}{filename}";
 
-        bool dirExists = _FileSetup.DirExists(dir);
-        if (!dirExists)
+        if (!_FileSetup.DirExists(dir))
             _FileSetup.CreateDir(dir);
 
-        bool fileExists = _FileSetup.FileExists(file);
-        if (!fileExists)
+        if (!_FileSetup.FileExists(file))
             _FileSetup.CreateFile(file);
 
-        File.WriteAllText(file, "");
-    }
-
-    private void SetupFollowerGoalFile()
-    {
-        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
-        string file = $"{dir}FollowerGoal.txt";
-
-        bool dirExists = _FileSetup.DirExists(dir);
-        if (!dirExists)
-            _FileSetup.CreateDir(dir);
-
-        bool fileExists = _FileSetup.FileExists(file);
-        if (!fileExists)
-            _FileSetup.CreateFile(file);
-
-        File.WriteAllText(file, "");
-    }
-
-    private void SetupSubGoalFile()
-    {
-        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
-        string file = $"{dir}SubGoal.txt";
-
-        bool dirExists = _FileSetup.DirExists(dir);
-        if (!dirExists)
-            _FileSetup.CreateDir(dir);
-
-        bool fileExists = _FileSetup.FileExists(file);
-        if (!fileExists)
-            _FileSetup.CreateFile(file);
-
-        File.WriteAllText(file, "");
+        if (clearOnBoot)
+            File.WriteAllText(file, "");
     }
 }

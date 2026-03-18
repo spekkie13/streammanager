@@ -23,14 +23,12 @@ public class FileSetup : IFileSetup
     {
         try
         {
-            using FileStream fs = new (filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            using FileStream fs = new(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             fs.Flush();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error: {ex.Message}");
         }
-
-        File.Create(filePath);
     }
 }

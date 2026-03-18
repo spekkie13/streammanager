@@ -1,15 +1,16 @@
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Constants;
+using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Clash;
 
 public class ClashFileManager
 {
-    private readonly ClashFileSetup _FileSetup;
+    private readonly FileSetup _FileSetup;
     private readonly IClashFileWriter _FileWriter;
 
-    public ClashFileManager(ClashFileSetup setup, IClashFileWriter writer)
+    public ClashFileManager(FileSetup setup, IClashFileWriter writer)
     {
         _FileSetup = setup;
         _FileWriter = writer;

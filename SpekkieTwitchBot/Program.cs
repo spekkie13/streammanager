@@ -203,7 +203,6 @@ public static class Program
                 // -----------------------
                 // Clash of Clans
                 // -----------------------
-                services.AddSingleton<ClashFileSetup>();
                 services.AddSingleton<ClashFileReader>();
                 services.AddSingleton<ClashFileWriter>();
                 services.AddSingleton<ClashFileManager>();

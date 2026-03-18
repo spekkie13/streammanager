@@ -20,7 +20,7 @@ public class WarService(
     : BackgroundService, IWarService
 {
     private readonly Dictionary<string, byte[]> _LogoCache = new();
-    private string? _lastWarState = null;
+    private string? _LastWarState;
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await FetchWar();
@@ -70,9 +70,9 @@ public class WarService(
         if (runTimeWar.Clan == null || runTimeWar.Opponent == null)
         {
             logger.LogWarning("No war detected...");
-            if (_lastWarState != "notInWar")
+            if (_LastWarState != "notInWar")
             {
-                _lastWarState = "notInWar";
+                _LastWarState = "notInWar";
                 await eventBus.PublishAsync(new WarStateChangedEvent("notInWar", null, null));
             }
             return;
@@ -90,9 +90,9 @@ public class WarService(
         }
         logger.LogInfo("Updated: " + DateTime.Now);
 
-        if (runTimeWar.State != _lastWarState)
+        if (runTimeWar.State != _LastWarState)
         {
-            _lastWarState = runTimeWar.State;
+            _LastWarState = runTimeWar.State;
             await eventBus.PublishAsync(new WarStateChangedEvent(runTimeWar.State, runTimeWar.Clan.Name, runTimeWar.Opponent.Name));
         }
 
