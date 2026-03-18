@@ -47,9 +47,11 @@ public class SpotifyFileWriter(ITextFileWriter fileWriter)
                   align-items: center;
                   gap: 12px;
                   padding: 10px;
-                  background: rgba(0, 0, 0, 0.6);
+                  background: rgba(15, 15, 15, 0.88);
+                  border: 1px solid rgba(255, 255, 255, 0.10);
+                  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
                   border-radius: 10px;
-                  width: fit-content;
+                  width: 336px;
                 }
                 .art {
                   width: 64px;
@@ -59,7 +61,7 @@ public class SpotifyFileWriter(ITextFileWriter fileWriter)
                   flex-shrink: 0;
                 }
                 .info { display: flex; flex-direction: column; gap: 4px; }
-                .clip { max-width: 240px; overflow: hidden; }
+                .clip { width: 240px; overflow: hidden; }
                 .text {
                   font-family: sans-serif;
                   white-space: nowrap;
