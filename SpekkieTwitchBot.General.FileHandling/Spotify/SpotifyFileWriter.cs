@@ -93,7 +93,9 @@ public class SpotifyFileWriter(ITextFileWriter fileWriter)
             """;
 
         string path = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}nowplaying.html";
-        File.WriteAllText(path, html);
+        using FileStream fs = new(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        using StreamWriter writer = new(fs);
+        writer.Write(html);
     }
 
     public void WriteCurrentSongImage(byte[] imgBytes)
