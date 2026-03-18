@@ -44,6 +44,7 @@ public sealed class SpotifyHostedService : BackgroundService
                 // now playing -> file
                 string nowPlaying = $"{song?.Name} by {GetArtists(song)}";
                 _SpotifyFileWriter.WriteSongFile(nowPlaying);
+                _SpotifyFileWriter.WriteNowPlayingHtml(song?.Name ?? "", GetArtists(song));
 
                 // wacht ongeveer tot track klaar is (maar met safety clamp)
                 int durationLeft = (song?.DurationMs ?? 10000) - (playable?.ProgressMs ?? 0);

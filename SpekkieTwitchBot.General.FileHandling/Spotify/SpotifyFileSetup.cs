@@ -1,4 +1,4 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.General.FileHandling.Common;
 
 namespace SpekkieTwitchBot.General.FileHandling.Spotify;
 
@@ -21,6 +21,7 @@ public class SpotifyFileSetup
         string titleDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentTitle.txt";
         string artistDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentArtist.txt";
         string pictureDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}currentSong.png";
+        string htmlDir = $"{BaseDir}{_OutputDir}{Path.DirectorySeparatorChar}nowplaying.html";
 
         if (!_FileSetup.FileExists(titleDir))
             _FileSetup.CreateFile(titleDir);
@@ -30,5 +31,8 @@ public class SpotifyFileSetup
 
         if (!_FileSetup.FileExists(pictureDir))
             _FileSetup.CreateFile(pictureDir);
+
+        if (!_FileSetup.FileExists(htmlDir))
+            _FileSetup.CreateFile(htmlDir);
     }
 }
