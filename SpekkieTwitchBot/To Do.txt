@@ -1,2 +1,1 @@
-﻿-> add !sr command to allow for song requests
--> Fix time formatting
+﻿-> rewrite war stats into a local HTML file to be able to apply styling and have it look as perfect as can be always
