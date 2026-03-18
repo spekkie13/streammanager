@@ -1,6 +1,7 @@
 using Moq;
 using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.General.FileHandling.Spotify;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 using SpotifyAuthService;
 
@@ -11,9 +12,10 @@ public class SpotifyCommandHandlerTests
     private readonly Mock<ISpotifyService> _Spotify = new();
     private readonly Mock<SpotifyFileWriter> _FileWriter = new(MockBehavior.Loose, null!);
     private readonly Mock<ISpotifySearchService> _Search = new();
+    private readonly Mock<ITwitchChannelInfoClient> _ChannelInfo = new();
 
     private SpotifyCommandHandler CreateHandler() =>
-        new(_Spotify.Object, _FileWriter.Object, _Search.Object);
+        new(_Spotify.Object, _FileWriter.Object, _Search.Object, _ChannelInfo.Object);
 
     // ── HandleAddSongToQueueCommand ──────────────────────────────────────────
 
