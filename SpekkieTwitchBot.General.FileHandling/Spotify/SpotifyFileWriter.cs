@@ -21,7 +21,7 @@ public class SpotifyFileWriter(ITextFileWriter fileWriter)
         fileWriter.Write(artistDir, artist);
     }
 
-    public void WriteNowPlayingHtml(string title, string artist)
+    public void WriteNowPlayingHtml(string title, string artist, int reloadDelayMs)
     {
         string safeTitle = WebUtility.HtmlEncode(title);
         string safeArtist = WebUtility.HtmlEncode(artist);
@@ -58,36 +58,40 @@ public class SpotifyFileWriter(ITextFileWriter fileWriter)
                   object-fit: cover;
                   flex-shrink: 0;
                 }
-                .title {
+                .info { display: flex; flex-direction: column; gap: 4px; }
+                .clip { max-width: 240px; overflow: hidden; }
+                .text {
                   font-family: sans-serif;
-                  font-size: 16px;
-                  font-weight: bold;
-                  color: #ffffff;
                   white-space: nowrap;
-                  max-width: 240px;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
+                  display: inline-block;
                 }
-                .artist {
-                  font-family: sans-serif;
-                  font-size: 13px;
-                  color: #cccccc;
-                  white-space: nowrap;
-                  max-width: 240px;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
+                .title { font-size: 16px; font-weight: bold; color: #ffffff; }
+                .artist { font-size: 13px; color: #cccccc; }
+                @keyframes marquee {
+                  0%,  15% { transform: translateX(0); }
+                  85%, 100% { transform: translateX(var(--scroll-dist)); }
                 }
+                .scrolling { animation: marquee 8s ease-in-out infinite; }
               </style>
             </head>
             <body>
               <div class="card">
                 <img class="art" src="currentsong.png" onerror="this.style.display='none'">
                 <div class="info">
-                  <div class="title">{{safeTitle}}</div>
-                  <div class="artist">{{safeArtist}}</div>
+                  <div class="clip"><span class="text title">{{safeTitle}}</span></div>
+                  <div class="clip"><span class="text artist">{{safeArtist}}</span></div>
                 </div>
               </div>
-              <script>setTimeout(() => location.reload(), 5000);</script>
+              <script>
+                document.querySelectorAll('.text').forEach(span => {
+                  const overflow = span.scrollWidth - span.parentElement.clientWidth;
+                  if (overflow > 0) {
+                    span.style.setProperty('--scroll-dist', `-${overflow}px`);
+                    span.classList.add('scrolling');
+                  }
+                });
+                setTimeout(() => location.reload(), {{reloadDelayMs}});
+              </script>
             </body>
             </html>
             """;

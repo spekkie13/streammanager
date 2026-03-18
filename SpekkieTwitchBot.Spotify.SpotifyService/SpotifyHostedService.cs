@@ -41,14 +41,14 @@ public sealed class SpotifyHostedService : BackgroundService
                 if (artBytes is { Length: > 0 })
                     _SpotifyFileWriter.WriteCurrentSongImage(artBytes);
 
-                // now playing -> file
-                string nowPlaying = $"{song?.Name} by {GetArtists(song)}";
-                _SpotifyFileWriter.WriteSongFile(nowPlaying);
-                _SpotifyFileWriter.WriteNowPlayingHtml(song?.Name ?? "", GetArtists(song));
-
                 // wacht ongeveer tot track klaar is (maar met safety clamp)
                 int durationLeft = (song?.DurationMs ?? 10000) - (playable?.ProgressMs ?? 0);
                 durationLeft = Math.Clamp(durationLeft, 2_000, 60_000); // min 2s, max 60s (voorkomt idiote delays)
+
+                // now playing -> file
+                string nowPlaying = $"{song?.Name} by {GetArtists(song)}";
+                _SpotifyFileWriter.WriteSongFile(nowPlaying);
+                _SpotifyFileWriter.WriteNowPlayingHtml(song?.Name ?? "", GetArtists(song), durationLeft + 1000);
 
                 await Task.Delay(TimeSpan.FromMilliseconds(durationLeft), stoppingToken).ConfigureAwait(false);
             }
