@@ -149,11 +149,11 @@ public class WarService(
             string fileName = $"{teamFolder}{Path.DirectorySeparatorChar}hit {member.MapPosition}.txt";
             await writer.WriteAsync(fileName, member.Attacks.First().DestructionPercentage + "%");
 
-            double minutes = member.Attacks.First().Duration / 60;
-            double seconds = member.Attacks.First().Duration % 60;
+            int minutes = (int)member.Attacks.First().Duration / 60;
+            int seconds = (int)member.Attacks.First().Duration % 60;
 
             fileName = teamFolder + $"{Path.DirectorySeparatorChar}hit " + member.MapPosition + " time.txt";
-            await writer.WriteAsync(fileName, $"{minutes}:{seconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0')}");
+            await writer.WriteAsync(fileName, $"{minutes}:{seconds.ToString().PadLeft(2, '0')}");
         }
 
         List<double> times = (from member in clan.Members
