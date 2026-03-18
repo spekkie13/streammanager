@@ -79,9 +79,11 @@ public class ClashCommandHandlerTests
     }
 
     [Fact]
-    public void AddPlayerTag_UpdatesAndReturnsConfirmation()
+    public async Task AddPlayerTag_UpdatesAndReturnsConfirmation()
     {
-        string result = CreateHandler().HandleAddPlayerTagCommand("#ABC123");
+        _War.Setup(w => w.UpdatePlayerTag("#ABC123")).Returns(Task.CompletedTask);
+
+        string result = await CreateHandler().HandleAddPlayerTagCommand("#ABC123");
 
         _War.Verify(w => w.UpdatePlayerTag("#ABC123"));
         Assert.Contains("#ABC123", result);

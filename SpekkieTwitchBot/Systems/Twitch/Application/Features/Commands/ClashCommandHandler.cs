@@ -23,9 +23,9 @@ public class ClashCommandHandler(IWarService warService, IObsWebSocket obsWebSoc
         return enable ? "War service has been turned on" : "War service has been turned off";
     }
 
-    public string HandleAddPlayerTagCommand(string playerTag)
+    public async Task<string> HandleAddPlayerTagCommand(string playerTag)
     {
-        warService.UpdatePlayerTag(playerTag);
+        await warService.UpdatePlayerTag(playerTag);
         return $"Updated player tag to: {playerTag}";
     }
 }

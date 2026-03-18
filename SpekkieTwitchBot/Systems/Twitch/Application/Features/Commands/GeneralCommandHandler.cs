@@ -79,7 +79,7 @@ public class GeneralCommandHandler : IGeneralCommandHandler
 
             // Clash of Clans
             ["!war"]          = _ => Task.FromResult(_ClashCommandHandler.HandleSetWarStatsCommand(commandArgs)),
-            ["!setplayertag"] = _ => Task.FromResult(_ClashCommandHandler.HandleAddPlayerTagCommand(commandArgs)),
+            ["!setplayertag"] = _ => _ClashCommandHandler.HandleAddPlayerTagCommand(commandArgs),
         };
 
         if (!_CommandHandlers.TryGetValue(commandText, out Func<CancellationToken, Task<string>>? handler))

@@ -18,12 +18,13 @@ public class WarService(
     Logger logger)
     : BackgroundService, IWarService
 {
+    private readonly Dictionary<string, byte[]> _LogoCache = new();
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
             if (warStatus.GetStatus())
-                FetchWar();
+                await FetchWar();
             else
                 logger.LogInfo("War stats inactive");
 
@@ -37,7 +38,7 @@ public class WarService(
         Console.WriteLine($"War stats active: {enable}");
     }
 
-    private async void FetchWar()
+    private async Task FetchWar()
     {
         try
         {
@@ -83,6 +84,7 @@ public class WarService(
         if (runTimeWar.State == "preparation" && manager.IsNewWar(runTimeWar.PreparationStartTime))
         {
             Console.WriteLine("New war detected, resetting war files...");
+            _LogoCache.Clear();
             manager.ResetWarFiles();
             manager.SaveWarId(runTimeWar.PreparationStartTime);
         }
@@ -93,15 +95,24 @@ public class WarService(
 
     private async Task<byte[]> GetTeamLogoAsync(RunTimeClan clan)
     {
+        if (_LogoCache.TryGetValue(clan.Tag, out byte[]? cached))
+            return cached;
+
         CcnClanInfo? ccnInfo = await ccnClient.GetClanInfoAsync(clan.Tag);
+        byte[] logo;
         if (!string.IsNullOrEmpty(ccnInfo?.LogoUrl))
         {
             logger.LogInfo($"[CCN] Using CCN logo for '{clan.Name}'");
-            return await client.GetByteArrayAsync(ccnInfo.LogoUrl);
+            logo = await client.GetByteArrayAsync(ccnInfo.LogoUrl);
+        }
+        else
+        {
+            logger.LogInfo($"[CCN] '{clan.Name}' not found on CCN, using CoC badge");
+            logo = await client.GetByteArrayAsync(clan.BadgeUrls.Large);
         }
 
-        logger.LogInfo($"[CCN] '{clan.Name}' not found on CCN, using CoC badge");
-        return await client.GetByteArrayAsync(clan.BadgeUrls.Large);
+        _LogoCache[clan.Tag] = logo;
+        return logo;
     }
 
     private async Task ProcessTeam(RunTimeClan clan, string team, string teamFolder)
@@ -165,7 +176,7 @@ public class WarService(
         return warStatus.GetStatus();
     }
 
-    public async void UpdatePlayerTag(string playerTag)
+    public async Task UpdatePlayerTag(string playerTag)
     {
         try
         {

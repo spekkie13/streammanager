@@ -1,4 +1,3 @@
-using System.Net;
 using Moq;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
