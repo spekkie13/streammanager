@@ -11,8 +11,9 @@ public class FollowSubFeatureTests
     private readonly Mock<ITwitchChat> _Chat = new();
     private readonly Mock<ITwitchChannelInfoClient> _Api = new();
     private readonly Mock<ITwitchFileWriter> _Files = new();
+    private readonly Mock<ITwitchFileReader> _FileReader = new();
 
-    private FollowSubFeature CreateFeature() => new(_Chat.Object, _Api.Object, _Files.Object);
+    private FollowSubFeature CreateFeature() => new(_Chat.Object, _Api.Object, _Files.Object, _FileReader.Object);
 
     private static SubHappened Sub(SubKind kind, string recipient = "viewer1", string? gifter = null,
         string tier = "1000", int? months = null) =>

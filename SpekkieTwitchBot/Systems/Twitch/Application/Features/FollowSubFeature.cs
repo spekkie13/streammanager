@@ -1,4 +1,5 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
+using SpekkieClassLibrary.Twitch;
+using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
@@ -8,16 +9,30 @@ public class FollowSubFeature
 {
     private readonly ITwitchChat _Chat;
     private readonly ITwitchFileWriter _Files;
+    private readonly ITwitchFileReader _FileReader;
     private readonly ITwitchChannelInfoClient _Api;
 
     public FollowSubFeature(
         ITwitchChat chat,
         ITwitchChannelInfoClient api,
-        ITwitchFileWriter files
+        ITwitchFileWriter files,
+        ITwitchFileReader fileReader
     ) {
         _Chat = chat;
         _Api = api;
         _Files = files;
+        _FileReader = fileReader;
+    }
+
+    public async Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        string latestFollower = await _Api.GetLatestFollower(cancellationToken);
+        string latestSubscriber = await _Api.GetLatestSubscriber(cancellationToken);
+        _Files.WriteLatestFollowerHtml(latestFollower);
+        _Files.WriteLatestSubHtml(latestSubscriber);
+
+        int totalSubs = await _Api.GetSubscriberCount(cancellationToken);
+        await WriteSubGoalAsync(totalSubs, cancellationToken);
     }
 
     public async Task HandleFollowAsync(FollowHappened e, CancellationToken cancellationToken = default)
@@ -25,7 +40,8 @@ public class FollowSubFeature
         if (string.IsNullOrWhiteSpace(e.UserName)) return;
         
         await _Files.WriteMostRecentFollowerAsync(e.UserName, cancellationToken);
-        
+        _Files.WriteLatestFollowerHtml(e.UserName);
+
         int totalFollowers = await _Api.GetFollowerCount(cancellationToken);
         await _Files.WriteTotalFollowersAsync(totalFollowers, cancellationToken);
         
@@ -38,11 +54,21 @@ public class FollowSubFeature
 
         string latestSubscriber = FormatLatestSub(e);
         await _Files.WriteMostRecentSubscriberAsync(latestSubscriber, cancellationToken);
+        _Files.WriteLatestSubHtml(latestSubscriber);
         
         int totalSubs = await _Api.GetSubscriberCount(cancellationToken);
         await _Files.WriteTotalSubscribersAsync(totalSubs, cancellationToken);
-        
+        await WriteSubGoalAsync(totalSubs, cancellationToken);
+
         await _Chat.SendAsync(message: FormatChatThanks(e), cancellationToken);
+    }
+
+    private async Task WriteSubGoalAsync(int current, CancellationToken ct)
+    {
+        SubGoalConfig? config = await _FileReader.ReadSubGoalConfigAsync();
+        if (config == null) return;
+        int daysRemaining = Math.Max(0, config.EndDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber);
+        _Files.WriteSubGoalHtml(current, config.Goal, daysRemaining);
     }
 
     private static string FormatLatestSub(SubHappened e)
