@@ -20,7 +20,9 @@ public class FileReader : IFileReader
     public async Task<string> ReadAsync(string fileName)
     {
         if (!File.Exists(fileName)) return string.Empty;
-        return await File.ReadAllTextAsync(fileName);
+        using FileStream fileStream = new(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using StreamReader reader = new(fileStream);
+        return await reader.ReadToEndAsync();
     }
         
 }
