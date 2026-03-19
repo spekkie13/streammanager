@@ -7,7 +7,7 @@ public class PubSubReconnectPolicyTests
     [Fact]
     public void NextDelay_FirstCall_ReturnsAtLeast250Ms()
     {
-        var policy = new PubSubReconnectPolicy();
+        PubSubReconnectPolicy policy = new PubSubReconnectPolicy();
 
         TimeSpan delay = policy.NextDelay();
 
@@ -17,22 +17,20 @@ public class PubSubReconnectPolicyTests
     [Fact]
     public void NextDelay_EachCall_ReturnsSameOrHigherDelay()
     {
-        var policy = new PubSubReconnectPolicy();
-        TimeSpan previous = TimeSpan.Zero;
+        PubSubReconnectPolicy policy = new PubSubReconnectPolicy();
 
         for (int i = 0; i < 8; i++)
         {
             TimeSpan current = policy.NextDelay();
             // base delay grows; even with zero jitter it should be >= previous base
             Assert.True(current >= TimeSpan.FromMilliseconds(250));
-            previous = current;
         }
     }
 
     [Fact]
     public void NextDelay_AfterManyCalls_CapsAt30Seconds()
     {
-        var policy = new PubSubReconnectPolicy();
+        PubSubReconnectPolicy policy = new PubSubReconnectPolicy();
 
         // Drain past the cap (attempt is capped at 8 → 2^8*250 = 64000ms → capped at 30000)
         for (int i = 0; i < 20; i++)
@@ -46,7 +44,7 @@ public class PubSubReconnectPolicyTests
     [Fact]
     public void Reset_AfterSeveralCalls_ResetsDelayToInitialRange()
     {
-        var policy = new PubSubReconnectPolicy();
+        PubSubReconnectPolicy policy = new PubSubReconnectPolicy();
 
         // Advance to high delay
         for (int i = 0; i < 8; i++) policy.NextDelay();
@@ -62,10 +60,10 @@ public class PubSubReconnectPolicyTests
     public void NextDelay_IncludesJitter_DelayIsNotAlwaysIdentical()
     {
         // Run enough iterations to statistically observe jitter variation
-        var delays = new HashSet<double>();
+        HashSet<double> delays = new HashSet<double>();
         for (int i = 0; i < 30; i++)
         {
-            var policy = new PubSubReconnectPolicy();
+            PubSubReconnectPolicy policy = new PubSubReconnectPolicy();
             delays.Add(policy.NextDelay().TotalMilliseconds);
         }
 

@@ -1,4 +1,6 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common;
+using System.Text.Json;
+using SpekkieClassLibrary.Twitch;
+using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Twitch;
@@ -8,7 +10,7 @@ public class TwitchFileReader : ITwitchFileReader
     private readonly FileReader _FileReader;
     
     private const string OutputDir = "/Output/Twitch";
-    private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
 
     public TwitchFileReader(FileReader fileReader)
     {
@@ -39,19 +41,21 @@ public class TwitchFileReader : ITwitchFileReader
 
     public async Task<string> ReadMostRecentSubFileAsync()
     {
-        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentSub.txt";
+        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentSubscriber.txt";
         return await _FileReader.ReadAsync(file);
     }
 
-    public async Task<string> ReadSubGoalFileAsync()
+    public async Task<string> ReadLatestSubDisplayAsync()
     {
-        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}FollowerGoal.txt";
+        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}LatestSubDisplay.txt";
         return await _FileReader.ReadAsync(file);
     }
 
-    public async Task<string> ReadFollowerGoalFileAsync()
+    public async Task<StreamGoalsConfig?> ReadGoalsConfigAsync()
     {
-        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}SubGoal.txt";
-        return await _FileReader.ReadAsync(file);
+        string file = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}goals.json";
+        string json = await _FileReader.ReadAsync(file);
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        return JsonSerializer.Deserialize<StreamGoalsConfig>(json);
     }
 }

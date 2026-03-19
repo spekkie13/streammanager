@@ -1,4 +1,4 @@
-﻿using System.Net.WebSockets;
+using System.Net.WebSockets;
 using System.Text;
 using SpekkieTwitchBot.General.FileHandling;
 
@@ -36,7 +36,7 @@ public sealed class TwitchIrcWebSocketTransport
     public async Task ConnectAsync(CancellationToken ct)
     {
         // quick check
-        var existing = _Ws;
+        ClientWebSocket? existing = _Ws;
         if (existing is { State: WebSocketState.Open })
         {
             _Log.LogWarning($"[IRC-WS] ConnectAsync called but already connected. State={existing.State}");
@@ -47,12 +47,12 @@ public sealed class TwitchIrcWebSocketTransport
         await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
 
         // new session state
-        var ws = new ClientWebSocket();
+        ClientWebSocket ws = new ClientWebSocket();
         ws.Options.KeepAliveInterval = TimeSpan.FromSeconds(20);
 
         // linked token: stop host => stop loop; plus connect timeout
-        var runCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(runCts.Token);
+        CancellationTokenSource runCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        using CancellationTokenSource connectCts = CancellationTokenSource.CreateLinkedTokenSource(runCts.Token);
         connectCts.CancelAfter(ConnectTimeout);
 
         lock (_Gate)
@@ -70,7 +70,7 @@ public sealed class TwitchIrcWebSocketTransport
             OnConnected?.Invoke();
 
             // start receive loop
-            var task = Task.Run(() => ReceiveLoop(runCts.Token), CancellationToken.None);
+            Task task = Task.Run(() => ReceiveLoop(runCts.Token), CancellationToken.None);
             lock (_Gate) _RecvTask = task;
 
             // log completion/faults
@@ -134,7 +134,7 @@ public sealed class TwitchIrcWebSocketTransport
         {
             try
             {
-                using var waitCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                using CancellationTokenSource waitCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 waitCts.CancelAfter(DisconnectTimeout);
 
                 _Log.LogWarning($"[IRC-WS] Waiting for ReceiveLoop (timeout={DisconnectTimeout.TotalSeconds:0}s) ...");
@@ -181,7 +181,7 @@ public sealed class TwitchIrcWebSocketTransport
 
     public async Task SendRawAsync(string line, CancellationToken ct)
     {
-        var ws = _Ws;
+        ClientWebSocket? ws = _Ws;
         if (ws is null)
         {
             _Log.LogError("[IRC-WS] SEND failed: ws is null");
@@ -207,13 +207,13 @@ public sealed class TwitchIrcWebSocketTransport
         _Log.LogWarning("[IRC-WS] ReceiveLoop begin");
 
         byte[] buffer = new byte[16 * 1024];
-        var sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
         try
         {
             while (!ct.IsCancellationRequested)
             {
-                var ws = _Ws;
+                ClientWebSocket? ws = _Ws;
                 if (ws is null)
                 {
                     _Log.LogWarning("[IRC-WS] ReceiveLoop break: ws null");
@@ -257,7 +257,7 @@ public sealed class TwitchIrcWebSocketTransport
                         _Log.LogWarning($"[IRC-WS] RECV: {Trunc(SanitizeForLog(line), 200)}");
                     }
 
-                    var handler = OnRawLine;
+                    Func<string, Task>? handler = OnRawLine;
                     if (handler is null) continue;
 
                     if (AwaitRawLineHandlers)

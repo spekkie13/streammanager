@@ -32,6 +32,7 @@ public sealed class IrcMessage
         if (raw.StartsWith("@"))
         {
             int space = raw.IndexOf(' ');
+            if (space < 0) return new IrcMessage(tags, "", "", raw, "", "");
             string tagPart = raw[..space];
             raw = raw[(space + 1)..];
 
@@ -47,6 +48,7 @@ public sealed class IrcMessage
         if (raw.StartsWith(":"))
         {
             int space = raw.IndexOf(' ');
+            if (space < 0) return new IrcMessage(tags, raw[1..], "", raw, "", "");
             prefix = raw[1..space];
             raw = raw[(space + 1)..];
         }

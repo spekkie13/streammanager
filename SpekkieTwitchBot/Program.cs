@@ -1,4 +1,4 @@
-﻿using EventTimerService;
+using EventTimerService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,8 +23,10 @@ using SpekkieTwitchBot.Systems.Twitch.Application.Routing;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat.Irc;
+using SpekkieTwitchBot.Events;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
+using SpekkieClassLibrary.Events;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using SpotifyAuthService;
 using WebsocketClient = Websocket.Client.WebsocketClient;
@@ -53,6 +55,8 @@ public static class Program
 
         using (host)
         {
+            host.Services.GetRequiredService<WarObsHandler>().Register();
+
             Console.WriteLine("[BOOT] Starting host...");
 
             try
@@ -70,7 +74,7 @@ public static class Program
                 if (ex is AggregateException aex)
                 {
                     Console.WriteLine("[BOOT] AggregateException inner exceptions:");
-                    foreach (var inner in aex.Flatten().InnerExceptions)
+                    foreach (Exception inner in aex.Flatten().InnerExceptions)
                     {
                         Console.WriteLine("---- INNER ----");
                         Console.WriteLine(inner);
@@ -84,7 +88,7 @@ public static class Program
     {
         Probe.Log($"WithTimeout ENTER: {name} timeout={timeout.TotalSeconds:0}s");
 
-        using var cts = new CancellationTokenSource();
+        using CancellationTokenSource cts = new CancellationTokenSource();
         cts.CancelAfter(timeout);
 
         // Start op background thread zodat sync-blokkades ook zichtbaar worden
@@ -189,13 +193,21 @@ public static class Program
                 services.AddSingleton<ITwitchAuthTokenProvider, FileBackedTwitchAuthTokenProvider>();
                 
                 // -----------------------
+                // -----------------------
+                // Event bus
+                // -----------------------
+                services.AddSingleton<StreamEventBus>();
+                services.AddSingleton<IStreamEventBus>(sp => sp.GetRequiredService<StreamEventBus>());
+                services.AddSingleton<WarObsHandler>();
+
+                // -----------------------
                 // Clash of Clans
                 // -----------------------
-                services.AddSingleton<ClashFileSetup>();
                 services.AddSingleton<ClashFileReader>();
                 services.AddSingleton<ClashFileWriter>();
                 services.AddSingleton<ClashFileManager>();
                 services.AddSingleton<CocHttpClient>();
+                services.AddSingleton<CcnHttpClient>();
                 services.AddSingleton<WarStatus>();
                 services.AddSingleton<WarService>();
                 services.AddSingleton<IWarService>(sp => sp.GetRequiredService<WarService>());

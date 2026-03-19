@@ -6,7 +6,7 @@ public static class Probe
 
     public static void Log(string msg)
     {
-        var n = Interlocked.Increment(ref _I);
+        int n = Interlocked.Increment(ref _I);
         Console.WriteLine($"[PROBE {n:0000}] [t{Environment.CurrentManagedThreadId}] {msg}");
     }
 }

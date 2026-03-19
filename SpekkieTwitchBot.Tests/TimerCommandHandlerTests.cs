@@ -7,51 +7,51 @@ namespace SpekkieTwitchBot.Tests;
 
 public class TimerCommandHandlerTests
 {
-    private readonly Mock<IEventTimerService> _timerService = new();
-    private readonly Mock<ITimerFileWriter> _timerFileWriter = new();
-    private TimerCommandHandler CreateHandler() => new(_timerService.Object, _timerFileWriter.Object);
+    private readonly Mock<IEventTimerService> _TimerService = new();
+    private readonly Mock<ITimerFileWriter> _TimerFileWriter = new();
+    private TimerCommandHandler CreateHandler() => new(_TimerService.Object, _TimerFileWriter.Object);
 
     [Fact]
     public void HandleAddTimeToTimer_Seconds_AddsCorrectAmount()
     {
-        _timerService.Setup(t => t.GetRemainingTime()).Returns(TimeSpan.FromMinutes(10));
+        _TimerService.Setup(t => t.GetRemainingTime()).Returns(TimeSpan.FromMinutes(10));
 
         string result = CreateHandler().HandleAddTimeToTimerCommand("30s");
 
-        _timerService.Verify(t => t.SetRemainingTime(TimeSpan.FromMinutes(10) + TimeSpan.FromSeconds(30)));
+        _TimerService.Verify(t => t.SetRemainingTime(TimeSpan.FromMinutes(10) + TimeSpan.FromSeconds(30)));
         Assert.Equal("added 30 seconds to timer", result);
     }
 
     [Fact]
     public void HandleAddTimeToTimer_Minutes_AddsCorrectAmount()
     {
-        _timerService.Setup(t => t.GetRemainingTime()).Returns(TimeSpan.FromHours(1));
+        _TimerService.Setup(t => t.GetRemainingTime()).Returns(TimeSpan.FromHours(1));
 
         string result = CreateHandler().HandleAddTimeToTimerCommand("5m");
 
-        _timerService.Verify(t => t.SetRemainingTime(TimeSpan.FromHours(1) + TimeSpan.FromMinutes(5)));
+        _TimerService.Verify(t => t.SetRemainingTime(TimeSpan.FromHours(1) + TimeSpan.FromMinutes(5)));
         Assert.Equal("added 5 minutes to the timer", result);
     }
 
     [Fact]
     public void HandleAddTimeToTimer_Hours_AddsCorrectAmount()
     {
-        _timerService.Setup(t => t.GetRemainingTime()).Returns(TimeSpan.FromMinutes(30));
+        _TimerService.Setup(t => t.GetRemainingTime()).Returns(TimeSpan.FromMinutes(30));
 
         string result = CreateHandler().HandleAddTimeToTimerCommand("2h");
 
-        _timerService.Verify(t => t.SetRemainingTime(TimeSpan.FromMinutes(30) + TimeSpan.FromHours(2)));
+        _TimerService.Verify(t => t.SetRemainingTime(TimeSpan.FromMinutes(30) + TimeSpan.FromHours(2)));
         Assert.Equal("added 2 hours to the timer", result);
     }
 
     [Fact]
     public void HandleAddTimeToTimer_NoSuffix_ReturnsEmptyAndDoesNotSetTime()
     {
-        _timerService.Setup(t => t.GetRemainingTime()).Returns(TimeSpan.Zero);
+        _TimerService.Setup(t => t.GetRemainingTime()).Returns(TimeSpan.Zero);
 
         string result = CreateHandler().HandleAddTimeToTimerCommand("42");
 
-        _timerService.Verify(t => t.SetRemainingTime(It.IsAny<TimeSpan>()), Times.Never);
+        _TimerService.Verify(t => t.SetRemainingTime(It.IsAny<TimeSpan>()), Times.Never);
         Assert.Equal("", result);
     }
 
@@ -60,7 +60,7 @@ public class TimerCommandHandlerTests
     {
         CreateHandler().HandleSetTimeOnTimerCommand("01:30:00");
 
-        _timerService.Verify(t => t.SetRemainingTime(new TimeSpan(1, 30, 0)));
+        _TimerService.Verify(t => t.SetRemainingTime(new TimeSpan(1, 30, 0)));
     }
 
     [Fact]
@@ -74,22 +74,22 @@ public class TimerCommandHandlerTests
     [Fact]
     public void HandlePauseTimer_StopsTimerAndReturnsRemainingTime()
     {
-        _timerService.Setup(t => t.GetRemainingTime()).Returns(new TimeSpan(0, 4, 30));
+        _TimerService.Setup(t => t.GetRemainingTime()).Returns(new TimeSpan(0, 4, 30));
 
         string result = CreateHandler().HandlePauseTimerCommand();
 
-        _timerService.Verify(t => t.StopTimer());
+        _TimerService.Verify(t => t.StopTimer());
         Assert.Contains("00:04:30", result);
     }
 
     [Fact]
     public void HandleStartTimer_StartsTimerAndReturnsRemainingTime()
     {
-        _timerService.Setup(t => t.GetRemainingTime()).Returns(new TimeSpan(1, 0, 0));
+        _TimerService.Setup(t => t.GetRemainingTime()).Returns(new TimeSpan(1, 0, 0));
 
         string result = CreateHandler().HandleStartTimerCommand();
 
-        _timerService.Verify(t => t.StartTimer());
+        _TimerService.Verify(t => t.StartTimer());
         Assert.Contains("01:00:00", result);
     }
 
@@ -98,6 +98,6 @@ public class TimerCommandHandlerTests
     {
         CreateHandler().HandleSetTimerCommand("02:00:00");
 
-        _timerFileWriter.Verify(w => w.WriteRemainingTime(new TimeSpan(2, 0, 0)));
+        _TimerFileWriter.Verify(w => w.WriteRemainingTime(new TimeSpan(2, 0, 0)));
     }
 }

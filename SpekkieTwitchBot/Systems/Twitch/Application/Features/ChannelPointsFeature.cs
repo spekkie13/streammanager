@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Newtonsoft.Json;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
@@ -43,12 +43,12 @@ public class ChannelPointsFeature
                 string input = e.UserInput ?? "";
                 if (string.IsNullOrWhiteSpace(input))
                     return "User input is required for this reward";
-                
+
                 string result = await HandleSongRedemption(input, e.RedemptionId, e.RewardId, ct);
 
                 _Logger.LogInfo(result);
                 _Logger.LogInfo($"Redeemed: {e.RewardTitle} by {e.UserName}");
-                return result;
+                return $"@{e.UserName} {result}";
             }
             case "Hydrate":
             {
@@ -64,26 +64,31 @@ public class ChannelPointsFeature
     private async Task<string> HandleSongRedemption(string input, string redemptionId, string rewardId, CancellationToken ct)
     {
         string result = await _SpotifyService.AddSongToQueueAsync(input, ct);
-        bool success = result.Contains("Added", StringComparison.OrdinalIgnoreCase);
-        
+        bool success = !result.Equals("Error", StringComparison.OrdinalIgnoreCase);
+
         string status = success
             ? TwitchConstants.ChannelPointStatusFulfilled
             : TwitchConstants.ChannelPointStatusCancelled;
-        
+
         await UpdateRedemptionStatus(redemptionId, rewardId, status, ct);
-        
-        return success ? $"successfully added {input} to queue" : $"failed to add {input} to queue";
+
+        return success ? $"Successfully added {result} to the queue" : $"Failed to add song to the queue";
     }
     
     public async Task<string> CreateRedemption(string commandArgs)
     {
-        string title = commandArgs.Split("|")[0];
-        string prompt = commandArgs.Split("|")[1];
-        int cost = Convert.ToInt32(commandArgs.Split("|")[2]);
-        bool isUserInputRequired = true;
+        string[] parts = commandArgs.Split("|");
+        if (parts.Length < 3)
+            return "Invalid format. Expected: title|prompt|cost[|userInputRequired]";
 
-        if (commandArgs.Split("|").Length > 3)
-            isUserInputRequired = Convert.ToInt32(commandArgs.Split("|").Last()) != 0;
+        string title = parts[0];
+        string prompt = parts[1];
+        if (!int.TryParse(parts[2], out int cost))
+            return "Invalid cost value.";
+
+        bool isUserInputRequired = true;
+        if (parts.Length > 3)
+            isUserInputRequired = parts[^1] != "0";
         string url = $"{TwitchConstants.TwitchChannelRewardsUrl}30731359";
         string rewardInfo =
             $"{{\"title\":\"{title}\",\"cost\":{cost},\"is_user_input_required\":{isUserInputRequired.ToString().ToLower()},\"prompt\":\"{prompt[..Math.Min(prompt.Length, 200)]}\"}}";

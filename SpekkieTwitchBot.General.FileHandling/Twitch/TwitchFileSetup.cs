@@ -1,4 +1,4 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.General.FileHandling.Common;
 
 namespace SpekkieTwitchBot.General.FileHandling.Twitch;
 
@@ -6,82 +6,62 @@ public class TwitchFileSetup
 {
     private const string OutputDir = "/Output/Twitch";
 
-    private static readonly string BaseDir =
-        Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
 
     private readonly FileSetup _FileSetup;
 
     public TwitchFileSetup(FileSetup fileSetup)
     {
         _FileSetup = fileSetup;
-        SetupRecentFollowerFile();
-        SetupRecentSubFile();
-        SetupFollowerGoalFile();
-        SetupRecentSubFile();
-        SetupSubGoalFile();
+        SetupFile("RecentFollower.txt", clearOnBoot: true);
+        SetupFile("RecentSubscriber.txt", clearOnBoot: true);
+        SetupFile("LatestSubDisplay.txt", clearOnBoot: false);
+        SetupFile("latestactivity.html", clearOnBoot: false);
+        SetupFile("subgoal.html", clearOnBoot: false);
+        SetupGoalsConfig();
     }
 
-    private void SetupRecentFollowerFile()
+    private void SetupGoalsConfig()
     {
-        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
-        string file = $"{dir}RecentFollower.txt";
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}";
+        string file = $"{dir}goals.json";
 
-        bool dirExists = _FileSetup.DirExists(dir);
-        if (!dirExists)
+        if (!_FileSetup.DirExists(dir))
             _FileSetup.CreateDir(dir);
 
-        bool fileExists = _FileSetup.FileExists(file);
-        if (!fileExists)
-            _FileSetup.CreateFile(file);
-
-        File.WriteAllText(file, "");
+        if (!_FileSetup.FileExists(file))
+        {
+            using FileStream fs = new(file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+            using StreamWriter sw = new(fs);
+            sw.Write("""
+                {
+                  "followerGoal": 1000,
+                  "subGoal": {
+                    "goal": 50,
+                    "current": 0,
+                    "rewardEn": "describe your reward here in English",
+                    "rewardNl": "beschrijf je beloning hier in het Nederlands",
+                    "endDate": "2026-12-31"
+                  }
+                }
+                """);
+        }
     }
 
-    private void SetupRecentSubFile()
+    private void SetupFile(string filename, bool clearOnBoot)
     {
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
-        string file = $"{dir}RecentSub.txt";
+        string file = $"{dir}{filename}";
 
-        bool dirExists = _FileSetup.DirExists(dir);
-        if (!dirExists)
+        if (!_FileSetup.DirExists(dir))
             _FileSetup.CreateDir(dir);
 
-        bool fileExists = _FileSetup.FileExists(file);
-        if (!fileExists)
+        if (!_FileSetup.FileExists(file))
             _FileSetup.CreateFile(file);
 
-        File.WriteAllText(file, "");
-    }
-
-    private void SetupFollowerGoalFile()
-    {
-        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
-        string file = $"{dir}FollowerGoal.txt";
-
-        bool dirExists = _FileSetup.DirExists(dir);
-        if (!dirExists)
-            _FileSetup.CreateDir(dir);
-
-        bool fileExists = _FileSetup.FileExists(file);
-        if (!fileExists)
-            _FileSetup.CreateFile(file);
-
-        File.WriteAllText(file, "");
-    }
-
-    private void SetupSubGoalFile()
-    {
-        string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}";
-        string file = $"{dir}SubGoal.txt";
-
-        bool dirExists = _FileSetup.DirExists(dir);
-        if (!dirExists)
-            _FileSetup.CreateDir(dir);
-
-        bool fileExists = _FileSetup.FileExists(file);
-        if (!fileExists)
-            _FileSetup.CreateFile(file);
-
-        File.WriteAllText(file, "");
+        if (clearOnBoot)
+        {
+            using FileStream fs = new(file, FileMode.Truncate, FileAccess.Write, FileShare.ReadWrite);
+        }
     }
 }

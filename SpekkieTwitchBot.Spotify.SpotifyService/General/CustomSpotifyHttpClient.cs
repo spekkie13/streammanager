@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -95,7 +95,7 @@ public sealed class CustomSpotifyHttpClient
     {
         try
         {
-            var response = await GetAsync(url, ct).ConfigureAwait(false);
+            HttpResponseMessage response = await GetAsync(url, ct).ConfigureAwait(false);
             return await response.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)
@@ -122,7 +122,7 @@ public sealed class CustomSpotifyHttpClient
 
         JObject jsonObject = JObject.Parse(json);
 
-        var item = new CurrentlyPlaying();
+        CurrentlyPlaying item = new CurrentlyPlaying();
         item.CurrentlyPlayingType = jsonObject["currently_playing_type"]?.ToString() ?? "";
         item.IsPlaying = jsonObject["is_playing"]?.ToString() != "False";
         item.ProgressMs = int.Parse(jsonObject["progress_ms"]?.ToString() ?? "0");
@@ -212,6 +212,26 @@ public sealed class CustomSpotifyHttpClient
         };
 
         return item;
+    }
+
+    public async Task<string> GetTrackDisplayNameAsync(string trackId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await GetAsync($"https://api.spotify.com/v1/tracks/{trackId}", ct).ConfigureAwait(false);
+        string json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(json)) return "";
+
+        JObject root;
+        try { root = JObject.Parse(json); }
+        catch { return ""; }
+
+        string name = root["name"]?.ToString() ?? "";
+        if (root["artists"] is not JArray artistsArray) return name;
+
+        string artists = string.Join(" & ", artistsArray
+            .Select(a => a["name"]?.ToString())
+            .Where(n => !string.IsNullOrWhiteSpace(n)));
+
+        return string.IsNullOrWhiteSpace(artists) ? name : $"{name} by {artists}";
     }
 
     public async Task<List<Track>?> InterpretSongSearchResult(string url, CancellationToken ct = default)

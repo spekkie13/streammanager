@@ -60,6 +60,78 @@ public class PubSubMessageParserTests
     }
 
     [Fact]
+    public void Parse_MessageWithNonRedemptionInnerType_ReturnsUnknown()
+    {
+        string innerData = """{"type":"update-redemption-status","data":{}}""";
+        string raw = $$"""
+        {
+            "type": "MESSAGE",
+            "data": {
+                "topic": "channel-points-channel-v1.123456",
+                "message": {{System.Text.Json.JsonSerializer.Serialize(innerData)}}
+            }
+        }
+        """;
+
+        PubSubInboundMessage result = PubSubMessageParser.Parse(raw);
+
+        Assert.Equal(PubSubInboundKind.Unknown, result.Kind);
+    }
+
+    [Fact]
+    public void Parse_MessageWithNoInnerType_ReturnsUnknown()
+    {
+        // Simulates a follow-like payload that has no "type" field in the inner message
+        string innerData = """{"display_name":"cooluser","username":"cooluser","user_id":"123"}""";
+        string raw = $$"""
+        {
+            "type": "MESSAGE",
+            "data": {
+                "topic": "following.123456",
+                "message": {{System.Text.Json.JsonSerializer.Serialize(innerData)}}
+            }
+        }
+        """;
+
+        PubSubInboundMessage result = PubSubMessageParser.Parse(raw);
+
+        Assert.Equal(PubSubInboundKind.Unknown, result.Kind);
+    }
+
+    [Fact]
+    public void Parse_MessageWithRedemption_NoUserInput_SetsEmptyUserInput()
+    {
+        string innerData = """
+        {
+            "type": "reward-redeemed",
+            "data": {
+                "redemption": {
+                    "id": "rid",
+                    "user": {"id": "u1", "login": "user1"},
+                    "reward": {"id": "r1", "title": "Hydrate"},
+                    "redeemed_at": "2024-01-01T12:00:00Z"
+                }
+            }
+        }
+        """;
+        string raw = $$"""
+        {
+            "type": "MESSAGE",
+            "data": {
+                "topic": "channel-points-channel-v1.123456",
+                "message": {{System.Text.Json.JsonSerializer.Serialize(innerData)}}
+            }
+        }
+        """;
+
+        PubSubInboundMessage result = PubSubMessageParser.Parse(raw);
+
+        Assert.Equal(PubSubInboundKind.Message, result.Kind);
+        Assert.NotNull(result.Redemption);
+        Assert.Equal("", result.Redemption.UserInput);
+    }
+
+    [Fact]
     public void Parse_MessageWithRedemption_ParsesRedemptionCorrectly()
     {
         string innerData = """

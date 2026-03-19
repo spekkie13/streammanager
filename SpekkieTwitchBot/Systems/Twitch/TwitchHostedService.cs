@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.General;
+using SpekkieTwitchBot.General.FileHandling.Timer;
+using SpekkieTwitchBot.General.FileHandling.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Application.Routing;
 
@@ -23,7 +25,10 @@ public sealed class TwitchHostedService : IHostedService
         ITwitchEvents events,
         TwitchEventRouter router,
         Logger logger,
-        IHostApplicationLifetime lifetime    
+        IHostApplicationLifetime lifetime,
+        TwitchFileSetup twitchFileSetup,
+        TimerFileSetup timerFileSetup,
+        GeneralFileSetup generalFileSetup
     )
     {
         _Chat = chat;
@@ -31,6 +36,9 @@ public sealed class TwitchHostedService : IHostedService
         _Router = router;
         _Logger = logger;
         _Lifetime = lifetime;
+        _ = twitchFileSetup;   // resolved to run file setup on boot
+        _ = timerFileSetup;
+        _ = generalFileSetup;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -55,7 +63,7 @@ public sealed class TwitchHostedService : IHostedService
         {
             if (t.IsFaulted)
             {
-                var ex = t.Exception?.GetBaseException() ?? t.Exception;
+                Exception? ex = t.Exception?.GetBaseException() ?? t.Exception;
                 _Logger.LogError("[BOOT] TwitchHostedService RunAsync FAULTED: " + ex);
             }
             else if (t.IsCanceled)
@@ -80,6 +88,8 @@ public sealed class TwitchHostedService : IHostedService
 
             await WithTimeout(token => _Events.ConnectAsync(token), ct, TimeSpan.FromSeconds(15), "events.ConnectAsync")
                 .ConfigureAwait(false);
+
+            await _Router.InitializeAsync(ct).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -124,7 +134,7 @@ public sealed class TwitchHostedService : IHostedService
         TimeSpan timeout,
         string name)
     {
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(outerCt);
+        using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(outerCt);
         cts.CancelAfter(timeout);
 
         Task? op = null;

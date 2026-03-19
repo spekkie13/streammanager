@@ -16,7 +16,9 @@ public class TextCommandHandler : ITextCommandHandler
     private static List<TextCommand> LoadTextCommands()
     {
         string commandLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SpekkieTwitchBot/Settings/TextCommands.json";
-        string json = File.ReadAllText(commandLocation);
+        using FileStream rfs = new(commandLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using StreamReader sr = new(rfs);
+        string json = sr.ReadToEnd();
 
         TextCommands comm = JsonConvert.DeserializeObject<TextCommands>(json) ?? new TextCommands();
         List<TextCommand> commands = comm.Commands;
@@ -69,7 +71,9 @@ public class TextCommandHandler : ITextCommandHandler
         };
         string json = JsonConvert.SerializeObject(commands);
         string commandLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SpekkieTwitchBot/Settings/TextCommands.json";
-        File.WriteAllText(commandLocation, json);
+        using FileStream wfs = new(commandLocation, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        using StreamWriter sw = new(wfs);
+        sw.Write(json);
         _Commands = LoadTextCommands();
         return reply;
     }

@@ -45,7 +45,7 @@ public class CocHttpClient
         string json = await response.Content.ReadAsStringAsync();
         JObject jsonObject = JObject.Parse(json);
 
-        var clanData = jsonObject["clan"];
+        JToken? clanData = jsonObject["clan"];
         string clanTag = clanData?["tag"]?.ToString() ?? "";
 
         return clanTag;

@@ -1,2 +1,8 @@
-﻿-> Update most recent follower & sub file logic (on sub/follow event)
--> Introduce database logic to allow for custom text commands
+﻿-> Pause Spotify when an alert is triggered
+-> Brainstorm about the old vs new sub goal
+-> Investigate !uptime
+-> Investigate formatting of the follower goal amount
+-> Investigate automatic switching of war stats / chatbox
+-> Remove !addsong
+-> Check permissions for Mod-only commands
+-> Compliments service - extension of greeting service

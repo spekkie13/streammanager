@@ -1,7 +1,8 @@
-using System.Globalization;
 using Microsoft.Extensions.Hosting;
+using SpekkieClassLibrary.ClashOfClans.Ccn;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Constants;
+using SpekkieClassLibrary.Events;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Clash;
 
@@ -12,16 +13,22 @@ public class WarService(
     ClashFileWriter writer,
     ClashFileManager manager,
     CocHttpClient client,
+    CcnHttpClient ccnClient,
     WarStatus warStatus,
+    IStreamEventBus eventBus,
     Logger logger)
     : BackgroundService, IWarService
 {
+    private readonly Dictionary<string, byte[]> _LogoCache = new();
+    private string? _LastWarState;
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await FetchWar();
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (warStatus.GetStatus())
-                FetchWar();
+            if (warStatus.IsOn)
+                await FetchWar();
             else
                 logger.LogInfo("War stats inactive");
 
@@ -31,11 +38,11 @@ public class WarService(
 
     public void SetWarStats(bool enable)
     {
-        warStatus.SetStatus(enable);
+        warStatus.IsOn = enable;
         Console.WriteLine($"War stats active: {enable}");
     }
 
-    private async void FetchWar()
+    private async Task FetchWar()
     {
         try
         {
@@ -63,6 +70,11 @@ public class WarService(
         if (runTimeWar.Clan == null || runTimeWar.Opponent == null)
         {
             logger.LogWarning("No war detected...");
+            if (_LastWarState != "notInWar")
+            {
+                _LastWarState = "notInWar";
+                await eventBus.PublishAsync(new WarStateChangedEvent("notInWar", null, null));
+            }
             return;
         }
 
@@ -78,9 +90,16 @@ public class WarService(
         }
         logger.LogInfo("Updated: " + DateTime.Now);
 
+        if (runTimeWar.State != _LastWarState)
+        {
+            _LastWarState = runTimeWar.State;
+            await eventBus.PublishAsync(new WarStateChangedEvent(runTimeWar.State, runTimeWar.Clan.Name, runTimeWar.Opponent.Name));
+        }
+
         if (runTimeWar.State == "preparation" && manager.IsNewWar(runTimeWar.PreparationStartTime))
         {
             Console.WriteLine("New war detected, resetting war files...");
+            _LogoCache.Clear();
             manager.ResetWarFiles();
             manager.SaveWarId(runTimeWar.PreparationStartTime);
         }
@@ -89,9 +108,31 @@ public class WarService(
         await ProcessTeam(clan: runTimeWar.Opponent, team: "away", teamFolder: ClashConstants.AwayFolder);
     }
 
+    private async Task<byte[]> GetTeamLogoAsync(RunTimeClan clan)
+    {
+        if (_LogoCache.TryGetValue(clan.Tag, out byte[]? cached))
+            return cached;
+
+        CcnClanInfo? ccnInfo = await ccnClient.GetClanInfoAsync(clan.Tag);
+        byte[] logo;
+        if (!string.IsNullOrEmpty(ccnInfo?.LogoUrl))
+        {
+            logger.LogInfo($"[CCN] Using CCN logo for '{clan.Name}'");
+            logo = await client.GetByteArrayAsync(ccnInfo.LogoUrl);
+        }
+        else
+        {
+            logger.LogInfo($"[CCN] '{clan.Name}' not found on CCN, using CoC badge");
+            logo = await client.GetByteArrayAsync(clan.BadgeUrls.Large);
+        }
+
+        _LogoCache[clan.Tag] = logo;
+        return logo;
+    }
+
     private async Task ProcessTeam(RunTimeClan clan, string team, string teamFolder)
     {
-        byte[] logo = await client.GetByteArrayAsync(clan.BadgeUrls.Large);
+        byte[] logo = await GetTeamLogoAsync(clan);
         manager.CreateTeamLogoFile(logo, team);
         await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} name.txt", clan.Name);
         await manager.WritePlayerNames(clan, teamFolder);
@@ -123,11 +164,11 @@ public class WarService(
             string fileName = $"{teamFolder}{Path.DirectorySeparatorChar}hit {member.MapPosition}.txt";
             await writer.WriteAsync(fileName, member.Attacks.First().DestructionPercentage + "%");
 
-            double minutes = member.Attacks.First().Duration / 60;
-            double seconds = member.Attacks.First().Duration % 60;
+            int minutes = (int)member.Attacks.First().Duration / 60;
+            int seconds = (int)member.Attacks.First().Duration % 60;
 
             fileName = teamFolder + $"{Path.DirectorySeparatorChar}hit " + member.MapPosition + " time.txt";
-            await writer.WriteAsync(fileName, $"{minutes}:{seconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0')}");
+            await writer.WriteAsync(fileName, $"{minutes}:{seconds.ToString().PadLeft(2, '0')}");
         }
 
         List<double> times = (from member in clan.Members
@@ -147,10 +188,10 @@ public class WarService(
 
     public bool GetWarStatus()
     {
-        return warStatus.GetStatus();
+        return warStatus.IsOn;
     }
 
-    public async void UpdatePlayerTag(string playerTag)
+    public async Task UpdatePlayerTag(string playerTag)
     {
         try
         {

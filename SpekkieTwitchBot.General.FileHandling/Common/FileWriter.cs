@@ -6,14 +6,16 @@ public class FileWriter : ITextFileWriter
 {
     public void Write(string fileName, string data)
     {
-        using StreamWriter writer = new (fileName);
+        using FileStream fs = new(fileName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        using StreamWriter writer = new(fs);
         writer.WriteLine(data);
         writer.Flush();
     }
 
     public async Task WriteAsync(string fileName, string data)
     {
-        await using StreamWriter writer = new (fileName);
+        await using FileStream fs = new(fileName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        await using StreamWriter writer = new(fs);
         await writer.WriteLineAsync(data);
         await writer.FlushAsync();
     }
