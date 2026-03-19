@@ -9,7 +9,7 @@ public class FileReader : IFileReader
         using FileStream fileStream = new (
             fileName,
             FileMode.Open,
-            FileAccess.ReadWrite,
+            FileAccess.Read,
             FileShare.ReadWrite);
 
         using StreamReader reader = new (fileStream);

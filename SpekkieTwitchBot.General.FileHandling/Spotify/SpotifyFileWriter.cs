@@ -63,7 +63,7 @@ public class SpotifyFileWriter(ITextFileWriter fileWriter)
                 .info { display: flex; flex-direction: column; gap: 4px; }
                 .clip { width: 240px; overflow: hidden; }
                 .text {
-                  font-family: sans-serif;
+                  font-family: 'Supercell Magic', sans-serif;
                   white-space: nowrap;
                   display: inline-block;
                 }

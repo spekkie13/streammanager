@@ -20,7 +20,8 @@ public class GeneralFileWriter
         string dir = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}Log{Path.DirectorySeparatorChar}Log.txt";
         try
         {
-            using StreamWriter writer = File.AppendText(dir);
+            using FileStream fs = new(dir, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            using StreamWriter writer = new(fs);
             writer.WriteLine(text);
         }
         catch (Exception ex)

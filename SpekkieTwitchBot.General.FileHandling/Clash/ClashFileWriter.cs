@@ -6,7 +6,8 @@ public class ClashFileWriter : IClashFileWriter
 {
     public void Write(string fileName, string data)
     {
-        using StreamWriter writer = new StreamWriter(fileName);
+        using FileStream fs = new(fileName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        using StreamWriter writer = new(fs);
         writer.WriteLine(data);
         writer.Flush();
     }
@@ -15,7 +16,8 @@ public class ClashFileWriter : IClashFileWriter
 
     public async Task WriteTeamNames(string file, string teamName)
     {
-        await using StreamWriter writer = new(file);
+        await using FileStream fs = new(file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        await using StreamWriter writer = new(fs);
         await writer.WriteLineAsync(teamName);
         await writer.FlushAsync();
     }
