@@ -87,10 +87,14 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
     public async Task<string> GetLatestSubscriber(CancellationToken ct = default)
     {
         await EnsureHeadersAsync(ct);
-        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={_ChannelId}";
+        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={_ChannelId}&first=100";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
-        return json["data"]?[0]?["user_name"]?.ToString() ?? "N/A";
+        JArray? data = json["data"] as JArray;
+        if (data == null || data.Count == 0) return "N/A";
+        // API returns oldest-first; broadcaster's own sub is always last — skip it
+        var subscribers = data.Where(s => s["user_id"]?.ToString() != _ChannelId).ToList();
+        return subscribers.LastOrDefault()?["user_name"]?.ToString() ?? "N/A";
     }
 
     public async Task<string?> GetCurrentStreamIdAsync(CancellationToken ct = default)

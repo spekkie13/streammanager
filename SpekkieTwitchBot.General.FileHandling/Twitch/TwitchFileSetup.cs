@@ -15,29 +15,38 @@ public class TwitchFileSetup
     {
         _FileSetup = fileSetup;
         SetupFile("RecentFollower.txt", clearOnBoot: true);
-        SetupFile("RecentSub.txt", clearOnBoot: true);
-        SetupFile("FollowerGoal.txt", clearOnBoot: true);
-        SetupFile("SubGoal.txt", clearOnBoot: true);
+        SetupFile("RecentSubscriber.txt", clearOnBoot: true);
+        SetupFile("LatestSubDisplay.txt", clearOnBoot: false);
         SetupFile("latestactivity.html", clearOnBoot: false);
         SetupFile("subgoal.html", clearOnBoot: false);
-        SetupSubGoalConfig();
+        SetupGoalsConfig();
     }
 
-    private void SetupSubGoalConfig()
+    private void SetupGoalsConfig()
     {
         string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}";
-        string file = $"{dir}subgoal.json";
+        string file = $"{dir}goals.json";
 
         if (!_FileSetup.DirExists(dir))
             _FileSetup.CreateDir(dir);
 
         if (!_FileSetup.FileExists(file))
-            File.WriteAllText(file, """
+        {
+            using FileStream fs = new(file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+            using StreamWriter sw = new(fs);
+            sw.Write("""
                 {
-                  "goal": 25,
-                  "endDate": "2026-12-31"
+                  "followerGoal": 1000,
+                  "subGoal": {
+                    "goal": 50,
+                    "current": 0,
+                    "rewardEn": "describe your reward here in English",
+                    "rewardNl": "beschrijf je beloning hier in het Nederlands",
+                    "endDate": "2026-12-31"
+                  }
                 }
                 """);
+        }
     }
 
     private void SetupFile(string filename, bool clearOnBoot)
@@ -52,6 +61,8 @@ public class TwitchFileSetup
             _FileSetup.CreateFile(file);
 
         if (clearOnBoot)
-            File.WriteAllText(file, "");
+        {
+            using FileStream fs = new(file, FileMode.Truncate, FileAccess.Write, FileShare.ReadWrite);
+        }
     }
 }

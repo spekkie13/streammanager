@@ -41,27 +41,21 @@ public class TwitchFileReader : ITwitchFileReader
 
     public async Task<string> ReadMostRecentSubFileAsync()
     {
-        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentSub.txt";
+        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}RecentSubscriber.txt";
         return await _FileReader.ReadAsync(file);
     }
 
-    public async Task<string> ReadSubGoalFileAsync()
+    public async Task<string> ReadLatestSubDisplayAsync()
     {
-        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}FollowerGoal.txt";
+        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}LatestSubDisplay.txt";
         return await _FileReader.ReadAsync(file);
     }
 
-    public async Task<string> ReadFollowerGoalFileAsync()
+    public async Task<StreamGoalsConfig?> ReadGoalsConfigAsync()
     {
-        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}SubGoal.txt";
-        return await _FileReader.ReadAsync(file);
-    }
-
-    public async Task<SubGoalConfig?> ReadSubGoalConfigAsync()
-    {
-        string file = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}subgoal.json";
+        string file = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}goals.json";
         string json = await _FileReader.ReadAsync(file);
         if (string.IsNullOrWhiteSpace(json)) return null;
-        return JsonSerializer.Deserialize<SubGoalConfig>(json);
+        return JsonSerializer.Deserialize<StreamGoalsConfig>(json);
     }
 }

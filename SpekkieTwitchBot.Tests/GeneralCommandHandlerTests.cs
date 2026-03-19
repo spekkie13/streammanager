@@ -1,5 +1,6 @@
 using Moq;
 using SpekkieTwitchBot.General.FileHandling.General;
+using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
@@ -15,11 +16,13 @@ public class GeneralCommandHandlerTests
     private readonly Mock<TimerCommandHandler> _Timer = new(MockBehavior.Loose, null!, null!);
     private readonly Mock<TwitchCommandHandler> _Twitch = new(MockBehavior.Loose, null!);
     private readonly Mock<ClashCommandHandler> _Clash = new(MockBehavior.Loose, null!, null!);
+    private readonly Mock<ITwitchFileReader> _TwitchFileReader = new();
 
     private GeneralCommandHandler CreateHandler() => new(
         _Reader.Object, _Writer.Object,
         _Text.Object, _Spotify.Object, _Obs.Object,
-        _Timer.Object, _Twitch.Object, _Clash.Object);
+        _Timer.Object, _Twitch.Object, _Clash.Object,
+        _TwitchFileReader.Object);
 
     private static ChatCommandReceived Cmd(string command, string args = "", string user = "viewer") =>
         new("mid", "uid", user, command, args, $"!{command} {args}");

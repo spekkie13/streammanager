@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.Net;
+using System.Text.Json;
+using SpekkieClassLibrary.Twitch;
 using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 
@@ -10,6 +13,10 @@ public class TwitchFileWriter(ITextFileWriter fileWriter) : ITwitchFileWriter
 
     private string? _LatestFollower;
     private string? _LatestSub;
+    private int _TotalFollowers;
+    private int _FollowerGoal;
+    private int _SubGoalCurrent;
+    private int _SubGoalGoal;
 
     private static readonly string BaseDir =
         Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
@@ -44,24 +51,32 @@ public class TwitchFileWriter(ITextFileWriter fileWriter) : ITwitchFileWriter
         await fileWriter.WriteAsync(dir, totalSubscribers.ToString());
     }
 
-    public void WriteLatestFollowerHtml(string username)
+    public void WriteLatestFollowerHtml(string username, int totalFollowers)
     {
         _LatestFollower = username;
+        _TotalFollowers = totalFollowers;
         WriteActivityHtml();
     }
 
-    public void WriteLatestSubHtml(string subText)
+    public void WriteLatestSubHtml(string subText, int totalSubs)
     {
         _LatestSub = subText;
         WriteActivityHtml();
+
+        string displayPath = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}LatestSubDisplay.txt";
+        using FileStream fs = new(displayPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        using StreamWriter sw = new(fs);
+        sw.Write(subText);
     }
 
-    public void WriteSubGoalHtml(int current, int goal, int daysRemaining)
+    public void WriteSubGoalHtml(StreamGoalsConfig config)
     {
-        double pct = goal > 0 ? Math.Min(100.0, current * 100.0 / goal) : 0;
-        string pctText = pct.ToString("F2");
+        _FollowerGoal = config.FollowerGoal;
+        _SubGoalCurrent = config.SubGoal.CurrentAmount;
+        _SubGoalGoal = config.SubGoal.Goal;
+        WriteActivityHtml();
 
-        string html = $$"""
+        string subHtml = $$"""
             <!DOCTYPE html>
             <html>
             <head>
@@ -69,67 +84,42 @@ public class TwitchFileWriter(ITextFileWriter fileWriter) : ITwitchFileWriter
               <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body { background: transparent; overflow: hidden; }
-                .widget {
-                  display: flex;
-                  flex-direction: column;
-                  gap: 6px;
-                  width: 420px;
-                }
-                .bar-track {
-                  width: 100%;
-                  height: 36px;
-                  background: rgba(0, 0, 0, 0.45);
-                  border-radius: 6px;
-                  overflow: hidden;
-                  position: relative;
-                }
-                .bar-fill {
-                  height: 100%;
-                  width: {{pct.ToString("F4")}}%;
-                  background: #3dba4e;
-                  border-radius: 6px;
-                  transition: width 0.6s ease;
-                }
-                .bar-label {
-                  position: absolute;
-                  inset: 0;
-                  display: flex;
+                .card {
+                  display: inline-flex;
                   align-items: center;
-                  justify-content: center;
-                  font-family: sans-serif;
-                  font-size: 15px;
-                  font-weight: bold;
-                  color: #ffffff;
-                  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+                  gap: 12px;
+                  padding: 16px 28px;
+                  background: rgba(15, 15, 15, 0.88);
+                  border: 1px solid rgba(255, 255, 255, 0.10);
+                  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+                  border-radius: 12px;
                 }
-                .meta {
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                  font-family: sans-serif;
+                .label {
+                  font-family: 'Supercell Magic', sans-serif;
                   font-size: 13px;
-                  color: #dddddd;
-                  padding: 0 2px;
-                }
-                .meta-center {
-                  font-weight: bold;
+                  color: #aaaaaa;
                   text-transform: uppercase;
-                  letter-spacing: 0.06em;
+                  letter-spacing: 0.08em;
+                }
+                .count {
+                  font-family: 'Supercell Magic', sans-serif;
+                  font-size: 28px;
+                  font-weight: bold;
                   color: #ffffff;
+                }
+                .slash {
+                  font-family: 'Supercell Magic', sans-serif;
+                  font-size: 28px;
+                  color: #ffcf00;
                 }
               </style>
             </head>
             <body>
-              <div class="widget">
-                <div class="bar-track">
-                  <div class="bar-fill"></div>
-                  <div class="bar-label">{{current}} ({{pctText}}%)</div>
-                </div>
-                <div class="meta">
-                  <span>0</span>
-                  <span class="meta-center">{{daysRemaining}} days to go</span>
-                  <span>{{goal}}</span>
-                </div>
+              <div class="card">
+                <span class="label">Total Subs</span>
+                <span class="count">{{config.SubGoal.CurrentAmount}}</span>
+                <span class="slash">/</span>
+                <span class="count">{{config.SubGoal.Goal}}</span>
               </div>
             </body>
             </html>
@@ -138,13 +128,23 @@ public class TwitchFileWriter(ITextFileWriter fileWriter) : ITwitchFileWriter
         string path = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}subgoal.html";
         using FileStream fs = new(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
         using StreamWriter writer = new(fs);
-        writer.Write(html);
+        writer.Write(subHtml);
+    }
+
+    public void WriteGoalsConfig(StreamGoalsConfig config)
+    {
+        string path = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}goals.json";
+        string json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+        using FileStream fs = new(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        using StreamWriter writer = new(fs);
+        writer.Write(json);
     }
 
     private void WriteActivityHtml()
     {
         string safeFollower = WebUtility.HtmlEncode(_LatestFollower ?? "—");
         string safeSub = WebUtility.HtmlEncode(_LatestSub ?? "—");
+        string totalFollowers = _TotalFollowers.ToString("N0", CultureInfo.InvariantCulture);
 
         string html = $$"""
             <!DOCTYPE html>
@@ -166,35 +166,50 @@ public class TwitchFileWriter(ITextFileWriter fileWriter) : ITwitchFileWriter
                   display: flex;
                   flex-direction: row;
                   align-items: stretch;
-                  gap: 0;
-                  padding: 12px 16px;
+                  padding: 16px 28px;
                   background: rgba(15, 15, 15, 0.88);
                   border: 1px solid rgba(255, 255, 255, 0.10);
                   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
-                  border-radius: 10px;
-                  width: 420px;
+                  border-radius: 12px;
+                  width: 1000px;
                 }
                 .divider {
                   width: 1px;
                   background: rgba(255, 255, 255, 0.10);
-                  margin: 0 14px;
+                  margin: 0 16px;
                   flex-shrink: 0;
                 }
-                .section { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+                .section { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
                 .label {
-                  font-family: sans-serif;
-                  font-size: 11px;
+                  font-family: 'Supercell Magic', sans-serif;
+                  font-size: 13px;
                   color: #aaaaaa;
                   text-transform: uppercase;
                   letter-spacing: 0.08em;
                 }
                 .clip { overflow: hidden; }
                 .text {
-                  font-family: sans-serif;
+                  font-family: 'Supercell Magic', sans-serif;
                   white-space: nowrap;
                   display: inline-block;
                 }
-                .name { font-size: 16px; font-weight: bold; color: #ffffff; }
+                .name { font-size: 20px; font-weight: bold; color: #ffffff; }
+                .goal {
+                  display: flex;
+                  align-items: baseline;
+                  gap: 4px;
+                }
+                .goal-num {
+                  font-family: 'Supercell Magic', sans-serif;
+                  font-size: 22px;
+                  font-weight: bold;
+                  color: #ffffff;
+                }
+                .goal-slash {
+                  font-family: 'Supercell Magic', sans-serif;
+                  font-size: 22px;
+                  color: #ffcf00;
+                }
                 @keyframes marquee {
                   0%,  15% { transform: translateX(0); }
                   85%, 100% { transform: translateX(var(--scroll-dist)); }
@@ -210,8 +225,26 @@ public class TwitchFileWriter(ITextFileWriter fileWriter) : ITwitchFileWriter
                 </div>
                 <div class="divider"></div>
                 <div class="section">
-                  <span class="label">Latest Subscriber</span>
+                  <span class="label">Follower Goal</span>
+                  <div class="goal">
+                    <span class="goal-num">{{totalFollowers}}</span>
+                    <span class="goal-slash">/</span>
+                    <span class="goal-num">{{_FollowerGoal}}</span>
+                  </div>
+                </div>
+                <div class="divider"></div>
+                <div class="section">
+                  <span class="label">Latest Sub</span>
                   <div class="clip"><span class="text name">{{safeSub}}</span></div>
+                </div>
+                <div class="divider"></div>
+                <div class="section">
+                  <span class="label">Sub Goal</span>
+                  <div class="goal">
+                    <span class="goal-num">{{_SubGoalCurrent}}</span>
+                    <span class="goal-slash">/</span>
+                    <span class="goal-num">{{_SubGoalGoal}}</span>
+                  </div>
                 </div>
               </div>
               <script>

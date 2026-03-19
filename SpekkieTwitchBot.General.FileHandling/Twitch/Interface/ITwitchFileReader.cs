@@ -8,7 +8,6 @@ public interface ITwitchFileReader
     public string ReadTwitchGeneralAuthFile();
     public Task<string> ReadMostRecentFollowerFileAsync();
     public Task<string> ReadMostRecentSubFileAsync();
-    public Task<string> ReadSubGoalFileAsync();
-    public Task<string> ReadFollowerGoalFileAsync();
-    public Task<SubGoalConfig?> ReadSubGoalConfigAsync();
+    public Task<string> ReadLatestSubDisplayAsync();
+    public Task<StreamGoalsConfig?> ReadGoalsConfigAsync();
 }
