@@ -1,4 +1,5 @@
 using SpekkieTwitchBot.General.FileHandling.General;
+using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
@@ -13,6 +14,7 @@ public class GeneralCommandHandler : IGeneralCommandHandler
     private readonly ITimerCommandHandler _TimerCommandHandler;
     private readonly ITwitchCommandHandler _TwitchCommandHandler;
     private readonly IClashCommandHandler _ClashCommandHandler;
+    private readonly ITwitchFileReader _TwitchFileReader;
 
     public GeneralCommandHandler(
         GeneralFileReader generalFileReader,
@@ -22,7 +24,8 @@ public class GeneralCommandHandler : IGeneralCommandHandler
         IObsCommandHandler obsCommandHandler,
         ITimerCommandHandler timerCommandHandler,
         ITwitchCommandHandler twitchCommandHandler,
-        IClashCommandHandler clashCommandHandler
+        IClashCommandHandler clashCommandHandler,
+        ITwitchFileReader twitchFileReader
     )
     {
         _GeneralFileReader = generalFileReader;
@@ -33,6 +36,7 @@ public class GeneralCommandHandler : IGeneralCommandHandler
         _TimerCommandHandler = timerCommandHandler;
         _TwitchCommandHandler = twitchCommandHandler;
         _ClashCommandHandler = clashCommandHandler;
+        _TwitchFileReader = twitchFileReader;
     }
     
     private Dictionary<string, Func<CancellationToken, Task<string>>> _CommandHandlers = new();
@@ -80,6 +84,10 @@ public class GeneralCommandHandler : IGeneralCommandHandler
             // Clash of Clans
             ["!war"]          = _ => Task.FromResult(_ClashCommandHandler.HandleSetWarStatsCommand(commandArgs)),
             ["!setplayertag"] = _ => _ClashCommandHandler.HandleAddPlayerTagCommand(commandArgs),
+
+            // Sub goal
+            ["!subgoal"] = HandleSubGoalCommand,
+            ["!subdoel"] = HandleSubGoalCommand,
         };
 
         if (!_CommandHandlers.TryGetValue(commandText, out Func<CancellationToken, Task<string>>? handler))
@@ -101,6 +109,16 @@ public class GeneralCommandHandler : IGeneralCommandHandler
             else
                 commands += $"{command}";
         return $"The following commands are available on this channel: {commands}";
+    }
+
+    private async Task<string> HandleSubGoalCommand(CancellationToken ct)
+    {
+        var config = await _TwitchFileReader.ReadGoalsConfigAsync();
+        if (config == null) return "No sub goal configured.";
+        var sub = config.SubGoal;
+        int daysRemaining = Math.Max(0, sub.EndDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber);
+        return $"Sub goal: {sub.CurrentAmount}/{sub.Goal} subs before {sub.EndDate:MMM d} ({daysRemaining} days left) — Reward: {sub.RewardEn} " +
+               $"| Sub doel: {sub.CurrentAmount}/{sub.Goal} subs voor {sub.EndDate:d MMM} ({daysRemaining} dagen over) — Beloning: {sub.RewardNl}";
     }
 
     private string HandleAfgeleidCommand()
