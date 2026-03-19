@@ -1,1 +1,8 @@
-﻿-> rewrite war stats into a local HTML file to be able to apply styling and have it look as perfect as can be always
+﻿-> Pause Spotify when an alert is triggered
+-> Brainstorm about the old vs new sub goal
+-> Investigate !uptime
+-> Investigate formatting of the follower goal amount
+-> Investigate automatic switching of war stats / chatbox
+-> Remove !addsong
+-> Check permissions for Mod-only commands
+-> Compliments service - extension of greeting service
