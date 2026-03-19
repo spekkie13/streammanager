@@ -6,8 +6,7 @@ public class TwitchFileSetup
 {
     private const string OutputDir = "/Output/Twitch";
 
-    private static readonly string BaseDir =
-        Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
 
     private readonly FileSetup _FileSetup;
 

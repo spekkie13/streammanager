@@ -152,7 +152,6 @@ public sealed class TwitchIrcChatClient : ITwitchChat
                 _ = SafeRaise(() => OnChatCommandReceived(cmd));
         }
 
-        await Task.CompletedTask;
     }
 
     private async Task SafeRaise(Func<Task> handler)

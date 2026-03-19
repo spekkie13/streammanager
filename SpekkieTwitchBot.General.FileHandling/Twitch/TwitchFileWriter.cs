@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using SpekkieClassLibrary.Twitch;
+using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 
@@ -18,8 +19,7 @@ public class TwitchFileWriter(ITextFileWriter fileWriter) : ITwitchFileWriter
     private int _SubGoalCurrent;
     private int _SubGoalGoal;
 
-    private static readonly string BaseDir =
-        Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
 
     public void WriteTwitchUserAuthFile(string text)
     {

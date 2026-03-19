@@ -27,7 +27,7 @@ public class WarService(
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (warStatus.GetStatus())
+            if (warStatus.IsOn)
                 await FetchWar();
             else
                 logger.LogInfo("War stats inactive");
@@ -38,7 +38,7 @@ public class WarService(
 
     public void SetWarStats(bool enable)
     {
-        warStatus.SetStatus(enable);
+        warStatus.IsOn = enable;
         Console.WriteLine($"War stats active: {enable}");
     }
 
@@ -188,7 +188,7 @@ public class WarService(
 
     public bool GetWarStatus()
     {
-        return warStatus.GetStatus();
+        return warStatus.IsOn;
     }
 
     public async Task UpdatePlayerTag(string playerTag)

@@ -10,7 +10,7 @@ public class TwitchFileReader : ITwitchFileReader
     private readonly FileReader _FileReader;
     
     private const string OutputDir = "/Output/Twitch";
-    private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
 
     public TwitchFileReader(FileReader fileReader)
     {

@@ -1,7 +1,7 @@
-﻿namespace SpekkieClassLibrary.Twitch;
+namespace SpekkieClassLibrary.Twitch;
 
 public class CooldownSetting
 {
-    public int Cooldown;
-    public bool IsEnabled;
+    public int Cooldown { get; set; }
+    public bool IsEnabled { get; set; }
 }

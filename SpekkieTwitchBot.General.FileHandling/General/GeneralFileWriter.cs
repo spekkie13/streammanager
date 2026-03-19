@@ -1,4 +1,5 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common.Interface;
+﻿using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.General;
 
@@ -7,8 +8,7 @@ public class GeneralFileWriter
     private readonly ITextFileWriter _FileWriter;
     private const string OutputDir = "/Output/General";
 
-    private static readonly string BaseDir =
-        Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
 
     public GeneralFileWriter(ITextFileWriter fileWriter)
     {

@@ -27,9 +27,6 @@ public sealed class ChatMessageFeature(ITwitchChat chat, ITwitchChannelInfoClien
 
         if (!_SeenThisStream.Add(e.UserId)) return;
 
-        string reply = $"hi {e.Username}!";
-
-        if (!string.IsNullOrEmpty(reply))
-            await chat.ReplyAsync(e.MessageId, reply, cancellationToken);
+        await chat.ReplyAsync(e.MessageId, $"hi {e.Username}!", cancellationToken);
     }
 }
