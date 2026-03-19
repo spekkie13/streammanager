@@ -65,8 +65,11 @@ public class GeneralCommandHandler : IGeneralCommandHandler
             ["!sr"]         = t => _SpotifyCommandHandler.HandleSongRequestCommand(commandArgs, command.UserId, username, t),
             ["!playsong"]   = t => _SpotifyCommandHandler.HandlePlaySpecificSongCommand(commandArgs, username, t),
 
-            // Twitch (als deze sync zijn -> Task.FromResult)
+            // Twitch
             ["!createredemption"] = _ => _TwitchCommandHandler.HandleCreateRedemptionCommand(commandArgs),
+            ["!uptime"]           = t => _TwitchCommandHandler.HandleUptimeCommand(t),
+            ["!clip"]             = t => _TwitchCommandHandler.HandleClipCommand(t),
+            ["!so"]               = t => _TwitchCommandHandler.HandleShoutoutCommand(commandArgs, t),
 
             // OBS (idem)
             ["!setscene"]        = _ => Task.FromResult(_ObsCommandHandler.HandleSetSceneCommand(commandArgs)),

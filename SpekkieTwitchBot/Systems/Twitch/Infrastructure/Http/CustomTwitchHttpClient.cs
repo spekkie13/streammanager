@@ -106,4 +106,46 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
         return json["data"]?[0]?["id"]?.ToString();
     }
+
+    public async Task<DateTimeOffset?> GetStreamStartTimeAsync(CancellationToken ct = default)
+    {
+        await EnsureHeadersAsync(ct);
+        string url = $"{TwitchConstants.TwitchStreamsUrl}?user_id={_ChannelId}";
+        using HttpResponseMessage msg = await GetAsync(url, ct);
+        if (!msg.IsSuccessStatusCode) return null;
+        JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
+        string? startedAt = json["data"]?[0]?["started_at"]?.ToString();
+        if (startedAt == null) return null;
+        return DateTimeOffset.TryParse(startedAt, out DateTimeOffset result) ? result : null;
+    }
+
+    public async Task<string?> CreateClipAsync(CancellationToken ct = default)
+    {
+        await EnsureHeadersAsync(ct);
+        string url = $"{TwitchConstants.TwitchClipsUrl}?broadcaster_id={_ChannelId}";
+        using HttpResponseMessage msg = await PostAsync(url, new StringContent(""), ct);
+        if (!msg.IsSuccessStatusCode) return null;
+        JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
+        string? id = json["data"]?[0]?["id"]?.ToString();
+        return id == null ? null : $"https://clips.twitch.tv/{id}";
+    }
+
+    public async Task<(string? LastGame, string? Login)> GetShoutoutInfoAsync(string username, CancellationToken ct = default)
+    {
+        await EnsureHeadersAsync(ct);
+        string userUrl = $"{TwitchConstants.TwitchUsersUrl}?login={username}";
+        using HttpResponseMessage userMsg = await GetAsync(userUrl, ct);
+        if (!userMsg.IsSuccessStatusCode) return (null, null);
+        JObject userJson = JObject.Parse(await userMsg.Content.ReadAsStringAsync(ct));
+        string? userId = userJson["data"]?[0]?["id"]?.ToString();
+        string? login = userJson["data"]?[0]?["login"]?.ToString();
+        if (userId == null) return (null, null);
+
+        string channelUrl = $"{TwitchConstants.TwitchChannelsUrl}?broadcaster_id={userId}";
+        using HttpResponseMessage chanMsg = await GetAsync(channelUrl, ct);
+        if (!chanMsg.IsSuccessStatusCode) return (null, login);
+        JObject chanJson = JObject.Parse(await chanMsg.Content.ReadAsStringAsync(ct));
+        string? lastGame = chanJson["data"]?[0]?["game_name"]?.ToString();
+        return (lastGame, login);
+    }
 }
