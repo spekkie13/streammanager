@@ -144,7 +144,7 @@ public class TwitchFileWriter(ITextFileWriter fileWriter) : ITwitchFileWriter
     {
         string safeFollower = WebUtility.HtmlEncode(_LatestFollower ?? "—");
         string safeSub = WebUtility.HtmlEncode(_LatestSub ?? "—");
-        string totalFollowers = _TotalFollowers.ToString("N0", CultureInfo.InvariantCulture);
+        string totalFollowers = _TotalFollowers.ToString();
 
         string html = $$"""
             <!DOCTYPE html>
