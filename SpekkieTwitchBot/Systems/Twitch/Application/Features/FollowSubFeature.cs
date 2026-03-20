@@ -120,9 +120,10 @@ public class FollowSubFeature : IDisposable
     {
         StreamGoalsConfig? config = await _FileReader.ReadGoalsConfigAsync();
         if (config == null) return;
-        StreamGoalsConfig updated = config with { SubGoal = config.SubGoal with { CurrentAmount = current } };
-        _Files.WriteGoalsConfig(updated);
-        _Files.WriteSubGoalHtml(updated);
+        // StreamGoalsConfig updated = config with { SubGoal = config.SubGoal with { CurrentAmount = current } };
+        // _Files.WriteGoalsConfig(updated);
+        // _Files.WriteSubGoalHtml(updated);
+        _Files.WriteSubGoalHtml(config);
     }
 
     private static string FormatLatestSub(SubHappened e)
