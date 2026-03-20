@@ -61,7 +61,6 @@ public class GeneralCommandHandler : IGeneralCommandHandler
             ["!next"]       = _SpotifyCommandHandler.HandleNextSongCommand,
             ["!prev"]       = _SpotifyCommandHandler.HandlePrevSongCommand,
             ["!queue"]      = _SpotifyCommandHandler.HandleGetQueueCommand,
-            ["!addsong"]    = t => _SpotifyCommandHandler.HandleAddSongToQueueCommand(commandArgs, t),
             ["!sr"]         = t => _SpotifyCommandHandler.HandleSongRequestCommand(commandArgs, command.UserId, username, t),
             ["!playsong"]   = t => _SpotifyCommandHandler.HandlePlaySpecificSongCommand(commandArgs, username, t),
 

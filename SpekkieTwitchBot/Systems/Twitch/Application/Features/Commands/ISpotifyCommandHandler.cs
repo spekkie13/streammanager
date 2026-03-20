@@ -8,7 +8,6 @@ public interface ISpotifyCommandHandler
     Task<string> HandleResumeMusicCommand(CancellationToken cancellationToken = default);
     Task<string> HandleNextSongCommand(CancellationToken cancellationToken = default);
     Task<string> HandlePrevSongCommand(CancellationToken cancellationToken = default);
-    Task<string> HandleAddSongToQueueCommand(string songData, CancellationToken cancellationToken = default);
     Task<string> HandlePlaySpecificSongCommand(string song, string username, CancellationToken cancellationToken = default);
     Task<string> HandleGetQueueCommand(CancellationToken cancellationToken = default);
     Task<string> HandleSongRequestCommand(string input, string userId, string username, CancellationToken ct = default);

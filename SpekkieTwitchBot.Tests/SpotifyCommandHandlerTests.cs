@@ -17,65 +17,6 @@ public class SpotifyCommandHandlerTests
     private SpotifyCommandHandler CreateHandler() =>
         new(_Spotify.Object, _FileWriter.Object, _Search.Object, _ChannelInfo.Object);
 
-    // ── HandleAddSongToQueueCommand ──────────────────────────────────────────
-
-    [Fact]
-    public async Task AddSong_TitleArtistFormat_SearchesAndQueues()
-    {
-        Track track = new() { Uri = "spotify:track:abc123" };
-        _Search.Setup(s => s.GetSongsByName("Song", "Artist")).ReturnsAsync(track);
-        _Spotify.Setup(s => s.AddSongToQueueAsync("spotify:track:abc123", It.IsAny<CancellationToken>()))
-                .ReturnsAsync("Success");
-
-        string result = await CreateHandler().HandleAddSongToQueueCommand("Song|Artist");
-
-        Assert.Equal("Added song to the queue...", result);
-    }
-
-    [Fact]
-    public async Task AddSong_TitleArtistFormat_SearchFails_ReturnsValidLinkMessage()
-    {
-        _Search.Setup(s => s.GetSongsByName("Song", "Artist")).ReturnsAsync((Track?)null);
-
-        string result = await CreateHandler().HandleAddSongToQueueCommand("Song|Artist");
-
-        Assert.Equal("Please provide a valid spotify link", result);
-    }
-
-    [Fact]
-    public async Task AddSong_SpotifyUrl_PassesDirectlyToService()
-    {
-        string url = "https://open.spotify.com/track/abc123";
-        _Spotify.Setup(s => s.AddSongToQueueAsync(url, It.IsAny<CancellationToken>()))
-                .ReturnsAsync("Success");
-
-        string result = await CreateHandler().HandleAddSongToQueueCommand(url);
-
-        Assert.Equal("Added song to the queue...", result);
-        _Search.Verify(s => s.GetSongsByName(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task AddSong_ServiceFails_ReturnsFailureMessage()
-    {
-        string url = "https://open.spotify.com/track/abc123";
-        _Spotify.Setup(s => s.AddSongToQueueAsync(url, It.IsAny<CancellationToken>()))
-                .ReturnsAsync("Error");
-
-        string result = await CreateHandler().HandleAddSongToQueueCommand(url);
-
-        Assert.Equal("Could not add song to the queue...", result);
-    }
-
-    [Fact]
-    public async Task AddSong_InvalidInput_ReturnsValidLinkMessage()
-    {
-        string result = await CreateHandler().HandleAddSongToQueueCommand("just a song name");
-
-        Assert.Equal("Please provide a valid spotify link", result);
-        _Spotify.Verify(s => s.AddSongToQueueAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
     // ── HandlePlaySpecificSongCommand ────────────────────────────────────────
 
     [Fact]
