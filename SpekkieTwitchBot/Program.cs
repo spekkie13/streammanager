@@ -230,6 +230,7 @@ public static class Program
                 services.AddSingleton<IClashCommandHandler>(sp => sp.GetRequiredService<ClashCommandHandler>());
                 services.AddSingleton<GeneralCommandHandler>();
                 services.AddSingleton<IGeneralCommandHandler>(sp => sp.GetRequiredService<GeneralCommandHandler>());
+                services.AddSingleton<ICommandPermissionService, CommandPermissionService>();
 
                 // -----------------------
                 // Chat (IRC)

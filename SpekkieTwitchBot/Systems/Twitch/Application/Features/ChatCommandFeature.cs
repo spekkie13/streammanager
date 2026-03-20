@@ -1,4 +1,6 @@
-﻿using SpekkieClassLibrary.Twitch.Commands;
+﻿using SpekkieClassLibrary.Twitch;
+using SpekkieClassLibrary.Twitch.Commands;
+using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
@@ -10,15 +12,21 @@ public sealed class ChatCommandFeature
     private readonly ITwitchChat _Chat;
     private readonly ITextCommandHandler _Text;
     private readonly IGeneralCommandHandler _General;
+    private readonly ICommandPermissionService _Permissions;
+    private readonly Logger _Log;
 
     public ChatCommandFeature(
         ITwitchChat chat,
         ITextCommandHandler text,
-        IGeneralCommandHandler general
+        IGeneralCommandHandler general,
+        ICommandPermissionService permissions,
+        Logger log
     ) {
         _Chat = chat;
         _Text = text;
         _General = general;
+        _Permissions = permissions;
+        _Log = log;
     }
 
     public async Task OnCommandAsync(ChatCommandReceived e, CancellationToken cancellationToken = default)
@@ -30,6 +38,12 @@ public sealed class ChatCommandFeature
 
         if (string.Equals(cmdText, "command", StringComparison.OrdinalIgnoreCase))
         {
+            if (e.Role < UserRole.Moderator)
+            {
+                await _Chat.ReplyAsync(e.MessageId, "You don't have permission to manage commands.", cancellationToken);
+                return;
+            }
+
             string[] parts = (e.ArgumentsAsString ?? "")
                 .Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
 
@@ -54,11 +68,25 @@ public sealed class ChatCommandFeature
             return;
         }
 
-        List<TextCommand> commands = _Text.GetTextCommands();
-        string reply = commands.Any(x => string.Equals(x.Command, command, StringComparison.OrdinalIgnoreCase))
-            ? _Text.HandleCommand(e)
-            : await _General.HandleCommand(e, cancellationToken);
+        if (!_Permissions.IsAllowed(command, e.Role))
+        {
+            await _Chat.ReplyAsync(e.MessageId, $"You don't have permission to use {command}.", cancellationToken);
+            return;
+        }
 
-        await _Chat.ReplyAsync(e.MessageId, reply, cancellationToken);
+        try
+        {
+            List<TextCommand> commands = _Text.GetTextCommands();
+            string reply = commands.Any(x => string.Equals(x.Command, command, StringComparison.OrdinalIgnoreCase))
+                ? _Text.HandleCommand(e)
+                : await _General.HandleCommand(e, cancellationToken);
+
+            await _Chat.ReplyAsync(e.MessageId, reply, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _Log.LogError($"[Command] {command} threw: {ex.Message}");
+            await _Chat.ReplyAsync(e.MessageId, $"Something went wrong executing {command}.", cancellationToken);
+        }
     }
 }

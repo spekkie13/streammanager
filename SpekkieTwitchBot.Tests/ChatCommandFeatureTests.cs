@@ -1,5 +1,7 @@
 using Moq;
+using SpekkieClassLibrary.Twitch;
 using SpekkieClassLibrary.Twitch.Commands;
+using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
@@ -12,11 +14,18 @@ public class ChatCommandFeatureTests
     private readonly Mock<ITwitchChat> _Chat = new();
     private readonly Mock<ITextCommandHandler> _Text = new();
     private readonly Mock<IGeneralCommandHandler> _General = new();
+    private readonly Mock<ICommandPermissionService> _Permissions = new();
+    private readonly Mock<Logger> _Log = new(MockBehavior.Loose, null!);
 
-    private ChatCommandFeature CreateFeature() => new(_Chat.Object, _Text.Object, _General.Object);
+    public ChatCommandFeatureTests()
+    {
+        _Permissions.Setup(p => p.IsAllowed(It.IsAny<string>(), It.IsAny<UserRole>())).Returns(true);
+    }
 
-    private static ChatCommandReceived Cmd(string cmd, string args = "") =>
-        new("mid", "uid", "user", cmd, args, $"!{cmd} {args}");
+    private ChatCommandFeature CreateFeature() => new(_Chat.Object, _Text.Object, _General.Object, _Permissions.Object, _Log.Object);
+
+    private static ChatCommandReceived Cmd(string cmd, string args = "", UserRole role = UserRole.Viewer) =>
+        new("mid", "uid", "user", role, cmd, args, $"!{cmd} {args}");
 
     [Fact]
     public async Task OnCommand_EmptyCommandText_DoesNothing()
@@ -27,9 +36,18 @@ public class ChatCommandFeatureTests
     }
 
     [Fact]
+    public async Task OnCommand_CommandManagement_ViewerRole_DeniesAccess()
+    {
+        await CreateFeature().OnCommandAsync(Cmd("command", "add !hi hello", UserRole.Viewer), CancellationToken.None);
+
+        _Chat.Verify(c => c.ReplyAsync("mid", It.Is<string>(s => s.Contains("permission")), It.IsAny<CancellationToken>()));
+        _Text.Verify(t => t.AddCommand(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public async Task OnCommand_CommandManagement_MissingArgs_SendsUsageMessage()
     {
-        await CreateFeature().OnCommandAsync(Cmd("command"), CancellationToken.None);
+        await CreateFeature().OnCommandAsync(Cmd("command", "", UserRole.Moderator), CancellationToken.None);
 
         _Chat.Verify(c => c.ReplyAsync("mid", It.Is<string>(s => s.Contains("Usage:")), It.IsAny<CancellationToken>()));
     }
@@ -37,7 +55,7 @@ public class ChatCommandFeatureTests
     [Fact]
     public async Task OnCommand_CommandManagement_MissingCommandName_SendsUsageMessage()
     {
-        await CreateFeature().OnCommandAsync(Cmd("command", "add"), CancellationToken.None);
+        await CreateFeature().OnCommandAsync(Cmd("command", "add", UserRole.Moderator), CancellationToken.None);
 
         _Chat.Verify(c => c.ReplyAsync("mid", It.Is<string>(s => s.Contains("Usage:")), It.IsAny<CancellationToken>()));
     }
@@ -47,10 +65,21 @@ public class ChatCommandFeatureTests
     {
         _Text.Setup(t => t.AddCommand("add", "!hi", "hello there")).Returns("Command !hi is added.");
 
-        await CreateFeature().OnCommandAsync(Cmd("command", "add !hi hello there"), CancellationToken.None);
+        await CreateFeature().OnCommandAsync(Cmd("command", "add !hi hello there", UserRole.Moderator), CancellationToken.None);
 
         _Text.Verify(t => t.AddCommand("add", "!hi", "hello there"));
         _Chat.Verify(c => c.ReplyAsync("mid", "Command !hi is added.", It.IsAny<CancellationToken>()));
+    }
+
+    [Fact]
+    public async Task OnCommand_InsufficientRole_RepliesWithPermissionDenied()
+    {
+        _Permissions.Setup(p => p.IsAllowed("!next", UserRole.Viewer)).Returns(false);
+
+        await CreateFeature().OnCommandAsync(Cmd("next", "", UserRole.Viewer), CancellationToken.None);
+
+        _Chat.Verify(c => c.ReplyAsync("mid", It.Is<string>(s => s.Contains("permission")), It.IsAny<CancellationToken>()));
+        _General.Verify(g => g.HandleCommand(It.IsAny<ChatCommandReceived>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -77,5 +106,17 @@ public class ChatCommandFeatureTests
 
         _General.Verify(g => g.HandleCommand(It.IsAny<ChatCommandReceived>(), It.IsAny<CancellationToken>()));
         _Chat.Verify(c => c.ReplyAsync("mid", "general reply", It.IsAny<CancellationToken>()));
+    }
+
+    [Fact]
+    public async Task OnCommand_HandlerThrows_RepliesWithErrorMessage()
+    {
+        _Text.Setup(t => t.GetTextCommands()).Returns([]);
+        _General.Setup(g => g.HandleCommand(It.IsAny<ChatCommandReceived>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("API failure"));
+
+        await CreateFeature().OnCommandAsync(Cmd("uptime"), CancellationToken.None);
+
+        _Chat.Verify(c => c.ReplyAsync("mid", It.Is<string>(s => s.Contains("went wrong")), It.IsAny<CancellationToken>()));
     }
 }

@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using SpekkieClassLibrary.Twitch;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
@@ -143,6 +144,7 @@ public sealed class TwitchIrcChatClient : ITwitchChat
                 MessageId: chat.MessageId,
                 UserId: chat.UserId,
                 Username: chat.Username,
+                Role: ParseRole(msg.Tags),
                 RawMessage: chat.Text,
                 CommandText: parts[0],
                 ArgumentsAsString: parts.Length > 1 ? parts[1] : ""
@@ -152,6 +154,16 @@ public sealed class TwitchIrcChatClient : ITwitchChat
                 _ = SafeRaise(() => OnChatCommandReceived(cmd));
         }
 
+    }
+
+    private static UserRole ParseRole(Dictionary<string, string> tags)
+    {
+        string badges = tags.GetValueOrDefault("badges", "");
+        if (badges.Contains("broadcaster")) return UserRole.Broadcaster;
+        if (tags.GetValueOrDefault("mod", "0") == "1") return UserRole.Moderator;
+        if (badges.Contains("vip")) return UserRole.VIP;
+        if (tags.GetValueOrDefault("subscriber", "0") == "1") return UserRole.Subscriber;
+        return UserRole.Viewer;
     }
 
     private async Task SafeRaise(Func<Task> handler)
