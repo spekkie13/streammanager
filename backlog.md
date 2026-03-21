@@ -22,6 +22,8 @@ C# Desktop app (lokaal)
 > **ORM:** Drizzle ORM — schema wijzigingen in `src/lib/schema.ts`, migreren met `npx drizzle-kit push`
 >
 > **YouTube vs Twitch architectuurverschil:** Twitch stuurt events via webhooks (EventSub). YouTube heeft geen equivalent — live chat events moeten gepolled worden via de YouTube Data API v3. De poller draait als Vercel Cron Job (elke minuut) en haalt `liveChatMessages` op voor actieve uitzendingen. Super Chats en memberships zitten als speciale message types in de chat response.
+>
+> **Sessie-inhoud (NextAuth JWT):** `session.twitchId`, `session.displayName`, `session.apiKey`. De `accessToken` zit **niet** in de sessie — die moet worden opgehaald uit de `users` tabel via `twitchId`. Na Epic 6 komen `session.youtubeChannelId` bij.
 
 ---
 
@@ -33,7 +35,7 @@ Week 2:  Epic 2 — Live dashboard
 Week 3:  Epic 3 — Configuratie beheren (webapp)
 Week 4:  Epic 3 — Configuratie beheren (desktop sync) + dashboard afmaken
 Week 5:  Epic 6 — YouTube ondersteuning (OAuth, schema, poller)
-Week 6:  Epic 6 — YouTube dashboard integratie
+Week 6:  Epic 6 — YouTube dashboard & analytics integratie
 Later:   Epic 4 — Analytics (platform-aware)
 Later:   Epic 5 — Monetisatie (pas na eerste externe gebruikers)
 ```
@@ -220,16 +222,20 @@ Also show a React hook (useStreamEvents) that connects to this SSE route and ret
 
 **Doel:** Een overzichtspagina die live support events toont, plus basisstatistieken van de huidige sessie.
 
+**Context:**
+- `session.accessToken` bestaat **niet** — de Twitch access token zit alleen in de `users` tabel. Haal hem op via `db.select().from(users).where(eq(users.twitchId, session.twitchId))`
+
 **Claude Code prompt:**
 ```
 I have a Next.js app with:
 - A useStreamEvents hook that returns a live array of Twitch events via SSE
-- Drizzle ORM with Neon DB: tables sub_events, follow_events, cheer_events, raid_events, stream_sessions
-- Twitch OAuth via NextAuth
+- Drizzle ORM with Neon DB: tables sub_events, follow_events, cheer_events, raid_events, stream_sessions, users
+- Twitch OAuth via NextAuth. Session contains session.twitchId — the Twitch access token is NOT in the session,
+  it must be fetched from the users table: db.select({ accessToken: users.accessToken }).from(users).where(eq(users.twitchId, session.twitchId))
 
 Build a /dashboard page that shows:
 1. A live feed of the last 20 support events (follow, sub, bits, raid) with type icon, fromUser and timestamp
-2. Total followers and subscribers (fetched from Twitch API using session.accessToken)
+2. Total followers and subscribers (fetched server-side from Twitch API using the accessToken from the users table)
 3. Current session duration (startedAt from the open stream_sessions row for this broadcaster)
 
 Use Tailwind CSS for styling. Keep it clean and dark-themed.
@@ -271,7 +277,7 @@ Users authenticate via Twitch OAuth (NextAuth). The users table has id (uuid) an
 
 Add a user_configs table to schema.ts:
 - id (uuid, primaryKey, defaultRandom)
-- userId (uuid, unique, references users.id)
+- userId (uuid, unique, notNull) — references users.id via .references(() => users.id)
 - commands (json — array of chat command objects)
 - triggers (json — array of event trigger objects)
 - macros (json — array of macro objects)
@@ -430,7 +436,8 @@ Fetch data server-side using Drizzle. Use Tailwind CSS, dark theme.
 **Claude Code prompt:**
 ```
 I have a Next.js app with NextAuth (Twitch OAuth) and a users table in Neon (Drizzle ORM).
-The users table is in src/lib/schema.ts and has id (uuid), twitchId (text), twitchLogin (text), twitchDisplayName (text), apiKey (text), createdAt (timestamp).
+The users table is in src/lib/schema.ts and has id (uuid), twitchId (text, nullable), twitchLogin (text), twitchDisplayName (text), apiKey (text), createdAt (timestamp).
+(twitchId may be nullable by this point if YouTube-only users exist — handle lookups accordingly.)
 
 Integrate Stripe for a monthly subscription:
 1. Add subscriptionStatus (text, default "free") and stripeCustomerId (text, nullable) to the users table in schema.ts
@@ -449,10 +456,14 @@ Use the official Stripe Node.js SDK. Use Drizzle for all DB updates. Run: npx dr
 
 **Doel:** Analytics en instellingen zijn alleen beschikbaar voor Pro gebruikers.
 
+**Context:**
+- Na Epic 6 kunnen gebruikers ook via YouTube inloggen (geen `twitchId`). Gebruik `session.twitchId ?? session.youtubeChannelId` als identifier en pas de DB lookup aan.
+
 **Claude Code prompt:**
 ```
 I have a Next.js app where users have a subscriptionStatus field ("free" | "pro") in the users table (Drizzle ORM, Neon DB).
-The session contains session.twitchId — use this to look up the user's subscriptionStatus from the DB.
+Users can log in via Twitch (session.twitchId) or YouTube (session.youtubeChannelId).
+Look up subscriptionStatus by: twitchId if session.twitchId is set, otherwise by youtubeChannelId.
 
 Add a subscription check to the following:
 1. /analytics page — redirect free users to /billing with a message explaining the feature requires Pro
@@ -483,7 +494,7 @@ Use Tailwind CSS, dark theme.
 
 ## Epic 6 — YouTube ondersteuning
 
-> Maakt de tool bruikbaar voor YouTube-streamers. YouTube heeft geen webhooks — events worden gepolled via de YouTube Data API v3. Equivalenten: Members = subs, Super Chats = bits, Subscribers = follows (read-only, geen real-time). Raids bestaan niet op YouTube.
+> Maakt de tool bruikbaar voor YouTube-creators. YouTube heeft geen webhooks — events worden gepolled via de YouTube Data API v3. Equivalenten: Members = subs, Super Chats = bits, Subscribers = follows (read-only, geen real-time). Raids bestaan niet op YouTube.
 
 ---
 
@@ -492,24 +503,36 @@ Use Tailwind CSS, dark theme.
 **Doel:** Gebruikers kunnen inloggen met hun Google/YouTube account naast of in plaats van Twitch, zodat de app hun YouTube-kanaal kan identificeren en de API kan aanroepen.
 
 **Context:**
-- NextAuth draait al met Twitch provider in `src/lib/auth.ts` (of vergelijkbaar)
-- YouTube vereist de scope `https://www.googleapis.com/auth/youtube.readonly`
-- In de callback moet `youtubeChannelId` worden opgeslagen in de `users` tabel (via YouTube Data API `channels.list?part=id&mine=true`)
-- De bestaande `users` tabel heeft `twitchId` — voeg `youtubeChannelId` (nullable) toe zodat een gebruiker optioneel beide platforms kan koppelen
+- NextAuth draait al met Twitch provider in `src/lib/auth.ts`
+- De huidige `upsertUser()` functie matcht op `twitchId` — voor YouTube gebruikers is het matching-veld `youtubeChannelId`
+- De bestaande `users` tabel heeft `twitchId` als `notNull()` — dit moet **nullable** worden zodat YouTube-only gebruikers een rij kunnen krijgen
+- `access_type: "offline"` is **verplicht** in de Google provider authorization params om een refresh token te ontvangen
+- `prompt: "consent"` forceer je tijdens development zodat Google bij elke login een refresh token stuurt (anders alleen bij eerste koppeling)
+- De YouTube channel ID zit **niet** in het Google OAuth profile — die moet worden opgehaald via een extra API call: `GET https://www.googleapis.com/youtube/v3/channels?part=id&mine=true` met de access token
 
 **Claude Code prompt:**
 ```
-I have a Next.js app with NextAuth. The current provider is Twitch. Users are stored in a Neon DB (Drizzle ORM) users table with: id (uuid), twitchId (text), twitchLogin, twitchDisplayName, apiKey, createdAt.
+I have a Next.js app with NextAuth. The current provider is Twitch. Users are stored in a Neon DB (Drizzle ORM) users table with: id (uuid), twitchId (text, notNull), twitchLogin, twitchDisplayName, apiKey, createdAt. Schema is in src/lib/schema.ts, auth config in src/lib/auth.ts.
 
-1. Add youtubeChannelId (text, nullable) and youtubeAccessToken (text, nullable) columns to the users table in src/lib/schema.ts.
+1. In schema.ts, make twitchId nullable (remove notNull()) and add:
+   - youtubeChannelId (text, nullable, unique)
+   - youtubeAccessToken (text, nullable)
    Run: npx drizzle-kit push
 
-2. Add a Google provider to NextAuth in src/lib/auth.ts (or wherever NextAuth is configured):
+2. Add a Google provider to NextAuth in src/lib/auth.ts:
    - Scopes: openid, email, profile, https://www.googleapis.com/auth/youtube.readonly
-   - In the signIn callback, after Google login, call https://www.googleapis.com/youtube/v3/channels?part=id&mine=true with the access token to get the YouTube channel ID
-   - Upsert the user row: if a user with this Google email exists, update youtubeChannelId and youtubeAccessToken; otherwise create a new user row
+   - Authorization params must include: access_type: "offline", prompt: "consent"
+     (access_type: "offline" is required to receive a refresh token from Google)
 
-3. Extend the NextAuth session to include session.youtubeChannelId and session.youtubeAccessToken.
+3. In the signIn callback, handle provider === "google":
+   - Call https://www.googleapis.com/youtube/v3/channels?part=id&mine=true with account.access_token to get the YouTube channel ID
+     (The channel ID is NOT in the Google OAuth profile — it requires this extra API call)
+   - Look up existing user by youtubeChannelId. If found: update youtubeAccessToken. If not found: insert a new user row with twitchId = null, youtubeChannelId, youtubeAccessToken, and a generated apiKey.
+   - Do NOT match on email — the users table has no email field.
+
+4. In the jwt callback, for Google provider: set token.youtubeChannelId from the DB row.
+
+5. In the session callback, expose session.youtubeChannelId.
 
 Required env vars: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 Show all changes to auth.ts, schema.ts, and the required .env additions.
@@ -525,6 +548,8 @@ Show all changes to auth.ts, schema.ts, and the required .env additions.
 - Bestaand patroon: aparte tabel per event type met `eventId` (unique) voor deduplicatie
 - YouTube events hebben geen Twitch EventSub message ID — gebruik de `id` van het `liveChatMessage` object als `eventId`
 - `channelId` is het equivalent van Twitch `broadcasterId`
+- `amountMicros` komt uit de YouTube API als een **string** (niet een number) — gebruik `parseInt()` bij het inserten
+- Drizzle's `bigint` vereist een mode: gebruik `bigint("amount_micros", { mode: "number" })`
 - Geen equivalent voor Twitch raids op YouTube
 
 **Claude Code prompt:**
@@ -538,7 +563,8 @@ ytSuperChatEvents ("yt_superchat_events"):
 - eventId (text, unique, notNull) — liveChatMessage.id from YouTube API
 - userId (text, nullable) — viewer's YouTube channel ID
 - userDisplayName (text, nullable)
-- amountMicros (bigint, notNull) — amount in micros (divide by 1,000,000 for display)
+- amountMicros (bigint("amount_micros", { mode: "number" }), notNull) — amount in micros (divide by 1,000,000 for display)
+  Note: YouTube API returns amountMicros as a string — parse with parseInt() before inserting
 - currency (text, notNull) — ISO 4217 currency code, e.g. "EUR"
 - message (text, nullable)
 - occurredAt (timestamp, notNull)
@@ -569,7 +595,35 @@ Show the additions to schema.ts and run: npx drizzle-kit push
 
 ---
 
-### [6.3] YouTube Live Chat poller (Vercel Cron Job)
+### [6.3] YouTube token refresh opslaan bij OAuth
+
+**Doel:** De YouTube refresh token opslaan tijdens OAuth zodat de poller verlopen access tokens kan vernieuwen zonder dat de gebruiker opnieuw hoeft in te loggen.
+
+**Context:**
+- Google geeft de `refresh_token` **alleen bij de eerste autorisatie** (of wanneer `prompt: "consent"` is ingesteld — zie [6.1])
+- Sla hem direct op — bij latere logins is `account.refresh_token` undefined
+- `youtubeRefreshToken` moet als apart veld in de `users` tabel
+- Dit moet klaar zijn **vóór** [6.4] (de cron job gebruikt de refresh token)
+
+**Claude Code prompt:**
+```
+I have a Next.js app with NextAuth and a Google/YouTube provider.
+The users table has youtubeChannelId (text) and youtubeAccessToken (text), both nullable.
+
+1. Add youtubeRefreshToken (text, nullable) to the users table in schema.ts.
+   Run: npx drizzle-kit push
+
+2. In the NextAuth signIn callback in src/lib/auth.ts, update the Google provider handling:
+   - When account.provider === "google" and account.refresh_token is present, save it to users.youtubeRefreshToken
+   - Only update youtubeRefreshToken when account.refresh_token is truthy — do NOT overwrite with null on subsequent logins
+     (Google only sends refresh_token on first authorization or when prompt: "consent" is set)
+
+Show the schema change and the NextAuth callback update.
+```
+
+---
+
+### [6.4] YouTube Live Chat poller (Vercel Cron Job)
 
 **Doel:** Een achtergrondservice die regelmatig actieve YouTube-uitzendingen opzoekt, de live chat ophaalt en Super Chats + membership events opslaat.
 
@@ -577,14 +631,14 @@ Show the additions to schema.ts and run: npx drizzle-kit push
 - YouTube heeft geen webhooks voor live events — polling is de enige optie
 - YouTube Data API v3 geeft bij `liveChatMessages.list` een `pollingIntervalMillis` terug — respecteer dit interval (minimaal 5 seconden, typisch 15–60 s)
 - Vercel Cron Jobs kunnen maximaal elke minuut draaien (`"* * * * *"`) — voldoende voor live chat
-- De cron job haalt de `youtubeAccessToken` op per actieve gebruiker (iedereen met `youtubeChannelId IS NOT NULL`)
-- Token refresh: gebruik de `refresh_token` (sla die ook op bij OAuth) om verlopen tokens te vernieuwen via `https://oauth2.googleapis.com/token`
+- De cron job haalt `youtubeAccessToken` en `youtubeRefreshToken` op per actieve gebruiker (iedereen met `youtubeChannelId IS NOT NULL`)
+- Token refresh: gebruik `youtubeRefreshToken` (toegevoegd in [6.3]) om verlopen tokens te vernieuwen via `https://oauth2.googleapis.com/token`
 - Deduplicatie via `onConflictDoNothing()` op `eventId` — safe om dubbel te runnen
 
 **Claude Code prompt:**
 ```
-I have a Next.js app (Vercel) with Drizzle ORM, Neon DB. Users can have a youtubeChannelId and youtubeAccessToken in the users table.
-I have yt_superchat_events and yt_member_events tables (schema already added).
+I have a Next.js app (Vercel) with Drizzle ORM, Neon DB. Users can have a youtubeChannelId, youtubeAccessToken, and youtubeRefreshToken in the users table.
+I have yt_superchat_events and yt_member_events tables (schema already added in a previous step).
 I also have a yt_stream_sessions table.
 
 Build a Vercel Cron Job at /api/cron/youtube-poll that:
@@ -600,7 +654,7 @@ Build a Vercel Cron Job at /api/cron/youtube-poll that:
    c. Call YouTube Data API: GET https://www.googleapis.com/youtube/v3/liveChatMessages?part=id,snippet,authorDetails&liveChatId=<id>&maxResults=200
       - Filter messages where snippet.type == "superChatEvent": insert into yt_superchat_events
         Fields: eventId = message.id, userId = authorDetails.channelId, userDisplayName = authorDetails.displayName,
-                amountMicros = snippet.superChatDetails.amountMicros, currency = snippet.superChatDetails.currency,
+                amountMicros = parseInt(snippet.superChatDetails.amountMicros), currency = snippet.superChatDetails.currency,
                 message = snippet.superChatDetails.userComment, occurredAt = snippet.publishedAt
       - Filter messages where snippet.type == "memberMilestoneChatEvent" or "newSponsorEvent": insert into yt_member_events
         Fields: eventId = message.id, userId = authorDetails.channelId, userDisplayName = authorDetails.displayName,
@@ -608,37 +662,14 @@ Build a Vercel Cron Job at /api/cron/youtube-poll that:
                 levelName = snippet.memberMilestoneChatDetails?.memberLevelName ?? null,
                 occurredAt = snippet.publishedAt
    d. All inserts use .onConflictDoNothing() on eventId
-   e. If any API call returns 401, attempt token refresh using the stored refresh token and retry once
+   e. If any API call returns 401, attempt token refresh:
+      - POST https://oauth2.googleapis.com/token with grant_type=refresh_token and the user's youtubeRefreshToken
+      - Update users.youtubeAccessToken in the DB with the new token
+      - Retry the failed API call once
 
 Handle errors per-user (log and continue to next user rather than failing the whole job).
 Show the full route handler and vercel.json cron config.
 Required env vars: CRON_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-```
-
----
-
-### [6.4] YouTube token refresh opslaan bij OAuth
-
-**Doel:** De YouTube refresh token opslaan tijdens OAuth zodat de poller verlopen access tokens kan vernieuwen zonder dat de gebruiker opnieuw hoeft in te loggen.
-
-**Context:**
-- Google geeft de `refresh_token` alleen bij de eerste autorisatie — sla hem direct op
-- Voeg `youtubeRefreshToken` (text, nullable) toe aan de `users` tabel
-- NextAuth's `account` callback bevat `account.refresh_token` voor Google provider
-
-**Claude Code prompt:**
-```
-I have a Next.js app with NextAuth and a Google/YouTube provider.
-The users table has youtubeChannelId (text) and youtubeAccessToken (text), both nullable.
-
-1. Add youtubeRefreshToken (text, nullable) to the users table in schema.ts.
-   Run: npx drizzle-kit push
-
-2. In the NextAuth callbacks in src/lib/auth.ts, update the signIn or jwt callback for the Google provider:
-   - When account.provider === "google" and account.refresh_token is present, save it to users.youtubeRefreshToken
-   - (Google only sends refresh_token on first authorization — don't overwrite with null on subsequent logins)
-
-Show the schema change and the NextAuth callback update.
 ```
 
 ---
@@ -650,7 +681,7 @@ Show the schema change and the NextAuth callback update.
 **Context:**
 - Epic [2.1] bouwt een SSE route die Twitch tabellen pollt — dit moet worden uitgebreid met de YouTube tabellen
 - De genormaliseerde event shape `{ id, type, fromUser, amount, occurredAt, platform }` krijgt een nieuw veld `platform` ('twitch' | 'youtube') zodat het dashboard een platform-icoontje kan tonen
-- Het dashboard ([2.2]) toont sessieduur — toon nu de actieve sessie voor het juist ingelogde platform (of beide)
+- Sign-in URL voor YouTube koppelen: gebruik `/api/auth/signin/google` (niet `?provider=google`) of roep `signIn('google')` aan via `next-auth/react`
 
 **Claude Code prompt:**
 ```
@@ -672,7 +703,9 @@ Also update the /dashboard page:
 2. Show active session info for whichever platform(s) are live:
    - Twitch: open row in stream_sessions for this twitchId
    - YouTube: open row in yt_stream_sessions for this youtubeChannelId (show broadcast title if available)
-3. Add a "Connect YouTube" button if session.youtubeChannelId is null (links to /api/auth/signin?provider=google)
+3. If session.youtubeChannelId is null, show a "Connect YouTube" button.
+   Use a client component with: import { signIn } from "next-auth/react" → onClick={() => signIn("google")}
+   Do NOT use /api/auth/signin?provider=google — that URL format does not work in NextAuth.
 
 Show the updated SSE route and the dashboard page changes.
 ```
@@ -681,7 +714,7 @@ Show the updated SSE route and the dashboard page changes.
 
 ### [6.6] Analytics uitbreiden voor YouTube
 
-**Doel:** De analytics API en pagina ook YouTube events tonen, zodat streamers hun Super Chat inkomsten en membership groei kunnen terugkijken.
+**Doel:** De analytics API en pagina ook YouTube events tonen, zodat creators hun Super Chat inkomsten en membership groei kunnen terugkijken.
 
 **Context:**
 - Epic [4.1] bouwt `/api/analytics` voor Twitch events — voeg YouTube events toe
@@ -691,10 +724,11 @@ Show the updated SSE route and the dashboard page changes.
 **Claude Code prompt:**
 ```
 I have a Next.js app with a GET /api/analytics route that returns Twitch event totals grouped by day.
-I now also have YouTube tables: yt_superchat_events (amountMicros, currency, channelId, occurredAt), yt_member_events (channelId, occurredAt), yt_stream_sessions (channelId, startedAt, endedAt, title).
+I now also have YouTube tables: yt_superchat_events (amountMicros bigint, currency, channelId, occurredAt), yt_member_events (channelId, occurredAt), yt_stream_sessions (channelId, startedAt, endedAt, title).
 
 Update /api/analytics to also return YouTube data when session.youtubeChannelId is set:
 - ytSuperchats: total count and totals per currency (e.g. { EUR: 45.50, USD: 12.00 }) for the selected range
+  (amountMicros is stored as integer — divide by 1,000,000 for display values)
 - ytMembers: total count for the range
 - Combined daily breakdown: add ytSuperchats and ytMembers columns to the per-day array
 
