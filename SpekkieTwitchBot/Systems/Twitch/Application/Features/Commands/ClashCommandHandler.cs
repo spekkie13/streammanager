@@ -7,20 +7,41 @@ public class ClashCommandHandler(IWarService warService, IObsWebSocket obsWebSoc
 {
     public string HandleSetWarStatsCommand(string argument)
     {
-        if (argument.ToLower() is not ("on" or "off"))
-            return "Usage: !war on | !war off";
+        WarDisplayMode? mode = argument.ToLower() switch
+        {
+            "on" => WarDisplayMode.ForceOn,
+            "off" => WarDisplayMode.ForceOff,
+            "auto" => WarDisplayMode.Auto,
+            _ => null
+        };
 
-        bool enable = argument.Equals("on", StringComparison.CurrentCultureIgnoreCase);
-        warService.SetWarStats(enable);
+        if (mode == null)
+            return "Usage: !war on | !war off | !war auto";
+
+        warService.SetWarMode(mode.Value);
 
         string sceneName = obsWebSocket.GetCurrentProgramScene();
         int chatBoxId = obsWebSocket.GetSceneItemId(sceneName: sceneName, sourceName: "Chatbox", searchOffset: 0);
-        obsWebSocket.SetSceneItemEnabled(sceneName: sceneName, sceneItemId: chatBoxId, sceneItemEnabled: !enable);
-
         int warStatsId = obsWebSocket.GetSceneItemId(sceneName: sceneName, sourceName: "War Stats", searchOffset: 0);
-        obsWebSocket.SetSceneItemEnabled(sceneName: sceneName, sceneItemId: warStatsId, sceneItemEnabled: enable);
 
-        return enable ? "War service has been turned on" : "War service has been turned off";
+        bool showWar = mode switch
+        {
+            WarDisplayMode.ForceOn => true,
+            WarDisplayMode.ForceOff => false,
+            WarDisplayMode.Auto => warService.IsWarActive,
+            _ => false
+        };
+
+        obsWebSocket.SetSceneItemEnabled(sceneName: sceneName, sceneItemId: chatBoxId, sceneItemEnabled: !showWar);
+        obsWebSocket.SetSceneItemEnabled(sceneName: sceneName, sceneItemId: warStatsId, sceneItemEnabled: showWar);
+
+        return mode switch
+        {
+            WarDisplayMode.ForceOn => "War stats forced on",
+            WarDisplayMode.ForceOff => "War stats forced off",
+            WarDisplayMode.Auto => "War stats set to auto mode",
+            _ => "War mode updated"
+        };
     }
 
     public async Task<string> HandleAddPlayerTagCommand(string playerTag)

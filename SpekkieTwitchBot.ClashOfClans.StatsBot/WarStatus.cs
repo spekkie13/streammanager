@@ -1,6 +1,8 @@
 namespace SpekkieTwitchBot.ClashOfClans.StatsBot;
 
+public enum WarDisplayMode { Auto, ForceOn, ForceOff }
+
 public class WarStatus
 {
-    public bool IsOn { get; set; }
+    public WarDisplayMode Mode { get; set; } = WarDisplayMode.Auto;
 }

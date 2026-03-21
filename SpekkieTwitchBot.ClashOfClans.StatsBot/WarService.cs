@@ -21,6 +21,8 @@ public class WarService(
 {
     private readonly Dictionary<string, byte[]> _LogoCache = new();
     private string? _LastWarState;
+
+    public bool IsWarActive => _LastWarState is "preparation" or "inWar";
     private CancellationTokenSource? _WatcherDebounce;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -76,10 +78,10 @@ public class WarService(
         }, cts.Token);
     }
 
-    public void SetWarStats(bool enable)
+    public void SetWarMode(WarDisplayMode mode)
     {
-        warStatus.IsOn = enable;
-        Console.WriteLine($"War stats active: {enable}");
+        warStatus.Mode = mode;
+        Console.WriteLine($"War display mode: {mode}");
     }
 
     private async Task FetchWar()
@@ -243,10 +245,7 @@ public class WarService(
         await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}{team} avg time.txt", averageTime);
     }
 
-    public bool GetWarStatus()
-    {
-        return warStatus.IsOn;
-    }
+    public WarDisplayMode GetWarMode() => warStatus.Mode;
 
     public async Task UpdatePlayerTag(string playerTag)
     {

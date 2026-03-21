@@ -19,6 +19,7 @@ public class TwitchFileSetup
         SetupFile("latestactivity.html", clearOnBoot: false);
         SetupFile("subgoal.html", clearOnBoot: false);
         SetupGoalsConfig();
+        SetupStreamStatsConfig();
     }
 
     private void SetupGoalsConfig()
@@ -43,6 +44,24 @@ public class TwitchFileSetup
                     "rewardNl": "beschrijf je beloning hier in het Nederlands",
                     "endDate": "2026-12-31"
                   }
+                }
+                """);
+        }
+    }
+
+    private void SetupStreamStatsConfig()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}";
+        string file = $"{dir}streamstats.json";
+
+        if (!_FileSetup.FileExists(file))
+        {
+            using FileStream fs = new(file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+            using StreamWriter sw = new(fs);
+            sw.Write("""
+                {
+                  "apiUrl": "https://your-app.vercel.app",
+                  "apiKey": "your-api-key-from-the-dashboard"
                 }
                 """);
         }

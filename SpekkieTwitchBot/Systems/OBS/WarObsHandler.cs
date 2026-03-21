@@ -1,8 +1,9 @@
 using SpekkieClassLibrary.Events;
+using SpekkieTwitchBot.ClashOfClans.StatsBot;
 
 namespace SpekkieTwitchBot.Systems.OBS;
 
-public class WarObsHandler(IObsWebSocket obs, IStreamEventBus eventBus)
+public class WarObsHandler(IObsWebSocket obs, IStreamEventBus eventBus, WarStatus warStatus)
 {
     public void Register()
     {
@@ -11,6 +12,9 @@ public class WarObsHandler(IObsWebSocket obs, IStreamEventBus eventBus)
 
     private Task HandleWarStateChanged(WarStateChangedEvent e, CancellationToken ct)
     {
+        if (warStatus.Mode != WarDisplayMode.Auto)
+            return Task.CompletedTask;
+
         string sceneName = obs.GetCurrentProgramScene();
 
         int chatBoxId = obs.GetSceneItemId(sceneName, "Chatbox", 0);

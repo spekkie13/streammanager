@@ -1,5 +1,6 @@
 using Moq;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
+using SpekkieTwitchBot.Systems.StreamStats;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
@@ -13,7 +14,7 @@ public class FollowSubFeatureTests
     private readonly Mock<ITwitchFileWriter> _Files = new();
     private readonly Mock<ITwitchFileReader> _FileReader = new();
 
-    private FollowSubFeature CreateFeature() => new(_Chat.Object, _Api.Object, _Files.Object, _FileReader.Object);
+    private FollowSubFeature CreateFeature() => new(_Chat.Object, _Api.Object, _Files.Object, _FileReader.Object, null!);
 
     private static SubHappened Sub(SubKind kind, string recipient = "viewer1", string? gifter = null,
         string tier = "1000", int? months = null) =>

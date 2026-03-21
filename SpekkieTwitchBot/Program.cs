@@ -25,6 +25,7 @@ using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat.Irc;
 using SpekkieTwitchBot.Events;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
+using SpekkieTwitchBot.Systems.StreamStats;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.EventSub;
 using SpekkieClassLibrary.Events;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
@@ -169,6 +170,11 @@ public static class Program
                 services.AddSingleton<GeneralFileSetup>();
                 services.AddSingleton<GeneralFileReader>();
                 services.AddSingleton<GeneralFileWriter>();
+
+                // -----------------------
+                // StreamStats
+                // -----------------------
+                services.AddSingleton<StreamStatsClient>();
 
                 // -----------------------
                 // Features + Router

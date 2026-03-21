@@ -12,29 +12,41 @@ public class ClashCommandHandlerTests
     private ClashCommandHandler CreateHandler() => new(_War.Object, _Obs.Object);
 
     [Fact]
-    public void SetWarStats_WhenTurnedOn_ReturnsTurnedOnMessage()
+    public void SetWarStats_WhenForcedOn_ReturnsForcedOnMessage()
     {
         _Obs.Setup(o => o.GetCurrentProgramScene()).Returns("Gaming");
         _Obs.Setup(o => o.GetSceneItemId("Gaming", It.IsAny<string>(), 0)).Returns(1);
 
         string result = CreateHandler().HandleSetWarStatsCommand("on");
 
-        Assert.Equal("War service has been turned on", result);
+        Assert.Equal("War stats forced on", result);
     }
 
     [Fact]
-    public void SetWarStats_WhenTurnedOff_ReturnsTurnedOffMessage()
+    public void SetWarStats_WhenForcedOff_ReturnsForcedOffMessage()
     {
         _Obs.Setup(o => o.GetCurrentProgramScene()).Returns("Gaming");
         _Obs.Setup(o => o.GetSceneItemId("Gaming", It.IsAny<string>(), 0)).Returns(1);
 
         string result = CreateHandler().HandleSetWarStatsCommand("off");
 
-        Assert.Equal("War service has been turned off", result);
+        Assert.Equal("War stats forced off", result);
     }
 
     [Fact]
-    public void SetWarStats_WarOn_ChatboxHiddenBrowserShown()
+    public void SetWarStats_WhenAuto_ReturnsAutoMessage()
+    {
+        _Obs.Setup(o => o.GetCurrentProgramScene()).Returns("Gaming");
+        _Obs.Setup(o => o.GetSceneItemId("Gaming", It.IsAny<string>(), 0)).Returns(1);
+        _War.Setup(w => w.IsWarActive).Returns(false);
+
+        string result = CreateHandler().HandleSetWarStatsCommand("auto");
+
+        Assert.Equal("War stats set to auto mode", result);
+    }
+
+    [Fact]
+    public void SetWarStats_ForceOn_ChatboxHiddenWarStatsShown()
     {
         _Obs.Setup(o => o.GetCurrentProgramScene()).Returns("Scene");
         _Obs.Setup(o => o.GetSceneItemId("Scene", "Chatbox", 0)).Returns(10);
@@ -47,7 +59,7 @@ public class ClashCommandHandlerTests
     }
 
     [Fact]
-    public void SetWarStats_WarOff_ChatboxShownBrowserHidden()
+    public void SetWarStats_ForceOff_ChatboxShownWarStatsHidden()
     {
         _Obs.Setup(o => o.GetCurrentProgramScene()).Returns("Scene");
         _Obs.Setup(o => o.GetSceneItemId("Scene", "Chatbox", 0)).Returns(10);
@@ -60,14 +72,28 @@ public class ClashCommandHandlerTests
     }
 
     [Fact]
-    public void SetWarStats_CallsSetWarStatsOnWarService()
+    public void SetWarStats_Auto_ObsReflectsIsWarActive()
+    {
+        _Obs.Setup(o => o.GetCurrentProgramScene()).Returns("Scene");
+        _Obs.Setup(o => o.GetSceneItemId("Scene", "Chatbox", 0)).Returns(10);
+        _Obs.Setup(o => o.GetSceneItemId("Scene", "War Stats", 0)).Returns(20);
+        _War.Setup(w => w.IsWarActive).Returns(true);
+
+        CreateHandler().HandleSetWarStatsCommand("auto");
+
+        _Obs.Verify(o => o.SetSceneItemEnabled("Scene", 10, false)); // chatbox hidden (war active)
+        _Obs.Verify(o => o.SetSceneItemEnabled("Scene", 20, true));  // war stats shown (war active)
+    }
+
+    [Fact]
+    public void SetWarStats_CallsSetWarModeOnWarService()
     {
         _Obs.Setup(o => o.GetCurrentProgramScene()).Returns("Scene");
         _Obs.Setup(o => o.GetSceneItemId(It.IsAny<string>(), It.IsAny<string>(), 0)).Returns(1);
 
         CreateHandler().HandleSetWarStatsCommand("on");
 
-        _War.Verify(w => w.SetWarStats(true));
+        _War.Verify(w => w.SetWarMode(WarDisplayMode.ForceOn));
     }
 
     [Fact]
@@ -75,7 +101,7 @@ public class ClashCommandHandlerTests
     {
         string result = CreateHandler().HandleSetWarStatsCommand("invalid");
 
-        Assert.Equal("Usage: !war on | !war off", result);
+        Assert.Equal("Usage: !war on | !war off | !war auto", result);
     }
 
     [Fact]
