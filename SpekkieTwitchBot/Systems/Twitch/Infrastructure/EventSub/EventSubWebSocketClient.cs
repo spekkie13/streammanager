@@ -1,23 +1,21 @@
-﻿using System.Net.WebSockets;
+using System.Net.WebSockets;
 using System.Text;
 using SpekkieTwitchBot.General.FileHandling;
 
-namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
+namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.EventSub;
 
-public sealed class PubSubWebSocketClient(Logger logger)
+public sealed class EventSubWebSocketClient(Logger logger)
 {
     private ClientWebSocket? _Ws;
     private CancellationTokenSource? _Cts;
     private readonly SemaphoreSlim _SendLock = new(1, 1);
 
-    private readonly Uri _Uri = new("wss://pubsub-edge.twitch.tv");
-
     public event Action? OnConnected;
     public event Action<string>? OnMessage;
     public event Action<string?>? OnDisconnected;
     public event Action<Exception>? OnError;
-    
-    public async Task ConnectAsync(CancellationToken ct)
+
+    public async Task ConnectAsync(Uri uri, CancellationToken ct)
     {
         if (_Ws is { State: WebSocketState.Open }) return;
 
@@ -28,49 +26,19 @@ public sealed class PubSubWebSocketClient(Logger logger)
 
         try
         {
-            logger.LogWarning("[WS] Connecting...");
-            await _Ws.ConnectAsync(_Uri, _Cts.Token).ConfigureAwait(false);
+            logger.LogWarning($"[EventSub WS] Connecting to {uri}...");
+            await _Ws.ConnectAsync(uri, _Cts.Token).ConfigureAwait(false);
 
-            logger.LogWarning("[WS] Connected");
+            logger.LogWarning("[EventSub WS] Connected");
             OnConnected?.Invoke();
 
             _ = Task.Run(() => ReceiveLoop(_Cts.Token), ct);
-            _ = Task.Run(() => PingLoop(_Cts.Token), ct);
         }
         catch (Exception ex)
         {
             OnError?.Invoke(ex);
             await CloseAsync(ct).ConfigureAwait(false);
             OnDisconnected?.Invoke("Connect failed");
-        }
-    }
-
-    public void Send(string json)
-    {
-        _ = SendAsync(json, CancellationToken.None);
-    }
-
-    private async Task SendAsync(string json, CancellationToken ct)
-    {
-        ClientWebSocket? ws = _Ws;
-        if (ws is null || ws.State != WebSocketState.Open)
-            return;
-
-        byte[] bytes = Encoding.UTF8.GetBytes(json);
-
-        await _SendLock.WaitAsync(ct).ConfigureAwait(false);
-        try
-        {
-            await ws.SendAsync(
-                new ArraySegment<byte>(bytes),
-                WebSocketMessageType.Text,
-                endOfMessage: true,
-                cancellationToken: ct
-            ).ConfigureAwait(false);
-        }
-        finally
-        {
-            _SendLock.Release();
         }
     }
 
@@ -107,7 +75,7 @@ public sealed class PubSubWebSocketClient(Logger logger)
     {
         try
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             byte[] buffer = new byte[16 * 1024];
 
             while (!ct.IsCancellationRequested)
@@ -119,8 +87,7 @@ public sealed class PubSubWebSocketClient(Logger logger)
 
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    string? desc = ws.CloseStatusDescription;
-                    logger.LogWarning($"[WS] Close frame received. CloseStatus={(int?)ws.CloseStatus} Desc={desc}");
+                    logger.LogWarning($"[EventSub WS] Close frame received. Status={(int?)ws.CloseStatus} Desc={ws.CloseStatusDescription}");
                     break;
                 }
 
@@ -143,17 +110,6 @@ public sealed class PubSubWebSocketClient(Logger logger)
         finally
         {
             OnDisconnected?.Invoke("Receive loop ended");
-        }
-    }
-
-    private async Task PingLoop(CancellationToken ct)
-    {
-        // Keep session alive; reduces “session unused”.
-        while (!ct.IsCancellationRequested)
-        {
-            await Task.Delay(TimeSpan.FromMinutes(3), ct).ConfigureAwait(false);
-            await SendAsync("{\"type\":\"PING\"}", ct);
-            logger.LogWarning("[WS] PING sent");
         }
     }
 }

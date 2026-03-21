@@ -16,6 +16,8 @@ public static class TwitchConstants
     public static string TwitchClipsUrl => "https://api.twitch.tv/helix/clips";
     public static string TwitchUsersUrl => "https://api.twitch.tv/helix/users";
     public static string TwitchChannelsUrl => "https://api.twitch.tv/helix/channels";
+    public static string TwitchEventSubSubscriptionsUrl => "https://api.twitch.tv/helix/eventsub/subscriptions";
+
     public static string ChannelPointStatusCancelled => "CANCELED";
     public static string ChannelPointStatusFulfilled => "FULFILLED";
     public static string ChannelPointStatusUncompleted => "UNFULFILLED";

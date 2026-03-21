@@ -10,22 +10,77 @@ namespace SpekkieTwitchBot.ClashOfClans.StatsBot;
 public class CocHttpClient
 {
     private readonly HttpClient _HttpClient;
-    private readonly string _ClashToken;
+    private string _ClashToken;
+    private readonly string _TokenPath;
+    private FileSystemWatcher? _TokenWatcher;
+    private CancellationTokenSource? _WatcherDebounce;
 
     public CocHttpClient()
     {
         _HttpClient = new HttpClient();
-        _ClashToken = File.ReadAllText($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clash api token.txt");
+        _TokenPath = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clash api token.txt";
+        _ClashToken = ReadToken();
+
         #if DEBUG
                 _ClashToken = ClashConstants.DebugApiToken;
                 Console.WriteLine("Running in debug mode");
         #endif
 
         SetupAuth();
+        StartTokenWatcher();
+    }
+
+    private string ReadToken()
+    {
+        if (!File.Exists(_TokenPath))
+        {
+            Console.WriteLine("[CoC] Warning: clash api token file not found — API requests will fail");
+            return string.Empty;
+        }
+
+        string token = File.ReadAllText(_TokenPath).Trim();
+        if (string.IsNullOrEmpty(token))
+            Console.WriteLine("[CoC] Warning: clash api token is empty — API requests will fail");
+
+        return token;
+    }
+
+    private void StartTokenWatcher()
+    {
+        string dir = Path.GetDirectoryName(_TokenPath)!;
+        string file = Path.GetFileName(_TokenPath);
+
+        _TokenWatcher = new FileSystemWatcher(dir, file)
+        {
+            NotifyFilter = NotifyFilters.LastWrite,
+            EnableRaisingEvents = true
+        };
+        _TokenWatcher.Changed += OnTokenFileChanged;
+    }
+
+    private void OnTokenFileChanged(object sender, FileSystemEventArgs e)
+    {
+        _WatcherDebounce?.Cancel();
+        _WatcherDebounce?.Dispose();
+        _WatcherDebounce = new CancellationTokenSource();
+        CancellationTokenSource cts = _WatcherDebounce;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(500, cts.Token);
+                _ClashToken = ReadToken();
+                SetupAuth();
+                Console.WriteLine("[CoC] API token reloaded");
+            }
+            catch (OperationCanceledException) { }
+        }, cts.Token);
     }
 
     private void SetupAuth()
     {
+        _HttpClient.DefaultRequestHeaders.Accept.Clear();
         _HttpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         _HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _ClashToken);
     }

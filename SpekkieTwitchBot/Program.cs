@@ -25,7 +25,7 @@ using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Chat.Irc;
 using SpekkieTwitchBot.Events;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
-using SpekkieTwitchBot.Systems.Twitch.Infrastructure.PubSub;
+using SpekkieTwitchBot.Systems.Twitch.Infrastructure.EventSub;
 using SpekkieClassLibrary.Events;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using SpotifyAuthService;
@@ -254,15 +254,11 @@ public static class Program
                 services.AddHostedService<SpotifyHostedService>();
                 
                 // -----------------------
-                // PubSub
+                // EventSub
                 // -----------------------
-                services.AddSingleton<PubSubWebSocketClient>();
-                services.AddSingleton<PubSubReconnectPolicy>();
-                services.AddSingleton<PubSubMessageBuilder>();
-                services.AddSingleton<PubSubMessageParser>();
-
-                services.AddSingleton<TwitchPubSubClient>();
-                services.AddSingleton<ITwitchEvents>(sp => sp.GetRequiredService<TwitchPubSubClient>());
+                services.AddSingleton<EventSubWebSocketClient>();
+                services.AddSingleton<TwitchEventSubClient>();
+                services.AddSingleton<ITwitchEvents>(sp => sp.GetRequiredService<TwitchEventSubClient>());
 
                 // -----------------------
                 // OBS / Timer

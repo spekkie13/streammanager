@@ -116,7 +116,9 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
         string? startedAt = json["data"]?[0]?["started_at"]?.ToString();
         if (startedAt == null) return null;
-        return DateTimeOffset.TryParse(startedAt, out DateTimeOffset result) ? result : null;
+        return DateTimeOffset.TryParse(startedAt, null, System.Globalization.DateTimeStyles.AssumeUniversal, out DateTimeOffset result)
+            ? result.ToUniversalTime()
+            : null;
     }
 
     public async Task<string?> CreateClipAsync(CancellationToken ct = default)

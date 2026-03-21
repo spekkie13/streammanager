@@ -21,19 +21,59 @@ public class WarService(
 {
     private readonly Dictionary<string, byte[]> _LogoCache = new();
     private string? _LastWarState;
+    private CancellationTokenSource? _WatcherDebounce;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        StartFileWatchers(stoppingToken);
         await FetchWar();
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (warStatus.IsOn)
-                await FetchWar();
-            else
-                logger.LogInfo("War stats inactive");
-
+            await FetchWar();
             await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
         }
+    }
+
+    private void StartFileWatchers(CancellationToken stoppingToken)
+    {
+        string dir = ClashConstants.OutputDir;
+        WatchFile(dir, "clan tag.txt", stoppingToken);
+        WatchFile(dir, "player tag.txt", stoppingToken);
+    }
+
+    private void WatchFile(string dir, string file, CancellationToken stoppingToken)
+    {
+        FileSystemWatcher watcher = new(dir, file)
+        {
+            NotifyFilter = NotifyFilters.LastWrite,
+            EnableRaisingEvents = true
+        };
+        watcher.Changed += (_, _) => OnTagFileChanged(stoppingToken);
+        stoppingToken.Register(watcher.Dispose);
+    }
+
+    private void OnTagFileChanged(CancellationToken stoppingToken)
+    {
+        _WatcherDebounce?.Cancel();
+        _WatcherDebounce?.Dispose();
+        _WatcherDebounce = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+        CancellationTokenSource cts = _WatcherDebounce;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(500, cts.Token);
+                logger.LogWarning("[CoC] Tag file changed — triggering immediate war fetch");
+                await FetchWar();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                logger.LogError($"[CoC] Error on tag file change: {ex.Message}");
+            }
+        }, cts.Token);
     }
 
     public void SetWarStats(bool enable)
@@ -47,12 +87,29 @@ public class WarService(
         try
         {
             string clanTagPath = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt";
-            string clanTag = await reader.ReadAsync(clanTagPath);
-            clanTag = clanTag.Replace("\r", "").Replace("\n", "");
+            string clanTag = (await reader.ReadAsync(clanTagPath)).Replace("\r", "").Replace("\n", "").Trim();
+
             if (string.IsNullOrEmpty(clanTag))
             {
-                logger.LogWarning("Clan tag is empty");
-                return;
+                string playerTagPath = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}player tag.txt";
+                string playerTag = (await reader.ReadAsync(playerTagPath)).Replace("\r", "").Replace("\n", "").Trim();
+
+                if (string.IsNullOrEmpty(playerTag))
+                {
+                    logger.LogWarning("[CoC] Both clan tag and player tag are empty — skipping war fetch");
+                    return;
+                }
+
+                logger.LogWarning("[CoC] Clan tag is empty — looking up clan from player tag");
+                clanTag = await client.GetPlayerClan(playerTag);
+
+                if (string.IsNullOrEmpty(clanTag))
+                {
+                    logger.LogWarning("[CoC] Could not resolve clan tag from player tag — player may not be in a clan");
+                    return;
+                }
+
+                await writer.WriteAsync(clanTagPath, clanTag);
             }
 
             RunTimeWar? runTimeWar = await client.FetchWar(clanTag);
