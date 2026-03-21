@@ -13,10 +13,10 @@ export default async function LandingPage() {
       <div className="text-center space-y-8 px-4 max-w-lg w-full">
         <div className="space-y-3">
           <h1 className="text-5xl font-bold tracking-tight">
-            Stream<span className="text-purple-500">Stats</span>
+            Creator<span className="text-purple-500">Deck</span>
           </h1>
           <p className="text-zinc-400 text-lg max-w-md mx-auto">
-            Track your Twitch subscriber goal in real time — including subs that happen while you&apos;re offline.
+            Your creator command centre — streams, videos, and everything in between.
           </p>
         </div>
 

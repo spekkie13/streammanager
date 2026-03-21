@@ -8,8 +8,8 @@ import { authOptions } from "@/lib/auth"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "StreamStats",
-  description: "Twitch sub goal tracker for streamers",
+  title: "CreatorDeck",
+  description: "Your creator command centre — streams, videos, and everything in between.",
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
