@@ -27,18 +27,31 @@ C# Desktop app (lokaal)
 
 ---
 
-## Aanbevolen volgorde
+## Tiers & bouwvolgorde
+
+### Gratis tier — genoeg om écht nuttig te zijn
+> Doel: een product neerzetten dat mensen actief gebruiken en waarover ze feedback geven.
 
 ```
 Week 1:  Epic 1 — Events opslaan & structureren (Twitch)
-Week 2:  Epic 2 — Live dashboard
-Week 3:  Epic 3 — Configuratie beheren (webapp)
-Week 4:  Epic 3 — Configuratie beheren (desktop sync) + dashboard afmaken
-Week 5:  Epic 6 — YouTube ondersteuning (OAuth, schema, poller)
-Week 6:  Epic 6 — YouTube dashboard & analytics integratie
-Later:   Epic 4 — Analytics (platform-aware)
-Later:   Epic 5 — Monetisatie (pas na eerste externe gebruikers)
+Week 2:  Epic 2 — Live dashboard (incl. OBS & Spotify widgets)
+Week 3:  Epic 6.1–6.4 — YouTube OAuth, schema, token refresh, poller
+Week 4:  Epic 6.5 — YouTube in het dashboard
+         ↑ SHIP: verzamel feedback, valideer gebruikersgedrag
 ```
+
+### Betaalde tier — duidelijke meerwaarde, makkelijk te begrijpen
+> Pas bouwen als de gratis tier gebruikers heeft en feedback is verzameld.
+
+```
+Week 5:  Epic 4 — Analytics (achter paywall) ← eerste conversie-moment
+Week 6:  Epic 5 — Stripe integratie + feature gates
+Week 7:  Epic 3 — Configuratie beheren (webapp + desktop sync)
+         Epic 6.6 — YouTube analytics
+```
+
+> **Waarom deze volgorde?**
+> Epic 3 (configuratie) is complex om te bouwen én complex uit te leggen aan nieuwe gebruikers. Analytics is een veel eenvoudigere eerste betaalfunctie — de waarde is onmiddellijk duidelijk: "bekijk je groei van de afgelopen 30 dagen." Epic 3 volgt daarna als power user feature.
 
 ---
 
