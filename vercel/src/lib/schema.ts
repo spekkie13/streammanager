@@ -1,0 +1,45 @@
+import { pgTable, text, timestamp, integer, uuid } from "drizzle-orm/pg-core"
+
+export const users = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  twitchId: text("twitch_id").unique().notNull(),
+  twitchLogin: text("twitch_login").notNull(),
+  twitchDisplayName: text("twitch_display_name").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  apiKey: text("api_key").unique().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const subEvents = pgTable("sub_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  broadcasterId: text("broadcaster_id").notNull(),
+  eventId: text("event_id").unique().notNull(),
+  userId: text("user_id"),
+  userLogin: text("user_login"),
+  userDisplayName: text("user_display_name"),
+  gifterId: text("gifter_id"),
+  gifterLogin: text("gifter_login"),
+  gifterDisplayName: text("gifter_display_name"),
+  tier: text("tier").notNull(),
+  kind: text("kind").notNull(),
+  giftCount: integer("gift_count").default(1),
+  cumulativeMonths: integer("cumulative_months"),
+  message: text("message"),
+  occurredAt: timestamp("occurred_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const subGoals = pgTable("sub_goals", {
+  broadcasterId: text("broadcaster_id").primaryKey(),
+  goal: integer("goal").notNull().default(100),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const eventsubSubscriptions = pgTable("eventsub_subscriptions", {
+  id: text("id").primaryKey(),
+  broadcasterId: text("broadcaster_id").notNull(),
+  type: text("type").notNull(),
+  status: text("status").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
