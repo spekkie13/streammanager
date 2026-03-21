@@ -43,3 +43,10 @@ export const eventsubSubscriptions = pgTable("eventsub_subscriptions", {
   status: text("status").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
+
+export const waitlist = pgTable("waitlist", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").unique().notNull(),
+  twitchLogin: text("twitch_login"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
