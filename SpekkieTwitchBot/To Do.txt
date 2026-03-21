@@ -1,4 +1,5 @@
 ﻿-> Pause Spotify when an alert is triggered
--> Investigate formatting of the follower goal amount
--> Investigate automatic switching of war stats / chatbox
 -> Compliments service - extension of greeting service
+
+-> timed commands (texts triggered on a timer in chat)
+-> plan out a webservice for off-stream event polling
