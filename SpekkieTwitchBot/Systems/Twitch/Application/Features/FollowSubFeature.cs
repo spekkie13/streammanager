@@ -1,6 +1,5 @@
 using SpekkieClassLibrary.Twitch;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
-using SpekkieTwitchBot.Systems.StreamStats;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 using SpotifyAuthService;
@@ -13,7 +12,6 @@ public class FollowSubFeature : IDisposable
     private readonly ITwitchFileWriter _Files;
     private readonly ITwitchFileReader _FileReader;
     private readonly ITwitchChannelInfoClient _Api;
-    private readonly StreamStatsClient _StreamStats;
     private readonly ISpotifyService _Spotify;
 
     private FileSystemWatcher? _GoalsWatcher;
@@ -27,14 +25,12 @@ public class FollowSubFeature : IDisposable
         ITwitchChannelInfoClient api,
         ITwitchFileWriter files,
         ITwitchFileReader fileReader,
-        StreamStatsClient streamStats,
         ISpotifyService spotify
     ) {
         _Chat = chat;
         _Api = api;
         _Files = files;
         _FileReader = fileReader;
-        _StreamStats = streamStats;
         _Spotify = spotify;
     }
 
@@ -49,12 +45,12 @@ public class FollowSubFeature : IDisposable
             : latestSubscriberRaw;
         int totalFollowers = await _Api.GetFollowerCount(cancellationToken);
 
-        int? streamStatsCount = await _StreamStats.GetSubCountAsync(cancellationToken);
-        _CurrentSubCount = streamStatsCount ?? await _Api.GetSubscriberCount(cancellationToken);
+        StreamGoalsConfig? goalsConfig = await _FileReader.ReadGoalsConfigAsync();
+        _CurrentSubCount = goalsConfig?.SubGoal.CurrentAmount ?? 0;
 
         _Files.WriteLatestFollowerHtml(latestFollower, totalFollowers);
         _Files.WriteLatestSubHtml(latestSubscriber, _CurrentSubCount);
-        await WriteSubGoalAsync(_CurrentSubCount, cancellationToken);
+        if (goalsConfig != null) _Files.WriteSubGoalHtml(goalsConfig);
 
         StartGoalsWatcher();
     }
