@@ -2,14 +2,15 @@ import { eq } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { users } from "@/lib/schema"
 import { randomBytes } from "crypto"
+import type { User } from "@/types/entities"
 
 class UserRepository {
-  async findByTwitchId(twitchId: string) {
+  async findByTwitchId(twitchId: string): Promise<User | null> {
     const rows = await db.select().from(users).where(eq(users.twitchId, twitchId)).limit(1)
     return rows[0] ?? null
   }
 
-  async findByApiKey(apiKey: string) {
+  async findByApiKey(apiKey: string): Promise<User | null> {
     const rows = await db.select().from(users).where(eq(users.apiKey, apiKey)).limit(1)
     return rows[0] ?? null
   }

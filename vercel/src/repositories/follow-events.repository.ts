@@ -1,10 +1,9 @@
 import { db } from "@/lib/db"
 import { followEvents } from "@/lib/schema"
-
-type InsertFollowEvent = typeof followEvents.$inferInsert
+import type { InsertFollowEvent } from "@/types/entities"
 
 class FollowEventsRepository {
-  async insert(data: InsertFollowEvent) {
+  async insert(data: InsertFollowEvent): Promise<void> {
     await db.insert(followEvents).values(data).onConflictDoNothing()
   }
 }
