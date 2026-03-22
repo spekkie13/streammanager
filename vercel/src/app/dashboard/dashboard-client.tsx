@@ -9,6 +9,7 @@ import type { LiveEvent, LiveEventType } from "@/types/events"
 type Props = {
   session: Session
   goal: number
+  initialCount: number
   endsAt: string | null
   total: number
   initialEvents: LiveEvent[]
@@ -41,22 +42,25 @@ function toDateInputValue(iso: string | null): string {
   return iso.slice(0, 10) // "YYYY-MM-DD"
 }
 
-export function DashboardClient({ session, goal, endsAt, total, initialEvents, subscriptionsRegistered }: Props) {
+export function DashboardClient({ session, goal, initialCount, endsAt, total, initialEvents, subscriptionsRegistered }: Props) {
   const [currentGoal, setCurrentGoal] = useState(goal)
   const [goalInput, setGoalInput] = useState(String(goal))
+  const [initialCountInput, setInitialCountInput] = useState(String(initialCount))
   const [endsAtInput, setEndsAtInput] = useState(toDateInputValue(endsAt))
   const [savingGoal, setSavingGoal] = useState(false)
 
   const events = useStreamEvents(initialEvents)
-  const progress = Math.min((total / currentGoal) * 100, 100)
+  const displayTotal = total + (parseInt(initialCountInput) || 0)
+  const progress = Math.min((displayTotal / currentGoal) * 100, 100)
 
   async function saveGoal() {
     const val = parseInt(goalInput)
     if (isNaN(val) || val < 1) return
     setSavingGoal(true)
+    const initialCountVal = Math.max(0, parseInt(initialCountInput) || 0)
     await fetch("/api/goal", {
       method: "POST",
-      body: JSON.stringify({ goal: val, endsAt: endsAtInput || null }),
+      body: JSON.stringify({ goal: val, initialCount: initialCountVal, endsAt: endsAtInput || null }),
       headers: { "Content-Type": "application/json" },
     })
     setCurrentGoal(val)
@@ -94,7 +98,7 @@ export function DashboardClient({ session, goal, endsAt, total, initialEvents, s
             )}
           </div>
           <div className="flex items-end gap-3">
-            <span className="text-5xl font-bold">{total}</span>
+            <span className="text-5xl font-bold">{displayTotal}</span>
             <span className="text-2xl text-zinc-400 dark:text-zinc-500 pb-1">/ {currentGoal}</span>
           </div>
           <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-3">
@@ -114,6 +118,16 @@ export function DashboardClient({ session, goal, endsAt, total, initialEvents, s
                 onChange={e => setGoalInput(e.target.value)}
                 className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
                 min={1}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-zinc-500 dark:text-zinc-400">Starting count <span className="text-zinc-400 dark:text-zinc-600">(migration offset)</span></label>
+              <input
+                type="number"
+                value={initialCountInput}
+                onChange={e => setInitialCountInput(e.target.value)}
+                className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
+                min={0}
               />
             </div>
             <div className="flex flex-col gap-1">

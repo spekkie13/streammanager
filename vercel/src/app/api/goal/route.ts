@@ -8,18 +8,19 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const row = await subGoalsRepository.findByBroadcasterId(session.twitchId)
-  return NextResponse.json({ goal: row?.goal ?? 100, endsAt: row?.endsAt?.toISOString() ?? null })
+  return NextResponse.json({ goal: row?.goal ?? 100, initialCount: row?.initialCount ?? 0, endsAt: row?.endsAt?.toISOString() ?? null })
 }
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { goal, endsAt } = await req.json()
+  const { goal, initialCount, endsAt } = await req.json()
   if (typeof goal !== "number" || goal < 1) return NextResponse.json({ error: "Invalid goal" }, { status: 400 })
+  const safeInitialCount = typeof initialCount === "number" && initialCount >= 0 ? Math.floor(initialCount) : 0
 
   const endsAtDate = endsAt ? new Date(endsAt) : null
 
-  await subGoalsRepository.upsert(session.twitchId, goal, endsAtDate)
-  return NextResponse.json({ ok: true, goal, endsAt: endsAtDate?.toISOString() ?? null })
+  await subGoalsRepository.upsert(session.twitchId, goal, safeInitialCount, endsAtDate)
+  return NextResponse.json({ ok: true, goal, initialCount: safeInitialCount, endsAt: endsAtDate?.toISOString() ?? null })
 }
