@@ -15,10 +15,10 @@ type Props = {
 }
 
 const TYPE_BADGE: Record<LiveEventType, string> = {
-  sub:    "bg-purple-500/20 text-purple-300 border border-purple-500/40",
-  follow: "bg-blue-500/20 text-blue-300 border border-blue-500/40",
-  bits:   "bg-yellow-500/20 text-yellow-300 border border-yellow-500/40",
-  raid:   "bg-green-500/20 text-green-300 border border-green-500/40",
+  sub:    "bg-purple-500/20 text-purple-400 border border-purple-500/40",
+  follow: "bg-blue-500/20 text-blue-400 border border-blue-500/40",
+  bits:   "bg-yellow-500/20 text-yellow-500 border border-yellow-500/40",
+  raid:   "bg-green-500/20 text-green-500 border border-green-500/40",
 }
 
 const TYPE_ICON: Record<LiveEventType, string> = {
@@ -71,19 +71,19 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] text-zinc-900 dark:text-white">
       <AppHeader displayName={session.displayName} />
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
 
         {/* Sub goal */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-          <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Sub Goal</h2>
+        <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+          <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Sub Goal</h2>
           <div className="flex items-end gap-3">
             <span className="text-5xl font-bold">{total}</span>
-            <span className="text-2xl text-zinc-500 pb-1">/ {currentGoal}</span>
+            <span className="text-2xl text-zinc-400 dark:text-zinc-500 pb-1">/ {currentGoal}</span>
           </div>
-          <div className="w-full bg-zinc-800 rounded-full h-3">
+          <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-3">
             <div
               className="bg-purple-500 h-3 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
@@ -96,7 +96,7 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
               type="number"
               value={goalInput}
               onChange={e => setGoalInput(e.target.value)}
-              className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:border-purple-500"
+              className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
               min={1}
             />
             <button
@@ -113,14 +113,14 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Bot config */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Bot Integration</h2>
+          <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Bot Integration</h2>
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-zinc-500 mb-1 block">Webhook URL</label>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-zinc-800 text-xs text-zinc-300 px-3 py-2 rounded-lg truncate">{webhookUrl}</code>
-                  <button onClick={() => copy(webhookUrl, "webhook")} className="text-xs text-zinc-400 hover:text-white px-2 py-2 rounded transition-colors">
+                  <code className="flex-1 bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-lg truncate">{webhookUrl}</code>
+                  <button onClick={() => copy(webhookUrl, "webhook")} className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white px-2 py-2 rounded transition-colors">
                     {copied === "webhook" ? "✓" : "Copy"}
                   </button>
                 </div>
@@ -128,8 +128,8 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
               <div>
                 <label className="text-xs text-zinc-500 mb-1 block">API Key</label>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-zinc-800 text-xs text-zinc-300 px-3 py-2 rounded-lg truncate">{session.apiKey}</code>
-                  <button onClick={() => copy(session.apiKey, "apiKey")} className="text-xs text-zinc-400 hover:text-white px-2 py-2 rounded transition-colors">
+                  <code className="flex-1 bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-lg truncate">{session.apiKey}</code>
+                  <button onClick={() => copy(session.apiKey, "apiKey")} className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white px-2 py-2 rounded transition-colors">
                     {copied === "apiKey" ? "✓" : "Copy"}
                   </button>
                 </div>
@@ -138,18 +138,18 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
           </div>
 
           {/* Register subscriptions */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Twitch EventSub</h2>
-            <p className="text-zinc-400 text-sm">Register webhook subscriptions so Twitch delivers events to this service.</p>
+          <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Twitch EventSub</h2>
+            <p className="text-zinc-600 dark:text-zinc-400 text-sm">Register webhook subscriptions so Twitch delivers events to this service.</p>
             <button
               onClick={registerSubscriptions}
               disabled={registering}
-              className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 border border-zinc-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              className="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
             >
               {registering ? "Registering..." : "Register Subscriptions"}
             </button>
             {registerStatus && (
-              <p className={`text-sm ${registerStatus.includes("success") ? "text-green-400" : "text-red-400"}`}>
+              <p className={`text-sm ${registerStatus.includes("success") ? "text-green-500" : "text-red-400"}`}>
                 {registerStatus}
               </p>
             )}
@@ -157,16 +157,16 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
         </div>
 
         {/* Live event feed */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+        <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Live Feed</h2>
-              <span className="flex items-center gap-1.5 text-xs text-green-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+              <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Live Feed</h2>
+              <span className="flex items-center gap-1.5 text-xs text-green-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
                 Live
               </span>
             </div>
-            <Link href="/events" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
+            <Link href="/events" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">
               View all events →
             </Link>
           </div>
@@ -176,19 +176,19 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
               Waiting for events... Subs, follows, bits and raids will appear here in real time.
             </div>
           ) : (
-            <div className="divide-y divide-zinc-800/60">
+            <div className="divide-y divide-zinc-200 dark:divide-zinc-800/60">
               {events.map(event => (
                 <div key={event.id} className="px-6 py-3 flex items-center gap-4">
                   <span className={`shrink-0 text-xs px-2 py-0.5 rounded font-medium ${TYPE_BADGE[event.type]}`}>
                     {TYPE_ICON[event.type]} {event.type}
                   </span>
-                  <span className="flex-1 text-sm text-white truncate">{event.fromUser}</span>
+                  <span className="flex-1 text-sm text-zinc-900 dark:text-white truncate">{event.fromUser}</span>
                   {event.amount !== null && (
-                    <span className="text-sm text-zinc-400 shrink-0">
+                    <span className="text-sm text-zinc-500 dark:text-zinc-400 shrink-0">
                       {formatAmount(event.type, event.amount)}
                     </span>
                   )}
-                  <span className="text-xs text-zinc-600 shrink-0">
+                  <span className="text-xs text-zinc-400 dark:text-zinc-600 shrink-0">
                     {new Date(event.occurredAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>

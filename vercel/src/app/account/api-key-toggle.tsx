@@ -15,18 +15,18 @@ export function ApiKeyToggle({ apiKey }: { apiKey: string }) {
     <div className="space-y-2">
       <button
         onClick={() => setVisible(v => !v)}
-        className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
+        className="text-sm text-purple-500 hover:text-purple-400 transition-colors"
       >
         {visible ? "Hide API key" : "Click to show API key"}
       </button>
       {visible && (
         <div className="flex items-center gap-2">
-          <code className="flex-1 text-xs text-zinc-300 font-mono bg-zinc-800 px-3 py-2 rounded-lg break-all">
+          <code className="flex-1 text-xs text-zinc-700 dark:text-zinc-300 font-mono bg-zinc-100 dark:bg-zinc-800 px-3 py-2 rounded-lg break-all">
             {apiKey}
           </code>
           <button
             onClick={copy}
-            className="shrink-0 text-xs text-zinc-400 hover:text-white transition-colors px-2 py-2"
+            className="shrink-0 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors px-2 py-2"
           >
             {copied ? "✓" : "Copy"}
           </button>
