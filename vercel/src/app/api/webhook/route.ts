@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createHmac, timingSafeEqual } from "crypto"
 import { db } from "@/lib/db"
-import { subEvents } from "@/lib/schema"
+import { subEvents, streamSessions } from "@/lib/schema"
+import { eq, isNull } from "drizzle-orm"
 
 const TWITCH_MESSAGE_ID = "twitch-eventsub-message-id"
 const TWITCH_MESSAGE_TIMESTAMP = "twitch-eventsub-message-timestamp"
@@ -73,6 +74,22 @@ export async function POST(req: NextRequest) {
           giftCount: 1,
           occurredAt,
         }).onConflictDoNothing()
+      }
+
+      if (subscription.type === "channel.stream.online") {
+        const existing = await db.select({ id: streamSessions.id })
+          .from(streamSessions)
+          .where(eq(streamSessions.broadcasterId, broadcasterId) && isNull(streamSessions.endedAt))
+          .limit(1)
+        if (existing.length === 0) {
+          await db.insert(streamSessions).values({ broadcasterId, startedAt: occurredAt })
+        }
+      }
+
+      if (subscription.type === "channel.stream.offline") {
+        await db.update(streamSessions)
+          .set({ endedAt: occurredAt })
+          .where(eq(streamSessions.broadcasterId, broadcasterId) && isNull(streamSessions.endedAt))
       }
 
       if (subscription.type === "channel.subscription.gift") {

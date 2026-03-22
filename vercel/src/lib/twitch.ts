@@ -18,6 +18,8 @@ const SUB_TYPES = [
   { type: "channel.subscribe", version: "1" },
   { type: "channel.subscription.message", version: "1" },
   { type: "channel.subscription.gift", version: "1" },
+  { type: "channel.stream.online", version: "1" },
+  { type: "channel.stream.offline", version: "1" },
 ]
 
 export async function registerEventSubSubscriptions(broadcasterId: string): Promise<{ id: string; type: string; status: string }[]> {

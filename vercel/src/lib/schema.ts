@@ -81,6 +81,14 @@ export const raidEvents = pgTable("raid_events", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
+export const streamSessions = pgTable("stream_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  broadcasterId: text("broadcaster_id").notNull(),
+  startedAt: timestamp("started_at").notNull(),
+  endedAt: timestamp("ended_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
 export const waitlist = pgTable("waitlist", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").unique().notNull(),
