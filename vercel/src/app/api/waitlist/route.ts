@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { waitlist } from "@/lib/schema"
+import { waitlistRepository } from "@/repositories/waitlist.repository"
 
 export async function POST(req: NextRequest) {
   const { email, twitchLogin } = await req.json()
@@ -10,11 +9,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await db.insert(waitlist).values({
-      email: email.toLowerCase().trim(),
-      twitchLogin: twitchLogin?.trim() || null,
-    }).onConflictDoNothing()
-
+    await waitlistRepository.insert(email.toLowerCase().trim(), twitchLogin?.trim())
     return NextResponse.json({ ok: true })
   } catch {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 })

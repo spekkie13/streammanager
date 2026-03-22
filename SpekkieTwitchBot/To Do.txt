@@ -1,5 +1,1 @@
-﻿-> Pause Spotify when an alert is triggered
--> Compliments service - extension of greeting service
-
--> timed commands (texts triggered on a timer in chat)
--> plan out a webservice for off-stream event polling
+﻿-> Compliments service - extension of greeting service

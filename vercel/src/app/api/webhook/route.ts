@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createHmac, timingSafeEqual } from "crypto"
-import { db } from "@/lib/db"
-import { subEvents, streamSessions, followEvents, cheerEvents, raidEvents } from "@/lib/schema"
-import { eq, isNull } from "drizzle-orm"
+import { subEventsRepository } from "@/repositories/sub-events.repository"
+import { followEventsRepository } from "@/repositories/follow-events.repository"
+import { cheerEventsRepository } from "@/repositories/cheer-events.repository"
+import { raidEventsRepository } from "@/repositories/raid-events.repository"
+import { streamSessionService } from "@/services/stream-session.service"
 
 const TWITCH_MESSAGE_ID = "twitch-eventsub-message-id"
 const TWITCH_MESSAGE_TIMESTAMP = "twitch-eventsub-message-timestamp"
@@ -34,115 +36,53 @@ export async function POST(req: NextRequest) {
   const payload = JSON.parse(body)
 
   if (messageType === "webhook_callback_verification") {
-    return new NextResponse(payload.challenge, {
-      status: 200,
-      headers: { "Content-Type": "text/plain" },
-    })
+    return new NextResponse(payload.challenge, { status: 200, headers: { "Content-Type": "text/plain" } })
   }
 
   if (messageType === "notification") {
     const { subscription, event } = payload
     const broadcasterId: string = subscription.condition.broadcaster_user_id
+      ?? subscription.condition.to_broadcaster_user_id
     const occurredAt = new Date(timestamp)
 
     try {
-      if (subscription.type === "channel.subscribe" && !event.is_gift) {
-        await db.insert(subEvents).values({
-          broadcasterId,
-          eventId: messageId,
-          userId: event.user_id,
-          userLogin: event.user_login,
-          userDisplayName: event.user_name,
-          tier: event.tier,
-          kind: "new",
-          giftCount: 1,
-          occurredAt,
-        }).onConflictDoNothing()
-      }
+      switch (subscription.type) {
+        case "channel.subscribe":
+          if (!event.is_gift) {
+            await subEventsRepository.insert({ broadcasterId, eventId: messageId, userId: event.user_id, userLogin: event.user_login, userDisplayName: event.user_name, tier: event.tier, kind: "new", giftCount: 1, occurredAt })
+          }
+          break
 
-      if (subscription.type === "channel.subscription.message") {
-        await db.insert(subEvents).values({
-          broadcasterId,
-          eventId: messageId,
-          userId: event.user_id,
-          userLogin: event.user_login,
-          userDisplayName: event.user_name,
-          tier: event.tier,
-          kind: "resub",
-          cumulativeMonths: event.cumulative_months ?? null,
-          message: event.message?.text ?? null,
-          giftCount: 1,
-          occurredAt,
-        }).onConflictDoNothing()
-      }
+        case "channel.subscription.message":
+          await subEventsRepository.insert({ broadcasterId, eventId: messageId, userId: event.user_id, userLogin: event.user_login, userDisplayName: event.user_name, tier: event.tier, kind: "resub", cumulativeMonths: event.cumulative_months ?? null, message: event.message?.text ?? null, giftCount: 1, occurredAt })
+          break
 
-      if (subscription.type === "channel.stream.online") {
-        const existing = await db.select({ id: streamSessions.id })
-          .from(streamSessions)
-          .where(eq(streamSessions.broadcasterId, broadcasterId) && isNull(streamSessions.endedAt))
-          .limit(1)
-        if (existing.length === 0) {
-          await db.insert(streamSessions).values({ broadcasterId, startedAt: occurredAt })
-        }
-      }
+        case "channel.subscription.gift":
+          await subEventsRepository.insert({ broadcasterId, eventId: messageId, gifterId: event.is_anonymous ? null : event.user_id, gifterLogin: event.is_anonymous ? null : event.user_login, gifterDisplayName: event.is_anonymous ? null : event.user_name, tier: event.tier, kind: "community_gift", giftCount: event.total ?? 1, occurredAt })
+          break
 
-      if (subscription.type === "channel.stream.offline") {
-        await db.update(streamSessions)
-          .set({ endedAt: occurredAt })
-          .where(eq(streamSessions.broadcasterId, broadcasterId) && isNull(streamSessions.endedAt))
-      }
+        case "channel.stream.online":
+          await streamSessionService.handleOnline(broadcasterId, occurredAt)
+          break
 
-      if (subscription.type === "channel.subscription.gift") {
-        await db.insert(subEvents).values({
-          broadcasterId,
-          eventId: messageId,
-          gifterId: event.is_anonymous ? null : event.user_id,
-          gifterLogin: event.is_anonymous ? null : event.user_login,
-          gifterDisplayName: event.is_anonymous ? null : event.user_name,
-          tier: event.tier,
-          kind: "community_gift",
-          giftCount: event.total ?? 1,
-          occurredAt,
-        }).onConflictDoNothing()
-      }
-      if (subscription.type === "channel.follow") {
-        await db.insert(followEvents).values({
-          broadcasterId,
-          eventId: messageId,
-          userId: event.user_id,
-          userLogin: event.user_login,
-          userDisplayName: event.user_name,
-          occurredAt,
-        }).onConflictDoNothing()
-      }
+        case "channel.stream.offline":
+          await streamSessionService.handleOffline(broadcasterId, occurredAt)
+          break
 
-      if (subscription.type === "channel.cheer") {
-        await db.insert(cheerEvents).values({
-          broadcasterId,
-          eventId: messageId,
-          userId: event.is_anonymous ? null : event.user_id,
-          userLogin: event.is_anonymous ? null : event.user_login,
-          userDisplayName: event.is_anonymous ? null : event.user_name,
-          bits: event.bits,
-          message: event.message ?? null,
-          isAnonymous: event.is_anonymous ?? false,
-          occurredAt,
-        }).onConflictDoNothing()
-      }
+        case "channel.follow":
+          await followEventsRepository.insert({ broadcasterId, eventId: messageId, userId: event.user_id, userLogin: event.user_login, userDisplayName: event.user_name, occurredAt })
+          break
 
-      if (subscription.type === "channel.raid") {
-        await db.insert(raidEvents).values({
-          broadcasterId,
-          eventId: messageId,
-          fromBroadcasterId: event.from_broadcaster_user_id,
-          fromBroadcasterLogin: event.from_broadcaster_user_login,
-          fromBroadcasterDisplayName: event.from_broadcaster_user_name,
-          viewerCount: event.viewers,
-          occurredAt,
-        }).onConflictDoNothing()
+        case "channel.cheer":
+          await cheerEventsRepository.insert({ broadcasterId, eventId: messageId, userId: event.is_anonymous ? null : event.user_id, userLogin: event.is_anonymous ? null : event.user_login, userDisplayName: event.is_anonymous ? null : event.user_name, bits: event.bits, message: event.message ?? null, isAnonymous: event.is_anonymous ?? false, occurredAt })
+          break
+
+        case "channel.raid":
+          await raidEventsRepository.insert({ broadcasterId, eventId: messageId, fromBroadcasterId: event.from_broadcaster_user_id, fromBroadcasterLogin: event.from_broadcaster_user_login, fromBroadcasterDisplayName: event.from_broadcaster_user_name, viewerCount: event.viewers, occurredAt })
+          break
       }
     } catch (err) {
-      console.error("DB insert error:", err)
+      console.error("Webhook handler error:", err)
     }
   }
 
