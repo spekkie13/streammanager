@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createHmac, timingSafeEqual } from "crypto"
 import { db } from "@/lib/db"
-import { subEvents, streamSessions } from "@/lib/schema"
+import { subEvents, streamSessions, followEvents, cheerEvents, raidEvents } from "@/lib/schema"
 import { eq, isNull } from "drizzle-orm"
 
 const TWITCH_MESSAGE_ID = "twitch-eventsub-message-id"
@@ -102,6 +102,42 @@ export async function POST(req: NextRequest) {
           tier: event.tier,
           kind: "community_gift",
           giftCount: event.total ?? 1,
+          occurredAt,
+        }).onConflictDoNothing()
+      }
+      if (subscription.type === "channel.follow") {
+        await db.insert(followEvents).values({
+          broadcasterId,
+          eventId: messageId,
+          userId: event.user_id,
+          userLogin: event.user_login,
+          userDisplayName: event.user_name,
+          occurredAt,
+        }).onConflictDoNothing()
+      }
+
+      if (subscription.type === "channel.cheer") {
+        await db.insert(cheerEvents).values({
+          broadcasterId,
+          eventId: messageId,
+          userId: event.is_anonymous ? null : event.user_id,
+          userLogin: event.is_anonymous ? null : event.user_login,
+          userDisplayName: event.is_anonymous ? null : event.user_name,
+          bits: event.bits,
+          message: event.message ?? null,
+          isAnonymous: event.is_anonymous ?? false,
+          occurredAt,
+        }).onConflictDoNothing()
+      }
+
+      if (subscription.type === "channel.raid") {
+        await db.insert(raidEvents).values({
+          broadcasterId,
+          eventId: messageId,
+          fromBroadcasterId: event.from_broadcaster_user_id,
+          fromBroadcasterLogin: event.from_broadcaster_user_login,
+          fromBroadcasterDisplayName: event.from_broadcaster_user_name,
+          viewerCount: event.viewers,
           occurredAt,
         }).onConflictDoNothing()
       }

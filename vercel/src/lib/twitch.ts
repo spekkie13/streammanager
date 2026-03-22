@@ -20,7 +20,16 @@ const SUB_TYPES = [
   { type: "channel.subscription.gift", version: "1" },
   { type: "channel.stream.online", version: "1" },
   { type: "channel.stream.offline", version: "1" },
+  { type: "channel.follow", version: "2" },
+  { type: "channel.cheer", version: "1" },
+  { type: "channel.raid", version: "1" },
 ]
+
+function buildCondition(type: string, broadcasterId: string): Record<string, string> {
+  if (type === "channel.follow") return { broadcaster_user_id: broadcasterId, moderator_user_id: broadcasterId }
+  if (type === "channel.raid") return { to_broadcaster_user_id: broadcasterId }
+  return { broadcaster_user_id: broadcasterId }
+}
 
 export async function registerEventSubSubscriptions(broadcasterId: string): Promise<{ id: string; type: string; status: string }[]> {
   const token = await getAppAccessToken()
@@ -38,7 +47,7 @@ export async function registerEventSubSubscriptions(broadcasterId: string): Prom
       body: JSON.stringify({
         type,
         version,
-        condition: { broadcaster_user_id: broadcasterId },
+        condition: buildCondition(type, broadcasterId),
         transport: {
           method: "webhook",
           callback: callbackUrl,
