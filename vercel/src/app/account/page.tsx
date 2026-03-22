@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { AppHeader } from "@/components/app-header"
+import { ApiKeyToggle } from "./api-key-toggle"
 
 export default async function AccountPage() {
   const session = await getServerSession(authOptions)
@@ -25,14 +26,14 @@ export default async function AccountPage() {
             <span className="text-sm text-zinc-400">Twitch ID</span>
             <span className="text-sm text-zinc-300 font-mono">{session.twitchId}</span>
           </div>
-          <div className="px-6 py-4 flex items-start justify-between gap-6">
-            <div>
-              <span className="text-sm text-zinc-400">API Key</span>
-              <p className="text-xs text-zinc-600 mt-0.5">Used by the desktop app to authenticate with CreatorDeck.</p>
+          <div className="px-6 py-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm text-zinc-400">API Key</span>
+                <p className="text-xs text-zinc-600 mt-0.5">Used by the desktop app to authenticate with CreatorDeck.</p>
+              </div>
             </div>
-            <span className="text-xs text-zinc-300 font-mono bg-zinc-800 px-3 py-1.5 rounded-lg break-all text-right max-w-xs">
-              {session.apiKey}
-            </span>
+            <ApiKeyToggle apiKey={session.apiKey} />
           </div>
         </div>
 

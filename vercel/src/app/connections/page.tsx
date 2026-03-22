@@ -24,12 +24,20 @@ function ConnectionRow({ name, description, connected, detail, comingSoon }: Con
         <p className="text-xs text-zinc-500">{description}</p>
         {detail && <p className="text-xs text-zinc-400 mt-1">{detail}</p>}
       </div>
-      <div className="shrink-0">
+      <div className="shrink-0 flex items-center gap-2">
         {connected ? (
-          <span className="flex items-center gap-1.5 text-xs text-green-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
-            Connected
-          </span>
+          <>
+            <span className="flex items-center gap-1.5 text-xs text-green-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+              Connected
+            </span>
+            <button
+              disabled
+              className="text-xs text-zinc-500 border border-zinc-800 px-3 py-1.5 rounded-lg opacity-50 cursor-not-allowed"
+            >
+              Disconnect
+            </button>
+          </>
         ) : (
           <button
             disabled={comingSoon}
