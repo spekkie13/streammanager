@@ -13,7 +13,11 @@ export function useStreamEvents(initial: LiveEvent[] = []): LiveEvent[] {
 
     es.onmessage = (e: MessageEvent) => {
       const incoming: LiveEvent[] = JSON.parse(e.data)
-      setEvents(prev => [...incoming, ...prev].slice(0, MAX_EVENTS))
+      setEvents(prev => {
+        const existingIds = new Set(prev.map(ev => ev.id))
+        const newEvents = incoming.filter(ev => !existingIds.has(ev.id))
+        return [...newEvents, ...prev].slice(0, MAX_EVENTS)
+      })
     }
 
     es.onerror = () => {
