@@ -5,8 +5,8 @@ import type { LiveEvent } from "@/types/events"
 
 const MAX_EVENTS = 50
 
-export function useStreamEvents(): LiveEvent[] {
-  const [events, setEvents] = useState<LiveEvent[]>([])
+export function useStreamEvents(initial: LiveEvent[] = []): LiveEvent[] {
+  const [events, setEvents] = useState<LiveEvent[]>(initial)
 
   useEffect(() => {
     const es = new EventSource("/api/events/stream")

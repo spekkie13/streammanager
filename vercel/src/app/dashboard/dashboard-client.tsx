@@ -4,13 +4,14 @@ import Link from "next/link"
 import { signOut } from "next-auth/react"
 import type { Session } from "next-auth"
 import { useStreamEvents } from "@/hooks/use-stream-events"
-import type { LiveEventType } from "@/types/events"
+import type { LiveEvent, LiveEventType } from "@/types/events"
 
 type Props = {
   session: Session
   goal: number
   total: number
   webhookUrl: string
+  initialEvents: LiveEvent[]
 }
 
 const TYPE_BADGE: Record<LiveEventType, string> = {
@@ -34,7 +35,7 @@ function formatAmount(type: LiveEventType, amount: number | null): string | null
   return null
 }
 
-export function DashboardClient({ session, goal, total, webhookUrl }: Props) {
+export function DashboardClient({ session, goal, total, webhookUrl, initialEvents }: Props) {
   const [currentGoal, setCurrentGoal] = useState(goal)
   const [goalInput, setGoalInput] = useState(String(goal))
   const [savingGoal, setSavingGoal] = useState(false)
@@ -42,7 +43,7 @@ export function DashboardClient({ session, goal, total, webhookUrl }: Props) {
   const [registerStatus, setRegisterStatus] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
 
-  const events = useStreamEvents()
+  const events = useStreamEvents(initialEvents)
   const progress = Math.min((total / currentGoal) * 100, 100)
 
   async function saveGoal() {
