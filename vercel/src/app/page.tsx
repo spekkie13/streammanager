@@ -25,10 +25,10 @@ export default async function LandingPage() {
           <WaitlistForm />
         </div>
 
-        <div className="border-t border-zinc-800 pt-6 space-y-3">
+        {/*<div className="border-t border-zinc-800 pt-6 space-y-3">
           <p className="text-zinc-500 text-xs">Already have access?</p>
           <SignInButton />
-        </div>
+        </div>*/}
       </div>
     </main>
   )
