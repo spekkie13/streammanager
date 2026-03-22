@@ -16,6 +16,11 @@ class SubEventsRepository {
     return db.select().from(subEvents).where(condition).orderBy(desc(subEvents.occurredAt))
   }
 
+  async findSince(broadcasterId: string, since: Date): Promise<SubEvent[]> {
+    return db.select().from(subEvents)
+      .where(and(eq(subEvents.broadcasterId, broadcasterId), gt(subEvents.occurredAt, since)))
+  }
+
   async countByBroadcasterId(broadcasterId: string): Promise<number> {
     const result = await db.select({ count: sql<number>`count(*)` })
       .from(subEvents)
