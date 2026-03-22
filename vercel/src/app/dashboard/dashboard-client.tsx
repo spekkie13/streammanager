@@ -3,40 +3,39 @@ import { useState } from "react"
 import Link from "next/link"
 import { signOut } from "next-auth/react"
 import type { Session } from "next-auth"
-
-type SubEvent = {
-  id: string
-  userId: string | null
-  userDisplayName: string | null
-  gifterId: string | null
-  gifterDisplayName: string | null
-  tier: string
-  kind: string
-  giftCount: number | null
-  cumulativeMonths: number | null
-  occurredAt: string
-}
+import { useStreamEvents } from "@/hooks/use-stream-events"
+import type { LiveEvent, LiveEventType } from "@/types/events"
 
 type Props = {
   session: Session
   goal: number
   total: number
-  recentSubs: SubEvent[]
   webhookUrl: string
+  initialEvents: LiveEvent[]
 }
 
-function tierLabel(tier: string) {
-  return tier === "prime" ? "Prime" : tier === "1000" ? "T1" : tier === "2000" ? "T2" : tier === "3000" ? "T3" : tier
+const TYPE_BADGE: Record<LiveEventType, string> = {
+  sub:    "bg-purple-500/20 text-purple-300 border border-purple-500/40",
+  follow: "bg-blue-500/20 text-blue-300 border border-blue-500/40",
+  bits:   "bg-yellow-500/20 text-yellow-300 border border-yellow-500/40",
+  raid:   "bg-green-500/20 text-green-300 border border-green-500/40",
 }
 
-function kindLabel(kind: string, event: SubEvent) {
-  if (kind === "new") return `${event.userDisplayName ?? "Someone"} subscribed (${tierLabel(event.tier)})`
-  if (kind === "resub") return `${event.userDisplayName ?? "Someone"} resubscribed (${event.cumulativeMonths ?? "?"} months, ${tierLabel(event.tier)})`
-  if (kind === "community_gift") return `${event.gifterDisplayName ?? "Anonymous"} gifted ${event.giftCount ?? 1} subs`
-  return kind
+const TYPE_ICON: Record<LiveEventType, string> = {
+  sub:    "★",
+  follow: "♥",
+  bits:   "◆",
+  raid:   "▶",
 }
 
-export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }: Props) {
+function formatAmount(type: LiveEventType, amount: number | null): string | null {
+  if (amount === null) return null
+  if (type === "bits") return `${amount.toLocaleString()} bits`
+  if (type === "raid") return `${amount.toLocaleString()} viewers`
+  return null
+}
+
+export function DashboardClient({ session, goal, total, webhookUrl, initialEvents }: Props) {
   const [currentGoal, setCurrentGoal] = useState(goal)
   const [goalInput, setGoalInput] = useState(String(goal))
   const [savingGoal, setSavingGoal] = useState(false)
@@ -44,6 +43,7 @@ export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }
   const [registerStatus, setRegisterStatus] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
 
+  const events = useStreamEvents(initialEvents)
   const progress = Math.min((total / currentGoal) * 100, 100)
 
   async function saveGoal() {
@@ -85,7 +85,7 @@ export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
 
-        {/* Goal progress */}
+        {/* Sub goal */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
           <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Sub Goal</h2>
           <div className="flex items-end gap-3">
@@ -149,7 +149,7 @@ export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }
           {/* Register subscriptions */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
             <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Twitch EventSub</h2>
-            <p className="text-zinc-400 text-sm">Register webhook subscriptions so Twitch delivers sub events to this service.</p>
+            <p className="text-zinc-400 text-sm">Register webhook subscriptions so Twitch delivers events to this service.</p>
             <button
               onClick={registerSubscriptions}
               disabled={registering}
@@ -165,29 +165,41 @@ export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }
           </div>
         </div>
 
-        {/* Recent subs */}
+        {/* Live event feed */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Recent Subs</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Live Feed</h2>
+              <span className="flex items-center gap-1.5 text-xs text-green-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+                Live
+              </span>
+            </div>
             <Link href="/events" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
               View all events →
             </Link>
           </div>
-          {recentSubs.length === 0 ? (
+
+          {events.length === 0 ? (
             <div className="px-6 py-12 text-center text-zinc-500 text-sm">
-              No sub events recorded yet. Register your subscriptions above to start tracking.
+              Waiting for events... Subs, follows, bits and raids will appear here in real time.
             </div>
           ) : (
-            <div className="divide-y divide-zinc-800">
-              {recentSubs.map(sub => (
-                <div key={sub.id} className="px-6 py-3 flex items-center justify-between">
-                  <div>
-                    <span className="text-sm text-white">{kindLabel(sub.kind, sub)}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-zinc-500">
-                    <span className="bg-zinc-800 px-2 py-0.5 rounded">{tierLabel(sub.tier)}</span>
-                    <span>{new Date(sub.occurredAt).toLocaleString()}</span>
-                  </div>
+            <div className="divide-y divide-zinc-800/60">
+              {events.map(event => (
+                <div key={event.id} className="px-6 py-3 flex items-center gap-4">
+                  <span className={`shrink-0 text-xs px-2 py-0.5 rounded font-medium ${TYPE_BADGE[event.type]}`}>
+                    {TYPE_ICON[event.type]} {event.type}
+                  </span>
+                  <span className="flex-1 text-sm text-white truncate">{event.fromUser}</span>
+                  {event.amount !== null && (
+                    <span className="text-sm text-zinc-400 shrink-0">
+                      {formatAmount(event.type, event.amount)}
+                    </span>
+                  )}
+                  <span className="text-xs text-zinc-600 shrink-0">
+                    {new Date(event.occurredAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                  </span>
                 </div>
               ))}
             </div>
