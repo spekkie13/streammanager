@@ -71,13 +71,13 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] text-zinc-900 dark:text-white">
+    <div className="min-h-screen">
       <AppHeader displayName={session.displayName} />
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
 
         {/* Sub goal */}
-        <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
           <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Sub Goal</h2>
           <div className="flex items-end gap-3">
             <span className="text-5xl font-bold">{total}</span>
@@ -113,7 +113,7 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Bot config */}
-          <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
             <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Bot Integration</h2>
             <div className="space-y-3">
               <div>
@@ -138,7 +138,7 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
           </div>
 
           {/* Register subscriptions */}
-          <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
             <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Twitch EventSub</h2>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm">Register webhook subscriptions so Twitch delivers events to this service.</p>
             <button
@@ -157,7 +157,7 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
         </div>
 
         {/* Live event feed */}
-        <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Live Feed</h2>

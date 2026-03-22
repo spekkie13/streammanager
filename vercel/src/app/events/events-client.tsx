@@ -88,13 +88,13 @@ export function EventsClient({ displayName }: { displayName: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] text-zinc-900 dark:text-white">
+    <div className="min-h-screen">
       <AppHeader displayName={displayName} />
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
 
         {/* Filters */}
-        <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-4">
           <h2 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Filters</h2>
 
           {/* Type toggles */}
@@ -164,7 +164,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
         </div>
 
         {/* Results */}
-        <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
           <div className="px-6 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               {data ? `${data.total.toLocaleString()} events` : "Events"}

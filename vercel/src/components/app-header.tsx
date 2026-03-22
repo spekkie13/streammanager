@@ -34,7 +34,7 @@ export function AppHeader({ displayName }: Props) {
   }, [])
 
   return (
-    <header className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between bg-white dark:bg-[#0a0a0a]">
+    <header className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
       <Link href="/dashboard" className="text-xl font-bold hover:opacity-80 transition-opacity text-zinc-900 dark:text-white">
         Creator<span className="text-purple-500">Deck</span>
       </Link>

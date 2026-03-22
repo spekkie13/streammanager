@@ -9,7 +9,7 @@ export default async function AccountPage() {
   if (!session) redirect("/")
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] text-zinc-900 dark:text-white">
+    <div className="min-h-screen">
       <AppHeader displayName={session.displayName} />
       <main className="max-w-3xl mx-auto px-6 py-10 space-y-6">
         <div>
@@ -17,7 +17,7 @@ export default async function AccountPage() {
           <p className="text-zinc-500 text-sm mt-1">Your account information and credentials.</p>
         </div>
 
-        <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl divide-y divide-zinc-200 dark:divide-zinc-800">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl divide-y divide-zinc-200 dark:divide-zinc-800">
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-sm text-zinc-500 dark:text-zinc-400">Display name</span>
             <span className="text-sm text-zinc-900 dark:text-white">{session.displayName}</span>
@@ -37,7 +37,7 @@ export default async function AccountPage() {
           </div>
         </div>
 
-        <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-3">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-3">
           <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Danger Zone</h2>
           <p className="text-sm text-zinc-500">Deleting your account will permanently remove all your data.</p>
           <button

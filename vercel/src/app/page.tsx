@@ -9,7 +9,7 @@ export default async function LandingPage() {
   if (session) redirect("/dashboard")
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0a0a0a]">
+    <main className="min-h-screen flex items-center justify-center">
       <div className="text-center space-y-8 px-4 max-w-lg w-full">
         <div className="space-y-3">
           <h1 className="text-5xl font-bold tracking-tight text-zinc-900 dark:text-white">
