@@ -20,6 +20,7 @@ export default async function DashboardPage() {
   ])
 
   const goal = goalRows[0]?.goal ?? 100
+  const initialCount = goalRows[0]?.initialCount ?? 0
   const endsAt = goalRows[0]?.endsAt?.toISOString() ?? null
   const total = totalRows[0]?.total ?? 0
 
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
     <DashboardClient
       session={session}
       goal={goal}
+      initialCount={initialCount}
       endsAt={endsAt}
       total={total}
       initialEvents={recentEvents.events}
