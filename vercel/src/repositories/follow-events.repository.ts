@@ -1,10 +1,21 @@
+import { and, eq, gt, gte, lte } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { followEvents } from "@/lib/schema"
-import type { InsertFollowEvent } from "@/types/entities"
+import type { FollowEvent, InsertFollowEvent } from "@/types/entities"
 
 class FollowEventsRepository {
   async insert(data: InsertFollowEvent): Promise<void> {
     await db.insert(followEvents).values(data).onConflictDoNothing()
+  }
+
+  async findSince(broadcasterId: string, since: Date): Promise<FollowEvent[]> {
+    return db.select().from(followEvents)
+      .where(and(eq(followEvents.broadcasterId, broadcasterId), gt(followEvents.occurredAt, since)))
+  }
+
+  async findInRange(broadcasterId: string, from: Date, to: Date): Promise<FollowEvent[]> {
+    return db.select().from(followEvents)
+      .where(and(eq(followEvents.broadcasterId, broadcasterId), gte(followEvents.occurredAt, from), lte(followEvents.occurredAt, to)))
   }
 }
 

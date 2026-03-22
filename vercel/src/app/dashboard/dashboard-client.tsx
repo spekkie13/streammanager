@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import Link from "next/link"
 import { signOut } from "next-auth/react"
 import type { Session } from "next-auth"
 
@@ -73,7 +74,7 @@ export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       {/* Header */}
       <header className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
-        <span className="text-xl font-bold">Stream<span className="text-purple-500">Stats</span></span>
+        <span className="text-xl font-bold">Creator<span className="text-purple-500">Deck</span></span>
         <div className="flex items-center gap-4">
           <span className="text-zinc-400 text-sm">{session.displayName}</span>
           <button onClick={() => signOut({ callbackUrl: "/" })} className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
@@ -166,8 +167,11 @@ export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }
 
         {/* Recent subs */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-zinc-800">
+          <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
             <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Recent Subs</h2>
+            <Link href="/events" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
+              View all events →
+            </Link>
           </div>
           {recentSubs.length === 0 ? (
             <div className="px-6 py-12 text-center text-zinc-500 text-sm">

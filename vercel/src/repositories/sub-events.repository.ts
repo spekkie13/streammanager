@@ -1,4 +1,4 @@
-import { and, eq, desc, gt, sql } from "drizzle-orm"
+import { and, eq, desc, gt, gte, lte, sql } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { subEvents } from "@/lib/schema"
 import type { SubEvent, InsertSubEvent } from "@/types/entities"
@@ -14,6 +14,16 @@ class SubEventsRepository {
       : eq(subEvents.broadcasterId, broadcasterId)
 
     return db.select().from(subEvents).where(condition).orderBy(desc(subEvents.occurredAt))
+  }
+
+  async findSince(broadcasterId: string, since: Date): Promise<SubEvent[]> {
+    return db.select().from(subEvents)
+      .where(and(eq(subEvents.broadcasterId, broadcasterId), gt(subEvents.occurredAt, since)))
+  }
+
+  async findInRange(broadcasterId: string, from: Date, to: Date): Promise<SubEvent[]> {
+    return db.select().from(subEvents)
+      .where(and(eq(subEvents.broadcasterId, broadcasterId), gte(subEvents.occurredAt, from), lte(subEvents.occurredAt, to)))
   }
 
   async countByBroadcasterId(broadcasterId: string): Promise<number> {
