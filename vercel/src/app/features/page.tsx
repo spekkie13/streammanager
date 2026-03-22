@@ -23,15 +23,16 @@ function FeatureRow({ name, description, enabled = false, comingSoon }: FeatureR
         <p className="text-xs text-zinc-500">{description}</p>
       </div>
       <div
-        className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${
+        title={comingSoon ? "Coming soon" : enabled ? "Active" : "Inactive"}
+        className={`relative shrink-0 w-10 h-6 rounded-full cursor-default ${
           comingSoon
-            ? "bg-zinc-200 dark:bg-zinc-800 cursor-not-allowed opacity-40"
+            ? "bg-zinc-200 dark:bg-zinc-700 opacity-40"
             : enabled
-              ? "bg-purple-500 cursor-pointer"
-              : "bg-zinc-200 dark:bg-zinc-700 cursor-pointer"
+              ? "bg-purple-500"
+              : "bg-zinc-200 dark:bg-zinc-700"
         }`}
       >
-        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${enabled && !comingSoon ? "left-5" : "left-1"}`} />
+        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${enabled && !comingSoon ? "left-5" : "left-1"}`} />
       </div>
     </div>
   )
@@ -77,6 +78,10 @@ export default async function FeaturesPage() {
             comingSoon={true}
           />
         </div>
+
+        <p className="text-xs text-zinc-400 dark:text-zinc-600">
+          Feature controls are coming soon. Toggles currently reflect what is active.
+        </p>
       </main>
     </div>
   )

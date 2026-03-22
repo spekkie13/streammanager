@@ -20,10 +20,18 @@ const SETTINGS_ITEMS = [
   { label: "Features",    href: "/features" },
 ]
 
+const PAGE_NAMES: Record<string, string> = {
+  "/events":      "Event History",
+  "/account":     "Account",
+  "/connections": "Connections",
+  "/features":    "Features",
+}
+
 export function AppHeader({ displayName }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
+  const pageName = PAGE_NAMES[pathname]
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -35,9 +43,15 @@ export function AppHeader({ displayName }: Props) {
 
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
-      <Link href="/dashboard" className="text-xl font-bold hover:opacity-80 transition-opacity text-zinc-900 dark:text-white">
+      <Link href="/dashboard" className="text-xl font-bold hover:opacity-80 transition-opacity">
         Creator<span className="text-purple-500">Deck</span>
       </Link>
+
+      {pageName && (
+        <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400 absolute left-1/2 -translate-x-1/2">
+          {pageName}
+        </span>
+      )}
 
       <div className="flex items-center gap-2">
         <ThemeToggle />
@@ -76,6 +90,9 @@ export function AppHeader({ displayName }: Props) {
               </div>
 
               <div className="border-t border-zinc-200 dark:border-zinc-800 py-1">
+                <p className="px-4 pt-1 pb-0.5 text-xs font-medium text-zinc-400 dark:text-zinc-600 uppercase tracking-wider">
+                  Settings
+                </p>
                 {SETTINGS_ITEMS.map(item => (
                   <Link
                     key={item.href}

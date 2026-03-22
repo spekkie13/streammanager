@@ -92,6 +92,10 @@ export function EventsClient({ displayName }: { displayName: string }) {
       <AppHeader displayName={displayName} />
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Event History</h1>
+          <p className="text-zinc-500 text-sm mt-1">Browse, filter and sort all events from your streams.</p>
+        </div>
 
         {/* Filters */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-4">

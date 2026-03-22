@@ -10,8 +10,8 @@ type Props = {
   session: Session
   goal: number
   total: number
-  webhookUrl: string
   initialEvents: LiveEvent[]
+  subscriptionsRegistered: boolean
 }
 
 const TYPE_BADGE: Record<LiveEventType, string> = {
@@ -35,13 +35,10 @@ function formatAmount(type: LiveEventType, amount: number | null): string | null
   return null
 }
 
-export function DashboardClient({ session, goal, total, webhookUrl, initialEvents }: Props) {
+export function DashboardClient({ session, goal, total, initialEvents, subscriptionsRegistered }: Props) {
   const [currentGoal, setCurrentGoal] = useState(goal)
   const [goalInput, setGoalInput] = useState(String(goal))
   const [savingGoal, setSavingGoal] = useState(false)
-  const [registering, setRegistering] = useState(false)
-  const [registerStatus, setRegisterStatus] = useState<string | null>(null)
-  const [copied, setCopied] = useState<string | null>(null)
 
   const events = useStreamEvents(initialEvents)
   const progress = Math.min((total / currentGoal) * 100, 100)
@@ -55,26 +52,25 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
     setSavingGoal(false)
   }
 
-  async function registerSubscriptions() {
-    setRegistering(true)
-    setRegisterStatus(null)
-    const res = await fetch("/api/register-subscriptions", { method: "POST" })
-    if (res.ok) setRegisterStatus("Subscriptions registered successfully!")
-    else setRegisterStatus("Failed to register — check your Twitch app scopes.")
-    setRegistering(false)
-  }
-
-  function copy(text: string, key: string) {
-    navigator.clipboard.writeText(text)
-    setCopied(key)
-    setTimeout(() => setCopied(null), 2000)
-  }
-
   return (
     <div className="min-h-screen">
       <AppHeader displayName={session.displayName} />
 
-      <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
+
+        {/* Setup banner */}
+        {!subscriptionsRegistered && (
+          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-xl p-4 flex items-start gap-3">
+            <span className="text-amber-500 text-base mt-0.5">⚠</span>
+            <div>
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Setup required</p>
+              <p className="text-xs text-amber-700 dark:text-amber-500 mt-0.5">
+                Register your Twitch EventSub subscriptions to start receiving live events.{" "}
+                <Link href="/connections" className="underline hover:no-underline">Go to Connections →</Link>
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Sub goal */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
@@ -109,53 +105,6 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
           </div>
         </div>
 
-        {/* Two-column: bot config + register */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* Bot config */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
-            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Bot Integration</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-zinc-500 mb-1 block">Webhook URL</label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-lg truncate">{webhookUrl}</code>
-                  <button onClick={() => copy(webhookUrl, "webhook")} className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white px-2 py-2 rounded transition-colors">
-                    {copied === "webhook" ? "✓" : "Copy"}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="text-xs text-zinc-500 mb-1 block">API Key</label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-lg truncate">{session.apiKey}</code>
-                  <button onClick={() => copy(session.apiKey, "apiKey")} className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white px-2 py-2 rounded transition-colors">
-                    {copied === "apiKey" ? "✓" : "Copy"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Register subscriptions */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
-            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Twitch EventSub</h2>
-            <p className="text-zinc-600 dark:text-zinc-400 text-sm">Register webhook subscriptions so Twitch delivers events to this service.</p>
-            <button
-              onClick={registerSubscriptions}
-              disabled={registering}
-              className="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-            >
-              {registering ? "Registering..." : "Register Subscriptions"}
-            </button>
-            {registerStatus && (
-              <p className={`text-sm ${registerStatus.includes("success") ? "text-green-500" : "text-red-400"}`}>
-                {registerStatus}
-              </p>
-            )}
-          </div>
-        </div>
-
         {/* Live event feed */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
@@ -182,7 +131,7 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
                   <span className={`shrink-0 text-xs px-2 py-0.5 rounded font-medium ${TYPE_BADGE[event.type]}`}>
                     {TYPE_ICON[event.type]} {event.type}
                   </span>
-                  <span className="flex-1 text-sm text-zinc-900 dark:text-white truncate">{event.fromUser}</span>
+                  <span className="flex-1 text-sm truncate">{event.fromUser}</span>
                   {event.amount !== null && (
                     <span className="text-sm text-zinc-500 dark:text-zinc-400 shrink-0">
                       {formatAmount(event.type, event.amount)}
