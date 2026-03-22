@@ -1,4 +1,4 @@
-import { and, eq, gt, gte, lte } from "drizzle-orm"
+import { and, desc, eq, gt, gte, lte } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { cheerEvents } from "@/lib/schema"
 import type { CheerEvent, InsertCheerEvent } from "@/types/entities"
@@ -11,11 +11,13 @@ class CheerEventsRepository {
   async findSince(broadcasterId: string, since: Date): Promise<CheerEvent[]> {
     return db.select().from(cheerEvents)
       .where(and(eq(cheerEvents.broadcasterId, broadcasterId), gt(cheerEvents.occurredAt, since)))
+      .orderBy(desc(cheerEvents.occurredAt))
   }
 
   async findInRange(broadcasterId: string, from: Date, to: Date): Promise<CheerEvent[]> {
     return db.select().from(cheerEvents)
       .where(and(eq(cheerEvents.broadcasterId, broadcasterId), gte(cheerEvents.occurredAt, from), lte(cheerEvents.occurredAt, to)))
+      .orderBy(desc(cheerEvents.occurredAt))
   }
 }
 

@@ -33,6 +33,7 @@ export const subEvents = pgTable("sub_events", {
 export const subGoals = pgTable("sub_goals", {
   broadcasterId: text("broadcaster_id").primaryKey(),
   goal: integer("goal").notNull().default(100),
+  endsAt: timestamp("ends_at"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
 

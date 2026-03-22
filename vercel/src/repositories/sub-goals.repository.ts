@@ -9,10 +9,10 @@ class SubGoalsRepository {
     return rows[0] ?? null
   }
 
-  async upsert(broadcasterId: string, goal: number): Promise<void> {
+  async upsert(broadcasterId: string, goal: number, endsAt?: Date | null): Promise<void> {
     await db.insert(subGoals)
-      .values({ broadcasterId, goal })
-      .onConflictDoUpdate({ target: subGoals.broadcasterId, set: { goal, updatedAt: new Date() } })
+      .values({ broadcasterId, goal, endsAt: endsAt ?? null })
+      .onConflictDoUpdate({ target: subGoals.broadcasterId, set: { goal, endsAt: endsAt ?? null, updatedAt: new Date() } })
   }
 }
 
