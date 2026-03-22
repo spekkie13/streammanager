@@ -1,10 +1,10 @@
-import { pgTable, text, timestamp, integer, uuid } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp, integer, uuid, boolean } from "drizzle-orm/pg-core"
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
-  twitchId: text("twitch_id").unique().notNull(),
-  twitchLogin: text("twitch_login").notNull(),
-  twitchDisplayName: text("twitch_display_name").notNull(),
+  twitchId: text("twitch_id").unique(),         // nullable: YouTube-only users have no Twitch account
+  twitchLogin: text("twitch_login"),
+  twitchDisplayName: text("twitch_display_name"),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   apiKey: text("api_key").unique().notNull(),
@@ -41,6 +41,51 @@ export const eventsubSubscriptions = pgTable("eventsub_subscriptions", {
   broadcasterId: text("broadcaster_id").notNull(),
   type: text("type").notNull(),
   status: text("status").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const followEvents = pgTable("follow_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  broadcasterId: text("broadcaster_id").notNull(),
+  eventId: text("event_id").unique().notNull(),
+  userId: text("user_id"),
+  userLogin: text("user_login"),
+  userDisplayName: text("user_display_name"),
+  occurredAt: timestamp("occurred_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const cheerEvents = pgTable("cheer_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  broadcasterId: text("broadcaster_id").notNull(),
+  eventId: text("event_id").unique().notNull(),
+  userId: text("user_id"),
+  userLogin: text("user_login"),
+  userDisplayName: text("user_display_name"),
+  bits: integer("bits").notNull(),
+  message: text("message"),
+  isAnonymous: boolean("is_anonymous").notNull().default(false),
+  occurredAt: timestamp("occurred_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const raidEvents = pgTable("raid_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  broadcasterId: text("broadcaster_id").notNull(),
+  eventId: text("event_id").unique().notNull(),
+  fromBroadcasterId: text("from_broadcaster_id").notNull(),
+  fromBroadcasterLogin: text("from_broadcaster_login").notNull(),
+  fromBroadcasterDisplayName: text("from_broadcaster_display_name").notNull(),
+  viewerCount: integer("viewer_count").notNull(),
+  occurredAt: timestamp("occurred_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const streamSessions = pgTable("stream_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  broadcasterId: text("broadcaster_id").notNull(),
+  startedAt: timestamp("started_at").notNull(),
+  endedAt: timestamp("ended_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 

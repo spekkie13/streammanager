@@ -1,48 +1,46 @@
 "use client"
 import { useState } from "react"
-import { signOut } from "next-auth/react"
+import Link from "next/link"
 import type { Session } from "next-auth"
-
-type SubEvent = {
-  id: string
-  userId: string | null
-  userDisplayName: string | null
-  gifterId: string | null
-  gifterDisplayName: string | null
-  tier: string
-  kind: string
-  giftCount: number | null
-  cumulativeMonths: number | null
-  occurredAt: string
-}
+import { AppHeader } from "@/components/app-header"
+import { useStreamEvents } from "@/hooks/use-stream-events"
+import type { LiveEvent, LiveEventType } from "@/types/events"
 
 type Props = {
   session: Session
   goal: number
   total: number
-  recentSubs: SubEvent[]
-  webhookUrl: string
+  initialEvents: LiveEvent[]
+  subscriptionsRegistered: boolean
 }
 
-function tierLabel(tier: string) {
-  return tier === "prime" ? "Prime" : tier === "1000" ? "T1" : tier === "2000" ? "T2" : tier === "3000" ? "T3" : tier
+const TYPE_BADGE: Record<LiveEventType, string> = {
+  sub:    "bg-purple-500/20 text-purple-400 border border-purple-500/40",
+  follow: "bg-blue-500/20 text-blue-400 border border-blue-500/40",
+  bits:   "bg-yellow-500/20 text-yellow-500 border border-yellow-500/40",
+  raid:   "bg-green-500/20 text-green-500 border border-green-500/40",
 }
 
-function kindLabel(kind: string, event: SubEvent) {
-  if (kind === "new") return `${event.userDisplayName ?? "Someone"} subscribed (${tierLabel(event.tier)})`
-  if (kind === "resub") return `${event.userDisplayName ?? "Someone"} resubscribed (${event.cumulativeMonths ?? "?"} months, ${tierLabel(event.tier)})`
-  if (kind === "community_gift") return `${event.gifterDisplayName ?? "Anonymous"} gifted ${event.giftCount ?? 1} subs`
-  return kind
+const TYPE_ICON: Record<LiveEventType, string> = {
+  sub:    "★",
+  follow: "♥",
+  bits:   "◆",
+  raid:   "▶",
 }
 
-export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }: Props) {
+function formatAmount(type: LiveEventType, amount: number | null): string | null {
+  if (amount === null) return null
+  if (type === "bits") return `${amount.toLocaleString()} bits`
+  if (type === "raid") return `${amount.toLocaleString()} viewers`
+  return null
+}
+
+export function DashboardClient({ session, goal, total, initialEvents, subscriptionsRegistered }: Props) {
   const [currentGoal, setCurrentGoal] = useState(goal)
   const [goalInput, setGoalInput] = useState(String(goal))
   const [savingGoal, setSavingGoal] = useState(false)
-  const [registering, setRegistering] = useState(false)
-  const [registerStatus, setRegisterStatus] = useState<string | null>(null)
-  const [copied, setCopied] = useState<string | null>(null)
 
+  const events = useStreamEvents(initialEvents)
   const progress = Math.min((total / currentGoal) * 100, 100)
 
   async function saveGoal() {
@@ -54,44 +52,34 @@ export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }
     setSavingGoal(false)
   }
 
-  async function registerSubscriptions() {
-    setRegistering(true)
-    setRegisterStatus(null)
-    const res = await fetch("/api/register-subscriptions", { method: "POST" })
-    if (res.ok) setRegisterStatus("Subscriptions registered successfully!")
-    else setRegisterStatus("Failed to register — check your Twitch app scopes.")
-    setRegistering(false)
-  }
-
-  function copy(text: string, key: string) {
-    navigator.clipboard.writeText(text)
-    setCopied(key)
-    setTimeout(() => setCopied(null), 2000)
-  }
-
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      {/* Header */}
-      <header className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
-        <span className="text-xl font-bold">Stream<span className="text-purple-500">Stats</span></span>
-        <div className="flex items-center gap-4">
-          <span className="text-zinc-400 text-sm">{session.displayName}</span>
-          <button onClick={() => signOut({ callbackUrl: "/" })} className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-            Sign out
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen">
+      <AppHeader displayName={session.displayName} />
 
-      <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
 
-        {/* Goal progress */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-          <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Sub Goal</h2>
+        {/* Setup banner */}
+        {!subscriptionsRegistered && (
+          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-xl p-4 flex items-start gap-3">
+            <span className="text-amber-500 text-base mt-0.5">⚠</span>
+            <div>
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Setup required</p>
+              <p className="text-xs text-amber-700 dark:text-amber-500 mt-0.5">
+                Register your Twitch EventSub subscriptions to start receiving live events.{" "}
+                <Link href="/connections" className="underline hover:no-underline">Go to Connections →</Link>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Sub goal */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+          <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Sub Goal</h2>
           <div className="flex items-end gap-3">
             <span className="text-5xl font-bold">{total}</span>
-            <span className="text-2xl text-zinc-500 pb-1">/ {currentGoal}</span>
+            <span className="text-2xl text-zinc-400 dark:text-zinc-500 pb-1">/ {currentGoal}</span>
           </div>
-          <div className="w-full bg-zinc-800 rounded-full h-3">
+          <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-3">
             <div
               className="bg-purple-500 h-3 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
@@ -104,7 +92,7 @@ export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }
               type="number"
               value={goalInput}
               onChange={e => setGoalInput(e.target.value)}
-              className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:border-purple-500"
+              className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
               min={1}
             />
             <button
@@ -117,73 +105,41 @@ export function DashboardClient({ session, goal, total, recentSubs, webhookUrl }
           </div>
         </div>
 
-        {/* Two-column: bot config + register */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* Bot config */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Bot Integration</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-zinc-500 mb-1 block">Webhook URL</label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-zinc-800 text-xs text-zinc-300 px-3 py-2 rounded-lg truncate">{webhookUrl}</code>
-                  <button onClick={() => copy(webhookUrl, "webhook")} className="text-xs text-zinc-400 hover:text-white px-2 py-2 rounded transition-colors">
-                    {copied === "webhook" ? "✓" : "Copy"}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="text-xs text-zinc-500 mb-1 block">API Key</label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-zinc-800 text-xs text-zinc-300 px-3 py-2 rounded-lg truncate">{session.apiKey}</code>
-                  <button onClick={() => copy(session.apiKey, "apiKey")} className="text-xs text-zinc-400 hover:text-white px-2 py-2 rounded transition-colors">
-                    {copied === "apiKey" ? "✓" : "Copy"}
-                  </button>
-                </div>
-              </div>
+        {/* Live event feed */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Live Feed</h2>
+              <span className="flex items-center gap-1.5 text-xs text-green-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
+                Live
+              </span>
             </div>
+            <Link href="/events" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">
+              View all events →
+            </Link>
           </div>
 
-          {/* Register subscriptions */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Twitch EventSub</h2>
-            <p className="text-zinc-400 text-sm">Register webhook subscriptions so Twitch delivers sub events to this service.</p>
-            <button
-              onClick={registerSubscriptions}
-              disabled={registering}
-              className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 border border-zinc-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-            >
-              {registering ? "Registering..." : "Register Subscriptions"}
-            </button>
-            {registerStatus && (
-              <p className={`text-sm ${registerStatus.includes("success") ? "text-green-400" : "text-red-400"}`}>
-                {registerStatus}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Recent subs */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-zinc-800">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Recent Subs</h2>
-          </div>
-          {recentSubs.length === 0 ? (
+          {events.length === 0 ? (
             <div className="px-6 py-12 text-center text-zinc-500 text-sm">
-              No sub events recorded yet. Register your subscriptions above to start tracking.
+              Waiting for events... Subs, follows, bits and raids will appear here in real time.
             </div>
           ) : (
-            <div className="divide-y divide-zinc-800">
-              {recentSubs.map(sub => (
-                <div key={sub.id} className="px-6 py-3 flex items-center justify-between">
-                  <div>
-                    <span className="text-sm text-white">{kindLabel(sub.kind, sub)}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-zinc-500">
-                    <span className="bg-zinc-800 px-2 py-0.5 rounded">{tierLabel(sub.tier)}</span>
-                    <span>{new Date(sub.occurredAt).toLocaleString()}</span>
-                  </div>
+            <div className="divide-y divide-zinc-200 dark:divide-zinc-800/60">
+              {events.map(event => (
+                <div key={event.id} className="px-6 py-3 flex items-center gap-4">
+                  <span className={`shrink-0 text-xs px-2 py-0.5 rounded font-medium ${TYPE_BADGE[event.type]}`}>
+                    {TYPE_ICON[event.type]} {event.type}
+                  </span>
+                  <span className="flex-1 text-sm truncate">{event.fromUser}</span>
+                  {event.amount !== null && (
+                    <span className="text-sm text-zinc-500 dark:text-zinc-400 shrink-0">
+                      {formatAmount(event.type, event.amount)}
+                    </span>
+                  )}
+                  <span className="text-xs text-zinc-400 dark:text-zinc-600 shrink-0">
+                    {new Date(event.occurredAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                  </span>
                 </div>
               ))}
             </div>
