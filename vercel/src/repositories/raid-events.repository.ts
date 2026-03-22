@@ -1,4 +1,4 @@
-import { and, eq, gt } from "drizzle-orm"
+import { and, eq, gt, gte, lte } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { raidEvents } from "@/lib/schema"
 import type { RaidEvent, InsertRaidEvent } from "@/types/entities"
@@ -11,6 +11,11 @@ class RaidEventsRepository {
   async findSince(broadcasterId: string, since: Date): Promise<RaidEvent[]> {
     return db.select().from(raidEvents)
       .where(and(eq(raidEvents.broadcasterId, broadcasterId), gt(raidEvents.occurredAt, since)))
+  }
+
+  async findInRange(broadcasterId: string, from: Date, to: Date): Promise<RaidEvent[]> {
+    return db.select().from(raidEvents)
+      .where(and(eq(raidEvents.broadcasterId, broadcasterId), gte(raidEvents.occurredAt, from), lte(raidEvents.occurredAt, to)))
   }
 }
 
