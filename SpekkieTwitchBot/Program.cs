@@ -183,7 +183,7 @@ public static class Program
                 services.AddSingleton<FollowSubFeature>();
                 services.AddSingleton<ChatCommandFeature>();
                 services.AddSingleton<ChatMessageFeature>();
-                services.AddSingleton<TwitchEventsFeature>();
+                services.AddSingleton<TimedMessagesFeature>();
                 services.AddSingleton<TwitchEventRouter>();
                 
                 // -----------------------

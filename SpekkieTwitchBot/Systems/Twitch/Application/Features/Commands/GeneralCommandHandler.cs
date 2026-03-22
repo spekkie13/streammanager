@@ -39,15 +39,14 @@ public class GeneralCommandHandler : IGeneralCommandHandler
         _TwitchFileReader = twitchFileReader;
     }
     
-    private Dictionary<string, Func<CancellationToken, Task<string>>> _CommandHandlers = new();
-
     public async Task<string> HandleCommand(ChatCommandReceived command, CancellationToken ct)
     {
         string username = command.Username;
         string commandText = $"!{command.CommandText}";
         string commandArgs = command.ArgumentsAsString ?? "";
 
-        _CommandHandlers = new Dictionary<string, Func<CancellationToken, Task<string>>>(StringComparer.OrdinalIgnoreCase)
+        Dictionary<string, Func<CancellationToken, Task<string>>> commandHandlers = null!;
+        commandHandlers = new Dictionary<string, Func<CancellationToken, Task<string>>>(StringComparer.OrdinalIgnoreCase)
         {
             // sync handlers -> wrap
             ["!commands"] = _ => Task.FromResult(HandleCommandsCommand()),
@@ -92,25 +91,19 @@ public class GeneralCommandHandler : IGeneralCommandHandler
             ["!subdoel"] = HandleSubGoalCommand,
         };
 
-        if (!_CommandHandlers.TryGetValue(commandText, out Func<CancellationToken, Task<string>>? handler))
+        if (!commandHandlers.TryGetValue(commandText, out Func<CancellationToken, Task<string>>? handler))
             return "Unknown command";
 
         return await handler(ct).ConfigureAwait(false);
-    }
-    
-    private string HandleCommandsCommand()
-    {
-        string commands = "";
-        
-        List<string> textCommands = _TextCommandHandler.GetTextCommands().Select(x => x.Command ?? "").ToList();
-        textCommands.AddRange(_CommandHandlers.Keys);
-        
-        foreach (string command in textCommands)
-            if (command != _CommandHandlers.Keys.Last())
-                commands += $"{command}, ";
-            else
-                commands += $"{command}";
-        return $"The following commands are available on this channel: {commands}";
+
+        string HandleCommandsCommand()
+        {
+            List<string> all = _TextCommandHandler.GetTextCommands()
+                .Select(x => x.Command ?? "")
+                .Concat(commandHandlers.Keys)
+                .ToList();
+            return $"The following commands are available on this channel: {string.Join(", ", all)}";
+        }
     }
 
     private async Task<string> HandleSubGoalCommand(CancellationToken ct)

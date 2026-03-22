@@ -12,7 +12,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 {
     private readonly HttpClient _Client = new();
     private readonly ITwitchAuthTokenProvider _Tokens;
-    private string? _ChannelId;
+    private readonly SemaphoreSlim _HeaderLock = new(1, 1);
     
     public CustomTwitchHttpClient(ITwitchAuthTokenProvider tokens)
     {
@@ -23,29 +23,37 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
     {
         string clientId = await _Tokens.GetClientIdAsync(cancellationToken);
         string accessToken = await _Tokens.GetUserAccessTokenAsync(cancellationToken);
-        TwitchGeneralFile file = await _Tokens.ReadIdentityAsync(cancellationToken);
-        _ChannelId = file.ChannelId;
-        
+
         _Client.DefaultRequestHeaders.Remove("client-id");
         _Client.DefaultRequestHeaders.Remove("broadcaster_id");
         
+        if (string.IsNullOrEmpty(clientId)) throw new InvalidOperationException("Twitch ClientId is missing from auth file.");
+        if (string.IsNullOrEmpty(accessToken)) throw new InvalidOperationException("Twitch access token is missing or could not be refreshed.");
+
         _Client.DefaultRequestHeaders.Add("client-id", clientId);
-        _Client.DefaultRequestHeaders.Add("broadcaster_id", _ChannelId);
         _Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
     }
 
     private async Task<HttpResponseMessage> SendWithRetryAsync(Func<Task<HttpResponseMessage>> send, CancellationToken ct)
     {
-        await EnsureHeadersAsync(ct);
-        
-        HttpResponseMessage response = await send();
-        if (response.StatusCode != HttpStatusCode.Unauthorized) return response;
-        
-        await _Tokens.ForceRefreshAsync(ct);
-        await EnsureHeadersAsync(ct);
-        
-        response.Dispose();
-        return await send();
+        await _HeaderLock.WaitAsync(ct);
+        try
+        {
+            await EnsureHeadersAsync(ct);
+
+            HttpResponseMessage response = await send();
+            if (response.StatusCode != HttpStatusCode.Unauthorized) return response;
+
+            await _Tokens.ForceRefreshAsync(ct);
+            await EnsureHeadersAsync(ct);
+
+            response.Dispose();
+            return await send();
+        }
+        finally
+        {
+            _HeaderLock.Release();
+        }
     }
     
     public Task<HttpResponseMessage> GetAsync(string url, CancellationToken ct = default)
@@ -59,48 +67,52 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<int> GetFollowerCount(CancellationToken ct = default)
     {
-        await EnsureHeadersAsync(ct);
-        string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={_ChannelId}";
+        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={identity.ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
+        if (!msg.IsSuccessStatusCode) return 0;
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
-        return Convert.ToInt32(json["total"]);
+        return Convert.ToInt32(json["total"] ?? 0);
     }
 
     public async Task<string> GetLatestFollower(CancellationToken ct = default)
     {
-        await EnsureHeadersAsync(ct);
-        string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={_ChannelId}";
+        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={identity.ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
+        if (!msg.IsSuccessStatusCode) return "N/A";
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
         return json["data"]?[0]?["user_name"]?.ToString() ?? "N/A";
     }
 
     public async Task<int> GetSubscriberCount(CancellationToken ct = default)
     {
-        await EnsureHeadersAsync(ct);
-        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={_ChannelId}";
+        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={identity.ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
+        if (!msg.IsSuccessStatusCode) return 0;
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
-        return Convert.ToInt32(json["total"]);
+        return Convert.ToInt32(json["total"] ?? 0);
     }
 
     public async Task<string> GetLatestSubscriber(CancellationToken ct = default)
     {
-        await EnsureHeadersAsync(ct);
-        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={_ChannelId}&first=100";
+        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={identity.ChannelId}&first=100";
         using HttpResponseMessage msg = await GetAsync(url, ct);
+        if (!msg.IsSuccessStatusCode) return "N/A";
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
         JArray? data = json["data"] as JArray;
         if (data == null || data.Count == 0) return "N/A";
         // API returns oldest-first; broadcaster's own sub is always last — skip it
-        var subscribers = data.Where(s => s["user_id"]?.ToString() != _ChannelId).ToList();
+        var subscribers = data.Where(s => s["user_id"]?.ToString() != identity.ChannelId).ToList();
         return subscribers.LastOrDefault()?["user_name"]?.ToString() ?? "N/A";
     }
 
     public async Task<string?> GetCurrentStreamIdAsync(CancellationToken ct = default)
     {
-        await EnsureHeadersAsync(ct);
-        string url = $"{TwitchConstants.TwitchStreamsUrl}?user_id={_ChannelId}";
+        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        string url = $"{TwitchConstants.TwitchStreamsUrl}?user_id={identity.ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return null;
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
@@ -109,8 +121,8 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<DateTimeOffset?> GetStreamStartTimeAsync(CancellationToken ct = default)
     {
-        await EnsureHeadersAsync(ct);
-        string url = $"{TwitchConstants.TwitchStreamsUrl}?user_id={_ChannelId}";
+        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        string url = $"{TwitchConstants.TwitchStreamsUrl}?user_id={identity.ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return null;
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
@@ -123,8 +135,8 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<string?> CreateClipAsync(CancellationToken ct = default)
     {
-        await EnsureHeadersAsync(ct);
-        string url = $"{TwitchConstants.TwitchClipsUrl}?broadcaster_id={_ChannelId}";
+        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        string url = $"{TwitchConstants.TwitchClipsUrl}?broadcaster_id={identity.ChannelId}";
         using HttpResponseMessage msg = await PostAsync(url, new StringContent(""), ct);
         if (!msg.IsSuccessStatusCode) return null;
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
@@ -134,7 +146,6 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<(string? LastGame, string? Login)> GetShoutoutInfoAsync(string username, CancellationToken ct = default)
     {
-        await EnsureHeadersAsync(ct);
         string userUrl = $"{TwitchConstants.TwitchUsersUrl}?login={username}";
         using HttpResponseMessage userMsg = await GetAsync(userUrl, ct);
         if (!userMsg.IsSuccessStatusCode) return (null, null);

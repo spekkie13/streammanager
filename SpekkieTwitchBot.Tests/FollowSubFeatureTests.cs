@@ -1,4 +1,6 @@
 using Moq;
+using SpekkieClassLibrary.Twitch;
+using SpotifyAuthService;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.StreamStats;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
@@ -13,8 +15,11 @@ public class FollowSubFeatureTests
     private readonly Mock<ITwitchChannelInfoClient> _Api = new();
     private readonly Mock<ITwitchFileWriter> _Files = new();
     private readonly Mock<ITwitchFileReader> _FileReader = new();
+    private readonly Mock<ISpotifyService> _Spotify = new();
+    private readonly Mock<StreamStatsClient> _StreamStats = new(MockBehavior.Loose);
 
-    private FollowSubFeature CreateFeature() => new(_Chat.Object, _Api.Object, _Files.Object, _FileReader.Object, null!);
+    private FollowSubFeature CreateFeature() =>
+        new(_Chat.Object, _Api.Object, _Files.Object, _FileReader.Object, _StreamStats.Object, _Spotify.Object);
 
     private static SubHappened Sub(SubKind kind, string recipient = "viewer1", string? gifter = null,
         string tier = "1000", int? months = null) =>
@@ -146,5 +151,44 @@ public class FollowSubFeatureTests
         await CreateFeature().HandleFollowAsync(new FollowHappened("uid", "", DateTimeOffset.UtcNow), CancellationToken.None);
 
         _Chat.Verify(c => c.SendAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // ── Sub-goal write path ──────────────────────────────────────────────────
+
+    [Fact]
+    public async Task HandleSub_WithGoalsConfig_WritesSubGoalHtml()
+    {
+        var config = new StreamGoalsConfig(1000, new SubGoalConfig(50, 10, "reward", "beloning", DateOnly.FromDateTime(DateTime.Today.AddDays(30))));
+        _FileReader.Setup(r => r.ReadGoalsConfigAsync()).ReturnsAsync(config);
+        _Api.Setup(a => a.GetSubscriberCount(It.IsAny<CancellationToken>())).ReturnsAsync(100);
+
+        await CreateFeature().HandleSubAsync(Sub(SubKind.New), CancellationToken.None);
+
+        _Files.Verify(f => f.WriteSubGoalHtml(It.IsAny<StreamGoalsConfig>()), Times.Once);
+        _Files.Verify(f => f.WriteGoalsConfig(It.IsAny<StreamGoalsConfig>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleSub_NullGoalsConfig_DoesNotWriteSubGoalHtml()
+    {
+        _FileReader.Setup(r => r.ReadGoalsConfigAsync()).ReturnsAsync((StreamGoalsConfig?)null);
+        _Api.Setup(a => a.GetSubscriberCount(It.IsAny<CancellationToken>())).ReturnsAsync(100);
+
+        await CreateFeature().HandleSubAsync(Sub(SubKind.New), CancellationToken.None);
+
+        _Files.Verify(f => f.WriteSubGoalHtml(It.IsAny<StreamGoalsConfig>()), Times.Never);
+    }
+
+    // ── Music pause on sub ───────────────────────────────────────────────────
+
+    [Fact]
+    public async Task HandleSub_PausesSpotify()
+    {
+        _Api.Setup(a => a.GetSubscriberCount(It.IsAny<CancellationToken>())).ReturnsAsync(100);
+        _Spotify.Setup(s => s.PausePlayerAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await CreateFeature().HandleSubAsync(Sub(SubKind.New), CancellationToken.None);
+
+        _Spotify.Verify(s => s.PausePlayerAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

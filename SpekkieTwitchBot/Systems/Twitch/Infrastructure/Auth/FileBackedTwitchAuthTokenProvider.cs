@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using Newtonsoft.Json;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
@@ -38,6 +38,9 @@ public class FileBackedTwitchAuthTokenProvider : ITwitchAuthTokenProvider
     public async Task<string> GetUserAccessTokenAsync(CancellationToken cancellationToken)
     {
         TwitchUserFile auth = await ReadTokensAsync();
+
+        if (!string.IsNullOrWhiteSpace(auth.UserToken))
+            return auth.UserToken;
 
         if (!string.IsNullOrWhiteSpace(auth.UserRefreshToken))
         {

@@ -89,10 +89,16 @@ public class ChannelPointsFeature
         bool isUserInputRequired = true;
         if (parts.Length > 3)
             isUserInputRequired = parts[^1] != "0";
-        string url = $"{TwitchConstants.TwitchChannelRewardsUrl}30731359";
-        string rewardInfo =
-            $"{{\"title\":\"{title}\",\"cost\":{cost},\"is_user_input_required\":{isUserInputRequired.ToString().ToLower()},\"prompt\":\"{prompt[..Math.Min(prompt.Length, 200)]}\"}}";
-        StringContent content = new (rewardInfo, Encoding.UTF8, "application/json");
+        TwitchGeneralFile auth = await _Tokens.ReadIdentityAsync(CancellationToken.None);
+        string url = $"{TwitchConstants.TwitchChannelRewardsUrl}{auth.ChannelId}";
+        string rewardInfo = JsonConvert.SerializeObject(new
+        {
+            title,
+            cost,
+            is_user_input_required = isUserInputRequired,
+            prompt = prompt[..Math.Min(prompt.Length, 200)]
+        });
+        StringContent content = new(rewardInfo, Encoding.UTF8, "application/json");
 
         HttpResponseMessage response = await _Client.PostAsync(url, content).ConfigureAwait(false);
         string responseMessage = response.IsSuccessStatusCode

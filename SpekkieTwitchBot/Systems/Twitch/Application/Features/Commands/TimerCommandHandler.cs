@@ -26,12 +26,6 @@ public class TimerCommandHandler : ITimerCommandHandler
         return $"Resuming timer at: {_EventTimerService.GetRemainingTime()}";
     }
 
-    public void HandleSetTimerCommand(string time)
-    {
-        TimeSpan remainingTime = TimeSpan.Parse(time);
-        _TimerFileWriter.WriteRemainingTime(remainingTime);
-    }
-
     public string HandleAddTimeToTimerCommand(string timeToAdd)
     {
         TimeSpan initialRemainingTime = _EventTimerService.GetRemainingTime();
@@ -39,19 +33,22 @@ public class TimerCommandHandler : ITimerCommandHandler
         switch (timeToAdd)
         {
             case not null when timeToAdd.ToLower().Contains('s'):
-                int duration = Convert.ToInt32(timeToAdd.Split('s')[0]);
+                if (!int.TryParse(timeToAdd.Split('s')[0], out int duration))
+                    return "Invalid format. Usage: !addtime <number>s/m/h (e.g. 30s, 5m, 1h)";
                 TimeSpan time = initialRemainingTime + TimeSpan.FromSeconds(duration);
                 _EventTimerService.SetRemainingTime(time);
                 message = $"added {duration} seconds to timer";
                 break;
             case not null when timeToAdd.ToLower().Contains('m'):
-                duration = Convert.ToInt32(timeToAdd.Split('m')[0]);
+                if (!int.TryParse(timeToAdd.Split('m')[0], out duration))
+                    return "Invalid format. Usage: !addtime <number>s/m/h (e.g. 30s, 5m, 1h)";
                 time = initialRemainingTime + TimeSpan.FromMinutes(duration);
                 _EventTimerService.SetRemainingTime(time);
                 message = $"added {duration} minutes to the timer";
                 break;
             case not null when timeToAdd.ToLower().Contains('h'):
-                duration = Convert.ToInt32(timeToAdd.Split('h')[0]);
+                if (!int.TryParse(timeToAdd.Split('h')[0], out duration))
+                    return "Invalid format. Usage: !addtime <number>s/m/h (e.g. 30s, 5m, 1h)";
                 time = initialRemainingTime + TimeSpan.FromHours(duration);
                 _EventTimerService.SetRemainingTime(time);
                 message = $"added {duration} hours to the timer";
@@ -64,10 +61,14 @@ public class TimerCommandHandler : ITimerCommandHandler
     public string HandleSetTimeOnTimerCommand(string time)
     {
         string[] parts = time.Split(":");
-        TimeSpan newTime =
-            new (Convert.ToInt32(parts[0]), Convert.ToInt32(parts[1]), Convert.ToInt32(parts[2]));
-        _EventTimerService.SetRemainingTime(newTime); 
-        return $"Set timer to {parts[0].PadLeft(2, '0')}:{parts[1].PadLeft(2, '0')}:{parts[2].PadLeft(2, '0')}";
+        if (parts.Length != 3
+            || !int.TryParse(parts[0], out int hours)
+            || !int.TryParse(parts[1], out int minutes)
+            || !int.TryParse(parts[2], out int seconds))
+            return "Invalid format. Usage: !settime HH:MM:SS (e.g. 01:30:00)";
 
+        TimeSpan newTime = new(hours, minutes, seconds);
+        _EventTimerService.SetRemainingTime(newTime);
+        return $"Set timer to {hours:D2}:{minutes:D2}:{seconds:D2}";
     }
 }

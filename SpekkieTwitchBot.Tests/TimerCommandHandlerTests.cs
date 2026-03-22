@@ -94,10 +94,22 @@ public class TimerCommandHandlerTests
     }
 
     [Fact]
-    public void HandleSetTimerCommand_WritesTimeToFile()
+    public void HandleSetTimeOnTimer_InvalidFormat_ReturnsUsageMessage()
     {
-        CreateHandler().HandleSetTimerCommand("02:00:00");
+        string result = CreateHandler().HandleSetTimeOnTimerCommand("not-a-time");
 
-        _TimerFileWriter.Verify(w => w.WriteRemainingTime(new TimeSpan(2, 0, 0)));
+        _TimerService.Verify(t => t.SetRemainingTime(It.IsAny<TimeSpan>()), Times.Never);
+        Assert.Contains("Usage", result);
+    }
+
+    [Fact]
+    public void HandleAddTimeToTimer_InvalidNumber_ReturnsUsageMessage()
+    {
+        _TimerService.Setup(t => t.GetRemainingTime()).Returns(TimeSpan.FromMinutes(10));
+
+        string result = CreateHandler().HandleAddTimeToTimerCommand("abcs");
+
+        _TimerService.Verify(t => t.SetRemainingTime(It.IsAny<TimeSpan>()), Times.Never);
+        Assert.Contains("Usage", result);
     }
 }

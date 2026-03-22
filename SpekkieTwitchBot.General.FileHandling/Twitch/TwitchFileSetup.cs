@@ -20,6 +20,7 @@ public class TwitchFileSetup
         SetupFile("subgoal.html", clearOnBoot: false);
         SetupGoalsConfig();
         SetupStreamStatsConfig();
+        SetupTimedMessagesConfig();
     }
 
     private void SetupGoalsConfig()
@@ -62,6 +63,31 @@ public class TwitchFileSetup
                 {
                   "apiUrl": "https://your-app.vercel.app",
                   "apiKey": "your-api-key-from-the-dashboard"
+                }
+                """);
+        }
+    }
+
+    private void SetupTimedMessagesConfig()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}";
+        string file = $"{dir}TimedMessages.json";
+
+        if (!_FileSetup.DirExists(dir))
+            _FileSetup.CreateDir(dir);
+
+        if (!_FileSetup.FileExists(file))
+        {
+            using FileStream fs = new(file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+            using StreamWriter sw = new(fs);
+            sw.Write("""
+                {
+                  "TimedMessages": [
+                    {
+                      "Message": "Example timed message — edit TimedMessages.json to configure",
+                      "IntervalMinutes": 30
+                    }
+                  ]
                 }
                 """);
         }

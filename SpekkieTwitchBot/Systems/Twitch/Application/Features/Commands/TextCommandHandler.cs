@@ -6,16 +6,18 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class TextCommandHandler : ITextCommandHandler
 {
+    private readonly string _FilePath;
     private List<TextCommand> _Commands;
 
-    public TextCommandHandler()
+    public TextCommandHandler(string? filePath = null)
     {
+        _FilePath = filePath ?? $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SpekkieTwitchBot/Settings/TextCommands.json";
         _Commands = LoadTextCommands();
     }
 
-    private static List<TextCommand> LoadTextCommands()
+    private List<TextCommand> LoadTextCommands()
     {
-        string commandLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SpekkieTwitchBot/Settings/TextCommands.json";
+        string commandLocation = _FilePath;
         using FileStream rfs = new(commandLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using StreamReader sr = new(rfs);
         string json = sr.ReadToEnd();
@@ -40,7 +42,7 @@ public class TextCommandHandler : ITextCommandHandler
     {
         TextCommand comm;
         string reply = "";
-        switch (action)
+        switch (action.ToLowerInvariant())
         {
             case "add":
                 comm = new TextCommand
@@ -52,6 +54,7 @@ public class TextCommandHandler : ITextCommandHandler
                 _Commands.Add(comm);
                 break;
             case "update":
+            case "edit":
                 comm = _Commands.FirstOrDefault(c => c.Command == command) ?? new TextCommand();
                 _Commands.Remove(comm);
                 comm.Response = response;
@@ -59,6 +62,7 @@ public class TextCommandHandler : ITextCommandHandler
                 reply = $"Command {command} is updated.";
                 break;
             case "delete":
+            case "remove":
                 comm = _Commands.FirstOrDefault(c => c.Command == command) ?? new TextCommand();
                 _Commands.Remove(comm);
                 reply = $"Command {command} is deleted.";
@@ -70,10 +74,11 @@ public class TextCommandHandler : ITextCommandHandler
             Commands = _Commands
         };
         string json = JsonConvert.SerializeObject(commands);
-        string commandLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SpekkieTwitchBot/Settings/TextCommands.json";
-        using FileStream wfs = new(commandLocation, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-        using StreamWriter sw = new(wfs);
-        sw.Write(json);
+        using (FileStream wfs = new(_FilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+        using (StreamWriter sw = new(wfs))
+        {
+            sw.Write(json);
+        }
         _Commands = LoadTextCommands();
         return reply;
     }

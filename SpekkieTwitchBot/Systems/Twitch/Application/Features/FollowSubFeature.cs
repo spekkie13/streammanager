@@ -3,6 +3,7 @@ using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.StreamStats;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
+using SpotifyAuthService;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
@@ -13,9 +14,11 @@ public class FollowSubFeature : IDisposable
     private readonly ITwitchFileReader _FileReader;
     private readonly ITwitchChannelInfoClient _Api;
     private readonly StreamStatsClient _StreamStats;
+    private readonly ISpotifyService _Spotify;
 
     private FileSystemWatcher? _GoalsWatcher;
     private CancellationTokenSource? _WatcherDebounce;
+    private CancellationTokenSource? _MusicResumeDebounce;
     private CancellationToken _StopToken;
     private int _CurrentSubCount;
 
@@ -24,13 +27,15 @@ public class FollowSubFeature : IDisposable
         ITwitchChannelInfoClient api,
         ITwitchFileWriter files,
         ITwitchFileReader fileReader,
-        StreamStatsClient streamStats
+        StreamStatsClient streamStats,
+        ISpotifyService spotify
     ) {
         _Chat = chat;
         _Api = api;
         _Files = files;
         _FileReader = fileReader;
         _StreamStats = streamStats;
+        _Spotify = spotify;
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -70,16 +75,16 @@ public class FollowSubFeature : IDisposable
 
     private void OnGoalsConfigChanged(object sender, FileSystemEventArgs e)
     {
-        _WatcherDebounce?.Cancel();
-        _WatcherDebounce?.Dispose();
-        _WatcherDebounce = CancellationTokenSource.CreateLinkedTokenSource(_StopToken);
-        var cts = _WatcherDebounce;
+        CancellationTokenSource newCts = CancellationTokenSource.CreateLinkedTokenSource(_StopToken);
+        CancellationTokenSource? oldCts = Interlocked.Exchange(ref _WatcherDebounce, newCts);
+        oldCts?.Cancel();
+        oldCts?.Dispose();
 
         _ = Task.Run(async () =>
         {
             try
             {
-                await Task.Delay(500, cts.Token);
+                await Task.Delay(500, newCts.Token);
                 StreamGoalsConfig? config = await _FileReader.ReadGoalsConfigAsync();
                 if (config == null) return;
                 _Files.WriteSubGoalHtml(config);
@@ -87,15 +92,41 @@ public class FollowSubFeature : IDisposable
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error reloading goals config: {ex.Message}");
+                Console.WriteLine($"Error reloading goals config: {ex}");
             }
-        }, cts.Token);
+        }, newCts.Token);
+    }
+
+    private void DebounceMusicResume()
+    {
+        CancellationTokenSource newCts = CancellationTokenSource.CreateLinkedTokenSource(_StopToken);
+        CancellationTokenSource? oldCts = Interlocked.Exchange(ref _MusicResumeDebounce, newCts);
+        oldCts?.Cancel();
+        oldCts?.Dispose();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _Spotify.PausePlayerAsync(newCts.Token);
+                await Task.Delay(TimeSpan.FromSeconds(25), newCts.Token);
+                await _Spotify.ResumePlayerAsync(newCts.Token);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in music pause/resume flow: {ex}");
+            }
+        }, newCts.Token);
     }
 
     public void Dispose()
     {
         _GoalsWatcher?.Dispose();
+        _WatcherDebounce?.Cancel();
         _WatcherDebounce?.Dispose();
+        _MusicResumeDebounce?.Cancel();
+        _MusicResumeDebounce?.Dispose();
     }
 
     public async Task HandleFollowAsync(FollowHappened e, CancellationToken cancellationToken = default)
@@ -113,6 +144,8 @@ public class FollowSubFeature : IDisposable
     public async Task HandleSubAsync(SubHappened e, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(e.RecipientUserName)) return;
+
+        DebounceMusicResume();
 
         string latestSubscriber = FormatLatestSub(e);
         await _Files.WriteMostRecentSubscriberAsync(latestSubscriber, cancellationToken);

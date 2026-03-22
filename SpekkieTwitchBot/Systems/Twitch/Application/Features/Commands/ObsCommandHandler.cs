@@ -21,11 +21,6 @@ public class ObsCommandHandler : IObsCommandHandler
         return $"Changing scene to {sceneName}";
     }
 
-    public string HandleSetInputVolume(string inputName, string volume)
-    {
-        return "";
-    }
-
     public string HandleSetInputMute(string inputName)
     {
         inputName = string.Concat(inputName[0].ToString().ToUpper(), inputName.AsSpan(1));

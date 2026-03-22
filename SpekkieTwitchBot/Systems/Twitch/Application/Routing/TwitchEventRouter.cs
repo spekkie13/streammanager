@@ -1,4 +1,4 @@
-﻿using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
@@ -11,9 +11,14 @@ public sealed class TwitchEventRouter(
     ChatCommandFeature chatCommands,
     ChatMessageFeature chatMessages,
     FollowSubFeature followSub,
-    ChannelPointsFeature channelPoints)
+    ChannelPointsFeature channelPoints,
+    TimedMessagesFeature timedMessages)
 {
-    public Task InitializeAsync(CancellationToken ct) => followSub.InitializeAsync(ct);
+    public async Task InitializeAsync(CancellationToken ct)
+    {
+        await followSub.InitializeAsync(ct);
+        await timedMessages.InitializeAsync(ct);
+    }
 
     public void Wire()
     {
