@@ -7,5 +7,5 @@ export default async function EventsPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect("/")
 
-  return <EventsClient />
+  return <EventsClient displayName={session.displayName} />
 }

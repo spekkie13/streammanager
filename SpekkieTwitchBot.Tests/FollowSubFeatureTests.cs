@@ -2,7 +2,6 @@ using Moq;
 using SpekkieClassLibrary.Twitch;
 using SpotifyAuthService;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
-using SpekkieTwitchBot.Systems.StreamStats;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
@@ -16,10 +15,9 @@ public class FollowSubFeatureTests
     private readonly Mock<ITwitchFileWriter> _Files = new();
     private readonly Mock<ITwitchFileReader> _FileReader = new();
     private readonly Mock<ISpotifyService> _Spotify = new();
-    private readonly Mock<StreamStatsClient> _StreamStats = new(MockBehavior.Loose);
 
     private FollowSubFeature CreateFeature() =>
-        new(_Chat.Object, _Api.Object, _Files.Object, _FileReader.Object, _StreamStats.Object, _Spotify.Object);
+        new(_Chat.Object, _Api.Object, _Files.Object, _FileReader.Object, _Spotify.Object);
 
     private static SubHappened Sub(SubKind kind, string recipient = "viewer1", string? gifter = null,
         string tier = "1000", int? months = null) =>
