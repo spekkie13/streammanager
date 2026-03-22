@@ -19,11 +19,13 @@ class SubEventsRepository {
   async findSince(broadcasterId: string, since: Date): Promise<SubEvent[]> {
     return db.select().from(subEvents)
       .where(and(eq(subEvents.broadcasterId, broadcasterId), gt(subEvents.occurredAt, since)))
+      .orderBy(desc(subEvents.occurredAt))
   }
 
   async findInRange(broadcasterId: string, from: Date, to: Date): Promise<SubEvent[]> {
     return db.select().from(subEvents)
       .where(and(eq(subEvents.broadcasterId, broadcasterId), gte(subEvents.occurredAt, from), lte(subEvents.occurredAt, to)))
+      .orderBy(desc(subEvents.occurredAt))
   }
 
   async countByBroadcasterId(broadcasterId: string): Promise<number> {
