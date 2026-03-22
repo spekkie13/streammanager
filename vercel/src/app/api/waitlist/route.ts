@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { waitlistRepository } from "@/repositories/waitlist.repository"
+import { waitlistRepository } from "@/repositories"
 
 export async function POST(req: NextRequest) {
   const { email, twitchLogin } = await req.json()

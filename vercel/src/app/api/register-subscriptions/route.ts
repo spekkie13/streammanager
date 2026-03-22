@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { twitchEventSubService } from "@/services/twitch-eventsub.service"
-import { eventSubSubscriptionsRepository } from "@/repositories/eventsub-subscriptions.repository"
+import { twitchEventSubService } from "@/services"
+import { eventSubSubscriptionsRepository } from "@/repositories"
 
 export async function POST() {
   const session = await getServerSession(authOptions)

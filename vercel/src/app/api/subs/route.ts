@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { userRepository } from "@/repositories/user.repository"
-import { subEventsRepository } from "@/repositories/sub-events.repository"
+import { userRepository, subEventsRepository } from "@/repositories"
 
 export async function GET(req: NextRequest) {
   const apiKey = req.headers.get("x-api-key") ?? req.nextUrl.searchParams.get("key") ?? ""
@@ -10,6 +9,7 @@ export async function GET(req: NextRequest) {
 
   const user = await userRepository.findByApiKey(apiKey)
   if (!user) return NextResponse.json({ error: "Invalid API key" }, { status: 401 })
+  if (!user.twitchId) return NextResponse.json({ events: [] })
 
   const events = await subEventsRepository.findByBroadcasterId(user.twitchId, since ? new Date(since) : undefined)
   return NextResponse.json({ events })

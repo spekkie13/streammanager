@@ -1,6 +1,6 @@
 import { NextAuthOptions } from "next-auth"
 import TwitchProvider from "next-auth/providers/twitch"
-import { userRepository } from "@/repositories/user.repository"
+import { userRepository } from "@/repositories"
 
 export const authOptions: NextAuthOptions = {
   providers: [

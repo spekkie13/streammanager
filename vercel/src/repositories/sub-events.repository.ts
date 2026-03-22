@@ -1,4 +1,4 @@
-import { and, eq, desc, gt } from "drizzle-orm"
+import { and, eq, desc, gt, sql } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { subEvents } from "@/lib/schema"
 import type { SubEvent, InsertSubEvent } from "@/types/entities"
@@ -17,8 +17,10 @@ class SubEventsRepository {
   }
 
   async countByBroadcasterId(broadcasterId: string): Promise<number> {
-    const rows = await db.select().from(subEvents).where(eq(subEvents.broadcasterId, broadcasterId))
-    return rows.length
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(subEvents)
+      .where(eq(subEvents.broadcasterId, broadcasterId))
+    return Number(result[0].count)
   }
 }
 

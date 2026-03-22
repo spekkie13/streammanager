@@ -2,9 +2,9 @@ import { pgTable, text, timestamp, integer, uuid, boolean } from "drizzle-orm/pg
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
-  twitchId: text("twitch_id").unique().notNull(),
-  twitchLogin: text("twitch_login").notNull(),
-  twitchDisplayName: text("twitch_display_name").notNull(),
+  twitchId: text("twitch_id").unique(),         // nullable: YouTube-only users have no Twitch account
+  twitchLogin: text("twitch_login"),
+  twitchDisplayName: text("twitch_display_name"),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   apiKey: text("api_key").unique().notNull(),
