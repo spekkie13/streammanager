@@ -1,8 +1,8 @@
 "use client"
 import { useState, useEffect, useCallback } from "react"
-import Link from "next/link"
 import type { LiveEventType } from "@/types/events"
 import type { EventSortBy, SortOrder, PaginatedEvents } from "@/types/event-filter"
+import { AppHeader } from "@/components/app-header"
 
 const EVENT_TYPES: { value: LiveEventType; label: string; color: string }[] = [
   { value: "sub",    label: "Subs",      color: "bg-purple-500/20 text-purple-300 border-purple-500/40" },
@@ -39,7 +39,7 @@ function formatDate(iso: string) {
   })
 }
 
-export function EventsClient() {
+export function EventsClient({ displayName }: { displayName: string }) {
   const [activeTypes, setActiveTypes] = useState<Set<LiveEventType>>(new Set())
   const [from, setFrom] = useState("")
   const [to, setTo] = useState("")
@@ -89,17 +89,7 @@ export function EventsClient() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
-      {/* Header */}
-      <header className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
-            ← Dashboard
-          </Link>
-          <span className="text-zinc-700">/</span>
-          <span className="text-xl font-bold">Creator<span className="text-purple-500">Deck</span></span>
-        </div>
-        <span className="text-zinc-500 text-sm font-medium">Event History</span>
-      </header>
+      <AppHeader displayName={displayName} />
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
 

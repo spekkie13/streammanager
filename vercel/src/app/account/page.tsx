@@ -1,0 +1,52 @@
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { redirect } from "next/navigation"
+import { AppHeader } from "@/components/app-header"
+
+export default async function AccountPage() {
+  const session = await getServerSession(authOptions)
+  if (!session) redirect("/")
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <AppHeader displayName={session.displayName} />
+      <main className="max-w-3xl mx-auto px-6 py-10 space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Account</h1>
+          <p className="text-zinc-500 text-sm mt-1">Your account information and credentials.</p>
+        </div>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl divide-y divide-zinc-800">
+          <div className="px-6 py-4 flex items-center justify-between">
+            <span className="text-sm text-zinc-400">Display name</span>
+            <span className="text-sm text-white">{session.displayName}</span>
+          </div>
+          <div className="px-6 py-4 flex items-center justify-between">
+            <span className="text-sm text-zinc-400">Twitch ID</span>
+            <span className="text-sm text-zinc-300 font-mono">{session.twitchId}</span>
+          </div>
+          <div className="px-6 py-4 flex items-start justify-between gap-6">
+            <div>
+              <span className="text-sm text-zinc-400">API Key</span>
+              <p className="text-xs text-zinc-600 mt-0.5">Used by the desktop app to authenticate with CreatorDeck.</p>
+            </div>
+            <span className="text-xs text-zinc-300 font-mono bg-zinc-800 px-3 py-1.5 rounded-lg break-all text-right max-w-xs">
+              {session.apiKey}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-3">
+          <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Danger Zone</h2>
+          <p className="text-sm text-zinc-500">Deleting your account will permanently remove all your data.</p>
+          <button
+            disabled
+            className="text-sm text-red-400 border border-red-900/50 px-4 py-2 rounded-lg opacity-40 cursor-not-allowed"
+          >
+            Delete account
+          </button>
+        </div>
+      </main>
+    </div>
+  )
+}

@@ -1,8 +1,8 @@
 "use client"
 import { useState } from "react"
 import Link from "next/link"
-import { signOut } from "next-auth/react"
 import type { Session } from "next-auth"
+import { AppHeader } from "@/components/app-header"
 import { useStreamEvents } from "@/hooks/use-stream-events"
 import type { LiveEvent, LiveEventType } from "@/types/events"
 
@@ -72,16 +72,7 @@ export function DashboardClient({ session, goal, total, webhookUrl, initialEvent
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
-      {/* Header */}
-      <header className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
-        <span className="text-xl font-bold">Creator<span className="text-purple-500">Deck</span></span>
-        <div className="flex items-center gap-4">
-          <span className="text-zinc-400 text-sm">{session.displayName}</span>
-          <button onClick={() => signOut({ callbackUrl: "/" })} className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-            Sign out
-          </button>
-        </div>
-      </header>
+      <AppHeader displayName={session.displayName} />
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
 
