@@ -1,15 +1,25 @@
-import { pgTable, text, timestamp, integer, uuid, boolean } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp, integer, uuid, boolean, bigint, unique } from "drizzle-orm/pg-core"
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
-  twitchId: text("twitch_id").unique(),         // nullable: YouTube-only users have no Twitch account
-  twitchLogin: text("twitch_login"),
-  twitchDisplayName: text("twitch_display_name"),
-  accessToken: text("access_token"),
-  refreshToken: text("refresh_token"),
   apiKey: text("api_key").unique().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
+
+// One row per (provider, providerAccountId) — a user can have multiple linked accounts
+export const linkedAccounts = pgTable("linked_accounts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),                // "twitch" | "youtube"
+  providerAccountId: text("provider_account_id").notNull(),
+  login: text("login"),
+  displayName: text("display_name"),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => ({
+  providerAccountUnique: unique().on(t.provider, t.providerAccountId),
+}))
 
 export const subEvents = pgTable("sub_events", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -95,5 +105,40 @@ export const waitlist = pgTable("waitlist", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").unique().notNull(),
   twitchLogin: text("twitch_login"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const ytSuperChatEvents = pgTable("yt_superchat_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  channelId: text("channel_id").notNull(),
+  eventId: text("event_id").unique().notNull(),
+  userId: text("user_id"),
+  userDisplayName: text("user_display_name"),
+  amountMicros: bigint("amount_micros", { mode: "number" }).notNull(),
+  currency: text("currency").notNull(),
+  message: text("message"),
+  occurredAt: timestamp("occurred_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const ytMemberEvents = pgTable("yt_member_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  channelId: text("channel_id").notNull(),
+  eventId: text("event_id").unique().notNull(),
+  userId: text("user_id"),
+  userDisplayName: text("user_display_name"),
+  memberMonths: integer("member_months").notNull(),
+  levelName: text("level_name"),
+  occurredAt: timestamp("occurred_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const ytStreamSessions = pgTable("yt_stream_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  channelId: text("channel_id").notNull(),
+  broadcastId: text("broadcast_id").notNull(),
+  title: text("title"),
+  startedAt: timestamp("started_at").notNull(),
+  endedAt: timestamp("ended_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })

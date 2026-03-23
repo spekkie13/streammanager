@@ -17,23 +17,33 @@ type Props = {
 }
 
 const TYPE_BADGE: Record<LiveEventType, string> = {
-  sub:    "bg-purple-500/20 text-purple-400 border border-purple-500/40",
-  follow: "bg-blue-500/20 text-blue-400 border border-blue-500/40",
-  bits:   "bg-yellow-500/20 text-yellow-500 border border-yellow-500/40",
-  raid:   "bg-green-500/20 text-green-500 border border-green-500/40",
+  sub:       "bg-purple-500/20 text-purple-400 border border-purple-500/40",
+  follow:    "bg-blue-500/20 text-blue-400 border border-blue-500/40",
+  bits:      "bg-yellow-500/20 text-yellow-500 border border-yellow-500/40",
+  raid:      "bg-green-500/20 text-green-500 border border-green-500/40",
+  superchat: "bg-red-500/20 text-red-400 border border-red-500/40",
+  member:    "bg-orange-500/20 text-orange-400 border border-orange-500/40",
 }
 
 const TYPE_ICON: Record<LiveEventType, string> = {
-  sub:    "★",
-  follow: "♥",
-  bits:   "◆",
-  raid:   "▶",
+  sub:       "★",
+  follow:    "♥",
+  bits:      "◆",
+  raid:      "▶",
+  superchat: "💬",
+  member:    "🎖",
 }
 
-function formatAmount(type: LiveEventType, amount: number | null): string | null {
+function formatAmount(type: LiveEventType, amount: number | null, currency?: string | null): string | null {
   if (amount === null) return null
   if (type === "bits") return `${amount.toLocaleString()} bits`
   if (type === "raid") return `${amount.toLocaleString()} viewers`
+  if (type === "member") return `${amount} mo.`
+  if (type === "superchat") {
+    return currency
+      ? new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount)
+      : `${amount}`
+  }
   return null
 }
 
@@ -279,7 +289,7 @@ export function DashboardClient({ session, goal, initialCount, endsAt, total, in
                   <span className="flex-1 text-sm truncate">{event.fromUser}</span>
                   {event.amount !== null && (
                     <span className="text-sm text-zinc-500 dark:text-zinc-400 shrink-0">
-                      {formatAmount(event.type, event.amount)}
+                      {formatAmount(event.type, event.amount, event.currency)}
                     </span>
                   )}
                   <span className="text-xs text-zinc-400 dark:text-zinc-600 shrink-0">

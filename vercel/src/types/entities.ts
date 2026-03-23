@@ -1,5 +1,6 @@
 import type {
   users,
+  linkedAccounts,
   subEvents,
   followEvents,
   cheerEvents,
@@ -8,10 +9,16 @@ import type {
   subGoals,
   waitlist,
   eventsubSubscriptions,
+  ytSuperChatEvents,
+  ytMemberEvents,
+  ytStreamSessions,
 } from "@/lib/schema"
 
 export type User = typeof users.$inferSelect
 export type InsertUser = typeof users.$inferInsert
+
+export type LinkedAccount = typeof linkedAccounts.$inferSelect
+export type InsertLinkedAccount = typeof linkedAccounts.$inferInsert
 
 export type SubEvent = typeof subEvents.$inferSelect
 export type InsertSubEvent = typeof subEvents.$inferInsert
@@ -36,3 +43,12 @@ export type InsertWaitlistEntry = typeof waitlist.$inferInsert
 
 export type EventSubSubscription = typeof eventsubSubscriptions.$inferSelect
 export type InsertEventSubSubscription = typeof eventsubSubscriptions.$inferInsert
+
+export type YtSuperChatEvent = typeof ytSuperChatEvents.$inferSelect
+export type InsertYtSuperChatEvent = typeof ytSuperChatEvents.$inferInsert
+
+export type YtMemberEvent = typeof ytMemberEvents.$inferSelect
+export type InsertYtMemberEvent = typeof ytMemberEvents.$inferInsert
+
+export type YtStreamSession = typeof ytStreamSessions.$inferSelect
+export type InsertYtStreamSession = typeof ytStreamSessions.$inferInsert

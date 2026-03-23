@@ -2,16 +2,22 @@ import "next-auth"
 
 declare module "next-auth" {
   interface Session {
-    twitchId: string
+    userId: string
+    twitchId: string | null
+    youtubeChannelId: string | null
     displayName: string
     apiKey: string
+    linkingError?: "account_conflict" | "no_youtube_channel"
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    twitchId: string
+    userId: string
+    twitchId: string | null
+    youtubeChannelId: string | null
     displayName: string
     apiKey: string
+    linkingError?: "account_conflict" | "no_youtube_channel"
   }
 }

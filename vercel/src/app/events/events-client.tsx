@@ -5,30 +5,42 @@ import type { EventSortBy, SortOrder, PaginatedEvents } from "@/types/event-filt
 import { AppHeader } from "@/components/app-header"
 
 const EVENT_TYPES: { value: LiveEventType; label: string; activeClass: string }[] = [
-  { value: "sub",    label: "Subs",    activeClass: "bg-purple-500/20 text-purple-500 border-purple-500/40" },
-  { value: "follow", label: "Follows", activeClass: "bg-blue-500/20 text-blue-500 border-blue-500/40" },
-  { value: "bits",   label: "Bits",    activeClass: "bg-yellow-500/20 text-yellow-500 border-yellow-500/40" },
-  { value: "raid",   label: "Raids",   activeClass: "bg-green-500/20 text-green-500 border-green-500/40" },
+  { value: "sub",       label: "Subs",       activeClass: "bg-purple-500/20 text-purple-500 border-purple-500/40" },
+  { value: "follow",    label: "Follows",    activeClass: "bg-blue-500/20 text-blue-500 border-blue-500/40" },
+  { value: "bits",      label: "Bits",       activeClass: "bg-yellow-500/20 text-yellow-500 border-yellow-500/40" },
+  { value: "raid",      label: "Raids",      activeClass: "bg-green-500/20 text-green-500 border-green-500/40" },
+  { value: "superchat", label: "Superchats", activeClass: "bg-red-500/20 text-red-500 border-red-500/40" },
+  { value: "member",    label: "Members",    activeClass: "bg-orange-500/20 text-orange-500 border-orange-500/40" },
 ]
 
 const TYPE_BADGE: Record<LiveEventType, string> = {
-  sub:    "bg-purple-500/20 text-purple-500 border border-purple-500/40",
-  follow: "bg-blue-500/20 text-blue-500 border border-blue-500/40",
-  bits:   "bg-yellow-500/20 text-yellow-500 border border-yellow-500/40",
-  raid:   "bg-green-500/20 text-green-500 border border-green-500/40",
+  sub:       "bg-purple-500/20 text-purple-500 border border-purple-500/40",
+  follow:    "bg-blue-500/20 text-blue-500 border border-blue-500/40",
+  bits:      "bg-yellow-500/20 text-yellow-500 border border-yellow-500/40",
+  raid:      "bg-green-500/20 text-green-500 border border-green-500/40",
+  superchat: "bg-red-500/20 text-red-500 border border-red-500/40",
+  member:    "bg-orange-500/20 text-orange-500 border border-orange-500/40",
 }
 
 const TYPE_ICON: Record<LiveEventType, string> = {
-  sub:    "★",
-  follow: "♥",
-  bits:   "◆",
-  raid:   "▶",
+  sub:       "★",
+  follow:    "♥",
+  bits:      "◆",
+  raid:      "▶",
+  superchat: "💬",
+  member:    "🎖",
 }
 
-function formatAmount(type: LiveEventType, amount: number | null): string | null {
+function formatAmount(type: LiveEventType, amount: number | null, currency?: string | null): string | null {
   if (amount === null) return null
   if (type === "bits") return `${amount.toLocaleString()} bits`
   if (type === "raid") return `${amount.toLocaleString()} viewers`
+  if (type === "member") return `${amount} mo.`
+  if (type === "superchat") {
+    return currency
+      ? new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount)
+      : `${amount}`
+  }
   return null
 }
 
@@ -192,7 +204,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
                   </span>
                   {event.amount !== null && (
                     <span className="text-sm text-zinc-500 dark:text-zinc-400 shrink-0">
-                      {formatAmount(event.type, event.amount)}
+                      {formatAmount(event.type, event.amount, event.currency)}
                     </span>
                   )}
                   <span className="text-xs text-zinc-400 dark:text-zinc-600 shrink-0 w-36 text-right">
