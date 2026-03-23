@@ -32,6 +32,8 @@ export async function GET(req: Request) {
     return NextResponse.redirect(`${BASE_URL}/connections?error=invalid_state`)
   }
 
+  const { codeVerifier } = JSON.parse(linkStateCookie.value)
+
   // Exchange code for tokens
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -42,6 +44,7 @@ export async function GET(req: Request) {
       client_secret: env.googleClientSecret,
       redirect_uri: `${BASE_URL}/api/connections/link/google/callback`,
       grant_type: "authorization_code",
+      code_verifier: codeVerifier,
     }),
   })
 
