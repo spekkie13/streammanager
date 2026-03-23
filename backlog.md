@@ -6,10 +6,10 @@
 Next.js app (gedeployed op Vercel)
 ├── Twitch OAuth (NextAuth)           ✅ gereed
 ├── Google/YouTube OAuth (NextAuth)   🔴 nog te bouwen  [Epic 6]
-├── Twitch EventSub webhooks          ✅ gereed (subs only)
+├── Twitch EventSub webhooks          ✅ gereed (subs, follows, bits, raids)
 ├── YouTube Live Chat poller          🔴 nog te bouwen  [Epic 6]
 ├── Neon DB (Drizzle ORM)             ✅ gereed
-├── Web dashboard                     🔴 nog te bouwen
+├── Web dashboard                     ✅ gereed (live feed, sub goal, event history)
 └── Config & analytics API            🔴 nog te bouwen
 
 C# Desktop app (lokaal)
@@ -33,10 +33,11 @@ C# Desktop app (lokaal)
 > Doel: een product neerzetten dat mensen actief gebruiken en waarover ze feedback geven.
 
 ```
-Week 1:  Epic 1 — Events opslaan & structureren (Twitch)
-Week 2:  Epic 2 — Live dashboard (incl. OBS & Spotify widgets)
-Week 3:  Epic 6.1–6.4 — YouTube OAuth, schema, token refresh, poller
-Week 4:  Epic 6.5 — YouTube in het dashboard
+✅ Done:  Epic 1 — Events opslaan & structureren (Twitch)
+✅ Done:  Epic 2.1/2.2 — Live dashboard & SSE events feed
+Next:    Epic 2.3 — OBS & Spotify widgets in het dashboard
+         Epic 6.1–6.4 — YouTube OAuth, schema, token refresh, poller
+         Epic 6.5 — YouTube in het dashboard
          ↑ SHIP: verzamel feedback, valideer gebruikersgedrag
 ```
 
@@ -52,209 +53,24 @@ Week 8:  Epic 7 — Unified chat view (USP — Twitch + YouTube in één feed)
          ↑ SHIP: multi-platform streamers als doelgroep, marketingpunt
 ```
 
+### Groei & uitbreiding — na product-market fit
+```
+[UX]     Guided onboarding flow
+[UX]     Platform audience pills (follower/subscriber count + growth indicator)
+Epic 8   OBS browser source widgets (chat overlay, goal overlay)
+Epic 9   Spotify mini player (OAuth + playback controls)
+Epic 10  Web migration van C# desktop integraties (strategisch)
+Epic 11  Personal music player (toekomstig — na validatie)
+```
+
 > **Waarom deze volgorde?**
 > Epic 3 (configuratie) is complex om te bouwen én complex uit te leggen aan nieuwe gebruikers. Analytics is een veel eenvoudigere eerste betaalfunctie — de waarde is onmiddellijk duidelijk: "bekijk je groei van de afgelopen 30 dagen." Epic 3 volgt daarna als power user feature.
 
 ---
 
-## Epic 1 — Events opslaan & structureren
-
-> Fundament voor alles. Subs worden al opgeslagen via EventSub webhooks. Follows, bits en raids ontbreken nog — zowel in het schema als in de webhook handler.
-
----
-
-### [1.1] Drizzle schema uitbreiden met follow-, bits- en raid-events
-
-**Doel:** Drie nieuwe tabellen toevoegen aan `src/lib/schema.ts` zodat follow-, bits- en raid-events persistent worden opgeslagen, consistent met de bestaande `sub_events` tabel.
-
-**Context:**
-- ORM is **Drizzle** (niet Prisma) — schema staat in `src/lib/schema.ts`
-- Migreren via `npx drizzle-kit push`
-- Bestaand patroon: aparte tabel per event type, met `eventId` (unique) voor deduplicatie en `broadcasterId` + `occurredAt` op elke tabel
-
-**Claude Code prompt:**
-```
-I have a Next.js app with Drizzle ORM and Neon DB. The schema is in src/lib/schema.ts.
-There is an existing sub_events table I use as a reference pattern — it has: id (uuid), broadcasterId (text), eventId (text unique), userId, userLogin, userDisplayName, occurredAt (timestamp), createdAt (timestamp).
-
-Add three new tables to schema.ts following the same pattern:
-
-followEvents ("follow_events"):
-- id (uuid, primaryKey, defaultRandom)
-- broadcasterId (text, notNull)
-- eventId (text, unique, notNull) — Twitch EventSub message ID
-- userId (text) — follower's Twitch ID
-- userLogin (text)
-- userDisplayName (text)
-- occurredAt (timestamp, notNull)
-- createdAt (timestamp, defaultNow, notNull)
-
-cheerEvents ("cheer_events"):
-- id (uuid, primaryKey, defaultRandom)
-- broadcasterId (text, notNull)
-- eventId (text, unique, notNull)
-- userId (text, nullable — can be anonymous)
-- userLogin (text, nullable)
-- userDisplayName (text, nullable)
-- bits (integer, notNull)
-- message (text, nullable)
-- isAnonymous (boolean, notNull, default false)
-- occurredAt (timestamp, notNull)
-- createdAt (timestamp, defaultNow, notNull)
-
-raidEvents ("raid_events"):
-- id (uuid, primaryKey, defaultRandom)
-- broadcasterId (text, notNull) — the receiving broadcaster
-- eventId (text, unique, notNull)
-- fromBroadcasterId (text, notNull)
-- fromBroadcasterLogin (text, notNull)
-- fromBroadcasterDisplayName (text, notNull)
-- viewerCount (integer, notNull)
-- occurredAt (timestamp, notNull)
-- createdAt (timestamp, defaultNow, notNull)
-
-Show the additions to schema.ts and the drizzle-kit push command.
-```
-
----
-
-### [1.2] Stream sessies bijhouden
-
-**Doel:** Automatisch een sessie aanmaken als de stream live gaat en afsluiten als de stream offline gaat, via EventSub `channel.stream.online` / `channel.stream.offline` events.
-
-**Context:**
-- Geen polling — detectie loopt via de bestaande EventSub webhook infrastructuur (`/api/webhook`)
-- Registratie van nieuwe event types loopt via `src/lib/twitch.ts` (`SUB_TYPES` array) en `/api/register-subscriptions`
-- `channel.stream.online` en `channel.stream.offline` gebruiken alleen `broadcaster_user_id` als condition
-
-**Claude Code prompt:**
-```
-I have a Next.js app with Drizzle ORM and Neon DB. Schema is in src/lib/schema.ts.
-Events from Twitch arrive via EventSub webhooks at /api/webhook (not polling).
-New EventSub subscription types are registered in src/lib/twitch.ts in the SUB_TYPES array.
-
-1. Add a stream_sessions table to schema.ts:
-   - id (uuid, primaryKey, defaultRandom)
-   - broadcasterId (text, notNull)
-   - startedAt (timestamp, notNull)
-   - endedAt (timestamp, nullable)
-   - createdAt (timestamp, defaultNow, notNull)
-
-2. In src/lib/twitch.ts, add to SUB_TYPES:
-   - { type: "channel.stream.online", version: "1" }
-   - { type: "channel.stream.offline", version: "1" }
-
-3. In /api/webhook/route.ts, handle the two new subscription types:
-   - channel.stream.online → insert a new stream_sessions row (only if no open session exists for this broadcasterId)
-   - channel.stream.offline → set endedAt on the open session for this broadcasterId
-
-Show the schema addition, the twitch.ts change, and the webhook handler additions.
-Run: npx drizzle-kit push
-```
-
----
-
-### [1.3] Webhook handler uitbreiden voor follows, bits en raids
-
-**Doel:** De drie nieuwe event types registreren bij Twitch EventSub en de webhook handler uitbreiden om ze te persisteren in de nieuwe tabellen.
-
-**Context:**
-- Registratie: voeg types toe aan `SUB_TYPES` in `src/lib/twitch.ts`
-- `channel.follow` (version **2**) vereist zowel `broadcaster_user_id` als `moderator_user_id` in de condition — gebruik de `broadcasterId` voor beide
-- `channel.cheer` en `channel.raid` gebruiken alleen `broadcaster_user_id`
-- Webhook handler staat in `/api/webhook/route.ts` — volg het bestaande patroon: insert met `onConflictDoNothing()` op `eventId`
-- De tabellen `follow_events`, `cheer_events`, `raid_events` zijn aangemaakt in [1.1]
-
-**Claude Code prompt:**
-```
-I have a Next.js app with Drizzle ORM, Neon DB, and a Twitch EventSub webhook setup.
-
-Current state:
-- src/lib/twitch.ts has a SUB_TYPES array and registerEventSubSubscriptions() function
-- /api/webhook/route.ts handles channel.subscribe, channel.subscription.message, channel.subscription.gift
-- New tables follow_events, cheer_events, raid_events exist in schema.ts (from a previous step)
-
-Do two things:
-
-1. In src/lib/twitch.ts, add to SUB_TYPES:
-   - { type: "channel.follow", version: "2" }
-     Note: channel.follow v2 requires condition { broadcaster_user_id, moderator_user_id } — pass broadcasterId for both
-   - { type: "channel.cheer", version: "1" }
-   - { type: "channel.raid", version: "1" }
-     Note: channel.raid uses condition { to_broadcaster_user_id } instead of broadcaster_user_id
-
-   The registerEventSubSubscriptions function builds the condition as { broadcaster_user_id: broadcasterId } for all types.
-   Update it to handle these exceptions: channel.follow needs { broadcaster_user_id, moderator_user_id }, channel.raid needs { to_broadcaster_user_id }.
-
-2. In /api/webhook/route.ts, add handlers for:
-   - channel.follow → insert into followEvents (eventId = messageId, userId, userLogin, userDisplayName, occurredAt)
-   - channel.cheer → insert into cheerEvents (eventId, userId/userLogin/userDisplayName nullable if anonymous, bits, message, isAnonymous, occurredAt)
-   - channel.raid → insert into raidEvents (eventId, fromBroadcasterId, fromBroadcasterLogin, fromBroadcasterDisplayName, viewerCount, occurredAt)
-
-All inserts use .onConflictDoNothing() on eventId for deduplication.
-Show the full updated twitch.ts and the additions to webhook/route.ts.
-```
-
----
-
 ## Epic 2 — Live dashboard
 
-> Het demo-moment van de tool. Één pagina die alles laat zien wat er tijdens een stream gebeurt.
-
----
-
-### [2.1] Realtime events naar de frontend
-
-**Doel:** Nieuwe Twitch events direct naar de dashboardpagina streamen zonder dat de gebruiker hoeft te refreshen.
-
-**Context:**
-- Events zitten verspreid over meerdere tabellen: `sub_events`, `follow_events`, `cheer_events`, `raid_events`
-- Authenticatie loopt via NextAuth (`getServerSession`)
-- Drizzle ORM voor queries
-
-**Claude Code prompt:**
-```
-I have a Next.js app with Drizzle ORM and Neon DB. Users authenticate via NextAuth (Twitch OAuth).
-Twitch events are stored in four tables: sub_events, follow_events, cheer_events, raid_events.
-All tables have a broadcasterId (text) and occurredAt (timestamp) column.
-
-Set up a Server-Sent Events (SSE) API route at /api/events/stream that:
-1. Authenticates the user via getServerSession — uses session.twitchId as broadcasterId
-2. Every 3 seconds, queries all four event tables for rows newer than the last sent timestamp
-3. Normalises each event into a shared shape: { id, type, fromUser, amount, occurredAt }
-   - sub_events: type = "sub", fromUser = userDisplayName, amount = giftCount
-   - follow_events: type = "follow", fromUser = userDisplayName, amount = null
-   - cheer_events: type = "bits", fromUser = userDisplayName (or "anonymous"), amount = bits
-   - raid_events: type = "raid", fromUser = fromBroadcasterDisplayName, amount = viewerCount
-4. Streams new events to the client as SSE messages in JSON format
-
-Also show a React hook (useStreamEvents) that connects to this SSE route and returns a live array of events.
-```
-
----
-
-### [2.2] Dashboard pagina
-
-**Doel:** Een overzichtspagina die live support events toont, plus basisstatistieken van de huidige sessie.
-
-**Context:**
-- `session.accessToken` bestaat **niet** — de Twitch access token zit alleen in de `users` tabel. Haal hem op via `db.select().from(users).where(eq(users.twitchId, session.twitchId))`
-
-**Claude Code prompt:**
-```
-I have a Next.js app with:
-- A useStreamEvents hook that returns a live array of Twitch events via SSE
-- Drizzle ORM with Neon DB: tables sub_events, follow_events, cheer_events, raid_events, stream_sessions, users
-- Twitch OAuth via NextAuth. Session contains session.twitchId — the Twitch access token is NOT in the session,
-  it must be fetched from the users table: db.select({ accessToken: users.accessToken }).from(users).where(eq(users.twitchId, session.twitchId))
-
-Build a /dashboard page that shows:
-1. A live feed of the last 20 support events (follow, sub, bits, raid) with type icon, fromUser and timestamp
-2. Total followers and subscribers (fetched server-side from Twitch API using the accessToken from the users table)
-3. Current session duration (startedAt from the open stream_sessions row for this broadcaster)
-
-Use Tailwind CSS for styling. Keep it clean and dark-themed.
-```
+> Items 2.1 (SSE events feed) and 2.2 (dashboard page) are complete. One item remains.
 
 ---
 
@@ -757,17 +573,6 @@ Show the updated API route and page.
 
 ---
 
-### [UI] Add platform logos to the Connections tab
-
-**Doel:** Show the official logo of each platform next to its connection entry on the Connections page for a more polished, recognisable UI.
-
-**Platforms:**
-- Twitch logo
-- Spotify logo
-- YouTube logo
-
----
-
 ### [GOALS] Multi-platform event goals
 
 **Doel:** Expand the current Twitch sub goal into a flexible goals system that supports one active goal per event type across all connected platforms — not just Twitch subs.
@@ -885,6 +690,211 @@ chat_messages
 **Doel:** TikTok live chat toevoegen aan de unified feed.
 
 **Status:** TikTok heeft geen officiële live chat API voor derde partijen. Dit item blijft geparkeerd totdat TikTok een API openstelt of een betrouwbare officiële integratiemethode beschikbaar komt. Geen third-party scrapers — te fragiel en ToS-risico.
+
+---
+
+---
+
+## [UX] Guided onboarding flow
+
+> **Priority: high** — affects every new user. Bad onboarding kills otherwise great tools. A setup wizard that walks the user through connecting Twitch, registering EventSub, and understanding the dashboard reduces abandonment and removes the current reliance on the user finding the Connections page themselves.
+
+**Current problem:**
+New users land on the dashboard with no guidance. EventSub registration is buried in Connections → Twitch → expand webhook section. If they skip it, the live feed is silent and the experience feels broken.
+
+**Proposed flow (step-by-step wizard, shown once on first login):**
+1. **Welcome** — brief intro to what CreatorDeck does, what to expect
+2. **Twitch connected** ✓ — confirm their Twitch account is linked (already done via OAuth)
+3. **Register EventSub** — single button, inline status feedback, cannot skip
+4. **All set** — direct them to the dashboard with a short explanation of each section
+
+**Implementation notes:**
+- Track completion with a `onboardingCompleted` boolean on the `users` table
+- Show the wizard as a full-screen overlay or a dedicated `/setup` route on first login
+- Once completed, never show again (unless explicitly reset via account settings)
+- The existing amber "Action required" banner on the dashboard acts as a fallback for users who somehow bypass the wizard
+
+---
+
+## [UX] Platform audience pills
+
+> **Priority: medium** — quick visual signal of channel health. Gives the streamer a glanceable snapshot of their audience size and momentum without leaving the dashboard.
+
+**What it is:**
+A row of small pills in the dashboard — one per connected platform — each showing:
+- The platform icon
+- Current follower count (Twitch, YouTube) or subscriber count (YouTube channels that surface it)
+- A growth indicator: `+N` new in the last 30 days, coloured green for positive, grey for flat
+
+**Per-platform data sources:**
+- **Twitch** — follower count from `GET /helix/channels/followers` (broadcaster token, `moderator:read:followers` scope already present). Growth derived from counting `follow_events` rows in the last 30 days.
+- **YouTube** — subscriber count from YouTube Data API `channels.list` (requires Epic 6 YouTube OAuth). Growth from YouTube Analytics API or local `youtube_events` table once Epic 6 is done.
+
+**Implementation notes:**
+- Twitch pill can be built independently of Epic 6 — only needs the existing Twitch token
+- YouTube pill is gated on Epic 6 (YouTube OAuth). Show a "Connect YouTube" prompt in the pill slot until connected.
+- Follower count is fetched server-side at page load (not live-updated — a refresh is fine)
+- Growth number is computed from the local DB event tables, so no extra API call needed
+- Pills live in the welcome/status card already on the dashboard, or as a dedicated row above the event feed
+
+---
+
+## Epic 8 — OBS browser source widget
+
+> **Priority: high, effort: low** — a browser source is a URL OBS loads in a Chromium window. No new integrations needed; it surfaces data already in the system. A chat overlay powered by CreatorDeck's unified feed is a strong USP that ties directly into Epic 7.
+
+**What it is:**
+A set of `/widget/*` routes that render minimal, transparent-background UI designed to be loaded as OBS browser sources. The streamer copies the URL from CreatorDeck, pastes it into OBS as a browser source, and it just works.
+
+---
+
+### [8.1] Widget authentication
+
+**Doel:** Allow widget routes to authenticate without a browser session, since OBS browser sources don't share cookies with the user's browser.
+
+**Approach:**
+- Generate a per-user widget token (a short-lived or long-lived signed token stored in the `users` table)
+- Widget routes accept `?token=<widgetToken>` as a query param and resolve the broadcaster from it
+- Token can be regenerated from the Connections or Account page
+
+---
+
+### [8.2] Chat overlay widget (`/widget/chat`)
+
+**Doel:** A transparent, overlay-ready chat feed showing messages from all connected platforms, styled to sit over stream footage in OBS.
+
+**UX requirements:**
+- Transparent background (no card or border)
+- Messages animate in from the bottom and fade out after a configurable duration (e.g. 8 seconds)
+- Font size and colours configurable via URL params (`?fontSize=18&color=white`)
+- Platform badge per message (Twitch purple, YouTube red)
+- No scrollbar — messages flow and disappear automatically
+
+**Afhankelijkheden:** Epic 7 (unified chat feed), [8.1] widget auth
+
+---
+
+### [8.3] Goal overlay widget (`/widget/goal`)
+
+**Doel:** A progress bar overlay for the current active goal (sub count, followers, etc.), suitable for placing at the bottom or side of a stream.
+
+**UX requirements:**
+- Transparent background
+- Animated progress bar that updates live
+- Configurable: label, colours, bar orientation (horizontal/vertical) via URL params
+- Pulls from the same goal data as the dashboard
+
+**Afhankelijkheden:** [8.1] widget auth
+
+---
+
+## Epic 9 — Spotify mini player
+
+> **Priority: medium** — natural next step once the Spotify connection is live (Epic 6 area). Requires Spotify Premium on the user's account for the Web Playback SDK.
+
+**What it is:**
+An embedded Spotify player in the dashboard with full playback controls — play, pause, skip, volume — without leaving CreatorDeck.
+
+---
+
+### [9.1] Spotify OAuth connection
+
+**Doel:** Allow users to connect their Spotify account to CreatorDeck via OAuth, storing access and refresh tokens in the `users` table.
+
+**Context:**
+- Spotify uses standard OAuth 2.0 with PKCE — add as a NextAuth provider or implement the OAuth flow manually
+- Scopes needed: `user-read-playback-state`, `user-modify-playback-state`, `user-read-currently-playing`, `streaming`
+- Store `spotifyAccessToken` and `spotifyRefreshToken` in the users table; token expires after 1 hour — implement refresh logic
+
+---
+
+### [9.2] Now Playing API route
+
+**Doel:** A backend route that fetches the currently playing track from Spotify and returns it to the frontend.
+
+**Endpoint:** `GET /api/spotify/now-playing`
+- Fetches from Spotify Web API: `GET https://api.spotify.com/v1/me/player/currently-playing`
+- Returns: `{ track, artist, albumArt, progress, duration, isPlaying }` or `null` if nothing is playing
+- Handles token refresh transparently
+
+---
+
+### [9.3] Playback control API routes
+
+**Doel:** API routes that proxy playback commands to Spotify.
+
+**Endpoints:**
+- `POST /api/spotify/play` — resume playback
+- `POST /api/spotify/pause` — pause playback
+- `POST /api/spotify/skip` — skip to next track
+- `POST /api/spotify/previous` — go to previous track
+- `POST /api/spotify/volume` — set volume (body: `{ volume: 0–100 }`)
+
+All routes authenticate the user via session, fetch their Spotify token, and forward the command to the Spotify Web API.
+
+---
+
+### [9.4] Mini player UI in the dashboard
+
+**Doel:** A compact player widget in the dashboard showing the current track with playback controls.
+
+**UX requirements:**
+- Album art thumbnail, track name, artist name
+- Progress bar showing current position (updates every second client-side)
+- Play/pause, skip, previous buttons
+- Volume slider
+- "Not playing" state when Spotify is idle
+- Collapsed by default on mobile; full width on desktop
+
+---
+
+## Epic 10 — Web migration of C# desktop integrations (strategic)
+
+> **Priority: medium-long term** — removes the dependency on the local C# desktop app, making CreatorDeck fully browser-based. This is a phased migration: Spotify first (already handled in Epic 9), then Twitch (already in the web), leaving OBS as the most complex piece.
+
+**Why:**
+The C# app requires the user to run a local process, configure file paths, and keep it updated separately. Moving integrations to the web makes CreatorDeck work from any machine with no install.
+
+**Phased approach:**
+
+### [10.1] OBS integration via WebSocket proxy
+
+**Doel:** Allow the web dashboard to control OBS (switch scenes, toggle sources, start/stop recording) without the C# app acting as a middleman.
+
+**The challenge:**
+OBS WebSocket is a local WebSocket server — browsers cannot connect to it directly due to mixed-content and CORS restrictions. Two options:
+1. **Local relay agent** — a tiny standalone background process (Go or Node, single binary, no UI) that bridges OBS WebSocket to a cloud WebSocket endpoint. Much lighter than the full C# app.
+2. **OBS Remote via cloud** — use a service like OBS.Ninja or a self-hosted relay. More infrastructure complexity.
+
+**Recommendation:** Local relay agent approach — minimal install, single binary, auto-starts with the OS. Eliminates the full C# app while keeping the OBS connection local where it must be.
+
+### [10.2] Retire C# desktop app
+
+**Doel:** Once OBS is handled by the relay agent and Spotify/Twitch run through the web, deprecate and archive the C# desktop app.
+
+**Afhankelijkheden:** Epic 9 (Spotify), [10.1] (OBS relay)
+
+---
+
+## Epic 11 — Personal music player (future exploration)
+
+> **Priority: low / future** — a genuinely unique feature but a significant infrastructure investment. Park until the core platform has traction and there is clear user demand.
+
+**The idea:**
+A built-in music player for the creator's own copyright-free music library, playable directly from CreatorDeck during streams. Includes analysis and smart grouping of tracks by mood, energy, or BPM so the streamer can pick the right vibe without manually curating playlists.
+
+**Infrastructure requirements:**
+- File storage for audio files (S3 or Cloudflare R2 — R2 has no egress fees, better for streaming)
+- Audio streaming endpoint (range requests for seeking)
+- Metadata extraction on upload: ID3 tags (title, artist, BPM, duration) + optional AI-based mood/energy classification
+- Playlist management: create, reorder, shuffle
+
+**Smart grouping options:**
+- Rule-based: group by BPM range (chill < 90 BPM, energetic > 130 BPM), by genre tag
+- AI-based: embed tracks using an audio ML model (e.g. Essentia) and cluster by similarity — requires a compute step on upload, not trivial
+- Start with rule-based; AI grouping is a v2 enhancement
+
+**Afhankelijkheden:** None from other epics, but should only be built after the core platform (Epics 1–7) is solid and user-validated.
 
 ---
 

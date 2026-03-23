@@ -11,6 +11,9 @@ const twitchHeaders = (accessToken: string) => ({
 })
 
 async function backfillFollowers(broadcasterId: string, accessToken: string): Promise<number> {
+  // Skip users already captured by live webhook events to avoid duplicates
+  const existingUserIds = await followEventsRepository.findTrackedUserIds(broadcasterId)
+
   let cursor: string | undefined
   let total = 0
 
@@ -27,6 +30,7 @@ async function backfillFollowers(broadcasterId: string, accessToken: string): Pr
     const followers: { user_id: string; user_login: string; user_name: string; followed_at: string }[] = data.data ?? []
 
     for (const f of followers) {
+      if (existingUserIds.has(f.user_id)) continue
       await followEventsRepository.insert({
         broadcasterId,
         eventId: `backfill-follow-${f.user_id}`,
@@ -35,6 +39,7 @@ async function backfillFollowers(broadcasterId: string, accessToken: string): Pr
         userDisplayName: f.user_name,
         occurredAt: new Date(f.followed_at),
       })
+      existingUserIds.add(f.user_id)
     }
 
     total += followers.length

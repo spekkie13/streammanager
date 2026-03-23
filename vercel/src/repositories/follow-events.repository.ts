@@ -17,6 +17,14 @@ class FollowEventsRepository {
       })
   }
 
+  async findTrackedUserIds(broadcasterId: string): Promise<Set<string>> {
+    const rows = await db
+      .select({ userId: followEvents.userId })
+      .from(followEvents)
+      .where(eq(followEvents.broadcasterId, broadcasterId))
+    return new Set(rows.map(r => r.userId).filter((id): id is string => id !== null))
+  }
+
   async findSince(broadcasterId: string, since: Date): Promise<FollowEvent[]> {
     return db.select().from(followEvents)
       .where(and(eq(followEvents.broadcasterId, broadcasterId), gt(followEvents.occurredAt, since)))
