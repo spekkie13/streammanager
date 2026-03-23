@@ -1,7 +1,16 @@
 import { NextAuthOptions } from "next-auth"
 import TwitchProvider from "next-auth/providers/twitch"
-import { userRepository } from "@/repositories"
+import GoogleProvider from "next-auth/providers/google"
+import { linkedAccountsRepository } from "@/repositories"
 import { env } from "@/lib/env"
+
+async function fetchYouTubeChannelId(accessToken: string): Promise<string | null> {
+  const res = await fetch("https://www.googleapis.com/youtube/v3/channels?part=id&mine=true", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  const data = await res.json()
+  return data.items?.[0]?.id ?? null
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,29 +23,108 @@ export const authOptions: NextAuthOptions = {
         },
       },
     }),
+    GoogleProvider({
+      clientId: env.googleClientId,
+      clientSecret: env.googleClientSecret,
+      authorization: {
+        params: {
+          scope: "openid email profile https://www.googleapis.com/auth/youtube.readonly",
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    }),
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async signIn({ account, profile }) {
-      if (!account || !profile) return false
-      const p = profile as Record<string, string>
-      await userRepository.upsert(p.sub, p.preferred_username, p.preferred_username, account.access_token ?? "", account.refresh_token ?? "")
-      return true
+    async signIn({ account }) {
+      return account?.provider === "twitch" || account?.provider === "google"
     },
     async jwt({ token, account, profile }) {
       if (account && profile) {
         const p = profile as Record<string, string>
-        token.twitchId = p.sub
-        token.displayName = p.preferred_username
-        const user = await userRepository.findByTwitchId(p.sub)
-        token.apiKey = user?.apiKey ?? ""
+        const existingUserId = token.userId as string | undefined
+
+        if (account.provider === "twitch") {
+          if (existingUserId) {
+            try {
+              await linkedAccountsRepository.upsertForUser(existingUserId, {
+                provider: "twitch",
+                providerAccountId: p.sub,
+                login: p.preferred_username,
+                displayName: p.preferred_username,
+                accessToken: account.access_token ?? "",
+                refreshToken: account.refresh_token ?? "",
+              })
+              token.twitchId = p.sub
+              delete token.linkingError
+            } catch {
+              token.linkingError = "account_conflict"
+            }
+          } else {
+            const { userId, apiKey } = await linkedAccountsRepository.upsertWithUser({
+              provider: "twitch",
+              providerAccountId: p.sub,
+              login: p.preferred_username,
+              displayName: p.preferred_username,
+              accessToken: account.access_token ?? "",
+              refreshToken: account.refresh_token ?? "",
+            })
+            token.userId = userId
+            token.twitchId = p.sub
+            token.youtubeChannelId = null
+            token.displayName = p.preferred_username
+            token.apiKey = apiKey
+          }
+
+        } else if (account.provider === "google") {
+          const channelId = await fetchYouTubeChannelId(account.access_token ?? "")
+          if (!channelId) {
+            token.linkingError = "no_youtube_channel"
+            return token
+          }
+
+          if (existingUserId) {
+            try {
+              await linkedAccountsRepository.upsertForUser(existingUserId, {
+                provider: "youtube",
+                providerAccountId: channelId,
+                login: channelId,
+                displayName: p.name ?? channelId,
+                accessToken: account.access_token ?? "",
+                refreshToken: account.refresh_token ?? "",
+              })
+              token.youtubeChannelId = channelId
+              delete token.linkingError
+            } catch {
+              token.linkingError = "account_conflict"
+            }
+          } else {
+            const { userId, apiKey } = await linkedAccountsRepository.upsertWithUser({
+              provider: "youtube",
+              providerAccountId: channelId,
+              login: channelId,
+              displayName: p.name ?? channelId,
+              accessToken: account.access_token ?? "",
+              refreshToken: account.refresh_token ?? "",
+            })
+            token.userId = userId
+            token.twitchId = null
+            token.youtubeChannelId = channelId
+            token.displayName = p.name ?? channelId
+            token.apiKey = apiKey
+          }
+        }
       }
       return token
     },
     async session({ session, token }) {
-      session.twitchId = token.twitchId as string
+      session.userId = token.userId as string
+      session.twitchId = token.twitchId as string | null
+      session.youtubeChannelId = token.youtubeChannelId as string | null
       session.displayName = token.displayName as string
       session.apiKey = token.apiKey as string
+      if (token.linkingError) session.linkingError = token.linkingError
       return session
     },
   },

@@ -5,6 +5,7 @@ export type SortOrder = "asc" | "desc"
 
 export type EventFilter = {
   broadcasterId: string
+  youtubeChannelId?: string | null
   types?: LiveEventType[]
   from?: Date
   to?: Date

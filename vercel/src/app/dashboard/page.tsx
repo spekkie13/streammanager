@@ -12,11 +12,13 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect("/")
 
+  const broadcasterId = session.twitchId ?? ""
+
   const [goalRows, totalRows, recentEvents, subscriptionsRegistered] = await Promise.all([
-    db.select().from(subGoals).where(eq(subGoals.broadcasterId, session.twitchId)).limit(1),
-    db.select({ total: count() }).from(subEvents).where(eq(subEvents.broadcasterId, session.twitchId)),
-    liveEventFeedService.getFilteredEvents({ broadcasterId: session.twitchId, limit: 50 }),
-    eventSubSubscriptionsRepository.existsByBroadcasterId(session.twitchId),
+    broadcasterId ? db.select().from(subGoals).where(eq(subGoals.broadcasterId, broadcasterId)).limit(1) : [],
+    broadcasterId ? db.select({ total: count() }).from(subEvents).where(eq(subEvents.broadcasterId, broadcasterId)) : [{ total: 0 }],
+    liveEventFeedService.getFilteredEvents({ broadcasterId, youtubeChannelId: session.youtubeChannelId, limit: 50 }),
+    broadcasterId ? eventSubSubscriptionsRepository.existsByBroadcasterId(broadcasterId) : false,
   ])
 
   const goal = goalRows[0]?.goal ?? 100

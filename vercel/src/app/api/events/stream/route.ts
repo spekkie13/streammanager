@@ -12,7 +12,8 @@ export async function GET(req: NextRequest) {
     return new Response("Unauthorized", { status: 401 })
   }
 
-  const broadcasterId = session.twitchId
+  const broadcasterId = session.twitchId ?? ""
+  const youtubeChannelId = session.youtubeChannelId
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
 
       const poll = async () => {
         try {
-          const events = await liveEventFeedService.getEventsSince(broadcasterId, lastSent)
+          const events = await liveEventFeedService.getEventsSince(broadcasterId, lastSent, youtubeChannelId)
           if (events.length > 0) {
             lastSent = new Date()
             controller.enqueue(encode(events))

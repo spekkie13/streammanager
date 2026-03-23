@@ -2,8 +2,10 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { AppHeader } from "@/components/app-header"
-import { eventSubSubscriptionsRepository } from "@/repositories"
+import { eventSubSubscriptionsRepository, linkedAccountsRepository } from "@/repositories"
 import { TwitchManage } from "./twitch-manage"
+import { YouTubeConnectButton } from "./youtube-connect"
+import { DisconnectButton } from "./disconnect-button"
 
 function TwitchLogo({ className }: { className?: string }) {
   return (
@@ -36,10 +38,12 @@ type ConnectionRowProps = {
   logo: React.ReactNode
   detail?: string
   comingSoon?: boolean
+  connectButton?: React.ReactNode
+  disconnectButton?: React.ReactNode
   children?: React.ReactNode
 }
 
-function ConnectionRow({ name, description, connected, logo, detail, comingSoon, children }: ConnectionRowProps) {
+function ConnectionRow({ name, description, connected, logo, detail, comingSoon, connectButton, disconnectButton, children }: ConnectionRowProps) {
   return (
     <div>
       <div className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6">
@@ -65,14 +69,9 @@ function ConnectionRow({ name, description, connected, logo, detail, comingSoon,
                   Connected
                 </span>
               )}
-              <button
-                disabled
-                className="text-xs text-zinc-500 border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 rounded-lg opacity-50 cursor-not-allowed"
-              >
-                Disconnect
-              </button>
+              {disconnectButton}
             </>
-          ) : (
+          ) : connectButton ?? (
             <button
               disabled={comingSoon}
               className="text-xs bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -91,7 +90,14 @@ export default async function ConnectionsPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect("/")
 
-  const subscriptionsRegistered = await eventSubSubscriptionsRepository.existsByBroadcasterId(session.twitchId)
+  const [subscriptionsRegistered, linkedAccounts] = await Promise.all([
+    session.twitchId ? eventSubSubscriptionsRepository.existsByBroadcasterId(session.twitchId) : false,
+    session.userId ? linkedAccountsRepository.findByUserId(session.userId) : [],
+  ])
+
+  const youtubeAccount = linkedAccounts.find(a => a.provider === "youtube")
+  const twitchAccount = linkedAccounts.find(a => a.provider === "twitch")
+  const canDisconnect = linkedAccounts.length > 1
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook`
 
   return (
@@ -103,16 +109,39 @@ export default async function ConnectionsPage() {
           <p className="text-zinc-500 text-sm mt-1">Manage the platforms and services connected to CreatorDeck.</p>
         </div>
 
+        {session.linkingError && (
+          <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 rounded-xl px-4 py-3">
+            <p className="text-sm font-medium text-red-700 dark:text-red-400">Connection failed</p>
+            <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">
+              {session.linkingError === "account_conflict"
+                ? "That account is already linked to a different CreatorDeck user."
+                : "We couldn't find a YouTube channel on that Google account. Make sure you're signing in with an account that has a YouTube channel."}
+            </p>
+          </div>
+        )}
+
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl divide-y divide-zinc-200 dark:divide-zinc-800">
           <ConnectionRow
             name="Twitch"
             description="Enables live event tracking, sub goals, and EventSub webhooks."
-            connected={true}
+            connected={!!twitchAccount}
             logo={<TwitchLogo className="w-5 h-5 text-[#9146FF]" />}
-            detail={`Connected as ${session.displayName}`}
+            detail={twitchAccount ? `Connected as ${twitchAccount.displayName ?? twitchAccount.login}` : undefined}
+            disconnectButton={canDisconnect ? <DisconnectButton provider="twitch" /> : undefined}
           >
-            <TwitchManage webhookUrl={webhookUrl} subscriptionsRegistered={subscriptionsRegistered} />
+            {twitchAccount && (
+              <TwitchManage webhookUrl={webhookUrl} subscriptionsRegistered={subscriptionsRegistered} />
+            )}
           </ConnectionRow>
+          <ConnectionRow
+            name="YouTube"
+            description="Track Super Chats, memberships, and live chat activity."
+            connected={!!youtubeAccount}
+            logo={<YouTubeLogo className="w-5 h-5 text-[#FF0000]" />}
+            detail={youtubeAccount ? `Connected as ${youtubeAccount.displayName ?? youtubeAccount.login ?? youtubeAccount.providerAccountId}` : undefined}
+            connectButton={<YouTubeConnectButton />}
+            disconnectButton={canDisconnect ? <DisconnectButton provider="youtube" /> : undefined}
+          />
           <ConnectionRow
             name="Spotify"
             description="Show your currently playing track in the dashboard."
@@ -120,14 +149,13 @@ export default async function ConnectionsPage() {
             logo={<SpotifyLogo className="w-5 h-5 text-[#1DB954]" />}
             comingSoon={true}
           />
-          <ConnectionRow
-            name="YouTube"
-            description="Track Super Chats, memberships, and live chat activity."
-            connected={false}
-            logo={<YouTubeLogo className="w-5 h-5 text-[#FF0000]" />}
-            comingSoon={true}
-          />
         </div>
+
+        {!canDisconnect && (
+          <p className="text-xs text-zinc-500 text-center">
+            Connect another platform before disconnecting your only linked account.
+          </p>
+        )}
       </main>
     </div>
   )

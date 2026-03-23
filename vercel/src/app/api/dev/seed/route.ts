@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { userRepository, followEventsRepository, subEventsRepository, cheerEventsRepository, raidEventsRepository } from "@/repositories"
+import { linkedAccountsRepository, followEventsRepository, subEventsRepository, cheerEventsRepository, raidEventsRepository } from "@/repositories"
 
 const TWITCH_HEADERS = (accessToken: string) => ({
   "Authorization": `Bearer ${accessToken}`,
@@ -116,22 +116,22 @@ export async function POST() {
   }
 
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!session?.twitchId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const user = await userRepository.findByTwitchId(session.twitchId)
-  if (!user?.accessToken) return NextResponse.json({ error: "No access token — sign out and sign in again" }, { status: 400 })
+  const twitchAccount = await linkedAccountsRepository.findByProvider("twitch", session.twitchId)
+  if (!twitchAccount?.accessToken) return NextResponse.json({ error: "No access token — sign out and sign in again" }, { status: 400 })
 
   const broadcasterId = session.twitchId
   const results: Record<string, number | string> = {}
 
   try {
-    results.followers = await seedFollowers(broadcasterId, user.accessToken)
+    results.followers = await seedFollowers(broadcasterId, twitchAccount.accessToken)
   } catch (err) {
     results.followers_error = String(err)
   }
 
   try {
-    results.subs = await seedSubs(broadcasterId, user.accessToken)
+    results.subs = await seedSubs(broadcasterId, twitchAccount.accessToken)
   } catch (err) {
     results.subs_error = String(err)
   }
