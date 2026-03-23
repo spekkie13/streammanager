@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { ThemeToggle } from "./theme-toggle"
+import { CreatorDeckLogo } from "./creator-deck-logo"
 
 type Props = {
   displayName: string
@@ -43,8 +44,8 @@ export function AppHeader({ displayName }: Props) {
 
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
-      <Link href="/dashboard" className="text-xl font-bold hover:opacity-80 transition-opacity">
-        Creator<span className="text-purple-500">Deck</span>
+      <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
+        <CreatorDeckLogo size="sm" />
       </Link>
 
       {pageName && (

@@ -42,15 +42,52 @@ function toDateInputValue(iso: string | null): string {
   return iso.slice(0, 10) // "YYYY-MM-DD"
 }
 
+function greeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return "Good morning"
+  if (h < 18) return "Good afternoon"
+  return "Good evening"
+}
+
+type StatusVariant = "good" | "warning" | "unknown"
+
+const STATUS_CONFIG: Record<StatusVariant, {
+  label: string
+  subtext: string
+  pill: string
+  dot: string
+}> = {
+  good: {
+    label: "All good",
+    subtext: "Everything is set up and ready to go. Have a great stream!",
+    pill: "bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400",
+    dot: "bg-green-500",
+  },
+  warning: {
+    label: "Action required",
+    subtext: "There are a few things to set up before you're ready to go.",
+    pill: "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400",
+    dot: "bg-amber-500",
+  },
+  unknown: {
+    label: "Status unknown",
+    subtext: "Some services couldn't be reached. Check your connections.",
+    pill: "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-500",
+    dot: "bg-zinc-400",
+  },
+}
+
 export function DashboardClient({ session, goal, initialCount, endsAt, total, initialEvents, subscriptionsRegistered }: Props) {
   const [currentGoal, setCurrentGoal] = useState(goal)
   const [goalInput, setGoalInput] = useState(String(goal))
   const [initialCountInput, setInitialCountInput] = useState(String(initialCount))
   const [endsAtInput, setEndsAtInput] = useState(toDateInputValue(endsAt))
   const [savingGoal, setSavingGoal] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   const events = useStreamEvents(initialEvents)
-  const displayTotal = total + (parseInt(initialCountInput) || 0)
+  const savedInitialCount = parseInt(initialCountInput) || 0
+  const displayTotal = total + savedInitialCount
   const progress = Math.min((displayTotal / currentGoal) * 100, 100)
 
   async function saveGoal() {
@@ -65,6 +102,14 @@ export function DashboardClient({ session, goal, initialCount, endsAt, total, in
     })
     setCurrentGoal(val)
     setSavingGoal(false)
+    setEditing(false)
+  }
+
+  function cancelEdit() {
+    setGoalInput(String(currentGoal))
+    setInitialCountInput(String(savedInitialCount))
+    setEndsAtInput(toDateInputValue(endsAt))
+    setEditing(false)
   }
 
   return (
@@ -72,6 +117,26 @@ export function DashboardClient({ session, goal, initialCount, endsAt, total, in
       <AppHeader displayName={session.displayName} />
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
+
+        {/* Welcome card */}
+        {(() => {
+          const variant: StatusVariant = subscriptionsRegistered ? "good" : "warning"
+          const s = STATUS_CONFIG[variant]
+          return (
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-1">
+                <h1 className="text-xl font-semibold tracking-tight">
+                  {greeting()}, <span className="text-purple-500">{session.displayName}</span> 👋
+                </h1>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.subtext}</p>
+              </div>
+              <span className={`shrink-0 self-start sm:self-auto inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border ${s.pill}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                {s.label}
+              </span>
+            </div>
+          )
+        })()}
 
         {/* Setup banner */}
         {!subscriptionsRegistered && (
@@ -90,13 +155,24 @@ export function DashboardClient({ session, goal, initialCount, endsAt, total, in
         {/* Sub goal */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Sub Goal</h2>
-            {endsAtInput && (
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                Ends {new Date(endsAtInput).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-              </span>
-            )}
+            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Twitch — Sub Goal</h2>
+            <div className="flex items-center gap-3">
+              {!editing && endsAtInput && (
+                <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Ends {new Date(endsAtInput).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                </span>
+              )}
+              {!editing && (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                >
+                  Edit
+                </button>
+              )}
+            </div>
           </div>
+
           <div className="flex items-end gap-3">
             <span className="text-5xl font-bold">{displayTotal}</span>
             <span className="text-2xl text-zinc-400 dark:text-zinc-500 pb-1">/ {currentGoal}</span>
@@ -109,54 +185,69 @@ export function DashboardClient({ session, goal, initialCount, endsAt, total, in
           </div>
           <p className="text-zinc-500 text-sm">{progress.toFixed(1)}% of goal reached</p>
 
-          <div className="flex flex-wrap items-end gap-3 pt-2">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-zinc-500 dark:text-zinc-400">Target</label>
-              <input
-                type="number"
-                value={goalInput}
-                onChange={e => setGoalInput(e.target.value)}
-                className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
-                min={1}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-zinc-500 dark:text-zinc-400">Starting count <span className="text-zinc-400 dark:text-zinc-600">(migration offset)</span></label>
-              <input
-                type="number"
-                value={initialCountInput}
-                onChange={e => setInitialCountInput(e.target.value)}
-                className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
-                min={0}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-zinc-500 dark:text-zinc-400">End date <span className="text-zinc-400 dark:text-zinc-600">(optional)</span></label>
-              <input
-                type="date"
-                value={endsAtInput}
-                onChange={e => setEndsAtInput(e.target.value)}
-                className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={saveGoal}
-                disabled={savingGoal}
-                className="bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-              >
-                {savingGoal ? "Saving..." : "Save"}
-              </button>
-              {endsAtInput && (
+          {editing && (
+            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Initial amount</label>
+                  <input
+                    type="number"
+                    value={initialCountInput}
+                    onChange={e => setInitialCountInput(e.target.value)}
+                    className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
+                    min={0}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Goal amount</label>
+                  <input
+                    type="number"
+                    value={goalInput}
+                    onChange={e => setGoalInput(e.target.value)}
+                    className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
+                    min={1}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    End date
+                    <span className="ml-1 font-normal text-zinc-400 dark:text-zinc-600">(optional)</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={endsAtInput}
+                      onChange={e => setEndsAtInput(e.target.value)}
+                      className="flex-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
+                    />
+                    {endsAtInput && (
+                      <button
+                        onClick={() => setEndsAtInput("")}
+                        className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors shrink-0"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setEndsAtInput("")}
-                  className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors px-2 py-2"
+                  onClick={saveGoal}
+                  disabled={savingGoal}
+                  className="bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors"
                 >
-                  Clear date
+                  {savingGoal ? "Saving..." : "Save"}
                 </button>
-              )}
+                <button
+                  onClick={cancelEdit}
+                  className="text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Live event feed */}
