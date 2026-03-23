@@ -57,6 +57,34 @@ class LinkedAccountsRepository {
     await db.insert(linkedAccounts).values({ userId: newUser.id, ...data })
     return { userId: newUser.id, apiKey }
   }
+
+  // Links a new account to an existing user (account linking flow).
+  // Throws if the account is already linked to a different user.
+  async upsertForUser(userId: string, data: {
+    provider: string
+    providerAccountId: string
+    login: string
+    displayName: string
+    accessToken: string
+    refreshToken: string
+  }): Promise<void> {
+    const existing = await this.findByProvider(data.provider, data.providerAccountId)
+    if (existing && existing.userId !== userId) {
+      throw new Error(`This ${data.provider} account is already linked to a different user`)
+    }
+
+    await db.insert(linkedAccounts)
+      .values({ userId, ...data })
+      .onConflictDoUpdate({
+        target: [linkedAccounts.provider, linkedAccounts.providerAccountId],
+        set: {
+          login: data.login,
+          displayName: data.displayName,
+          accessToken: data.accessToken,
+          ...(data.refreshToken ? { refreshToken: data.refreshToken } : {}),
+        },
+      })
+  }
 }
 
 export const linkedAccountsRepository = new LinkedAccountsRepository()

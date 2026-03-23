@@ -43,39 +43,66 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, profile }) {
       if (account && profile) {
         const p = profile as Record<string, string>
+        const existingUserId = token.userId as string | undefined
 
         if (account.provider === "twitch") {
-          const { userId, apiKey } = await linkedAccountsRepository.upsertWithUser({
-            provider: "twitch",
-            providerAccountId: p.sub,
-            login: p.preferred_username,
-            displayName: p.preferred_username,
-            accessToken: account.access_token ?? "",
-            refreshToken: account.refresh_token ?? "",
-          })
-          token.userId = userId
-          token.twitchId = p.sub
-          token.youtubeChannelId = null
-          token.displayName = p.preferred_username
-          token.apiKey = apiKey
+          if (existingUserId) {
+            // Linking Twitch to an existing session (e.g. YouTube user connecting Twitch)
+            await linkedAccountsRepository.upsertForUser(existingUserId, {
+              provider: "twitch",
+              providerAccountId: p.sub,
+              login: p.preferred_username,
+              displayName: p.preferred_username,
+              accessToken: account.access_token ?? "",
+              refreshToken: account.refresh_token ?? "",
+            })
+            token.twitchId = p.sub
+          } else {
+            const { userId, apiKey } = await linkedAccountsRepository.upsertWithUser({
+              provider: "twitch",
+              providerAccountId: p.sub,
+              login: p.preferred_username,
+              displayName: p.preferred_username,
+              accessToken: account.access_token ?? "",
+              refreshToken: account.refresh_token ?? "",
+            })
+            token.userId = userId
+            token.twitchId = p.sub
+            token.youtubeChannelId = null
+            token.displayName = p.preferred_username
+            token.apiKey = apiKey
+          }
 
         } else if (account.provider === "google") {
           const channelId = await fetchYouTubeChannelId(account.access_token ?? "")
           if (!channelId) return token
 
-          const { userId, apiKey } = await linkedAccountsRepository.upsertWithUser({
-            provider: "youtube",
-            providerAccountId: channelId,
-            login: channelId,
-            displayName: p.name ?? channelId,
-            accessToken: account.access_token ?? "",
-            refreshToken: account.refresh_token ?? "",
-          })
-          token.userId = userId
-          token.twitchId = null
-          token.youtubeChannelId = channelId
-          token.displayName = p.name ?? channelId
-          token.apiKey = apiKey
+          if (existingUserId) {
+            // Linking YouTube to an existing session (e.g. Twitch user connecting YouTube)
+            await linkedAccountsRepository.upsertForUser(existingUserId, {
+              provider: "youtube",
+              providerAccountId: channelId,
+              login: channelId,
+              displayName: p.name ?? channelId,
+              accessToken: account.access_token ?? "",
+              refreshToken: account.refresh_token ?? "",
+            })
+            token.youtubeChannelId = channelId
+          } else {
+            const { userId, apiKey } = await linkedAccountsRepository.upsertWithUser({
+              provider: "youtube",
+              providerAccountId: channelId,
+              login: channelId,
+              displayName: p.name ?? channelId,
+              accessToken: account.access_token ?? "",
+              refreshToken: account.refresh_token ?? "",
+            })
+            token.userId = userId
+            token.twitchId = null
+            token.youtubeChannelId = channelId
+            token.displayName = p.name ?? channelId
+            token.apiKey = apiKey
+          }
         }
       }
       return token

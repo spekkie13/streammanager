@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   const [goalRows, totalRows, recentEvents, subscriptionsRegistered] = await Promise.all([
     broadcasterId ? db.select().from(subGoals).where(eq(subGoals.broadcasterId, broadcasterId)).limit(1) : [],
     broadcasterId ? db.select({ total: count() }).from(subEvents).where(eq(subEvents.broadcasterId, broadcasterId)) : [{ total: 0 }],
-    broadcasterId ? liveEventFeedService.getFilteredEvents({ broadcasterId, limit: 50 }) : { events: [] },
+    liveEventFeedService.getFilteredEvents({ broadcasterId, youtubeChannelId: session.youtubeChannelId, limit: 50 }),
     broadcasterId ? eventSubSubscriptionsRepository.existsByBroadcasterId(broadcasterId) : false,
   ])
 

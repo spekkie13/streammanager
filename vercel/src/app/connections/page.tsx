@@ -2,8 +2,9 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { AppHeader } from "@/components/app-header"
-import { eventSubSubscriptionsRepository } from "@/repositories"
+import { eventSubSubscriptionsRepository, linkedAccountsRepository } from "@/repositories"
 import { TwitchManage } from "./twitch-manage"
+import { YouTubeConnectButton } from "./youtube-connect"
 
 function TwitchLogo({ className }: { className?: string }) {
   return (
@@ -36,10 +37,11 @@ type ConnectionRowProps = {
   logo: React.ReactNode
   detail?: string
   comingSoon?: boolean
+  connectButton?: React.ReactNode
   children?: React.ReactNode
 }
 
-function ConnectionRow({ name, description, connected, logo, detail, comingSoon, children }: ConnectionRowProps) {
+function ConnectionRow({ name, description, connected, logo, detail, comingSoon, connectButton, children }: ConnectionRowProps) {
   return (
     <div>
       <div className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6">
@@ -72,7 +74,7 @@ function ConnectionRow({ name, description, connected, logo, detail, comingSoon,
                 Disconnect
               </button>
             </>
-          ) : (
+          ) : connectButton ?? (
             <button
               disabled={comingSoon}
               className="text-xs bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -91,9 +93,12 @@ export default async function ConnectionsPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect("/")
 
-  const subscriptionsRegistered = session.twitchId
-    ? await eventSubSubscriptionsRepository.existsByBroadcasterId(session.twitchId)
-    : false
+  const [subscriptionsRegistered, linkedAccounts] = await Promise.all([
+    session.twitchId ? eventSubSubscriptionsRepository.existsByBroadcasterId(session.twitchId) : false,
+    session.userId ? linkedAccountsRepository.findByUserId(session.userId) : [],
+  ])
+
+  const youtubeAccount = linkedAccounts.find(a => a.provider === "youtube")
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook`
 
   return (
@@ -125,9 +130,10 @@ export default async function ConnectionsPage() {
           <ConnectionRow
             name="YouTube"
             description="Track Super Chats, memberships, and live chat activity."
-            connected={false}
+            connected={!!session.youtubeChannelId}
             logo={<YouTubeLogo className="w-5 h-5 text-[#FF0000]" />}
-            comingSoon={true}
+            detail={youtubeAccount ? `Connected as ${youtubeAccount.displayName ?? youtubeAccount.login ?? youtubeAccount.providerAccountId}` : undefined}
+            connectButton={<YouTubeConnectButton />}
           />
         </div>
       </main>

@@ -38,7 +38,7 @@ export default async function LandingPage() {
       {/* Nav */}
       <nav className="px-6 py-5 flex items-center justify-between max-w-5xl mx-auto w-full">
         <CreatorDeckLogo size="sm" />
-        {/*<SignInButton variant="ghost" />*/}
+        <SignInButton variant="ghost" />
       </nav>
 
       {/* Hero */}
