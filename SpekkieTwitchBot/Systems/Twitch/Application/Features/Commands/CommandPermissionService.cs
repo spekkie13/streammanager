@@ -1,13 +1,12 @@
 using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch;
+using SpekkieTwitchBot.General.FileHandling.Common;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class CommandPermissionService : ICommandPermissionService
 {
-    private static readonly string FilePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-        "SpekkieTwitchBot", "Settings", "CommandPermissions.json");
+    private static readonly string FilePath = Path.Combine(BotPaths.BaseDir, "Settings", "CommandPermissions.json");
 
     public bool IsAllowed(string command, UserRole userRole)
     {

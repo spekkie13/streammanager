@@ -23,7 +23,7 @@ public class SpotifyAuthService
     {
         string jsonData = _SpotifyFileReader.ReadSpotifyAuthFile();
         _SpotifyAuth = JsonConvert.DeserializeObject<SpotifyAuth>(jsonData) ?? new SpotifyAuth();
-        _Logger.LogInfo($"Spotify Auth: {JsonConvert.SerializeObject(_SpotifyAuth)}");
+        _Logger.LogInfo($"Spotify Auth loaded: client_id={_SpotifyAuth.ClientId}, client_secret=***, token=***, refresh_token=***");
         return _SpotifyAuth;
     }
     

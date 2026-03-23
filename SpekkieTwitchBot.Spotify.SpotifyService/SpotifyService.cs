@@ -8,19 +8,19 @@ namespace SpotifyAuthService;
 
 public class SpotifyService : ISpotifyService
 {
-    private readonly CustomSpotifyHttpClient _Client;
-    private readonly Logger _Logger;
+    private readonly CustomSpotifyHttpClient _client;
+    private readonly Logger _logger;
 
     public SpotifyService(CustomSpotifyHttpClient spotifyHttpClient, Logger logger)
     {
-        _Client = spotifyHttpClient;
-        _Logger = logger;
+        _client = spotifyHttpClient;
+        _logger = logger;
     }
 
     public async Task<(CurrentlyPlaying? playable, FullTrack? song)> GetCurrentPlayableAsync(CancellationToken ct = default)
     {
-        CurrentlyPlaying? playable = await _Client.GetCurrentlyPlayingTrack(SpotifyConstants.CurrentlyPlayingUrl, ct).ConfigureAwait(false);
-        FullTrack? song = await _Client.GetFullTrack(SpotifyConstants.CurrentlyPlayingUrl, ct).ConfigureAwait(false);
+        CurrentlyPlaying? playable = await _client.GetCurrentlyPlayingTrack(SpotifyConstants.CurrentlyPlayingUrl, ct).ConfigureAwait(false);
+        FullTrack? song = await _client.GetFullTrack(SpotifyConstants.CurrentlyPlayingUrl, ct).ConfigureAwait(false);
         return (playable, song);
     }
 
@@ -33,7 +33,7 @@ public class SpotifyService : ISpotifyService
 
     public async Task<string> GetCurrentlyPlayingPlaylistAsync(CancellationToken ct = default)
     {
-        CurrentlyPlaying? currentlyPlaying = await _Client.DecipherData<CurrentlyPlaying>(SpotifyConstants.CurrentlyPlayingUrl, ct)
+        CurrentlyPlaying? currentlyPlaying = await _client.DecipherData<CurrentlyPlaying>(SpotifyConstants.CurrentlyPlayingUrl, ct)
             .ConfigureAwait(false);
 
         Context? ctx = currentlyPlaying?.Context;
@@ -43,7 +43,7 @@ public class SpotifyService : ISpotifyService
 
     public async Task<string> GetQueueAsync(CancellationToken ct = default)
     {
-        QueueResponse? songQueue = await _Client.DecipherData<QueueResponse>(SpotifyConstants.GetQueueUrl, ct)
+        QueueResponse? songQueue = await _client.DecipherData<QueueResponse>(SpotifyConstants.GetQueueUrl, ct)
             .ConfigureAwait(false);
 
         if (songQueue == null) return string.Empty;
@@ -70,45 +70,45 @@ public class SpotifyService : ISpotifyService
 
     public async Task<bool> PausePlayerAsync(CancellationToken ct = default)
     {
-        HttpResponseMessage response = await _Client.PutAsync(SpotifyConstants.PausePlayerUrl, null, ct)
+        HttpResponseMessage response = await _client.PutAsync(SpotifyConstants.PausePlayerUrl, null, ct)
             .ConfigureAwait(false);
 
         if (response.IsSuccessStatusCode) return true;
 
-        _Logger.LogError($"Error pausing the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
+        _logger.LogError($"Error pausing the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
         return false;
     }
 
     public async Task<bool> ResumePlayerAsync(CancellationToken ct = default)
     {
-        HttpResponseMessage response = await _Client.PutAsync(SpotifyConstants.StartPlayerUrl, null, ct)
+        HttpResponseMessage response = await _client.PutAsync(SpotifyConstants.StartPlayerUrl, null, ct)
             .ConfigureAwait(false);
 
         if (response.IsSuccessStatusCode) return true;
 
-        _Logger.LogError($"Error resuming the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
+        _logger.LogError($"Error resuming the player: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
         return false;
     }
 
     public async Task<bool> SkipNextSongAsync(CancellationToken ct = default)
     {
-        HttpResponseMessage response = await _Client.PostAsync(SpotifyConstants.SkipNextUrl, null, ct)
+        HttpResponseMessage response = await _client.PostAsync(SpotifyConstants.SkipNextUrl, null, ct)
             .ConfigureAwait(false);
 
         if (response.IsSuccessStatusCode) return true;
 
-        _Logger.LogError($"Error skipping to the next song: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
+        _logger.LogError($"Error skipping to the next song: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
         return false;
     }
 
     public async Task<bool> SkipPrevSongAsync(CancellationToken ct = default)
     {
-        HttpResponseMessage response = await _Client.PostAsync(SpotifyConstants.SkipPrevUrl, null, ct)
+        HttpResponseMessage response = await _client.PostAsync(SpotifyConstants.SkipPrevUrl, null, ct)
             .ConfigureAwait(false);
 
         if (response.IsSuccessStatusCode) return true;
 
-        _Logger.LogError($"Error skipping to the previous song: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
+        _logger.LogError($"Error skipping to the previous song: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
         return false;
     }
 
@@ -116,7 +116,11 @@ public class SpotifyService : ISpotifyService
     {
         string songId;
 
-        if (!songUri.StartsWith("spotify:track:", StringComparison.OrdinalIgnoreCase))
+        if (songUri.StartsWith("spotify:track:", StringComparison.OrdinalIgnoreCase))
+        {
+            songId = songUri;
+        }
+        else if (songUri.StartsWith("http", StringComparison.OrdinalIgnoreCase) || songUri.Contains("open.spotify.com"))
         {
             string[] songParts = songUri.Split('/');
             string last = songParts.Last();
@@ -126,20 +130,28 @@ public class SpotifyService : ISpotifyService
         }
         else
         {
-            songId = songUri;
+            string searchUrl = $"{SpotifyConstants.SpotifySearchUrl}{Uri.EscapeDataString(songUri)}&type=track&limit=1";
+            List<Track>? results = await _client.InterpretSongSearchResult(searchUrl, ct).ConfigureAwait(false);
+            Track? track = results?.FirstOrDefault();
+            if (track?.Uri == null)
+            {
+                _logger.LogError($"No Spotify track found for search query: {songUri}");
+                return "Error";
+            }
+            songId = track.Uri;
         }
 
         HttpRequestMessage request = new(HttpMethod.Post, $"{SpotifyConstants.AddToQueueUrl}{songId}");
-        HttpResponseMessage response = await _Client.SendAsync(request, ct).ConfigureAwait(false);
+        HttpResponseMessage response = await _client.SendAsync(request, ct).ConfigureAwait(false);
 
         if (response.IsSuccessStatusCode)
         {
             string trackId = songId.Replace("spotify:track:", "", StringComparison.OrdinalIgnoreCase);
-            string displayName = await _Client.GetTrackDisplayNameAsync(trackId, ct).ConfigureAwait(false);
+            string displayName = await _client.GetTrackDisplayNameAsync(trackId, ct).ConfigureAwait(false);
             return string.IsNullOrWhiteSpace(displayName) ? "Success" : displayName;
         }
 
-        _Logger.LogError($"Error adding the requested song to the queue: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
+        _logger.LogError($"Error adding the requested song to the queue: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
         return "Error";
     }
 
@@ -151,7 +163,7 @@ public class SpotifyService : ISpotifyService
         string url = currentSong.Album.Images.First().Url ?? "";
         if (string.IsNullOrWhiteSpace(url)) return null;
 
-        return await _Client.GetByteArrayAsync(url, ct).ConfigureAwait(false);
+        return await _client.GetByteArrayAsync(url, ct).ConfigureAwait(false);
     }
 
     private static string JoinArtists(FullTrack? currentSong)

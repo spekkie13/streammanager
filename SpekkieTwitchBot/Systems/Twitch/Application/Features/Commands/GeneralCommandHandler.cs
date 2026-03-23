@@ -6,15 +6,15 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class GeneralCommandHandler : IGeneralCommandHandler
 {
-    private readonly GeneralFileReader _GeneralFileReader;
-    private readonly GeneralFileWriter _GeneralFileWriter;
-    private readonly ITextCommandHandler _TextCommandHandler;
-    private readonly ISpotifyCommandHandler _SpotifyCommandHandler;
-    private readonly IObsCommandHandler _ObsCommandHandler;
-    private readonly ITimerCommandHandler _TimerCommandHandler;
-    private readonly ITwitchCommandHandler _TwitchCommandHandler;
-    private readonly IClashCommandHandler _ClashCommandHandler;
-    private readonly ITwitchFileReader _TwitchFileReader;
+    private readonly GeneralFileReader _generalFileReader;
+    private readonly GeneralFileWriter _generalFileWriter;
+    private readonly ITextCommandHandler _textCommandHandler;
+    private readonly ISpotifyCommandHandler _spotifyCommandHandler;
+    private readonly IObsCommandHandler _obsCommandHandler;
+    private readonly ITimerCommandHandler _timerCommandHandler;
+    private readonly ITwitchCommandHandler _twitchCommandHandler;
+    private readonly IClashCommandHandler _clashCommandHandler;
+    private readonly ITwitchFileReader _twitchFileReader;
 
     public GeneralCommandHandler(
         GeneralFileReader generalFileReader,
@@ -28,15 +28,15 @@ public class GeneralCommandHandler : IGeneralCommandHandler
         ITwitchFileReader twitchFileReader
     )
     {
-        _GeneralFileReader = generalFileReader;
-        _GeneralFileWriter = generalFileWriter;
-        _TextCommandHandler = textCommandHandler;
-        _SpotifyCommandHandler = spotifyCommandHandler;
-        _ObsCommandHandler = obsCommandHandler;
-        _TimerCommandHandler = timerCommandHandler;
-        _TwitchCommandHandler = twitchCommandHandler;
-        _ClashCommandHandler = clashCommandHandler;
-        _TwitchFileReader = twitchFileReader;
+        _generalFileReader = generalFileReader;
+        _generalFileWriter = generalFileWriter;
+        _textCommandHandler = textCommandHandler;
+        _spotifyCommandHandler = spotifyCommandHandler;
+        _obsCommandHandler = obsCommandHandler;
+        _timerCommandHandler = timerCommandHandler;
+        _twitchCommandHandler = twitchCommandHandler;
+        _clashCommandHandler = clashCommandHandler;
+        _twitchFileReader = twitchFileReader;
     }
     
     public async Task<string> HandleCommand(ChatCommandReceived command, CancellationToken ct)
@@ -53,38 +53,38 @@ public class GeneralCommandHandler : IGeneralCommandHandler
             ["!afgeleid"] = _ => Task.FromResult(HandleAfgeleidCommand()),
 
             // Spotify (async)
-            ["!song"]        = _SpotifyCommandHandler.HandleGetCurrentSongCommand,
-            ["!playlist"]    = _SpotifyCommandHandler.HandleGetCurrentPlaylistCommand,
-            ["!pausemusic"]  = _SpotifyCommandHandler.HandlePauseMusicCommand,
-            ["!resumemusic"] = _SpotifyCommandHandler.HandleResumeMusicCommand,
-            ["!next"]       = _SpotifyCommandHandler.HandleNextSongCommand,
-            ["!prev"]       = _SpotifyCommandHandler.HandlePrevSongCommand,
-            ["!queue"]      = _SpotifyCommandHandler.HandleGetQueueCommand,
-            ["!sr"]         = t => _SpotifyCommandHandler.HandleSongRequestCommand(commandArgs, command.UserId, username, t),
-            ["!playsong"]   = t => _SpotifyCommandHandler.HandlePlaySpecificSongCommand(commandArgs, username, t),
+            ["!song"]        = _spotifyCommandHandler.HandleGetCurrentSongCommand,
+            ["!playlist"]    = _spotifyCommandHandler.HandleGetCurrentPlaylistCommand,
+            ["!pausemusic"]  = _spotifyCommandHandler.HandlePauseMusicCommand,
+            ["!resumemusic"] = _spotifyCommandHandler.HandleResumeMusicCommand,
+            ["!next"]       = _spotifyCommandHandler.HandleNextSongCommand,
+            ["!prev"]       = _spotifyCommandHandler.HandlePrevSongCommand,
+            ["!queue"]      = _spotifyCommandHandler.HandleGetQueueCommand,
+            ["!sr"]         = t => _spotifyCommandHandler.HandleSongRequestCommand(commandArgs, command.UserId, username, t),
+            ["!playsong"]   = t => _spotifyCommandHandler.HandlePlaySpecificSongCommand(commandArgs, username, t),
 
             // Twitch
-            ["!createredemption"] = _ => _TwitchCommandHandler.HandleCreateRedemptionCommand(commandArgs),
-            ["!uptime"]           = t => _TwitchCommandHandler.HandleUptimeCommand(t),
-            ["!clip"]             = t => _TwitchCommandHandler.HandleClipCommand(t),
-            ["!so"]               = t => _TwitchCommandHandler.HandleShoutoutCommand(commandArgs, t),
+            ["!createredemption"] = _ => _twitchCommandHandler.HandleCreateRedemptionCommand(commandArgs),
+            ["!uptime"]           = t => _twitchCommandHandler.HandleUptimeCommand(t),
+            ["!clip"]             = t => _twitchCommandHandler.HandleClipCommand(t),
+            ["!so"]               = t => _twitchCommandHandler.HandleShoutoutCommand(commandArgs, t),
 
             // OBS (idem)
-            ["!setscene"]        = _ => Task.FromResult(_ObsCommandHandler.HandleSetSceneCommand(commandArgs)),
-            ["!mutemic"]         = _ => Task.FromResult(_ObsCommandHandler.HandleSetInputMute("microphone")),
-            ["!mutemusic"]       = _ => Task.FromResult(_ObsCommandHandler.HandleSetInputMute("spotify")),
-            ["!standardvolumes"] = _ => Task.FromResult(_ObsCommandHandler.HandleSetStandardVolumes()),
-            ["!volumezero"]      = _ => Task.FromResult(_ObsCommandHandler.HandleVolumeZero()),
+            ["!setscene"]        = _ => Task.FromResult(_obsCommandHandler.HandleSetSceneCommand(commandArgs)),
+            ["!mutemic"]         = _ => Task.FromResult(_obsCommandHandler.HandleSetInputMute("microphone")),
+            ["!mutemusic"]       = _ => Task.FromResult(_obsCommandHandler.HandleSetInputMute("spotify")),
+            ["!standardvolumes"] = _ => Task.FromResult(_obsCommandHandler.HandleSetStandardVolumes()),
+            ["!volumezero"]      = _ => Task.FromResult(_obsCommandHandler.HandleVolumeZero()),
 
             // Timer (maak async als hij async is geworden, anders Task.FromResult)
-            ["!pausetimer"] = _ => Task.FromResult(_TimerCommandHandler.HandlePauseTimerCommand()),
-            ["!starttimer"] = _ => Task.FromResult(_TimerCommandHandler.HandleStartTimerCommand()),
-            ["!addtime"]    = _ => Task.FromResult(_TimerCommandHandler.HandleAddTimeToTimerCommand(commandArgs)),
-            ["!settime"]    = _ => Task.FromResult(_TimerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs)),
+            ["!pausetimer"] = _ => Task.FromResult(_timerCommandHandler.HandlePauseTimerCommand()),
+            ["!starttimer"] = _ => Task.FromResult(_timerCommandHandler.HandleStartTimerCommand()),
+            ["!addtime"]    = _ => Task.FromResult(_timerCommandHandler.HandleAddTimeToTimerCommand(commandArgs)),
+            ["!settime"]    = _ => Task.FromResult(_timerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs)),
 
             // Clash of Clans
-            ["!war"]          = _ => Task.FromResult(_ClashCommandHandler.HandleSetWarStatsCommand(commandArgs)),
-            ["!setplayertag"] = _ => _ClashCommandHandler.HandleAddPlayerTagCommand(commandArgs),
+            ["!war"]          = _ => Task.FromResult(_clashCommandHandler.HandleSetWarStatsCommand(commandArgs)),
+            ["!setplayertag"] = _ => _clashCommandHandler.HandleAddPlayerTagCommand(commandArgs),
 
             // Sub goal
             ["!subgoal"] = HandleSubGoalCommand,
@@ -98,7 +98,7 @@ public class GeneralCommandHandler : IGeneralCommandHandler
 
         string HandleCommandsCommand()
         {
-            List<string> all = _TextCommandHandler.GetTextCommands()
+            List<string> all = _textCommandHandler.GetTextCommands()
                 .Select(x => x.Command ?? "")
                 .Concat(commandHandlers.Keys)
                 .ToList();
@@ -108,7 +108,7 @@ public class GeneralCommandHandler : IGeneralCommandHandler
 
     private async Task<string> HandleSubGoalCommand(CancellationToken ct)
     {
-        var config = await _TwitchFileReader.ReadGoalsConfigAsync();
+        var config = await _twitchFileReader.ReadGoalsConfigAsync();
         if (config == null) return "No sub goal configured.";
         var sub = config.SubGoal;
         int daysRemaining = Math.Max(0, sub.EndDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber);
@@ -118,10 +118,11 @@ public class GeneralCommandHandler : IGeneralCommandHandler
 
     private string HandleAfgeleidCommand()
     {
-        string afgeleidtext = _GeneralFileReader.ReadAfgeleidCounter();
-        int afgeleid = Convert.ToInt32(afgeleidtext);
+        string afgeleidtext = _generalFileReader.ReadAfgeleidCounter();
+        if (!int.TryParse(afgeleidtext, out int afgeleid))
+            afgeleid = 0;
         afgeleid++;
-        _GeneralFileWriter.WriteAfgeleidCounter(afgeleid.ToString());
+        _generalFileWriter.WriteAfgeleidCounter(afgeleid.ToString());
         return $"Spekkie is {afgeleid}x afgeleid geweest";
     }
 }

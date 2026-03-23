@@ -2,10 +2,12 @@ namespace SpekkieClassLibrary.Constants;
 
 public class ClashConstants
 {
-    public static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
-    public static string OutputDir = $"{BaseDir}/Output/ClashOfClans";
-    public static string HomeFolder = $"{OutputDir}{Path.DirectorySeparatorChar}home";
-    public static string AwayFolder = $"{OutputDir}{Path.DirectorySeparatorChar}away";
+    public static readonly string BaseDir =
+        Environment.GetEnvironmentVariable("BOT_BASE_DIR")
+        ?? Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    public static readonly string OutputDir = $"{BaseDir}/Output/ClashOfClans";
+    public static readonly string HomeFolder = $"{OutputDir}{Path.DirectorySeparatorChar}home";
+    public static readonly string AwayFolder = $"{OutputDir}{Path.DirectorySeparatorChar}away";
     public const string ClanApiBaseUrl = "https://api.clashofclans.com/v1/clans/";
     public const string PlayerApiBaseUrl = "https://api.clashofclans.com/v1/players/";
     public const string DebugClanTag = "#29Y29P98J";

@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { WaitlistForm } from "./waitlist-form"
+import { SignInButton } from "./sign-in-button"
 
 const FEATURES = [
   { icon: "⚡", text: "Live event feed — subs, follows, bits and raids in real time" },
@@ -40,10 +41,10 @@ export default async function LandingPage() {
           <WaitlistForm />
         </div>
 
-        {/*<div className="border-t border-zinc-200 dark:border-zinc-800 pt-6 space-y-3">
+        <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6 space-y-3">
           <p className="text-zinc-500 text-xs">Already have access?</p>
           <SignInButton />
-        </div>*/}
+        </div>
       </div>
     </main>
   )

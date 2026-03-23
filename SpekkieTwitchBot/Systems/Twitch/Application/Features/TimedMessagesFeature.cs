@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Commands;
+using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
@@ -7,7 +8,7 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 public class TimedMessagesFeature(ITwitchChat chat) : IDisposable
 {
     private static readonly string ConfigPath =
-        $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SpekkieTwitchBot/Settings/TimedMessages.json";
+        Path.Combine(BotPaths.BaseDir, "Settings", "TimedMessages.json");
 
     private FileSystemWatcher? _Watcher;
     private CancellationTokenSource? _WatcherDebounce;

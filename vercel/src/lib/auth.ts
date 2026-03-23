@@ -1,12 +1,13 @@
 import { NextAuthOptions } from "next-auth"
 import TwitchProvider from "next-auth/providers/twitch"
 import { userRepository } from "@/repositories"
+import { env } from "@/lib/env"
 
 export const authOptions: NextAuthOptions = {
   providers: [
     TwitchProvider({
-      clientId: process.env.TWITCH_CLIENT_ID!,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET!,
+      clientId: env.twitchClientId,
+      clientSecret: env.twitchClientSecret,
       authorization: {
         params: {
           scope: "openid user:read:email channel:read:subscriptions moderator:read:followers",

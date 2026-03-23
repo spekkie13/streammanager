@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createHmac, timingSafeEqual } from "crypto"
 import { subEventsRepository, followEventsRepository, cheerEventsRepository, raidEventsRepository } from "@/repositories"
 import { streamSessionService } from "@/services"
+import { env } from "@/lib/env"
 
 const TWITCH_MESSAGE_ID = "twitch-eventsub-message-id"
 const TWITCH_MESSAGE_TIMESTAMP = "twitch-eventsub-message-timestamp"
@@ -9,7 +10,7 @@ const TWITCH_MESSAGE_SIGNATURE = "twitch-eventsub-message-signature"
 const MESSAGE_TYPE = "twitch-eventsub-message-type"
 
 function verifySignature(messageId: string, timestamp: string, body: string, signature: string): boolean {
-  const secret = process.env.TWITCH_WEBHOOK_SECRET!
+  const secret = env.twitchWebhookSecret
   const hmacMessage = messageId + timestamp + body
   const expected = "sha256=" + createHmac("sha256", secret).update(hmacMessage).digest("hex")
   try {

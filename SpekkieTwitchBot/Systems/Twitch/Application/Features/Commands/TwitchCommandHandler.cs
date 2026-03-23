@@ -4,21 +4,21 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class TwitchCommandHandler : ITwitchCommandHandler
 {
-    private readonly ChannelPointsFeature _ChannelPointsFeature;
-    private readonly ITwitchChannelInfoClient _Api;
+    private readonly ChannelPointsFeature _channelPointsFeature;
+    private readonly ITwitchChannelInfoClient _api;
 
     public TwitchCommandHandler(ChannelPointsFeature channelPointsFeature, ITwitchChannelInfoClient api)
     {
-        _ChannelPointsFeature = channelPointsFeature;
-        _Api = api;
+        _channelPointsFeature = channelPointsFeature;
+        _api = api;
     }
 
     public async Task<string> HandleCreateRedemptionCommand(string commandArgs)
-        => await _ChannelPointsFeature.CreateRedemption(commandArgs);
+        => await _channelPointsFeature.CreateRedemption(commandArgs);
 
     public async Task<string> HandleUptimeCommand(CancellationToken ct)
     {
-        DateTimeOffset? startTime = await _Api.GetStreamStartTimeAsync(ct);
+        DateTimeOffset? startTime = await _api.GetStreamStartTimeAsync(ct);
         if (startTime == null)
             return "The stream is currently offline. | De stream is momenteel offline.";
 
@@ -38,7 +38,7 @@ public class TwitchCommandHandler : ITwitchCommandHandler
 
     public async Task<string> HandleClipCommand(CancellationToken ct)
     {
-        string? clipUrl = await _Api.CreateClipAsync(ct);
+        string? clipUrl = await _api.CreateClipAsync(ct);
         return clipUrl != null
             ? $"Clip created! {clipUrl}"
             : "Failed to create clip — is the stream live?";
@@ -49,7 +49,7 @@ public class TwitchCommandHandler : ITwitchCommandHandler
         if (string.IsNullOrWhiteSpace(username))
             return "Usage: !so <username>";
 
-        (string? lastGame, string? login) = await _Api.GetShoutoutInfoAsync(username.TrimStart('@'), ct);
+        (string? lastGame, string? login) = await _api.GetShoutoutInfoAsync(username.TrimStart('@'), ct);
         if (login == null)
             return $"Could not find user '{username}'.";
 
