@@ -123,8 +123,7 @@ public static class Program
             .ConfigureAppConfiguration(configure =>
             {
                 configure.AddJsonFile(
-                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop) +
-                    "/SpekkieTwitchBot/Settings/appsettings.json"
+                    Path.Combine(BotPaths.BaseDir, "Settings", "appsettings.json")
                 );
             })
             .ConfigureLogging(logging =>

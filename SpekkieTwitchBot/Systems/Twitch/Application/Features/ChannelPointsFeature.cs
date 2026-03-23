@@ -137,8 +137,9 @@ public class ChannelPointsFeature
         if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(broadcasterId) || string.IsNullOrEmpty(rewardId) || string.IsNullOrEmpty(status))
             return;
         
-        StringContent requestContent = new ($"{{\"status\":\"{status}\"}}",
-            Encoding.UTF8, mediaType: "application/json");
+        StringContent requestContent = new(
+            JsonConvert.SerializeObject(new { status }),
+            Encoding.UTF8, "application/json");
 
         string requestUrl = $"{TwitchConstants.TwitchChannelRedemptionsUrl}{broadcasterId}&reward_id={rewardId}&id={id}";
         await _Client.PatchAsync(requestUrl, requestContent, ct);

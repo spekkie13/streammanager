@@ -6,8 +6,7 @@ public class GeneralFileSetup
 {
     private const string OutputDir = "/Output/General";
 
-    private static readonly string BaseDir =
-        Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
 
     private readonly FileSetup _FileSetup;
 

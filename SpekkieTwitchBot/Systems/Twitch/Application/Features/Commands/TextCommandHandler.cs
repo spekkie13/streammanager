@@ -1,23 +1,24 @@
 ﻿using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch.Commands;
+using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 public class TextCommandHandler : ITextCommandHandler
 {
-    private readonly string _FilePath;
-    private List<TextCommand> _Commands;
+    private readonly string _filePath;
+    private List<TextCommand> _commands;
 
     public TextCommandHandler(string? filePath = null)
     {
-        _FilePath = filePath ?? $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SpekkieTwitchBot/Settings/TextCommands.json";
-        _Commands = LoadTextCommands();
+        _filePath = filePath ?? Path.Combine(BotPaths.BaseDir, "Settings", "TextCommands.json");
+        _commands = LoadTextCommands();
     }
 
     private List<TextCommand> LoadTextCommands()
     {
-        string commandLocation = _FilePath;
+        string commandLocation = _filePath;
         using FileStream rfs = new(commandLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using StreamReader sr = new(rfs);
         string json = sr.ReadToEnd();
@@ -31,7 +32,7 @@ public class TextCommandHandler : ITextCommandHandler
     {
         string reply = "Unknown Command";
         
-        foreach (TextCommand comm in _Commands.Where(comm => comm.Command == $"!{command.CommandText}"))
+        foreach (TextCommand comm in _commands.Where(comm => comm.Command == $"!{command.CommandText}"))
         {
             reply = comm.Response ?? "";
         }
@@ -51,40 +52,40 @@ public class TextCommandHandler : ITextCommandHandler
                     Response = response
                 };
                 reply = $"Command {command} is added.";
-                _Commands.Add(comm);
+                _commands.Add(comm);
                 break;
             case "update":
             case "edit":
-                comm = _Commands.FirstOrDefault(c => c.Command == command) ?? new TextCommand();
-                _Commands.Remove(comm);
+                comm = _commands.FirstOrDefault(c => c.Command == command) ?? new TextCommand();
+                _commands.Remove(comm);
                 comm.Response = response;
-                _Commands.Add(comm);
+                _commands.Add(comm);
                 reply = $"Command {command} is updated.";
                 break;
             case "delete":
             case "remove":
-                comm = _Commands.FirstOrDefault(c => c.Command == command) ?? new TextCommand();
-                _Commands.Remove(comm);
+                comm = _commands.FirstOrDefault(c => c.Command == command) ?? new TextCommand();
+                _commands.Remove(comm);
                 reply = $"Command {command} is deleted.";
                 break;
         }
         
         TextCommands commands = new ()
         {
-            Commands = _Commands
+            Commands = _commands
         };
         string json = JsonConvert.SerializeObject(commands);
-        using (FileStream wfs = new(_FilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+        using (FileStream wfs = new(_filePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
         using (StreamWriter sw = new(wfs))
         {
             sw.Write(json);
         }
-        _Commands = LoadTextCommands();
+        _commands = LoadTextCommands();
         return reply;
     }
     
     public List<TextCommand> GetTextCommands()
     {
-        return _Commands;
+        return _commands;
     }
 }

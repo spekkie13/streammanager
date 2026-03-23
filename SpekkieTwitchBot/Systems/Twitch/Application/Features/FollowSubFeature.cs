@@ -1,4 +1,6 @@
 using SpekkieClassLibrary.Twitch;
+using SpekkieTwitchBot.General.FileHandling;
+using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
@@ -6,73 +8,58 @@ using SpotifyAuthService;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
-public class FollowSubFeature : IDisposable
+public class FollowSubFeature(
+    ITwitchChat chat,
+    ITwitchChannelInfoClient api,
+    ITwitchFileWriter files,
+    ITwitchFileReader fileReader,
+    ISpotifyService spotify,
+    Logger logger)
+    : IDisposable
 {
-    private readonly ITwitchChat _Chat;
-    private readonly ITwitchFileWriter _Files;
-    private readonly ITwitchFileReader _FileReader;
-    private readonly ITwitchChannelInfoClient _Api;
-    private readonly ISpotifyService _Spotify;
-
-    private FileSystemWatcher? _GoalsWatcher;
-    private CancellationTokenSource? _WatcherDebounce;
-    private CancellationTokenSource? _MusicResumeDebounce;
-    private CancellationToken _StopToken;
-    private int _CurrentSubCount;
-
-    public FollowSubFeature(
-        ITwitchChat chat,
-        ITwitchChannelInfoClient api,
-        ITwitchFileWriter files,
-        ITwitchFileReader fileReader,
-        ISpotifyService spotify
-    ) {
-        _Chat = chat;
-        _Api = api;
-        _Files = files;
-        _FileReader = fileReader;
-        _Spotify = spotify;
-    }
+    private FileSystemWatcher? _goalsWatcher;
+    private CancellationTokenSource? _watcherDebounce;
+    private CancellationTokenSource? _musicResumeDebounce;
+    private CancellationToken _stopToken;
+    private int _currentSubCount;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        _StopToken = cancellationToken;
+        _stopToken = cancellationToken;
 
-        string latestFollower = await _Api.GetLatestFollower(cancellationToken);
-        string latestSubscriberRaw = await _FileReader.ReadLatestSubDisplayAsync();
+        string latestFollower = await api.GetLatestFollower(cancellationToken);
+        string latestSubscriberRaw = await fileReader.ReadLatestSubDisplayAsync();
         string latestSubscriber = string.IsNullOrWhiteSpace(latestSubscriberRaw)
-            ? await _Api.GetLatestSubscriber(cancellationToken)
+            ? await api.GetLatestSubscriber(cancellationToken)
             : latestSubscriberRaw;
-        int totalFollowers = await _Api.GetFollowerCount(cancellationToken);
+        int totalFollowers = await api.GetFollowerCount(cancellationToken);
 
-        StreamGoalsConfig? goalsConfig = await _FileReader.ReadGoalsConfigAsync();
-        _CurrentSubCount = goalsConfig?.SubGoal.CurrentAmount ?? 0;
+        StreamGoalsConfig? goalsConfig = await fileReader.ReadGoalsConfigAsync();
+        _currentSubCount = goalsConfig?.SubGoal.CurrentAmount ?? 0;
 
-        _Files.WriteLatestFollowerHtml(latestFollower, totalFollowers);
-        _Files.WriteLatestSubHtml(latestSubscriber, _CurrentSubCount);
-        if (goalsConfig != null) _Files.WriteSubGoalHtml(goalsConfig);
+        files.WriteLatestFollowerHtml(latestFollower, totalFollowers);
+        files.WriteLatestSubHtml(latestSubscriber, _currentSubCount);
+        if (goalsConfig != null) files.WriteSubGoalHtml(goalsConfig);
 
         StartGoalsWatcher();
     }
 
     private void StartGoalsWatcher()
     {
-        string dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-            "SpekkieTwitchBot", "Settings");
+        string dir = Path.Combine(BotPaths.BaseDir, "Settings");
 
-        _GoalsWatcher = new FileSystemWatcher(dir, "goals.json")
+        _goalsWatcher = new FileSystemWatcher(dir, "goals.json")
         {
             NotifyFilter = NotifyFilters.LastWrite,
             EnableRaisingEvents = true
         };
-        _GoalsWatcher.Changed += OnGoalsConfigChanged;
+        _goalsWatcher.Changed += OnGoalsConfigChanged;
     }
 
     private void OnGoalsConfigChanged(object sender, FileSystemEventArgs e)
     {
-        CancellationTokenSource newCts = CancellationTokenSource.CreateLinkedTokenSource(_StopToken);
-        CancellationTokenSource? oldCts = Interlocked.Exchange(ref _WatcherDebounce, newCts);
+        CancellationTokenSource newCts = CancellationTokenSource.CreateLinkedTokenSource(_stopToken);
+        CancellationTokenSource? oldCts = Interlocked.Exchange(ref _watcherDebounce, newCts);
         oldCts?.Cancel();
         oldCts?.Dispose();
 
@@ -81,22 +68,22 @@ public class FollowSubFeature : IDisposable
             try
             {
                 await Task.Delay(500, newCts.Token);
-                StreamGoalsConfig? config = await _FileReader.ReadGoalsConfigAsync();
+                StreamGoalsConfig? config = await fileReader.ReadGoalsConfigAsync();
                 if (config == null) return;
-                _Files.WriteSubGoalHtml(config);
+                files.WriteSubGoalHtml(config);
             }
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error reloading goals config: {ex}");
+                logger.LogError($"Error reloading goals config: {ex}");
             }
         }, newCts.Token);
     }
 
     private void DebounceMusicResume()
     {
-        CancellationTokenSource newCts = CancellationTokenSource.CreateLinkedTokenSource(_StopToken);
-        CancellationTokenSource? oldCts = Interlocked.Exchange(ref _MusicResumeDebounce, newCts);
+        CancellationTokenSource newCts = CancellationTokenSource.CreateLinkedTokenSource(_stopToken);
+        CancellationTokenSource? oldCts = Interlocked.Exchange(ref _musicResumeDebounce, newCts);
         oldCts?.Cancel();
         oldCts?.Dispose();
 
@@ -104,37 +91,37 @@ public class FollowSubFeature : IDisposable
         {
             try
             {
-                await _Spotify.PausePlayerAsync(newCts.Token);
+                await spotify.PausePlayerAsync(newCts.Token);
                 await Task.Delay(TimeSpan.FromSeconds(25), newCts.Token);
-                await _Spotify.ResumePlayerAsync(newCts.Token);
+                await spotify.ResumePlayerAsync(newCts.Token);
             }
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in music pause/resume flow: {ex}");
+                logger.LogError($"Error in music pause/resume flow: {ex}");
             }
         }, newCts.Token);
     }
 
     public void Dispose()
     {
-        _GoalsWatcher?.Dispose();
-        _WatcherDebounce?.Cancel();
-        _WatcherDebounce?.Dispose();
-        _MusicResumeDebounce?.Cancel();
-        _MusicResumeDebounce?.Dispose();
+        _goalsWatcher?.Dispose();
+        _watcherDebounce?.Cancel();
+        _watcherDebounce?.Dispose();
+        _musicResumeDebounce?.Cancel();
+        _musicResumeDebounce?.Dispose();
     }
 
     public async Task HandleFollowAsync(FollowHappened e, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(e.UserName)) return;
         
-        await _Files.WriteMostRecentFollowerAsync(e.UserName, cancellationToken);
-        int totalFollowers = await _Api.GetFollowerCount(cancellationToken);
-        await _Files.WriteTotalFollowersAsync(totalFollowers, cancellationToken);
-        _Files.WriteLatestFollowerHtml(e.UserName, totalFollowers);
+        await files.WriteMostRecentFollowerAsync(e.UserName, cancellationToken);
+        int totalFollowers = await api.GetFollowerCount(cancellationToken);
+        await files.WriteTotalFollowersAsync(totalFollowers, cancellationToken);
+        files.WriteLatestFollowerHtml(e.UserName, totalFollowers);
         
-        await _Chat.SendAsync(message: $"Thanks for the follow {e.UserName}", cancellationToken);
+        await chat.SendAsync(message: $"Thanks for the follow {e.UserName}", cancellationToken);
     }
 
     public async Task HandleSubAsync(SubHappened e, CancellationToken cancellationToken = default)
@@ -144,25 +131,25 @@ public class FollowSubFeature : IDisposable
         DebounceMusicResume();
 
         string latestSubscriber = FormatLatestSub(e);
-        await _Files.WriteMostRecentSubscriberAsync(latestSubscriber, cancellationToken);
+        await files.WriteMostRecentSubscriberAsync(latestSubscriber, cancellationToken);
 
         int increment = e.Kind == SubKind.CommunityGift ? e.GiftCount : 1;
-        _CurrentSubCount += increment;
+        _currentSubCount += increment;
 
-        await _Files.WriteTotalSubscribersAsync(_CurrentSubCount, cancellationToken);
-        _Files.WriteLatestSubHtml(latestSubscriber, _CurrentSubCount);
-        await WriteSubGoalAsync(_CurrentSubCount, cancellationToken);
+        await files.WriteTotalSubscribersAsync(_currentSubCount, cancellationToken);
+        files.WriteLatestSubHtml(latestSubscriber, _currentSubCount);
+        await WriteSubGoalAsync(_currentSubCount, cancellationToken);
 
-        await _Chat.SendAsync(message: FormatChatThanks(e), cancellationToken);
+        await chat.SendAsync(message: FormatChatThanks(e), cancellationToken);
     }
 
     private async Task WriteSubGoalAsync(int current, CancellationToken ct)
     {
-        StreamGoalsConfig? config = await _FileReader.ReadGoalsConfigAsync();
+        StreamGoalsConfig? config = await fileReader.ReadGoalsConfigAsync();
         if (config == null) return;
         StreamGoalsConfig updated = config with { SubGoal = config.SubGoal with { CurrentAmount = current } };
-        _Files.WriteGoalsConfig(updated);
-        _Files.WriteSubGoalHtml(updated);
+        files.WriteGoalsConfig(updated);
+        files.WriteSubGoalHtml(updated);
     }
 
     private static string FormatLatestSub(SubHappened e)

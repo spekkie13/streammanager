@@ -5,7 +5,7 @@ namespace SpekkieTwitchBot.General.FileHandling.Timer;
 public class TimerFileSetup
 {
     private readonly FileSetup _FileSetup;
-    private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
     private const string OutputDir = "/Output/Timer";
 
     public TimerFileSetup(FileSetup fileSetup)

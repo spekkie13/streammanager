@@ -4,8 +4,7 @@ namespace SpekkieTwitchBot.General.FileHandling.Spotify;
 
 public class SpotifyFileSetup
 {
-    private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) +
-                                             $"{Path.DirectorySeparatorChar}SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
 
     private readonly FileSetup _FileSetup;
     private readonly string _OutputDir = $"{Path.DirectorySeparatorChar}Output{Path.DirectorySeparatorChar}Spotify";

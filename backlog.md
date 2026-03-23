@@ -48,6 +48,8 @@ Week 5:  Epic 4 — Analytics (achter paywall) ← eerste conversie-moment
 Week 6:  Epic 5 — Stripe integratie + feature gates
 Week 7:  Epic 3 — Configuratie beheren (webapp + desktop sync)
          Epic 6.6 — YouTube analytics
+Week 8:  Epic 7 — Unified chat view (USP — Twitch + YouTube in één feed)
+         ↑ SHIP: multi-platform streamers als doelgroep, marketingpunt
 ```
 
 > **Waarom deze volgorde?**
@@ -752,6 +754,122 @@ Update the /analytics page:
 
 Show the updated API route and page.
 ```
+
+---
+
+### [UI] Add platform logos to the Connections tab
+
+**Doel:** Show the official logo of each platform next to its connection entry on the Connections page for a more polished, recognisable UI.
+
+**Platforms:**
+- Twitch logo
+- Spotify logo
+- YouTube logo
+
+---
+
+### [GOALS] Multi-platform event goals
+
+**Doel:** Expand the current Twitch sub goal into a flexible goals system that supports one active goal per event type across all connected platforms — not just Twitch subs.
+
+**Motivatie:**
+The current sub goal is Twitch-only and sub-only. Creators increasingly care about follower milestones, YouTube member counts, and cheer/bits targets alongside subs. A generalised goals system lets them track what actually matters to them on any given stream.
+
+**Scope — one goal per event type, not a goal builder:**
+- Each supported event type gets its own goal slot (e.g. Twitch Subs, Twitch Follows, YouTube Members)
+- Only one active goal per slot at a time — same UX as today, just more slots
+- Goal slots are only visible/configurable once the relevant platform is connected
+
+**Event types to support (phased with platform epics):**
+- Twitch: Subscriptions ✅ (exists), Follows, Cheers (bits)
+- YouTube: Members, Super Chats (after Epic 6)
+
+**Architectuuroverwegingen:**
+- Current `sub_goals` table is Twitch-sub-specific — needs to be generalised or a new `goals` table introduced with a `type` discriminator column (e.g. `twitch_sub`, `twitch_follow`, `youtube_member`)
+- The OBS overlay output file and the C# bot that writes it are tied to the sub goal — those also need to support the new types
+- Dashboard UI should render each active goal as its own card, not cram them all into one
+
+**Afhankelijkheden:** Epic 6 (YouTube) for YouTube goal types. Twitch follow/cheer goals can be built independently.
+
+---
+
+## Epic 7 — Unified chat view (USP)
+
+> **Marketing hook:** "All your chats, one screen." Multi-platform streamers currently juggle separate browser tabs for Twitch chat, YouTube live chat, and others — mid-stream. CreatorDeck solves this with a single chronological feed that shows every message regardless of source, with a coloured platform badge so the streamer always knows where a message came from. No other mainstream stream management tool offers this out of the box.
+
+> **Afhankelijkheden:** Epic 6 (YouTube OAuth + chat poller). Twitch chat kan parallel worden gebouwd.
+
+---
+
+### [7.1] Twitch chat inlezen via EventSub
+
+**Doel:** Subscribe to the `channel.chat.message` EventSub event type so Twitch chat messages flow into the backend in real time via webhook, consistent with the existing EventSub infrastructure.
+
+**Context:**
+- `channel.chat.message` requires an additional EventSub subscription — add it to the register-subscriptions flow
+- Payload includes: `chatter_user_name`, `message.text`, `message_id`, `badges`, `message_type`
+- Store messages in a new `chat_messages` table (see [7.2]) and forward to the SSE stream
+
+---
+
+### [7.2] `chat_messages` tabel toevoegen aan schema
+
+**Doel:** Centrale tabel voor alle chat berichten ongeacht platform.
+
+**Schema:**
+```
+chat_messages
+- id (uuid, primaryKey, defaultRandom)
+- broadcasterId (text, notNull)
+- source (text, notNull) — "twitch" | "youtube" | "tiktok"
+- externalMessageId (text, unique, notNull) — platform-specific message ID for deduplication
+- username (text, notNull)
+- text (text, notNull)
+- badges (text, nullable) — JSON array of badge names
+- occurredAt (timestamp, notNull)
+- createdAt (timestamp, defaultNow, notNull)
+```
+
+---
+
+### [7.3] YouTube chat doorsturen naar `chat_messages`
+
+**Doel:** Berichten die binnenkomen via de YouTube chat poller (Epic 6.4) worden ook opgeslagen in `chat_messages` met `source = "youtube"`, zodat de unified feed beide platforms toont.
+
+**Context:**
+- YouTube chat poller haalt `liveChatMessages` op — map `authorDetails.displayName` → `username`, `snippet.displayMessage` → `text`, `id` → `externalMessageId`
+- Super Chats en memberships zijn ook chat message types in de YouTube API — markeer ze met een badge
+
+---
+
+### [7.4] SSE stream uitbreiden met chat events
+
+**Doel:** Chat berichten worden via de bestaande SSE endpoint naar de frontend gepusht als een nieuw event type `chat`, zodat de frontend real-time updates ontvangt zonder polling.
+
+**Context:**
+- Huidig SSE stream levert `sub`, `follow`, `bits`, `raid` events — voeg `chat` toe als type
+- Chat volume kan hoog zijn — overweeg client-side buffering (max 200 berichten in memory, oudste vallen eraf)
+
+---
+
+### [7.5] Unified chat UI in het dashboard
+
+**Doel:** Een chatvenster in het dashboard dat berichten van alle platforms toont in één chronologische feed.
+
+**UX-vereisten:**
+- Per bericht: platform badge (gekleurd naar bron — paars Twitch, rood YouTube), gebruikersnaam, berichttekst, tijdstip
+- Scrollt automatisch mee met nieuwe berichten, maar pauzeert scrollen als de gebruiker omhoog scrollt
+- Filteroptie per platform (toggle Twitch / YouTube aan/uit)
+- Maximaal ~200 berichten in de weergave; oudste worden verwijderd
+- Moderatieacties (ban, timeout, bericht verwijderen) zijn een follow-up feature — buiten scope voor v1
+
+---
+
+### [7.6] TikTok chat (toekomstig — buiten scope v1)
+
+**Doel:** TikTok live chat toevoegen aan de unified feed.
+
+**Status:** TikTok heeft geen officiële live chat API voor derde partijen. Dit item blijft geparkeerd totdat TikTok een API openstelt of een betrouwbare officiële integratiemethode beschikbaar komt. Geen third-party scrapers — te fragiel en ToS-risico.
 
 ---
 

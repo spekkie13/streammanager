@@ -22,5 +22,5 @@ export async function POST(req: NextRequest) {
   const endsAtDate = endsAt ? new Date(endsAt) : null
 
   await subGoalsRepository.upsert(session.twitchId, goal, safeInitialCount, endsAtDate)
-  return NextResponse.json({ ok: true, goal, initialCount: safeInitialCount, endsAt: endsAtDate?.toISOString() ?? null })
+  return NextResponse.json({ goal, initialCount: safeInitialCount, endsAt: endsAtDate?.toISOString() ?? null })
 }

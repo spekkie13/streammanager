@@ -11,8 +11,7 @@ public class SpotifyFileReader
         _FileReader = fileReader;
     }
     
-    private static readonly string BaseDir =
-        Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
 
     public string ReadSpotifyAuthFile()
     {

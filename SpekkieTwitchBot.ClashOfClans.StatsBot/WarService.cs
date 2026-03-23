@@ -19,11 +19,11 @@ public class WarService(
     Logger logger)
     : BackgroundService, IWarService
 {
-    private readonly Dictionary<string, byte[]> _LogoCache = new();
-    private string? _LastWarState;
+    private readonly Dictionary<string, byte[]> _logoCache = new();
+    private string? _lastWarState;
 
-    public bool IsWarActive => _LastWarState is "preparation" or "inWar";
-    private CancellationTokenSource? _WatcherDebounce;
+    public bool IsWarActive => _lastWarState is "preparation" or "inWar";
+    private CancellationTokenSource? _watcherDebounce;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -57,10 +57,10 @@ public class WarService(
 
     private void OnTagFileChanged(CancellationToken stoppingToken)
     {
-        _WatcherDebounce?.Cancel();
-        _WatcherDebounce?.Dispose();
-        _WatcherDebounce = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
-        CancellationTokenSource cts = _WatcherDebounce;
+        _watcherDebounce?.Cancel();
+        _watcherDebounce?.Dispose();
+        _watcherDebounce = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+        CancellationTokenSource cts = _watcherDebounce;
 
         _ = Task.Run(async () =>
         {
@@ -129,9 +129,9 @@ public class WarService(
         if (runTimeWar.Clan == null || runTimeWar.Opponent == null)
         {
             logger.LogWarning("No war detected...");
-            if (_LastWarState != "notInWar")
+            if (_lastWarState != "notInWar")
             {
-                _LastWarState = "notInWar";
+                _lastWarState = "notInWar";
                 await eventBus.PublishAsync(new WarStateChangedEvent("notInWar", null, null));
             }
             return;
@@ -149,16 +149,16 @@ public class WarService(
         }
         logger.LogInfo("Updated: " + DateTime.Now);
 
-        if (runTimeWar.State != _LastWarState)
+        if (runTimeWar.State != _lastWarState)
         {
-            _LastWarState = runTimeWar.State;
+            _lastWarState = runTimeWar.State;
             await eventBus.PublishAsync(new WarStateChangedEvent(runTimeWar.State, runTimeWar.Clan.Name, runTimeWar.Opponent.Name));
         }
 
         if (runTimeWar.State == "preparation" && manager.IsNewWar(runTimeWar.PreparationStartTime))
         {
             Console.WriteLine("New war detected, resetting war files...");
-            _LogoCache.Clear();
+            _logoCache.Clear();
             manager.ResetWarFiles();
             manager.SaveWarId(runTimeWar.PreparationStartTime);
         }
@@ -169,7 +169,7 @@ public class WarService(
 
     private async Task<byte[]> GetTeamLogoAsync(RunTimeClan clan)
     {
-        if (_LogoCache.TryGetValue(clan.Tag, out byte[]? cached))
+        if (_logoCache.TryGetValue(clan.Tag, out byte[]? cached))
             return cached;
 
         CcnClanInfo? ccnInfo = await ccnClient.GetClanInfoAsync(clan.Tag);
@@ -185,7 +185,7 @@ public class WarService(
             logo = await client.GetByteArrayAsync(clan.BadgeUrls.Large);
         }
 
-        _LogoCache[clan.Tag] = logo;
+        _logoCache[clan.Tag] = logo;
         return logo;
     }
 
