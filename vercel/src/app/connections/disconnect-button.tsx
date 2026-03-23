@@ -1,12 +1,15 @@
 "use client"
 import { useState } from "react"
-import { signOut } from "next-auth/react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 
 type Props = {
   provider: string
 }
 
 export function DisconnectButton({ provider }: Props) {
+  const { update } = useSession()
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -19,8 +22,9 @@ export function DisconnectButton({ provider }: Props) {
       body: JSON.stringify({ provider }),
     })
     if (res.ok) {
-      // Sign out to clear the stale JWT, then return to landing page
-      await signOut({ callbackUrl: "/" })
+      // Refresh session JWT from DB so UI reflects the disconnected state immediately
+      await update()
+      router.refresh()
     } else {
       const text = await res.text()
       setError(text)
