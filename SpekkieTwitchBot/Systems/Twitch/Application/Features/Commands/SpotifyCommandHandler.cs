@@ -12,8 +12,8 @@ public class SpotifyCommandHandler(
     ITwitchChannelInfoClient channelInfo)
     : ISpotifyCommandHandler
 {
-    private readonly HashSet<string> _SongRequestedThisStream = new(StringComparer.OrdinalIgnoreCase);
-    private string? _CurrentStreamId;
+    private readonly HashSet<string> _songRequestedThisStream = new(StringComparer.OrdinalIgnoreCase);
+    private string? _currentStreamId;
 
     public async Task<string> HandleGetCurrentSongCommand(CancellationToken cancellationToken = default)
     {
@@ -63,7 +63,7 @@ public class SpotifyCommandHandler(
 
     public async Task<string> HandlePlaySpecificSongCommand(string song, string username, CancellationToken cancellationToken = default)
     {
-        if (!username.Equals("itsspekkie", StringComparison.CurrentCultureIgnoreCase)) return "";
+        if (!username.Equals("itsspekkie", StringComparison.CurrentCultureIgnoreCase)) return "This command is only available for the broadcaster.";
         bool success = await spotifyService.PlaySpecificSongAsync(song, cancellationToken);
         return success ? $"started song: {song}" : $"failed to start song: {song}";
     }
@@ -80,20 +80,20 @@ public class SpotifyCommandHandler(
             return $"@{username} Usage: !sr <song name or Spotify link>";
 
         string? streamId = await channelInfo.GetCurrentStreamIdAsync(ct);
-        if (streamId != _CurrentStreamId)
+        if (streamId != _currentStreamId)
         {
-            _CurrentStreamId = streamId;
-            _SongRequestedThisStream.Clear();
+            _currentStreamId = streamId;
+            _songRequestedThisStream.Clear();
         }
 
-        if (!_SongRequestedThisStream.Add(userId))
+        if (!_songRequestedThisStream.Add(userId))
             return $"@{username} You can only use !sr once per stream. Use the channel point reward to request more songs!";
 
         string result = await spotifyService.AddSongToQueueAsync(input, ct);
         bool success = !result.Equals("Error", StringComparison.OrdinalIgnoreCase);
 
         if (!success)
-            _SongRequestedThisStream.Remove(userId);
+            _songRequestedThisStream.Remove(userId);
 
         return success
             ? $"@{username} Successfully added {result} to the queue!"

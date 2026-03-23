@@ -755,4 +755,15 @@ Show the updated API route and page.
 
 ---
 
+### [UI] Add platform logos to the Connections tab
+
+**Doel:** Show the official logo of each platform next to its connection entry on the Connections page for a more polished, recognisable UI.
+
+**Platforms:**
+- Twitch logo
+- Spotify logo
+- YouTube logo
+
+---
+
 *Backlog gecorrigeerd op basis van werkelijke codebase: Next.js + Neon DB + **Drizzle ORM** + NextAuth Twitch OAuth (webapp) en C# desktop app met OBS, Spotify en Twitch integraties. EventSub webhooks (geen polling). Bestaande tabellen: `users`, `sub_events`, `sub_goals`, `eventsub_subscriptions`.*

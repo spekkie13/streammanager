@@ -1,10 +1,11 @@
-﻿using SpekkieTwitchBot.General.FileHandling.Common.Interface;
+﻿using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.General.FileHandling.Common.Interface;
 
 namespace SpekkieTwitchBot.General.FileHandling.Timer;
 
 public class TimerFileWriter(ITextFileWriter fileWriter) : ITimerFileWriter
 {
-    private static readonly string BaseDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/SpekkieTwitchBot";
+    private static readonly string BaseDir = BotPaths.BaseDir;
     private const string OutputDir = "/Output/Timer";
 
     public void WriteRemainingTime(TimeSpan totalTime)
