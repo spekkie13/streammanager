@@ -47,16 +47,20 @@ export const authOptions: NextAuthOptions = {
 
         if (account.provider === "twitch") {
           if (existingUserId) {
-            // Linking Twitch to an existing session (e.g. YouTube user connecting Twitch)
-            await linkedAccountsRepository.upsertForUser(existingUserId, {
-              provider: "twitch",
-              providerAccountId: p.sub,
-              login: p.preferred_username,
-              displayName: p.preferred_username,
-              accessToken: account.access_token ?? "",
-              refreshToken: account.refresh_token ?? "",
-            })
-            token.twitchId = p.sub
+            try {
+              await linkedAccountsRepository.upsertForUser(existingUserId, {
+                provider: "twitch",
+                providerAccountId: p.sub,
+                login: p.preferred_username,
+                displayName: p.preferred_username,
+                accessToken: account.access_token ?? "",
+                refreshToken: account.refresh_token ?? "",
+              })
+              token.twitchId = p.sub
+              delete token.linkingError
+            } catch {
+              token.linkingError = "account_conflict"
+            }
           } else {
             const { userId, apiKey } = await linkedAccountsRepository.upsertWithUser({
               provider: "twitch",
@@ -75,19 +79,26 @@ export const authOptions: NextAuthOptions = {
 
         } else if (account.provider === "google") {
           const channelId = await fetchYouTubeChannelId(account.access_token ?? "")
-          if (!channelId) return token
+          if (!channelId) {
+            token.linkingError = "no_youtube_channel"
+            return token
+          }
 
           if (existingUserId) {
-            // Linking YouTube to an existing session (e.g. Twitch user connecting YouTube)
-            await linkedAccountsRepository.upsertForUser(existingUserId, {
-              provider: "youtube",
-              providerAccountId: channelId,
-              login: channelId,
-              displayName: p.name ?? channelId,
-              accessToken: account.access_token ?? "",
-              refreshToken: account.refresh_token ?? "",
-            })
-            token.youtubeChannelId = channelId
+            try {
+              await linkedAccountsRepository.upsertForUser(existingUserId, {
+                provider: "youtube",
+                providerAccountId: channelId,
+                login: channelId,
+                displayName: p.name ?? channelId,
+                accessToken: account.access_token ?? "",
+                refreshToken: account.refresh_token ?? "",
+              })
+              token.youtubeChannelId = channelId
+              delete token.linkingError
+            } catch {
+              token.linkingError = "account_conflict"
+            }
           } else {
             const { userId, apiKey } = await linkedAccountsRepository.upsertWithUser({
               provider: "youtube",
@@ -113,8 +124,9 @@ export const authOptions: NextAuthOptions = {
       session.youtubeChannelId = token.youtubeChannelId as string | null
       session.displayName = token.displayName as string
       session.apiKey = token.apiKey as string
+      if (token.linkingError) session.linkingError = token.linkingError
       return session
     },
   },
-  // pages: { signIn: "/" },
+  pages: { signIn: "/" },
 }

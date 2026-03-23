@@ -7,6 +7,7 @@ declare module "next-auth" {
     youtubeChannelId: string | null
     displayName: string
     apiKey: string
+    linkingError?: "account_conflict" | "no_youtube_channel"
   }
 }
 
@@ -17,5 +18,6 @@ declare module "next-auth/jwt" {
     youtubeChannelId: string | null
     displayName: string
     apiKey: string
+    linkingError?: "account_conflict" | "no_youtube_channel"
   }
 }

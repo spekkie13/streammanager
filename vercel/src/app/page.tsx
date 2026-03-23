@@ -61,9 +61,9 @@ export default async function LandingPage() {
             One dashboard for your stream events, goals, and analytics — across Twitch, YouTube, and more.
           </p>
 
-          {/*<div className="pt-2">
+          <div className="pt-2">
             <SignInButton />
-          </div>*/}
+          </div>
         </div>
       </section>
 
