@@ -1,4 +1,5 @@
 export { userRepository } from "./user.repository"
+export { linkedAccountsRepository } from "./linked-accounts.repository"
 export { subEventsRepository } from "./sub-events.repository"
 export { followEventsRepository } from "./follow-events.repository"
 export { cheerEventsRepository } from "./cheer-events.repository"

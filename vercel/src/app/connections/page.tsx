@@ -91,7 +91,9 @@ export default async function ConnectionsPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect("/")
 
-  const subscriptionsRegistered = await eventSubSubscriptionsRepository.existsByBroadcasterId(session.twitchId)
+  const subscriptionsRegistered = session.twitchId
+    ? await eventSubSubscriptionsRepository.existsByBroadcasterId(session.twitchId)
+    : false
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook`
 
   return (
