@@ -4,17 +4,19 @@ import { env } from "@/lib/env"
 import { NextResponse } from "next/server"
 import { randomBytes } from "crypto"
 
+const APP_URL = (process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL)!
+
 export async function GET() {
   const session = await getServerSession(authOptions)
   if (!session?.userId) {
-    return NextResponse.redirect(new URL("/", process.env.NEXTAUTH_URL!))
+    return NextResponse.redirect(new URL("/", APP_URL))
   }
 
   const state = randomBytes(16).toString("hex")
 
   const params = new URLSearchParams({
     client_id: env.googleClientId,
-    redirect_uri: `${process.env.NEXTAUTH_URL}/api/connections/link/google/callback`,
+    redirect_uri: `${APP_URL}/api/connections/link/google/callback`,
     response_type: "code",
     scope: "openid email profile https://www.googleapis.com/auth/youtube.readonly",
     access_type: "offline",

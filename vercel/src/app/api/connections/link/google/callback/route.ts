@@ -3,7 +3,7 @@ import { cookies } from "next/headers"
 import { linkedAccountsRepository } from "@/repositories"
 import { env } from "@/lib/env"
 
-const BASE_URL = process.env.NEXTAUTH_URL!
+const BASE_URL = (process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL)!
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
