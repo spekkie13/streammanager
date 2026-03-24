@@ -716,6 +716,19 @@ New users land on the dashboard with no guidance. EventSub registration is burie
 
 ---
 
+## [BUG] Investigate backfill inserting already-present events
+
+> **Priority: medium** — backfill runs on onboarding completion and may create duplicate rows for events already captured by live webhooks.
+
+**Symptoms observed:** After onboarding, some event rows may appear that overlap with events already recorded by the EventSub webhook (e.g. a follower who followed before onboarding but whose event was also delivered via webhook).
+
+**What to investigate:**
+- The `findTrackedUserIds` check in the backfill route skips users already in `follow_events` — verify this is working correctly in production
+- Sub backfill uses `eventId: backfill-sub-{userId}` with no conflict guard — if the same sub was already recorded via webhook (with a real eventId), a second row will be inserted
+- Consider adding `onConflictDoNothing` on `(broadcaster_id, user_id)` for sub events similar to the fix applied to follow events
+
+---
+
 ## [UX] Platform audience pills
 
 > **Priority: medium** — quick visual signal of channel health. Gives the streamer a glanceable snapshot of their audience size and momentum without leaving the dashboard.
