@@ -51,6 +51,8 @@ async function backfillFollowers(broadcasterId: string, accessToken: string): Pr
 }
 
 async function backfillSubs(broadcasterId: string, accessToken: string): Promise<number> {
+  const existingUserIds = await subEventsRepository.findTrackedUserIds(broadcasterId)
+
   let cursor: string | undefined
   let total = 0
 
@@ -70,6 +72,7 @@ async function backfillSubs(broadcasterId: string, accessToken: string): Promise
     }[] = data.data ?? []
 
     for (const s of subs) {
+      if (existingUserIds.has(s.user_id)) continue
       await subEventsRepository.insert({
         broadcasterId,
         eventId: `backfill-sub-${s.user_id}`,
@@ -84,6 +87,7 @@ async function backfillSubs(broadcasterId: string, accessToken: string): Promise
         giftCount: 1,
         occurredAt: new Date(), // Twitch subscriptions API does not return subscribed_at
       })
+      existingUserIds.add(s.user_id)
     }
 
     total += subs.length

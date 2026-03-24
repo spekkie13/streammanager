@@ -1,4 +1,4 @@
-import { and, eq, desc, gt, gte, lte, sql } from "drizzle-orm"
+import { and, eq, desc, gt, gte, lte, sql, isNotNull } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { subEvents } from "@/lib/schema"
 import type { SubEvent, InsertSubEvent } from "@/types/entities"
@@ -26,6 +26,13 @@ class SubEventsRepository {
     return db.select().from(subEvents)
       .where(and(eq(subEvents.broadcasterId, broadcasterId), gte(subEvents.occurredAt, from), lte(subEvents.occurredAt, to)))
       .orderBy(desc(subEvents.occurredAt))
+  }
+
+  async findTrackedUserIds(broadcasterId: string): Promise<Set<string>> {
+    const rows = await db.select({ userId: subEvents.userId })
+      .from(subEvents)
+      .where(and(eq(subEvents.broadcasterId, broadcasterId), isNotNull(subEvents.userId)))
+    return new Set(rows.map(r => r.userId!))
   }
 
   async countByBroadcasterId(broadcasterId: string): Promise<number> {

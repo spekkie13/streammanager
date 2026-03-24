@@ -716,16 +716,9 @@ New users land on the dashboard with no guidance. EventSub registration is burie
 
 ---
 
-## [BUG] Investigate backfill inserting already-present events
+## [BUG] ✅ Investigate backfill inserting already-present events
 
-> **Priority: medium** — backfill runs on onboarding completion and may create duplicate rows for events already captured by live webhooks.
-
-**Symptoms observed:** After onboarding, some event rows may appear that overlap with events already recorded by the EventSub webhook (e.g. a follower who followed before onboarding but whose event was also delivered via webhook).
-
-**What to investigate:**
-- The `findTrackedUserIds` check in the backfill route skips users already in `follow_events` — verify this is working correctly in production
-- Sub backfill uses `eventId: backfill-sub-{userId}` with no conflict guard — if the same sub was already recorded via webhook (with a real eventId), a second row will be inserted
-- Consider adding `onConflictDoNothing` on `(broadcaster_id, user_id)` for sub events similar to the fix applied to follow events
+> **Resolved** — sub backfill now uses `findTrackedUserIds` to skip users already recorded by live webhooks, matching the guard already in place for follow backfill.
 
 ---
 
@@ -908,6 +901,25 @@ A built-in music player for the creator's own copyright-free music library, play
 - Start with rule-based; AI grouping is a v2 enhancement
 
 **Afhankelijkheden:** None from other epics, but should only be built after the core platform (Epics 1–7) is solid and user-validated.
+
+---
+
+## Epic 12 — Localization & translation
+
+> **Priority: medium** — CreatorDeck's audience is international. The backlog is written in Dutch and the codebase has hardcoded English UI strings. Proper i18n opens the product to non-English streamers and makes future locale additions trivial.
+
+**Scope:**
+- Externalize all UI strings (dashboard, connections, setup wizard, landing page) into locale files
+- Support at minimum: English (`en`) and Dutch (`nl`)
+- Locale detection: browser `Accept-Language` header as default, user-overridable via account settings
+- Date/time and number formatting should respect locale (e.g. `toLocaleString`)
+
+**Recommended approach:**
+- Use `next-intl` — integrates cleanly with Next.js App Router, supports server and client components, minimal boilerplate
+- Locale files as JSON under `messages/en.json`, `messages/nl.json`
+- No database changes needed for locale preference — store in a cookie or user settings row
+
+**Afhankelijkheden:** None — can be done in any order, but easier before the UI grows further.
 
 ---
 
