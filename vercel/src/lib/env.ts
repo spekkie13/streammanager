@@ -11,4 +11,5 @@ export const env = {
   twitchWebhookSecret: requireEnv("TWITCH_WEBHOOK_SECRET"),
   googleClientId: requireEnv("GOOGLE_CLIENT_ID"),
   googleClientSecret: requireEnv("GOOGLE_CLIENT_SECRET"),
+  cronSecret: requireEnv("CRON_SECRET"),
 }
