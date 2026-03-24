@@ -4,12 +4,17 @@ import { env } from "@/lib/env"
 import { NextResponse } from "next/server"
 import { randomBytes, createHash } from "crypto"
 
-const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL)!
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL)!.replace(/\/$/, "")
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authOptions)
   if (!session?.userId) {
     return NextResponse.redirect(new URL("/", APP_URL))
+  }
+
+  // Debug mode: return the redirect_uri without actually redirecting to Google
+  if (new URL(req.url).searchParams.get("debug") === "1") {
+    return Response.json({ redirect_uri: `${APP_URL}/api/connections/link/google/callback`, APP_URL })
   }
 
   const state = randomBytes(16).toString("base64url")
