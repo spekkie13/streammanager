@@ -865,7 +865,22 @@ chat_messages
 
 ---
 
-### [7.6] TikTok chat (toekomstig — buiten scope v1)
+### [7.6] Connections pagina uitbreiden met YouTube-specifieke info
+
+**Doel:** De connections pagina toont momenteel voor Twitch uitgebreide info (EventSub status, webhook URL, re-register knop). Voor YouTube ontbreekt dit nog. Voeg vergelijkbare relevante info toe voor het YouTube account.
+
+**Te implementeren:**
+- YouTube channel ID en kanaallink tonen naast de display naam
+- Status van de YouTube live chat poller (actief / inactief) zodra die gebouwd is
+- Eventueel: subscriber count via YouTube Data API
+
+**Context:**
+- YouTube account info zit in `linked_accounts` tabel (provider = "youtube")
+- YouTube-specifieke UI component analoog aan `TwitchManage` bouwen als `YouTubeManage`
+
+---
+
+### [7.7] TikTok chat (toekomstig — buiten scope v1)
 
 **Doel:** TikTok live chat toevoegen aan de unified feed.
 
