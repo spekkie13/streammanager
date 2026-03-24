@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { db } from "@/lib/db"
-import { feedback } from "@/lib/schema"
+import { feedbackRepository } from "@/repositories"
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -16,6 +15,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Message too long" }, { status: 400 })
   }
 
-  await db.insert(feedback).values({ userId: session.userId, message: message.trim() })
+  await feedbackRepository.insert(session.userId, message.trim())
   return NextResponse.json({ ok: true })
 }
