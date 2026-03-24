@@ -13,6 +13,14 @@ class YtStreamSessionsRepository {
     }
   }
 
+  async isActive(channelId: string): Promise<boolean> {
+    const rows = await db.select({ id: ytStreamSessions.id })
+      .from(ytStreamSessions)
+      .where(and(eq(ytStreamSessions.channelId, channelId), isNull(ytStreamSessions.endedAt)))
+      .limit(1)
+    return rows.length > 0
+  }
+
   async closeByChannelId(channelId: string, endedAt: Date): Promise<void> {
     await db.update(ytStreamSessions)
       .set({ endedAt })
