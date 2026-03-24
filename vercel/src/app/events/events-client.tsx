@@ -155,9 +155,9 @@ export function EventsClient({ displayName }: { displayName: string }) {
           </div>
 
           {/* Date range + sort */}
-          <div className="flex flex-wrap gap-8 items-end">
+          <div className="flex flex-wrap gap-4 items-end">
             <div className="space-y-1">
-              <label className="text-xs text-zinc-500">From</label>
+              <label className="text-xs text-zinc-500 mr-2">From</label>
               <input
                 type="datetime-local"
                 value={from}
@@ -166,7 +166,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-zinc-500">To</label>
+              <label className="text-xs text-zinc-500 mr-2">To</label>
               <input
                 type="datetime-local"
                 value={to}
@@ -175,7 +175,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-zinc-500">Sort by</label>
+              <label className="text-xs text-zinc-500 mr-2">Sort by</label>
               <select
                 value={sortBy}
                 onChange={e => handleSortBy(e.target.value as EventSortBy)}
