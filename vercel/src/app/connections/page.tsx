@@ -2,9 +2,10 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { AppHeader } from "@/components/app-header"
-import { eventSubSubscriptionsRepository, linkedAccountsRepository } from "@/repositories"
+import { eventSubSubscriptionsRepository, linkedAccountsRepository, ytStreamSessionsRepository } from "@/repositories"
 import { TwitchManage } from "./twitch-manage"
 import { YouTubeConnectButton } from "./youtube-connect"
+import { YouTubeManage } from "./youtube-manage"
 import { DisconnectButton } from "./disconnect-button"
 import { ConnectionsUpdater } from "./connections-updater"
 
@@ -108,6 +109,10 @@ export default async function ConnectionsPage({
     session.userId ? linkedAccountsRepository.findByUserId(session.userId) : [],
   ])
 
+  const youtubePollerActive = session.youtubeChannelId
+    ? await ytStreamSessionsRepository.isActive(session.youtubeChannelId)
+    : false
+
   const youtubeAccount = linkedAccounts.find(a => a.provider === "youtube")
   const twitchAccount = linkedAccounts.find(a => a.provider === "twitch")
   const canDisconnect = linkedAccounts.length > 1
@@ -160,7 +165,15 @@ export default async function ConnectionsPage({
             detail={youtubeAccount && !hasYouTubeError ? `Connected as ${youtubeAccount.displayName ?? youtubeAccount.login ?? youtubeAccount.providerAccountId}` : undefined}
             connectButton={<YouTubeConnectButton retry={hasYouTubeError} />}
             disconnectButton={canDisconnect && !hasYouTubeError ? <DisconnectButton provider="youtube" /> : undefined}
-          />
+          >
+            {youtubeAccount && !hasYouTubeError && (
+              <YouTubeManage
+                channelId={youtubeAccount.providerAccountId}
+                displayName={youtubeAccount.displayName ?? youtubeAccount.providerAccountId}
+                isPollerActive={youtubePollerActive}
+              />
+            )}
+          </ConnectionRow>
           <ConnectionRow
             name="Spotify"
             description="Show your currently playing track in the dashboard."
