@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { ThemeToggle } from "./theme-toggle"
 import { CreatorDeckLogo } from "./creator-deck-logo"
+import { FeedbackButton } from "./feedback-button"
 
 type Props = {
   displayName: string
@@ -45,6 +46,7 @@ export function AppHeader({ displayName }: Props) {
   }, [])
 
   return (
+    <>
     <header className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
       <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
         <CreatorDeckLogo size="sm" />
@@ -125,5 +127,7 @@ export function AppHeader({ displayName }: Props) {
         </div>
       </div>
     </header>
+    <FeedbackButton />
+    </>
   )
 }
