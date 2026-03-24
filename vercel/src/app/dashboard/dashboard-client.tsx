@@ -238,6 +238,10 @@ export function DashboardClient({
             <div className="divide-y divide-zinc-200 dark:divide-zinc-800/60">
               {events.map(event => (
                 <div key={event.id} className="px-6 py-3 flex items-center gap-4">
+                  {event.platform === "youtube"
+                    ? <YouTubeLogo className="shrink-0 w-3 h-3 text-[#FF0000]" />
+                    : <TwitchLogo className="shrink-0 w-3 h-3 text-[#9146FF]" />
+                  }
                   <span className={`shrink-0 text-xs px-2 py-0.5 rounded font-medium ${TYPE_BADGE[event.type]}`}>
                     {TYPE_ICON[event.type]} {event.type}
                   </span>
