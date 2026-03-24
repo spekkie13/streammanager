@@ -47,7 +47,7 @@ export function AppHeader({ displayName }: Props) {
 
   return (
     <>
-    <header className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
       <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
         <CreatorDeckLogo size="sm" />
       </Link>
