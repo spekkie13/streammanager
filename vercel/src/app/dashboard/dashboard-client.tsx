@@ -126,24 +126,34 @@ export function DashboardClient({
             </h1>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.subtext}</p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <Link
-              href="/goals"
-              className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              Goals →
-            </Link>
-            <Link
-              href="/connections"
-              className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              Connections →
-            </Link>
-            <span className={`inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border ${s.pill}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-              {s.label}
-            </span>
-          </div>
+          <span className={`inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border shrink-0 ${s.pill}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+            {s.label}
+          </span>
+        </div>
+
+        {/* Quick actions */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link
+            href="/goals"
+            className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-purple-500/50 dark:hover:border-purple-500/40 rounded-xl px-5 py-4 flex items-center justify-between transition-colors"
+          >
+            <div>
+              <p className="text-sm font-semibold">Goals</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Manage your subscriber goal</p>
+            </div>
+            <span className="text-zinc-400 group-hover:text-purple-500 transition-colors text-lg">→</span>
+          </Link>
+          <Link
+            href="/connections"
+            className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 rounded-xl px-5 py-4 flex items-center justify-between transition-colors"
+          >
+            <div>
+              <p className="text-sm font-semibold">Connections</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Manage linked accounts</p>
+            </div>
+            <span className="text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors text-lg">→</span>
+          </Link>
         </div>
 
         {/* Setup banner */}
