@@ -31,10 +31,9 @@ export function SetupWizard({ displayName }: Props) {
 
   async function complete() {
     setCompleting(true)
-    await Promise.all([
-      fetch("/api/onboarding/complete", { method: "POST" }),
-      fetch("/api/onboarding/backfill", { method: "POST" }),
-    ])
+    // Fire backfill in the background — don't block navigation on it
+    fetch("/api/onboarding/backfill", { method: "POST" })
+    await fetch("/api/onboarding/complete", { method: "POST" })
     router.push("/dashboard")
   }
 
