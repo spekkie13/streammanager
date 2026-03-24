@@ -65,7 +65,9 @@ export const followEvents = pgTable("follow_events", {
   userDisplayName: text("user_display_name"),
   occurredAt: timestamp("occurred_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-})
+}, (t) => ({
+  broadcasterUserUnique: unique().on(t.broadcasterId, t.userId),
+}))
 
 export const cheerEvents = pgTable("cheer_events", {
   id: uuid("id").defaultRandom().primaryKey(),

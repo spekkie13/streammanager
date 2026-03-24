@@ -5,7 +5,16 @@ import type { FollowEvent, InsertFollowEvent } from "@/types/entities"
 
 class FollowEventsRepository {
   async insert(data: InsertFollowEvent): Promise<void> {
-    await db.insert(followEvents).values(data).onConflictDoNothing()
+    await db.insert(followEvents).values(data)
+      .onConflictDoUpdate({
+        target: [followEvents.broadcasterId, followEvents.userId],
+        set: {
+          eventId: data.eventId,
+          userLogin: data.userLogin,
+          userDisplayName: data.userDisplayName,
+          occurredAt: data.occurredAt,
+        },
+      })
   }
 
   async findSince(broadcasterId: string, since: Date): Promise<FollowEvent[]> {
