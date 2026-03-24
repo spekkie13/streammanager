@@ -4,7 +4,7 @@ import { env } from "@/lib/env"
 import { NextResponse } from "next/server"
 import { randomBytes, createHash } from "crypto"
 
-const APP_URL = (process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL)!
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL)!
 
 export async function GET() {
   const session = await getServerSession(authOptions)
