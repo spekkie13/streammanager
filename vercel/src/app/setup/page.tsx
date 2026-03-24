@@ -8,7 +8,7 @@ export default async function SetupPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect("/")
 
-  const user = await userRepository.findByTwitchId(session.twitchId)
+  const user = await userRepository.findById(session.userId)
   if (user?.onboardingCompleted) redirect("/dashboard")
 
   return (
