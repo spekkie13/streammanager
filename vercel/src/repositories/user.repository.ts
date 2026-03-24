@@ -14,6 +14,15 @@ class UserRepository {
     return rows[0] ?? null
   }
 
+  async findByWidgetToken(token: string): Promise<User | null> {
+    const rows = await db.select().from(users).where(eq(users.widgetToken, token)).limit(1)
+    return rows[0] ?? null
+  }
+
+  async setWidgetToken(userId: string, token: string): Promise<void> {
+    await db.update(users).set({ widgetToken: token }).where(eq(users.id, userId))
+  }
+
   async completeOnboarding(userId: string): Promise<void> {
     await db.update(users)
       .set({ onboardingCompleted: true })

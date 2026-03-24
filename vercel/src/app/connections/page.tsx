@@ -8,6 +8,7 @@ import { YouTubeConnectButton } from "./youtube-connect"
 import { YouTubeManage } from "./youtube-manage"
 import { DisconnectButton } from "./disconnect-button"
 import { ConnectionsUpdater } from "./connections-updater"
+import { WidgetTokenSection } from "./widget-token"
 
 function TwitchLogo({ className }: { className?: string }) {
   return (
@@ -188,6 +189,14 @@ export default async function ConnectionsPage({
             Connect another platform before disconnecting your only linked account.
           </p>
         )}
+
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+          <div className="px-4 sm:px-6 py-4">
+            <h2 className="text-sm font-medium text-zinc-900 dark:text-white">OBS Browser Sources</h2>
+            <p className="text-xs text-zinc-500 mt-0.5">Goal overlays you can drop directly into OBS.</p>
+          </div>
+          <WidgetTokenSection appUrl={process.env.NEXT_PUBLIC_APP_URL!} />
+        </div>
       </main>
     </div>
   )
