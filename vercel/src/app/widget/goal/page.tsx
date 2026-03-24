@@ -25,6 +25,11 @@ export default function GoalWidget() {
   const [data, setData] = useState<GoalData | null>(null)
   const [error, setError] = useState(false)
 
+  useEffect(() => {
+    document.documentElement.style.setProperty("background-color", "transparent", "important")
+    document.body.style.setProperty("background-color", "transparent", "important")
+  }, [])
+
   const poll = useCallback(async () => {
     if (!token) return
     try {
