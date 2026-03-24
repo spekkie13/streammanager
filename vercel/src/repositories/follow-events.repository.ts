@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, lte } from "drizzle-orm"
+import { and, desc, eq, gt, gte, lte, sql } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { followEvents } from "@/lib/schema"
 import type { FollowEvent, InsertFollowEvent } from "@/types/entities"
@@ -35,6 +35,13 @@ class FollowEventsRepository {
     return db.select().from(followEvents)
       .where(and(eq(followEvents.broadcasterId, broadcasterId), gte(followEvents.occurredAt, from), lte(followEvents.occurredAt, to)))
       .orderBy(desc(followEvents.occurredAt))
+  }
+
+  async countByBroadcasterId(broadcasterId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(followEvents)
+      .where(eq(followEvents.broadcasterId, broadcasterId))
+    return Number(result[0].count)
   }
 }
 

@@ -1,9 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { linkedAccountsRepository } from "@/repositories"
-import { and, eq } from "drizzle-orm"
-import { db } from "@/lib/db"
-import { linkedAccounts } from "@/lib/schema"
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions)
@@ -20,12 +17,6 @@ export async function POST(req: Request) {
     return new Response("Cannot disconnect your only linked account", { status: 400 })
   }
 
-  await db.delete(linkedAccounts).where(
-    and(
-      eq(linkedAccounts.userId, session.userId),
-      eq(linkedAccounts.provider, provider),
-    )
-  )
-
+  await linkedAccountsRepository.deleteByUserIdAndProvider(session.userId, provider)
   return new Response(null, { status: 204 })
 }

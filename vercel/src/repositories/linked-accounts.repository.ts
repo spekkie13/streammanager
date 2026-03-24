@@ -21,6 +21,12 @@ class LinkedAccountsRepository {
       .where(and(eq(linkedAccounts.provider, provider), isNotNull(linkedAccounts.accessToken)))
   }
 
+  async deleteByUserIdAndProvider(userId: string, provider: string): Promise<void> {
+    await db.delete(linkedAccounts).where(
+      and(eq(linkedAccounts.userId, userId), eq(linkedAccounts.provider, provider))
+    )
+  }
+
   async updateAccessToken(provider: string, providerAccountId: string, accessToken: string): Promise<void> {
     await db.update(linkedAccounts)
       .set({ accessToken })
