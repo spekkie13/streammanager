@@ -55,6 +55,7 @@ export function WidgetTokenSection({ appUrl }: { appUrl: string }) {
 
       <p className="text-xs text-zinc-500">
         Copy a widget URL and paste it into OBS as a Browser Source. Enable <strong>transparent background</strong> in the browser source settings.
+        Add <code className="bg-zinc-100 dark:bg-zinc-800 px-1 rounded">&amp;bg=0.4</code> to the URL for a semi-transparent dark backdrop (0–1).
       </p>
 
       <div className="space-y-2">

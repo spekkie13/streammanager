@@ -21,6 +21,7 @@ export default function GoalWidget() {
   const customLabel = params.get("label") ?? ""
   const barColor = params.get("color") ?? ""
   const fontSize = parseInt(params.get("fontSize") ?? "0") || 16
+  const bgOpacity = Math.min(1, Math.max(0, parseFloat(params.get("bg") ?? "0")))
 
   const [data, setData] = useState<GoalData | null>(null)
   const [error, setError] = useState(false)
@@ -57,8 +58,12 @@ export default function GoalWidget() {
 
   return (
     <div
-      className="p-4 select-none"
-      style={{ fontFamily: "Inter, sans-serif", fontSize: `${fontSize}px` }}
+      className="p-4 select-none rounded-xl"
+      style={{
+        fontFamily: "Inter, sans-serif",
+        fontSize: `${fontSize}px`,
+        background: bgOpacity > 0 ? `rgba(0,0,0,${bgOpacity})` : "transparent",
+      }}
     >
       {/* Label + count */}
       <div className="flex items-baseline justify-between gap-4 mb-2">
