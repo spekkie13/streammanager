@@ -111,6 +111,7 @@ export default async function ConnectionsPage({
   const youtubeAccount = linkedAccounts.find(a => a.provider === "youtube")
   const twitchAccount = linkedAccounts.find(a => a.provider === "twitch")
   const canDisconnect = linkedAccounts.length > 1
+  const hasYouTubeError = !!searchParams.error
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook`
 
   const errorMessage = searchParams.error
@@ -154,11 +155,11 @@ export default async function ConnectionsPage({
           <ConnectionRow
             name="YouTube"
             description="Track Super Chats, memberships, and live chat activity."
-            connected={!!youtubeAccount}
+            connected={!!youtubeAccount && !hasYouTubeError}
             logo={<YouTubeLogo className="w-5 h-5 text-[#FF0000]" />}
-            detail={youtubeAccount ? `Connected as ${youtubeAccount.displayName ?? youtubeAccount.login ?? youtubeAccount.providerAccountId}` : undefined}
-            connectButton={<YouTubeConnectButton />}
-            disconnectButton={canDisconnect ? <DisconnectButton provider="youtube" /> : undefined}
+            detail={youtubeAccount && !hasYouTubeError ? `Connected as ${youtubeAccount.displayName ?? youtubeAccount.login ?? youtubeAccount.providerAccountId}` : undefined}
+            connectButton={<YouTubeConnectButton retry={hasYouTubeError} />}
+            disconnectButton={canDisconnect && !hasYouTubeError ? <DisconnectButton provider="youtube" /> : undefined}
           />
           <ConnectionRow
             name="Spotify"
