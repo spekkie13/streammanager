@@ -24,7 +24,14 @@ export default async function AccountPage() {
           </div>
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-sm text-zinc-500 dark:text-zinc-400">Twitch ID</span>
-            <span className="text-sm text-zinc-700 dark:text-zinc-300 font-mono">{session.twitchId}</span>
+            <span className="text-sm text-zinc-700 dark:text-zinc-300 font-mono">{session.twitchId ?? "—"}</span>
+          </div>
+          <div className="px-6 py-4 flex items-center justify-between">
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">YouTube Channel ID</span>
+            {session.youtubeChannelId
+              ? <span className="text-sm text-zinc-700 dark:text-zinc-300 font-mono">{session.youtubeChannelId}</span>
+              : <span className="text-sm text-zinc-400 dark:text-zinc-600">Not connected</span>
+            }
           </div>
           <div className="px-6 py-4 space-y-2">
             <div className="flex items-center justify-between">
