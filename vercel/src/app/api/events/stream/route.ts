@@ -8,7 +8,7 @@ const INITIAL_LOOKBACK_MS = 5 * 60 * 1000 // send last 5 minutes on connect
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.twitchId) {
+  if (!session) {
     return new Response("Unauthorized", { status: 401 })
   }
 
