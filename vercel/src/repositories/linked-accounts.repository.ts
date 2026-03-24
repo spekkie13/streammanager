@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm"
+import { and, eq, isNotNull } from "drizzle-orm"
 import { randomBytes } from "crypto"
 import { db } from "@/lib/db"
 import { users, linkedAccounts } from "@/lib/schema"
@@ -14,6 +14,17 @@ class LinkedAccountsRepository {
 
   async findByUserId(userId: string): Promise<LinkedAccount[]> {
     return db.select().from(linkedAccounts).where(eq(linkedAccounts.userId, userId))
+  }
+
+  async findAllByProvider(provider: string): Promise<LinkedAccount[]> {
+    return db.select().from(linkedAccounts)
+      .where(and(eq(linkedAccounts.provider, provider), isNotNull(linkedAccounts.accessToken)))
+  }
+
+  async updateAccessToken(provider: string, providerAccountId: string, accessToken: string): Promise<void> {
+    await db.update(linkedAccounts)
+      .set({ accessToken })
+      .where(and(eq(linkedAccounts.provider, provider), eq(linkedAccounts.providerAccountId, providerAccountId)))
   }
 
   // Finds or creates a user+account pair, updates tokens on subsequent sign-ins.
