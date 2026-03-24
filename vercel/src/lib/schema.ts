@@ -3,6 +3,7 @@ import { pgTable, text, timestamp, integer, uuid, boolean, bigint, unique } from
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   apiKey: text("api_key").unique().notNull(),
+  widgetToken: text("widget_token").unique(),
   onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
