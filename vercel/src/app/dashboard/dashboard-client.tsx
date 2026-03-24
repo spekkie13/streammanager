@@ -1,9 +1,8 @@
 "use client"
-import { useState } from "react"
+import { useStreamEvents } from "@/hooks/use-stream-events"
 import Link from "next/link"
 import type { Session } from "next-auth"
 import { AppHeader } from "@/components/app-header"
-import { useStreamEvents } from "@/hooks/use-stream-events"
 import type { LiveEvent, LiveEventType } from "@/types/events"
 
 type Props = {
@@ -105,10 +104,9 @@ export function DashboardClient({
   subscriptionsRegistered, followerCount, subCount, ytSubCount,
   hasYouTube, followerGrowth, subGrowth,
 }: Props) {
-  const [savedInitialCount] = useState(initialCount)
   const events = useStreamEvents(initialEvents)
 
-  const displayTotal = total + savedInitialCount
+  const displayTotal = total + initialCount
   const progress = Math.min((displayTotal / goal) * 100, 100)
 
   const variant: StatusVariant = subscriptionsRegistered ? "good" : "warning"
@@ -163,16 +161,16 @@ export function DashboardClient({
         )}
 
         {/* Audience pills */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-4 space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
               <TwitchLogo className="w-3.5 h-3.5 text-[#9146FF]" />
               Followers
             </div>
             <p className="text-2xl font-bold">{formatCount(followerCount)}</p>
-            {followerGrowth > 0 && (
-              <p className="text-xs text-green-500">+{followerGrowth.toLocaleString()} last 30d</p>
-            )}
+            <p className={`text-xs ${followerGrowth > 0 ? "text-green-500" : "text-zinc-400 dark:text-zinc-600"}`}>
+              {followerGrowth > 0 ? `+${followerGrowth.toLocaleString()}` : "—"} last 30d
+            </p>
           </div>
 
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-4 space-y-1">
@@ -181,20 +179,19 @@ export function DashboardClient({
               Subscribers
             </div>
             <p className="text-2xl font-bold">{formatCount(subCount)}</p>
-            {subGrowth > 0 && (
-              <p className="text-xs text-green-500">+{subGrowth.toLocaleString()} last 30d</p>
-            )}
+            <p className={`text-xs ${subGrowth > 0 ? "text-green-500" : "text-zinc-400 dark:text-zinc-600"}`}>
+              {subGrowth > 0 ? `+${subGrowth.toLocaleString()}` : "—"} last 30d
+            </p>
           </div>
 
-          {hasYouTube && (
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-4 space-y-1">
-              <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-                <YouTubeLogo className="w-3.5 h-3.5 text-[#FF0000]" />
-                Subscribers
-              </div>
-              <p className="text-2xl font-bold">{formatCount(ytSubCount)}</p>
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-4 space-y-1">
+            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <YouTubeLogo className="w-3.5 h-3.5 text-[#FF0000]" />
+              Subscribers
             </div>
-          )}
+            <p className="text-2xl font-bold">{formatCount(hasYouTube ? ytSubCount : null)}</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-600">— last 30d</p>
+          </div>
         </div>
 
         {/* Sub goal — compact */}
