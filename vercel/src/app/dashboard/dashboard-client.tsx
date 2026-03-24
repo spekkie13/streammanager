@@ -14,6 +14,12 @@ type Props = {
   total: number
   initialEvents: LiveEvent[]
   subscriptionsRegistered: boolean
+  followerCount: number | null
+  subCount: number | null
+  ytSubCount: number | null
+  hasYouTube: boolean
+  followerGrowth: number
+  subGrowth: number
 }
 
 const TYPE_BADGE: Record<LiveEventType, string> = {
@@ -47,11 +53,6 @@ function formatAmount(type: LiveEventType, amount: number | null, currency?: str
   return null
 }
 
-function toDateInputValue(iso: string | null): string {
-  if (!iso) return ""
-  return iso.slice(0, 10) // "YYYY-MM-DD"
-}
-
 function greeting(): string {
   const h = new Date().getHours()
   if (h < 12) return "Good morning"
@@ -59,14 +60,32 @@ function greeting(): string {
   return "Good evening"
 }
 
-type StatusVariant = "good" | "warning" | "unknown"
+function formatCount(n: number | null): string {
+  if (n === null) return "—"
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
+  return n.toLocaleString()
+}
 
-const STATUS_CONFIG: Record<StatusVariant, {
-  label: string
-  subtext: string
-  pill: string
-  dot: string
-}> = {
+function TwitchLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z" />
+    </svg>
+  )
+}
+
+function YouTubeLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  )
+}
+
+type StatusVariant = "good" | "warning"
+
+const STATUS_CONFIG: Record<StatusVariant, { label: string; subtext: string; pill: string; dot: string }> = {
   good: {
     label: "All good",
     subtext: "Everything is set up and ready to go. Have a great stream!",
@@ -79,48 +98,21 @@ const STATUS_CONFIG: Record<StatusVariant, {
     pill: "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400",
     dot: "bg-amber-500",
   },
-  unknown: {
-    label: "Status unknown",
-    subtext: "Some services couldn't be reached. Check your connections.",
-    pill: "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-500",
-    dot: "bg-zinc-400",
-  },
 }
 
-export function DashboardClient({ session, goal, initialCount, endsAt, total, initialEvents, subscriptionsRegistered }: Props) {
-  const [currentGoal, setCurrentGoal] = useState(goal)
-  const [goalInput, setGoalInput] = useState(String(goal))
-  const [initialCountInput, setInitialCountInput] = useState(String(initialCount))
-  const [endsAtInput, setEndsAtInput] = useState(toDateInputValue(endsAt))
-  const [savingGoal, setSavingGoal] = useState(false)
-  const [editing, setEditing] = useState(false)
-
+export function DashboardClient({
+  session, goal, initialCount, endsAt, total, initialEvents,
+  subscriptionsRegistered, followerCount, subCount, ytSubCount,
+  hasYouTube, followerGrowth, subGrowth,
+}: Props) {
+  const [savedInitialCount] = useState(initialCount)
   const events = useStreamEvents(initialEvents)
-  const savedInitialCount = parseInt(initialCountInput) || 0
+
   const displayTotal = total + savedInitialCount
-  const progress = Math.min((displayTotal / currentGoal) * 100, 100)
+  const progress = Math.min((displayTotal / goal) * 100, 100)
 
-  async function saveGoal() {
-    const val = parseInt(goalInput)
-    if (isNaN(val) || val < 1) return
-    setSavingGoal(true)
-    const initialCountVal = Math.max(0, parseInt(initialCountInput) || 0)
-    await fetch("/api/goal", {
-      method: "POST",
-      body: JSON.stringify({ goal: val, initialCount: initialCountVal, endsAt: endsAtInput || null }),
-      headers: { "Content-Type": "application/json" },
-    })
-    setCurrentGoal(val)
-    setSavingGoal(false)
-    setEditing(false)
-  }
-
-  function cancelEdit() {
-    setGoalInput(String(currentGoal))
-    setInitialCountInput(String(savedInitialCount))
-    setEndsAtInput(toDateInputValue(endsAt))
-    setEditing(false)
-  }
+  const variant: StatusVariant = subscriptionsRegistered ? "good" : "warning"
+  const s = STATUS_CONFIG[variant]
 
   return (
     <div className="min-h-screen">
@@ -129,24 +121,32 @@ export function DashboardClient({ session, goal, initialCount, endsAt, total, in
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
 
         {/* Welcome card */}
-        {(() => {
-          const variant: StatusVariant = subscriptionsRegistered ? "good" : "warning"
-          const s = STATUS_CONFIG[variant]
-          return (
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="space-y-1">
-                <h1 className="text-xl font-semibold tracking-tight">
-                  {greeting()}, <span className="text-purple-500">{session.displayName}</span> 👋
-                </h1>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.subtext}</p>
-              </div>
-              <span className={`shrink-0 self-start sm:self-auto inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border ${s.pill}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-                {s.label}
-              </span>
-            </div>
-          )
-        })()}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-xl font-semibold tracking-tight">
+              {greeting()}, <span className="text-purple-500">{session.displayName}</span> 👋
+            </h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.subtext}</p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              href="/goals"
+              className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Goals →
+            </Link>
+            <Link
+              href="/connections"
+              className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Connections →
+            </Link>
+            <span className={`inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border ${s.pill}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+              {s.label}
+            </span>
+          </div>
+        </div>
 
         {/* Setup banner */}
         {!subscriptionsRegistered && (
@@ -162,30 +162,52 @@ export function DashboardClient({ session, goal, initialCount, endsAt, total, in
           </div>
         )}
 
-        {/* Sub goal */}
+        {/* Audience pills */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-4 space-y-1">
+            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <TwitchLogo className="w-3.5 h-3.5 text-[#9146FF]" />
+              Followers
+            </div>
+            <p className="text-2xl font-bold">{formatCount(followerCount)}</p>
+            {followerGrowth > 0 && (
+              <p className="text-xs text-green-500">+{followerGrowth.toLocaleString()} last 30d</p>
+            )}
+          </div>
+
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-4 space-y-1">
+            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <TwitchLogo className="w-3.5 h-3.5 text-[#9146FF]" />
+              Subscribers
+            </div>
+            <p className="text-2xl font-bold">{formatCount(subCount)}</p>
+            {subGrowth > 0 && (
+              <p className="text-xs text-green-500">+{subGrowth.toLocaleString()} last 30d</p>
+            )}
+          </div>
+
+          {hasYouTube && (
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-4 space-y-1">
+              <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                <YouTubeLogo className="w-3.5 h-3.5 text-[#FF0000]" />
+                Subscribers
+              </div>
+              <p className="text-2xl font-bold">{formatCount(ytSubCount)}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Sub goal — compact */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Twitch — Sub Goal</h2>
-            <div className="flex items-center gap-3">
-              {!editing && endsAtInput && (
-                <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Ends {new Date(endsAtInput).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                </span>
-              )}
-              {!editing && (
-                <button
-                  onClick={() => setEditing(true)}
-                  className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                >
-                  Edit
-                </button>
-              )}
-            </div>
+            <Link href="/goals" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">
+              Manage →
+            </Link>
           </div>
-
           <div className="flex items-end gap-3">
             <span className="text-5xl font-bold">{displayTotal}</span>
-            <span className="text-2xl text-zinc-400 dark:text-zinc-500 pb-1">/ {currentGoal}</span>
+            <span className="text-2xl text-zinc-400 dark:text-zinc-500 pb-1">/ {goal}</span>
           </div>
           <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-3">
             <div
@@ -194,70 +216,6 @@ export function DashboardClient({ session, goal, initialCount, endsAt, total, in
             />
           </div>
           <p className="text-zinc-500 text-sm">{progress.toFixed(1)}% of goal reached</p>
-
-          {editing && (
-            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Initial amount</label>
-                  <input
-                    type="number"
-                    value={initialCountInput}
-                    onChange={e => setInitialCountInput(e.target.value)}
-                    className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
-                    min={0}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Goal amount</label>
-                  <input
-                    type="number"
-                    value={goalInput}
-                    onChange={e => setGoalInput(e.target.value)}
-                    className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
-                    min={1}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    End date
-                    <span className="ml-1 font-normal text-zinc-400 dark:text-zinc-600">(optional)</span>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      value={endsAtInput}
-                      onChange={e => setEndsAtInput(e.target.value)}
-                      className="flex-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 text-zinc-900 dark:text-white"
-                    />
-                    {endsAtInput && (
-                      <button
-                        onClick={() => setEndsAtInput("")}
-                        className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors shrink-0"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={saveGoal}
-                  disabled={savingGoal}
-                  className="bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors"
-                >
-                  {savingGoal ? "Saving..." : "Save"}
-                </button>
-                <button
-                  onClick={cancelEdit}
-                  className="text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Live event feed */}

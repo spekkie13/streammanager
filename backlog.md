@@ -35,8 +35,8 @@ C# Desktop app (lokaal)
 ```
 ✅ Done:  Epic 1 — Events opslaan & structureren (Twitch)
 ✅ Done:  Epic 2.1/2.2 — Live dashboard & SSE events feed
+✅ Done:  Epic 6.1–6.4 — YouTube OAuth, schema, token refresh, poller
 Next:    Epic 2.3 — OBS & Spotify widgets in het dashboard
-         Epic 6.1–6.4 — YouTube OAuth, schema, token refresh, poller
          Epic 6.5 — YouTube in het dashboard
          ↑ SHIP: verzamel feedback, valideer gebruikersgedrag
 ```
@@ -454,7 +454,7 @@ Show the schema change and the NextAuth callback update.
 
 ---
 
-### [6.4] YouTube Live Chat poller (Vercel Cron Job)
+### ✅ [6.4] YouTube Live Chat poller (Vercel Cron Job)
 
 **Doel:** Een achtergrondservice die regelmatig actieve YouTube-uitzendingen opzoekt, de live chat ophaalt en Super Chats + membership events opslaat.
 
