@@ -155,8 +155,8 @@ export function EventsClient({ displayName }: { displayName: string }) {
           </div>
 
           {/* Date range + sort */}
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="space-y-2">
+          <div className="flex flex-wrap gap-8 items-end">
+            <div className="space-y-1">
               <label className="text-xs text-zinc-500">From</label>
               <input
                 type="datetime-local"
@@ -165,7 +165,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
                 className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-300 focus:outline-none focus:border-purple-500"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-xs text-zinc-500">To</label>
               <input
                 type="datetime-local"
@@ -174,7 +174,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
                 className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-300 focus:outline-none focus:border-purple-500"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-xs text-zinc-500">Sort by</label>
               <select
                 value={sortBy}
