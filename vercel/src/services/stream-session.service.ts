@@ -3,9 +3,11 @@ import { streamSessionRepository } from "@/repositories/stream-session.repositor
 class StreamSessionService {
   async handleOnline(broadcasterId: string, occurredAt: Date) : Promise<void> {
     const open = await streamSessionRepository.findOpen(broadcasterId)
-    if (!open) {
-      await streamSessionRepository.create(broadcasterId, occurredAt)
+    if (open) {
+      // Close any stale session (offline event was missed for a previous stream)
+      await streamSessionRepository.close(broadcasterId, occurredAt)
     }
+    await streamSessionRepository.create(broadcasterId, occurredAt)
   }
 
   async handleOffline(broadcasterId: string, occurredAt: Date) : Promise<void> {
