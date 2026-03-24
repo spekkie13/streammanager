@@ -81,9 +81,11 @@ export const authOptions: NextAuthOptions = {
               accessToken: account.access_token ?? "",
               refreshToken: account.refresh_token ?? "",
             })
+            const allAccounts = await linkedAccountsRepository.findByUserId(userId)
+            const ytAccount = allAccounts.find(a => a.provider === "youtube")
             token.userId = userId
             token.twitchId = p.sub
-            token.youtubeChannelId = null
+            token.youtubeChannelId = ytAccount?.providerAccountId ?? null
             token.displayName = p.preferred_username
             token.apiKey = apiKey
           }
@@ -119,10 +121,12 @@ export const authOptions: NextAuthOptions = {
               accessToken: account.access_token ?? "",
               refreshToken: account.refresh_token ?? "",
             })
+            const allAccounts = await linkedAccountsRepository.findByUserId(userId)
+            const twitchAccount = allAccounts.find(a => a.provider === "twitch")
             token.userId = userId
-            token.twitchId = null
+            token.twitchId = twitchAccount?.providerAccountId ?? null
             token.youtubeChannelId = channelId
-            token.displayName = p.name ?? channelId
+            token.displayName = twitchAccount?.displayName ?? p.name ?? channelId
             token.apiKey = apiKey
           }
         }
