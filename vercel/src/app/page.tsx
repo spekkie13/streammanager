@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { WaitlistForm } from "./waitlist-form"
-import { SignInButton } from "./sign-in-button"
 import { CreatorDeckLogo } from "@/components/creator-deck-logo"
 
 const FEATURES = [
@@ -36,9 +35,8 @@ export default async function LandingPage() {
     <div className="min-h-screen flex flex-col bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white">
 
       {/* Nav */}
-      <nav className="px-6 py-5 flex items-center justify-between max-w-5xl mx-auto w-full">
+      <nav className="px-6 py-5 flex items-center justify-center max-w-5xl mx-auto w-full">
         <CreatorDeckLogo size="sm" />
-        <SignInButton variant="ghost" />
       </nav>
 
       {/* Hero */}
@@ -61,9 +59,6 @@ export default async function LandingPage() {
             One dashboard for your stream events, goals, and analytics — across Twitch, YouTube, and more.
           </p>
 
-          <div className="pt-2">
-            <SignInButton />
-          </div>
         </div>
       </section>
 
