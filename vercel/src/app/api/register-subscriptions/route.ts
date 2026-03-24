@@ -11,9 +11,7 @@ export async function POST() {
   const results = await twitchEventSubService.registerSubscriptions(session.twitchId)
 
   for (const sub of results) {
-    if (sub.id !== "existing") {
-      await eventSubSubscriptionsRepository.insert({ id: sub.id, broadcasterId: session.twitchId, type: sub.type, status: sub.status })
-    }
+    await eventSubSubscriptionsRepository.insert({ id: sub.id, broadcasterId: session.twitchId, type: sub.type, status: sub.status })
   }
 
   return NextResponse.json({ subscriptions: results })

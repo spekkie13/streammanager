@@ -32,9 +32,31 @@ class TwitchEventSubService {
     return { broadcaster_user_id: broadcasterId }
   }
 
+  private async fetchExistingByBroadcaster(token: string, broadcasterId: string): Promise<Record<string, { id: string; status: string }>> {
+    const res = await fetch("https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled", {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Client-Id": process.env.TWITCH_CLIENT_ID!,
+      },
+    })
+    if (!res.ok) return {}
+    const data = await res.json()
+    const map: Record<string, { id: string; status: string }> = {}
+    for (const sub of data.data ?? []) {
+      const condition = sub.condition as Record<string, string>
+      if (Object.values(condition).includes(broadcasterId)) {
+        map[sub.type as string] = { id: sub.id as string, status: sub.status as string }
+      }
+    }
+    return map
+  }
+
   async registerSubscriptions(broadcasterId: string): Promise<{ id: string; type: string; status: string }[]> {
     const token = await this.getAppAccessToken()
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook`
+
+    // Fetch existing subscriptions upfront so 409s can be resolved to real IDs
+    const existing = await this.fetchExistingByBroadcaster(token, broadcasterId)
 
     const results = []
     for (const { type, version } of SUB_TYPES) {
@@ -60,8 +82,8 @@ class TwitchEventSubService {
       const data = await res.json()
       if (res.ok && data.data?.[0]) {
         results.push({ id: data.data[0].id, type, status: data.data[0].status })
-      } else if (res.status === 409) {
-        results.push({ id: "existing", type, status: "enabled" })
+      } else if (res.status === 409 && existing[type]) {
+        results.push({ id: existing[type].id, type, status: existing[type].status })
       }
     }
     return results
