@@ -40,7 +40,18 @@ export const authOptions: NextAuthOptions = {
     async signIn({ account }) {
       return account?.provider === "twitch" || account?.provider === "google"
     },
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, trigger }) {
+      // Called when client calls session.update() — refresh linked accounts from DB
+      if (trigger === "update" && token.userId) {
+        const accounts = await linkedAccountsRepository.findByUserId(token.userId as string)
+        const ytAccount = accounts.find(a => a.provider === "youtube")
+        const twitchAccount = accounts.find(a => a.provider === "twitch")
+        token.youtubeChannelId = ytAccount?.providerAccountId ?? null
+        token.twitchId = twitchAccount?.providerAccountId ?? null
+        delete token.linkingError
+        return token
+      }
+
       if (account && profile) {
         const p = profile as Record<string, string>
         const existingUserId = token.userId as string | undefined
@@ -70,9 +81,11 @@ export const authOptions: NextAuthOptions = {
               accessToken: account.access_token ?? "",
               refreshToken: account.refresh_token ?? "",
             })
+            const allAccounts = await linkedAccountsRepository.findByUserId(userId)
+            const ytAccount = allAccounts.find(a => a.provider === "youtube")
             token.userId = userId
             token.twitchId = p.sub
-            token.youtubeChannelId = null
+            token.youtubeChannelId = ytAccount?.providerAccountId ?? null
             token.displayName = p.preferred_username
             token.apiKey = apiKey
           }
@@ -108,10 +121,12 @@ export const authOptions: NextAuthOptions = {
               accessToken: account.access_token ?? "",
               refreshToken: account.refresh_token ?? "",
             })
+            const allAccounts = await linkedAccountsRepository.findByUserId(userId)
+            const twitchAccount = allAccounts.find(a => a.provider === "twitch")
             token.userId = userId
-            token.twitchId = null
+            token.twitchId = twitchAccount?.providerAccountId ?? null
             token.youtubeChannelId = channelId
-            token.displayName = p.name ?? channelId
+            token.displayName = twitchAccount?.displayName ?? p.name ?? channelId
             token.apiKey = apiKey
           }
         }

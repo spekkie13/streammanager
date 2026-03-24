@@ -59,7 +59,9 @@ class LinkedAccountsRepository {
   }
 
   // Links a new account to an existing user (account linking flow).
-  // Throws if the account is already linked to a different user.
+  // If the account belongs to an orphaned single-account user (e.g. from a
+  // broken previous linking attempt), migrates it to the current user instead.
+  // Throws only if the account belongs to a different multi-account user.
   async upsertForUser(userId: string, data: {
     provider: string
     providerAccountId: string
@@ -69,8 +71,16 @@ class LinkedAccountsRepository {
     refreshToken: string
   }): Promise<void> {
     const existing = await this.findByProvider(data.provider, data.providerAccountId)
+
     if (existing && existing.userId !== userId) {
-      throw new Error(`This ${data.provider} account is already linked to a different user`)
+      // Check if the conflicting user is orphaned (only has this one account)
+      const conflictingAccounts = await this.findByUserId(existing.userId)
+      if (conflictingAccounts.length === 1) {
+        // Safe to migrate: delete the orphaned user (cascades to their linked_accounts)
+        await db.delete(users).where(eq(users.id, existing.userId))
+      } else {
+        throw new Error(`This ${data.provider} account is already linked to a different user`)
+      }
     }
 
     await db.insert(linkedAccounts)

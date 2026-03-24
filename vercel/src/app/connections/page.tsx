@@ -6,6 +6,7 @@ import { eventSubSubscriptionsRepository, linkedAccountsRepository } from "@/rep
 import { TwitchManage } from "./twitch-manage"
 import { YouTubeConnectButton } from "./youtube-connect"
 import { DisconnectButton } from "./disconnect-button"
+import { ConnectionsUpdater } from "./connections-updater"
 
 function TwitchLogo({ className }: { className?: string }) {
   return (
@@ -86,7 +87,19 @@ function ConnectionRow({ name, description, connected, logo, detail, comingSoon,
   )
 }
 
-export default async function ConnectionsPage() {
+const LINK_ERRORS: Record<string, string> = {
+  account_conflict: "That account is already linked to a different CreatorDeck user.",
+  no_youtube_channel: "No YouTube channel found on that Google account.",
+  token_exchange_failed: "Google sign-in failed. Please try again.",
+  missing_params: "Something went wrong with the connection flow. Please try again.",
+  invalid_state: "Session expired during connection. Please try again.",
+}
+
+export default async function ConnectionsPage({
+  searchParams,
+}: {
+  searchParams: { error?: string; linked?: string }
+}) {
   const session = await getServerSession(authOptions)
   if (!session) redirect("/")
 
@@ -98,10 +111,20 @@ export default async function ConnectionsPage() {
   const youtubeAccount = linkedAccounts.find(a => a.provider === "youtube")
   const twitchAccount = linkedAccounts.find(a => a.provider === "twitch")
   const canDisconnect = linkedAccounts.length > 1
+  const hasYouTubeError = !!searchParams.error
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook`
+
+  const errorMessage = searchParams.error
+    ? (LINK_ERRORS[searchParams.error] ?? "Something went wrong. Please try again.")
+    : session.linkingError === "account_conflict"
+    ? LINK_ERRORS.account_conflict
+    : session.linkingError === "no_youtube_channel"
+    ? LINK_ERRORS.no_youtube_channel
+    : null
 
   return (
     <div className="min-h-screen">
+      <ConnectionsUpdater />
       <AppHeader displayName={session.displayName} />
       <main className="max-w-3xl mx-auto px-6 py-10 space-y-6">
         <div>
@@ -109,14 +132,10 @@ export default async function ConnectionsPage() {
           <p className="text-zinc-500 text-sm mt-1">Manage the platforms and services connected to CreatorDeck.</p>
         </div>
 
-        {session.linkingError && (
+        {errorMessage && (
           <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 rounded-xl px-4 py-3">
             <p className="text-sm font-medium text-red-700 dark:text-red-400">Connection failed</p>
-            <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">
-              {session.linkingError === "account_conflict"
-                ? "That account is already linked to a different CreatorDeck user."
-                : "We couldn't find a YouTube channel on that Google account. Make sure you're signing in with an account that has a YouTube channel."}
-            </p>
+            <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">{errorMessage}</p>
           </div>
         )}
 
@@ -136,11 +155,11 @@ export default async function ConnectionsPage() {
           <ConnectionRow
             name="YouTube"
             description="Track Super Chats, memberships, and live chat activity."
-            connected={!!youtubeAccount}
+            connected={!!youtubeAccount && !hasYouTubeError}
             logo={<YouTubeLogo className="w-5 h-5 text-[#FF0000]" />}
-            detail={youtubeAccount ? `Connected as ${youtubeAccount.displayName ?? youtubeAccount.login ?? youtubeAccount.providerAccountId}` : undefined}
-            connectButton={<YouTubeConnectButton />}
-            disconnectButton={canDisconnect ? <DisconnectButton provider="youtube" /> : undefined}
+            detail={youtubeAccount && !hasYouTubeError ? `Connected as ${youtubeAccount.displayName ?? youtubeAccount.login ?? youtubeAccount.providerAccountId}` : undefined}
+            connectButton={<YouTubeConnectButton retry={hasYouTubeError} />}
+            disconnectButton={canDisconnect && !hasYouTubeError ? <DisconnectButton provider="youtube" /> : undefined}
           />
           <ConnectionRow
             name="Spotify"

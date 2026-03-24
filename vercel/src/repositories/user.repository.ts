@@ -13,6 +13,12 @@ class UserRepository {
     const rows = await db.select().from(users).where(eq(users.apiKey, apiKey)).limit(1)
     return rows[0] ?? null
   }
+
+  async completeOnboarding(userId: string): Promise<void> {
+    await db.update(users)
+      .set({ onboardingCompleted: true })
+      .where(eq(users.id, userId))
+  }
 }
 
 export const userRepository = new UserRepository()

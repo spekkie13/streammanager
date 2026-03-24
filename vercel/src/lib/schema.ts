@@ -3,6 +3,7 @@ import { pgTable, text, timestamp, integer, uuid, boolean, bigint, unique } from
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   apiKey: text("api_key").unique().notNull(),
+  onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
@@ -65,7 +66,9 @@ export const followEvents = pgTable("follow_events", {
   userDisplayName: text("user_display_name"),
   occurredAt: timestamp("occurred_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-})
+}, (t) => ({
+  broadcasterUserUnique: unique().on(t.broadcasterId, t.userId),
+}))
 
 export const cheerEvents = pgTable("cheer_events", {
   id: uuid("id").defaultRandom().primaryKey(),
