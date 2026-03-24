@@ -136,6 +136,19 @@ export const ytMemberEvents = pgTable("yt_member_events", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
+// Additional goals beyond Twitch subs (which remain in sub_goals)
+// type: "twitch_follow" | "youtube_member"
+export const goals = pgTable("goals", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  goal: integer("goal").notNull().default(100),
+  endsAt: timestamp("ends_at"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (t) => ({
+  userTypeUnique: unique().on(t.userId, t.type),
+}))
+
 export const ytStreamSessions = pgTable("yt_stream_sessions", {
   id: uuid("id").defaultRandom().primaryKey(),
   channelId: text("channel_id").notNull(),
