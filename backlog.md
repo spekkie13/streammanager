@@ -5,12 +5,13 @@
 ```
 Next.js app (gedeployed op Vercel)
 ├── Twitch OAuth (NextAuth)           ✅ gereed
-├── Google/YouTube OAuth (NextAuth)   🔴 nog te bouwen  [Epic 6]
+├── Google/YouTube OAuth (NextAuth)   ✅ gereed  [Epic 6.1–6.3]
 ├── Twitch EventSub webhooks          ✅ gereed (subs, follows, bits, raids)
-├── YouTube Live Chat poller          🔴 nog te bouwen  [Epic 6]
+├── YouTube Live Chat poller          ✅ gereed  [Epic 6.4] — cron via cron-job.org
 ├── Neon DB (Drizzle ORM)             ✅ gereed
-├── Web dashboard                     ✅ gereed (live feed, sub goal, event history)
-└── Config & analytics API            🔴 nog te bouwen
+├── Web dashboard                     ✅ gereed (live feed, sub goal, audience pills, goals page)
+├── Guided onboarding wizard          ✅ gereed
+└── Analytics & config API            🔴 nog te bouwen
 
 C# Desktop app (lokaal)
 ├── OBS websocket                     ✅ gereed
@@ -18,53 +19,86 @@ C# Desktop app (lokaal)
 └── Pollt Next.js API                 ✅ gereed
 ```
 
-> **Bestaande schema tabellen:** `users`, `sub_events`, `sub_goals`, `eventsub_subscriptions`
+> **Schema tabellen:** `users`, `linked_accounts`, `sub_events`, `follow_events`, `cheer_events`, `raid_events`, `sub_goals`, `eventsub_subscriptions`, `yt_superchat_events`, `yt_member_events`, `yt_stream_sessions`
 > **ORM:** Drizzle ORM — schema wijzigingen in `src/lib/schema.ts`, migreren met `npx drizzle-kit push`
 >
-> **YouTube vs Twitch architectuurverschil:** Twitch stuurt events via webhooks (EventSub). YouTube heeft geen equivalent — live chat events moeten gepolled worden via de YouTube Data API v3. De poller draait als Vercel Cron Job (elke minuut) en haalt `liveChatMessages` op voor actieve uitzendingen. Super Chats en memberships zitten als speciale message types in de chat response.
+> **YouTube vs Twitch architectuurverschil:** Twitch stuurt events via webhooks (EventSub). YouTube heeft geen equivalent — live chat events worden gepolled via de YouTube Data API v3. De poller draait als externe cron job (cron-job.org, elke minuut) en haalt `liveChatMessages` op voor actieve uitzendingen.
 >
-> **Sessie-inhoud (NextAuth JWT):** `session.twitchId`, `session.displayName`, `session.apiKey`. De `accessToken` zit **niet** in de sessie — die moet worden opgehaald uit de `users` tabel via `twitchId`. Na Epic 6 komen `session.youtubeChannelId` bij.
+> **Sessie-inhoud (NextAuth JWT):** `session.twitchId`, `session.youtubeChannelId`, `session.displayName`, `session.userId`. Access tokens zitten **niet** in de sessie — ophalen via `linked_accounts` tabel.
 
 ---
 
-## Tiers & bouwvolgorde
+## Prioriteiten voor marketing-readiness
 
-### Gratis tier — genoeg om écht nuttig te zijn
-> Doel: een product neerzetten dat mensen actief gebruiken en waarover ze feedback geven.
+> **Doel:** een afgerond, verkoopbaar product dat streamers direct waarde biedt op alle aangesloten platformen — voordat zware marketing begint.
 
+### ✅ Fase 1 — Fundament (gereed)
 ```
-✅ Done:  Epic 1 — Events opslaan & structureren (Twitch)
-✅ Done:  Epic 2.1/2.2 — Live dashboard & SSE events feed
-✅ Done:  Epic 6.1–6.4 — YouTube OAuth, schema, token refresh, poller
-Next:    Epic 2.3 — OBS & Spotify widgets in het dashboard
-         Epic 6.5 — YouTube in het dashboard
-         ↑ SHIP: verzamel feedback, valideer gebruikersgedrag
-```
-
-### Betaalde tier — duidelijke meerwaarde, makkelijk te begrijpen
-> Pas bouwen als de gratis tier gebruikers heeft en feedback is verzameld.
-
-```
-Week 5:  Epic 4 — Analytics (achter paywall) ← eerste conversie-moment
-Week 6:  Epic 5 — Stripe integratie + feature gates
-Week 7:  Epic 3 — Configuratie beheren (webapp + desktop sync)
-         Epic 6.6 — YouTube analytics
-Week 8:  Epic 7 — Unified chat view (USP — Twitch + YouTube in één feed)
-         ↑ SHIP: multi-platform streamers als doelgroep, marketingpunt
+✅  Epic 1       — Twitch events opslaan & structureren
+✅  Epic 2.1/2.2 — Live dashboard & SSE event feed
+✅  Epic 6.1–6.4 — YouTube OAuth, schema, token refresh, poller
+✅  [UX]         — Guided onboarding wizard
+✅  [UX]         — Audience pills (Twitch + YouTube counts op dashboard)
+✅  /goals       — Aparte goals pagina met quick access link
+✅  [7.6]        — YouTubeManage component op connections pagina
 ```
 
-### Groei & uitbreiding — na product-market fit
+### 🔨 Fase 2 — Integratie completeren (volgende stap)
+> YouTube is half-geïntegreerd: events worden opgeslagen maar niet getoond. Dit sluit de loop.
 ```
-[UX]     Guided onboarding flow
-[UX]     Platform audience pills (follower/subscriber count + growth indicator)
-Epic 8   OBS browser source widgets (chat overlay, goal overlay)
-Epic 9   Spotify mini player (OAuth + playback controls)
-Epic 10  Web migration van C# desktop integraties (strategisch)
-Epic 11  Personal music player (toekomstig — na validatie)
+1.  [6.5]   — YouTube events (superchats, members) in live feed + platform badge
+2.  [GOALS] — Multi-platform goals (Twitch follows, Twitch cheers, YouTube members)
+```
+
+### 🔨 Fase 3 — OBS widgets (hoge zichtbaarheid, laag effort)
+> Streamers verwachten overlays. Dit is een sterke hook voor marketing en word-of-mouth.
+```
+3.  [8.1]   — Widget authenticatie (token-based, geen browser sessie nodig)
+4.  [8.3]   — Goal overlay widget (/widget/goal) — animated progress bar in OBS
+```
+
+### 🔨 Fase 4 — Analytics + monetisatie (betaalde tier)
+> Analytics is de duidelijkste reden om te betalen. Stripe volgt direct erna.
+```
+5.  [4.1]   — Analytics API route (totalen per dag, per sessie)
+6.  [4.2]   — Analytics pagina (grafiek, sessietabel)
+7.  [4.3]   — Sessie detailpagina
+8.  [5.1]   — Stripe abonnement
+9.  [5.2]   — Feature gates (analytics achter paywall)
+10. [5.3]   — Billing pagina
+    ↑ SHIP: begin marketing hier — product is verkoopbaar
+```
+
+### 🔨 Fase 5 — USP: unified chat (differentiator)
+> "All your chats, one screen." Sterkste marketingboodschap voor multi-platform streamers.
+```
+11. [7.1]   — Twitch chat via EventSub
+12. [7.2]   — chat_messages tabel
+13. [7.3]   — YouTube chat → chat_messages
+14. [7.4]   — SSE stream uitbreiden met chat events
+15. [7.5]   — Unified chat UI in dashboard
+16. [8.2]   — Chat overlay widget (/widget/chat) — voor OBS
+    ↑ Sterkste USP live — intensiveer marketing
+```
+
+### 🔨 Fase 6 — Verdieping & uitbreiding
+```
+17. [6.6]   — YouTube analytics (superchats, members in analytics pagina)
+18. [4.x]   — Sessie-overzicht Twitch + YouTube gecombineerd
+19. Epic 3  — Configuratie beheren (commands, triggers, macros)
+20. Epic 12 — Lokalisatie & vertaling (next-intl, EN + NL)
+```
+
+### 🔮 Fase 7 — Lange termijn
+```
+Epic 9   — Spotify mini player (OAuth + playback controls)
+Epic 10  — Web migration C# desktop integraties (OBS relay agent)
+Epic 2.3 — OBS & Spotify widgets in dashboard (via desktop app — minder urgent na Epic 10)
+Epic 11  — Personal music player (na validatie van core platform)
 ```
 
 > **Waarom deze volgorde?**
-> Epic 3 (configuratie) is complex om te bouwen én complex uit te leggen aan nieuwe gebruikers. Analytics is een veel eenvoudigere eerste betaalfunctie — de waarde is onmiddellijk duidelijk: "bekijk je groei van de afgelopen 30 dagen." Epic 3 volgt daarna als power user feature.
+> YouTube is al half-gebouwd — 6.5 sluit de integratie af met minimale inspanning. OBS widgets zijn een concrete, visuele USP die makkelijk te demonstreren zijn in marketing materiaal. Analytics + Stripe maken monetisatie mogelijk. Unified chat is complex maar de sterkste differentiator — die bouwt de grootste marketingboodschap op.
 
 ---
 
