@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
 import { subEvents, subGoals, followEvents, ytMemberEvents } from "@/lib/schema"
-import { eq, count, and, gt } from "drizzle-orm"
+import { eq, count, and, gt, ne } from "drizzle-orm"
 import { liveEventFeedService } from "@/services"
 import { eventSubSubscriptionsRepository, userRepository, linkedAccountsRepository, goalsRepository } from "@/repositories"
 import { DashboardClient } from "./dashboard-client"
@@ -32,12 +32,43 @@ async function fetchTwitchSubCount(broadcasterId: string, accessToken: string): 
   } catch { return null }
 }
 
-async function fetchYouTubeSubCount(accessToken: string): Promise<number | null> {
+async function refreshYouTubeToken(refreshToken: string): Promise<string | null> {
   try {
-    const res = await fetch(
-      "https://www.googleapis.com/youtube/v3/channels?part=statistics&mine=true",
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    )
+    const res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      }),
+    })
+    const data = await res.json()
+    return data.access_token ?? null
+  } catch { return null }
+}
+
+async function fetchYouTubeSubCount(
+  accessToken: string,
+  refreshToken: string | null,
+  channelId: string,
+): Promise<number | null> {
+  const doFetch = (token: string) =>
+    fetch("https://www.googleapis.com/youtube/v3/channels?part=statistics&mine=true", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+  try {
+    let res = await doFetch(accessToken)
+
+    if (res.status === 401 && refreshToken) {
+      const newToken = await refreshYouTubeToken(refreshToken)
+      if (!newToken) return null
+      await linkedAccountsRepository.updateAccessToken("youtube", channelId, newToken)
+      res = await doFetch(newToken)
+    }
+
     if (!res.ok) return null
     const data = await res.json()
     const raw = data.items?.[0]?.statistics?.subscriberCount
@@ -73,12 +104,12 @@ export default async function DashboardPage() {
   const [followerCount, subCount, ytSubCount, followerGrowthRows, subGrowthRows] = await Promise.all([
     twitchAccount?.accessToken ? fetchTwitchFollowerCount(broadcasterId, twitchAccount.accessToken) : null,
     twitchAccount?.accessToken ? fetchTwitchSubCount(broadcasterId, twitchAccount.accessToken) : null,
-    ytAccount?.accessToken ? fetchYouTubeSubCount(ytAccount.accessToken) : null,
+    ytAccount?.accessToken ? fetchYouTubeSubCount(ytAccount.accessToken, ytAccount.refreshToken ?? null, ytAccount.providerAccountId) : null,
     broadcasterId
       ? db.select({ total: count() }).from(followEvents).where(and(eq(followEvents.broadcasterId, broadcasterId), gt(followEvents.occurredAt, thirtyDaysAgo)))
       : Promise.resolve([{ total: 0 }]),
     broadcasterId
-      ? db.select({ total: count() }).from(subEvents).where(and(eq(subEvents.broadcasterId, broadcasterId), gt(subEvents.occurredAt, thirtyDaysAgo)))
+      ? db.select({ total: count() }).from(subEvents).where(and(eq(subEvents.broadcasterId, broadcasterId), gt(subEvents.occurredAt, thirtyDaysAgo), ne(subEvents.kind, "resub")))
       : Promise.resolve([{ total: 0 }]),
   ])
 
