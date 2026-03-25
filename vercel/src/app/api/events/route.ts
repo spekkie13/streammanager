@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
 
   const result = await liveEventFeedService.getFilteredEvents({
     broadcasterId: session.twitchId,
+    youtubeChannelId: session.youtubeChannelId ?? undefined,
     types,
     from,
     to,
