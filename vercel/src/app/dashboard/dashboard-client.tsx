@@ -218,7 +218,7 @@ export function DashboardClient({
               Subscribers
             </div>
             <p className="text-2xl font-bold">{formatCount(hasYouTube ? ytSubCount : null)}</p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-600">— last 30d</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-600">Live count</p>
           </div>
         </div>
 
@@ -231,22 +231,6 @@ export function DashboardClient({
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-
-            {/* Twitch sub goal — always active */}
-            <div className="bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 rounded-lg p-4 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-                <TwitchLogo className="w-3.5 h-3.5 text-[#9146FF]" />
-                Twitch Subscribers
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold">{displayTotal.toLocaleString()}</span>
-                <span className="text-sm text-zinc-400 dark:text-zinc-500">/ {goal.toLocaleString()}</span>
-              </div>
-              <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2">
-                <div className="bg-purple-500 h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
-              </div>
-              <p className="text-xs text-zinc-500">{progress.toFixed(1)}%</p>
-            </div>
 
             {/* Twitch follow goal */}
             {followGoal !== null ? (() => {
@@ -279,6 +263,22 @@ export function DashboardClient({
                 <Link href="/goals" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">Set a goal →</Link>
               </div>
             )}
+
+            {/* Twitch sub goal — always active */}
+            <div className="bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 rounded-lg p-4 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                <TwitchLogo className="w-3.5 h-3.5 text-[#9146FF]" />
+                Twitch Subscribers
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold">{displayTotal.toLocaleString()}</span>
+                <span className="text-sm text-zinc-400 dark:text-zinc-500">/ {goal.toLocaleString()}</span>
+              </div>
+              <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2">
+                <div className="bg-purple-500 h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+              </div>
+              <p className="text-xs text-zinc-500">{progress.toFixed(1)}%</p>
+            </div>
 
             {/* YouTube member goal */}
             {!hasYouTube ? (
