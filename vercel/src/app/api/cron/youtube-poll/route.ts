@@ -18,6 +18,7 @@ export async function GET(req: Request) {
   }
 
   const accounts = await linkedAccountsRepository.findAllByProvider("youtube")
+  console.log(`[yt-poll] found ${accounts.length} account(s)`)
   await Promise.allSettled(accounts.map(pollAccount))
 
   return NextResponse.json({ ok: true, accounts: accounts.length })
@@ -54,8 +55,12 @@ async function pollAccount(account: LinkedAccount): Promise<void> {
   )
 
   if (broadcastsRes.status === 401 && account.refreshToken) {
+    console.log(`[yt-poll] ${account.providerAccountId}: token expired, refreshing`)
     const newToken = await refreshAccessToken(account.refreshToken)
-    if (!newToken) return
+    if (!newToken) {
+      console.log(`[yt-poll] ${account.providerAccountId}: token refresh failed, skipping`)
+      return
+    }
     await linkedAccountsRepository.updateAccessToken("youtube", account.providerAccountId, newToken)
     accessToken = newToken
     broadcastsRes = await ytGet(
@@ -64,10 +69,14 @@ async function pollAccount(account: LinkedAccount): Promise<void> {
     )
   }
 
-  if (!broadcastsRes.ok) return
+  if (!broadcastsRes.ok) {
+    console.log(`[yt-poll] ${account.providerAccountId}: broadcasts fetch failed with status ${broadcastsRes.status}`)
+    return
+  }
 
   const broadcastsData = await broadcastsRes.json()
   const broadcast = broadcastsData.items?.[0]
+  console.log(`[yt-poll] ${account.providerAccountId}: broadcast=${broadcast?.id ?? "none"}`)
 
   if (!broadcast) {
     // No active broadcast — close any open session

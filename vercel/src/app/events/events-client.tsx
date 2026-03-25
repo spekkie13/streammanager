@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback } from "react"
-import type { LiveEventType } from "@/types/events"
+import type { LiveEvent, LiveEventType } from "@/types/events"
 import type { EventSortBy, SortOrder, PaginatedEvents } from "@/types/event-filter"
 import { AppHeader } from "@/components/app-header"
 
@@ -67,6 +67,119 @@ function formatDate(iso: string) {
   })
 }
 
+const TIER_LABEL: Record<string, string> = {
+  "1000": "Tier 1",
+  "2000": "Tier 2",
+  "3000": "Tier 3",
+}
+
+const SUB_KIND_LABEL: Record<string, string> = {
+  new: "New subscription",
+  resub: "Resubscription",
+  community_gift: "Gift subscriptions",
+}
+
+const MODAL_TYPES = new Set<LiveEventType>(["sub", "bits", "superchat", "member"])
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-4 py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+      <span className="text-xs text-zinc-500 dark:text-zinc-400 shrink-0">{label}</span>
+      <span className="text-xs text-zinc-900 dark:text-white text-right">{value}</span>
+    </div>
+  )
+}
+
+function EventDetailModal({ event, onClose }: { event: LiveEvent; onClose: () => void }) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose() }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [onClose])
+
+  const title = event.type === "sub"
+    ? SUB_KIND_LABEL[event.subKind ?? "new"] ?? "Subscription"
+    : event.type === "bits" ? "Bits Cheered"
+    : event.type === "superchat" ? "Super Chat"
+    : "Membership"
+
+  const formattedAmount = formatAmount(event.type, event.amount, event.currency)
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl w-full max-w-sm shadow-xl"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-2.5">
+            {event.platform === "youtube"
+              ? <YouTubeLogo className="w-3.5 h-3.5 text-[#FF0000]" />
+              : <TwitchLogo className="w-3.5 h-3.5 text-[#9146FF]" />
+            }
+            <span className={`text-xs px-2 py-0.5 rounded font-medium ${TYPE_BADGE[event.type]}`}>
+              {TYPE_ICON[event.type]} {event.type}
+            </span>
+            <span className="text-sm font-semibold">{title}</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors text-lg leading-none"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 py-4 space-y-0">
+          <DetailRow label="From" value={event.fromUser} />
+
+          {event.type === "sub" && (
+            <>
+              {event.tier && <DetailRow label="Tier" value={TIER_LABEL[event.tier] ?? event.tier} />}
+              {event.subKind === "resub" && event.cumulativeMonths != null && (
+                <DetailRow label="Total months" value={`${event.cumulativeMonths} months`} />
+              )}
+              {event.subKind === "community_gift" && event.amount != null && (
+                <DetailRow label="Gifted" value={`${event.amount} subscription${event.amount !== 1 ? "s" : ""}`} />
+              )}
+            </>
+          )}
+
+          {event.type === "bits" && formattedAmount && (
+            <DetailRow label="Amount" value={formattedAmount} />
+          )}
+
+          {event.type === "superchat" && formattedAmount && (
+            <DetailRow label="Amount" value={formattedAmount} />
+          )}
+
+          {event.type === "member" && (
+            <>
+              {event.amount != null && <DetailRow label="Member for" value={`${event.amount} month${event.amount !== 1 ? "s" : ""}`} />}
+              {event.levelName && <DetailRow label="Level" value={event.levelName} />}
+            </>
+          )}
+
+          {event.message && (
+            <div className="py-3 border-b border-zinc-100 dark:border-zinc-800">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1.5">Message</p>
+              <p className="text-sm text-zinc-900 dark:text-white italic">&ldquo;{event.message}&rdquo;</p>
+            </div>
+          )}
+
+          <DetailRow label="Time" value={new Date(event.occurredAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function EventsClient({ displayName }: { displayName: string }) {
   const [activeTypes, setActiveTypes] = useState<Set<LiveEventType>>(new Set())
   const [from, setFrom] = useState("")
@@ -77,6 +190,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
 
   const [data, setData] = useState<PaginatedEvents | null>(null)
   const [loading, setLoading] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<LiveEvent | null>(null)
 
   const fetchEvents = useCallback(async () => {
     setLoading(true)
@@ -117,6 +231,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
 
   return (
     <div className="min-h-screen">
+      {selectedEvent && <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
       <AppHeader displayName={displayName} />
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
@@ -157,7 +272,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
           {/* Date range + sort */}
           <div className="flex flex-wrap gap-4 items-end">
             <div className="space-y-1">
-              <label className="text-xs text-zinc-500">From</label>
+              <label className="text-xs text-zinc-500 mr-2">From</label>
               <input
                 type="datetime-local"
                 value={from}
@@ -166,7 +281,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-zinc-500">To</label>
+              <label className="text-xs text-zinc-500 mr-2">To</label>
               <input
                 type="datetime-local"
                 value={to}
@@ -175,7 +290,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-zinc-500">Sort by</label>
+              <label className="text-xs text-zinc-500 mr-2">Sort by</label>
               <select
                 value={sortBy}
                 onChange={e => handleSortBy(e.target.value as EventSortBy)}
@@ -210,28 +325,35 @@ export function EventsClient({ displayName }: { displayName: string }) {
             </div>
           ) : (
             <div className="divide-y divide-zinc-200 dark:divide-zinc-800/60">
-              {data.events.map(event => (
-                <div key={event.id} className="px-6 py-3 flex items-center gap-4">
-                  {event.platform === "youtube"
-                    ? <YouTubeLogo className="shrink-0 w-3 h-3 text-[#FF0000]" />
-                    : <TwitchLogo className="shrink-0 w-3 h-3 text-[#9146FF]" />
-                  }
-                  <span className={`shrink-0 text-xs px-2 py-0.5 rounded font-medium ${TYPE_BADGE[event.type]}`}>
-                    {TYPE_ICON[event.type]} {event.type}
-                  </span>
-                  <span className="flex-1 text-sm text-zinc-900 dark:text-white truncate">
-                    {event.fromUser}
-                  </span>
-                  {event.amount !== null && (
-                    <span className="text-sm text-zinc-500 dark:text-zinc-400 shrink-0">
-                      {formatAmount(event.type, event.amount, event.currency)}
+              {data.events.map(event => {
+                const hasDetail = MODAL_TYPES.has(event.type)
+                return (
+                  <div
+                    key={event.id}
+                    onClick={() => hasDetail && setSelectedEvent(event)}
+                    className={`px-6 py-3 flex items-center gap-4 ${hasDetail ? "cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors" : ""}`}
+                  >
+                    {event.platform === "youtube"
+                      ? <YouTubeLogo className="shrink-0 w-3 h-3 text-[#FF0000]" />
+                      : <TwitchLogo className="shrink-0 w-3 h-3 text-[#9146FF]" />
+                    }
+                    <span className={`shrink-0 text-xs px-2 py-0.5 rounded font-medium ${TYPE_BADGE[event.type]}`}>
+                      {TYPE_ICON[event.type]} {event.type}
                     </span>
-                  )}
-                  <span className="text-xs text-zinc-400 dark:text-zinc-600 shrink-0 w-36 text-right">
-                    {formatDate(event.occurredAt)}
-                  </span>
-                </div>
-              ))}
+                    <span className="flex-1 text-sm text-zinc-900 dark:text-white truncate">
+                      {event.fromUser}
+                    </span>
+                    {event.amount !== null && (
+                      <span className="text-sm text-zinc-500 dark:text-zinc-400 shrink-0">
+                        {formatAmount(event.type, event.amount, event.currency)}
+                      </span>
+                    )}
+                    <span className="text-xs text-zinc-400 dark:text-zinc-600 shrink-0 w-36 text-right">
+                      {formatDate(event.occurredAt)}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           )}
 
