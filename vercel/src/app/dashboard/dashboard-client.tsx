@@ -19,6 +19,10 @@ type Props = {
   hasYouTube: boolean
   followerGrowth: number
   subGrowth: number
+  followTotal: number
+  followGoal: number | null
+  ytMemberTotal: number
+  ytMemberGoal: number | null
 }
 
 const TYPE_BADGE: Record<LiveEventType, string> = {
@@ -102,7 +106,8 @@ const STATUS_CONFIG: Record<StatusVariant, { label: string; subtext: string; pil
 export function DashboardClient({
   session, goal, initialCount, endsAt, total, initialEvents,
   subscriptionsRegistered, followerCount, subCount, ytSubCount,
-  hasYouTube, followerGrowth, subGrowth,
+  hasYouTube, followerGrowth, subGrowth, followTotal, followGoal,
+  ytMemberTotal, ytMemberGoal,
 }: Props) {
   const events = useStreamEvents(initialEvents)
 
@@ -204,25 +209,108 @@ export function DashboardClient({
           </div>
         </div>
 
-        {/* Sub goal — compact */}
+        {/* Goals */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Twitch — Sub Goal</h2>
+            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Goals</h2>
             <Link href="/goals" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">
               Manage →
             </Link>
           </div>
-          <div className="flex items-end gap-3">
-            <span className="text-5xl font-bold">{displayTotal}</span>
-            <span className="text-2xl text-zinc-400 dark:text-zinc-500 pb-1">/ {goal}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+            {/* Twitch sub goal — always active */}
+            <div className="bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 rounded-lg p-4 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                <TwitchLogo className="w-3.5 h-3.5 text-[#9146FF]" />
+                Twitch Subscribers
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold">{displayTotal.toLocaleString()}</span>
+                <span className="text-sm text-zinc-400 dark:text-zinc-500">/ {goal.toLocaleString()}</span>
+              </div>
+              <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2">
+                <div className="bg-purple-500 h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+              </div>
+              <p className="text-xs text-zinc-500">{progress.toFixed(1)}%</p>
+            </div>
+
+            {/* Twitch follow goal */}
+            {followGoal !== null ? (() => {
+              const followProgress = Math.min((followTotal / followGoal) * 100, 100)
+              return (
+                <div className="bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 rounded-lg p-4 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                    <TwitchLogo className="w-3.5 h-3.5 text-[#9146FF]" />
+                    Twitch Followers
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-bold">{followTotal.toLocaleString()}</span>
+                    <span className="text-sm text-zinc-400 dark:text-zinc-500">/ {followGoal.toLocaleString()}</span>
+                  </div>
+                  <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2">
+                    <div className="bg-blue-500 h-2 rounded-full transition-all duration-500" style={{ width: `${followProgress}%` }} />
+                  </div>
+                  <p className="text-xs text-zinc-500">{followProgress.toFixed(1)}%</p>
+                </div>
+              )
+            })() : (
+              /* No goal set */
+              <div className="bg-zinc-50 dark:bg-zinc-800/50 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
+                  <TwitchLogo className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
+                  Twitch Followers
+                </div>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">No follow goal set.</p>
+                <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2" />
+                <Link href="/goals" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">Set a goal →</Link>
+              </div>
+            )}
+
+            {/* YouTube member goal */}
+            {!hasYouTube ? (
+              /* Not connected — amber tint */
+              <div className="bg-amber-50/60 dark:bg-amber-950/20 border border-dashed border-amber-300 dark:border-amber-700/50 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
+                  <YouTubeLogo className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
+                  YouTube Members
+                </div>
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">YouTube not connected</p>
+                <div className="w-full bg-amber-100 dark:bg-amber-900/20 rounded-full h-2" />
+                <Link href="/connections" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">Connect account →</Link>
+              </div>
+            ) : ytMemberGoal !== null ? (() => {
+              const memberProgress = Math.min((ytMemberTotal / ytMemberGoal) * 100, 100)
+              return (
+                <div className="bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 rounded-lg p-4 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                    <YouTubeLogo className="w-3.5 h-3.5 text-[#FF0000]" />
+                    YouTube Members
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-bold">{ytMemberTotal.toLocaleString()}</span>
+                    <span className="text-sm text-zinc-400 dark:text-zinc-500">/ {ytMemberGoal.toLocaleString()}</span>
+                  </div>
+                  <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2">
+                    <div className="bg-red-500 h-2 rounded-full transition-all duration-500" style={{ width: `${memberProgress}%` }} />
+                  </div>
+                  <p className="text-xs text-zinc-500">{memberProgress.toFixed(1)}%</p>
+                </div>
+              )
+            })() : (
+              /* Connected but no goal set */
+              <div className="bg-zinc-50 dark:bg-zinc-800/50 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
+                  <YouTubeLogo className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
+                  YouTube Members
+                </div>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">No member goal set.</p>
+                <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2" />
+                <Link href="/goals" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">Set a goal →</Link>
+              </div>
+            )}
+
           </div>
-          <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-3">
-            <div
-              className="bg-purple-500 h-3 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="text-zinc-500 text-sm">{progress.toFixed(1)}% of goal reached</p>
         </div>
 
         {/* Live event feed */}

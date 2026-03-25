@@ -2,10 +2,10 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
-import { subEvents, subGoals, followEvents } from "@/lib/schema"
+import { subEvents, subGoals, followEvents, ytMemberEvents } from "@/lib/schema"
 import { eq, count, and, gt } from "drizzle-orm"
 import { liveEventFeedService } from "@/services"
-import { eventSubSubscriptionsRepository, userRepository, linkedAccountsRepository } from "@/repositories"
+import { eventSubSubscriptionsRepository, userRepository, linkedAccountsRepository, goalsRepository } from "@/repositories"
 import { DashboardClient } from "./dashboard-client"
 
 async function fetchTwitchFollowerCount(broadcasterId: string, accessToken: string): Promise<number | null> {
@@ -50,15 +50,19 @@ export default async function DashboardPage() {
   if (!session) redirect("/")
 
   const broadcasterId = session.twitchId ?? ""
+  const youtubeChannelId = session.youtubeChannelId ?? null
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
-  const [user, goalRows, totalRows, recentEvents, subscriptionsRegistered, linkedAccounts] = await Promise.all([
+  const [user, goalRows, totalRows, recentEvents, subscriptionsRegistered, linkedAccounts, followTotalRows, ytMemberTotalRows, extraGoals] = await Promise.all([
     userRepository.findById(session.userId),
     broadcasterId ? db.select().from(subGoals).where(eq(subGoals.broadcasterId, broadcasterId)).limit(1) : [],
     broadcasterId ? db.select({ total: count() }).from(subEvents).where(eq(subEvents.broadcasterId, broadcasterId)) : [{ total: 0 }],
     liveEventFeedService.getFilteredEvents({ broadcasterId, youtubeChannelId: session.youtubeChannelId, limit: 15 }),
     broadcasterId ? eventSubSubscriptionsRepository.existsByBroadcasterId(broadcasterId) : false,
     linkedAccountsRepository.findByUserId(session.userId),
+    broadcasterId ? db.select({ total: count() }).from(followEvents).where(eq(followEvents.broadcasterId, broadcasterId)) : [{ total: 0 }],
+    youtubeChannelId ? db.select({ total: count() }).from(ytMemberEvents).where(eq(ytMemberEvents.channelId, youtubeChannelId)) : [{ total: 0 }],
+    goalsRepository.findByUserId(session.userId),
   ])
 
   if (!user?.onboardingCompleted) redirect("/setup")
@@ -83,6 +87,9 @@ export default async function DashboardPage() {
   const endsAt = goalRows[0]?.endsAt?.toISOString() ?? null
   const total = totalRows[0]?.total ?? 0
 
+  const followGoalRow = extraGoals.find(g => g.type === "twitch_follow") ?? null
+  const ytMemberGoalRow = extraGoals.find(g => g.type === "youtube_member") ?? null
+
   return (
     <DashboardClient
       session={session}
@@ -98,6 +105,10 @@ export default async function DashboardPage() {
       hasYouTube={!!ytAccount}
       followerGrowth={followerGrowthRows[0]?.total ?? 0}
       subGrowth={subGrowthRows[0]?.total ?? 0}
+      followTotal={followTotalRows[0]?.total ?? 0}
+      followGoal={followGoalRow?.goal ?? null}
+      ytMemberTotal={ytMemberTotalRows[0]?.total ?? 0}
+      ytMemberGoal={ytMemberGoalRow?.goal ?? null}
     />
   )
 }
