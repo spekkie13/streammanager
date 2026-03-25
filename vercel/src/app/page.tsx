@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { WaitlistForm } from "./waitlist-form"
 // import { SignInButton } from "./sign-in-button"
 import { CreatorDeckLogo } from "@/components/creator-deck-logo"
+import { ScreenshotCarousel } from "@/components/screenshot-carousel"
 
 const FEATURES = [
   {
@@ -65,6 +66,11 @@ export default async function LandingPage() {
             <SignInButton />
           </div>*/}
         </div>
+      </section>
+
+      {/* Screenshot carousel */}
+      <section className="pb-16">
+        <ScreenshotCarousel />
       </section>
 
       {/* Features */}
