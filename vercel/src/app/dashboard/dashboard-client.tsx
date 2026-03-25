@@ -114,7 +114,18 @@ export function DashboardClient({
   const displayTotal = total + initialCount
   const progress = Math.min((displayTotal / goal) * 100, 100)
 
-  const variant: StatusVariant = subscriptionsRegistered ? "good" : "warning"
+  const hasTwitch = !!session.twitchId
+  const twitchStatus = !hasTwitch
+    ? { dot: "bg-zinc-400 dark:bg-zinc-600", text: "text-zinc-400 dark:text-zinc-500", label: "Not connected" }
+    : !subscriptionsRegistered
+    ? { dot: "bg-amber-500", text: "text-amber-500", label: "Action required" }
+    : { dot: "bg-green-500", text: "text-green-500", label: "Connected" }
+  const ytStatus = hasYouTube
+    ? { dot: "bg-green-500", text: "text-green-500", label: "Connected" }
+    : { dot: "bg-zinc-400 dark:bg-zinc-600", text: "text-zinc-400 dark:text-zinc-500", label: "Not connected" }
+
+  const allGood = hasTwitch && subscriptionsRegistered
+  const variant: StatusVariant = allGood ? "good" : "warning"
   const s = STATUS_CONFIG[variant]
 
   return (
@@ -123,43 +134,45 @@ export function DashboardClient({
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
 
-        {/* Welcome card */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-xl font-semibold tracking-tight">
-              {greeting()}, <span className="text-purple-500">{session.displayName}</span> 👋
-            </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.subtext}</p>
+        {/* Welcome card — with platform status integrated */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-6 py-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="space-y-1">
+              <h1 className="text-xl font-semibold tracking-tight">
+                {greeting()}, <span className="text-purple-500">{session.displayName}</span> 👋
+              </h1>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.subtext}</p>
+            </div>
+            <span className={`inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border shrink-0 self-start sm:self-auto ${s.pill}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+              {s.label}
+            </span>
           </div>
-          <span className={`inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border shrink-0 ${s.pill}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-            {s.label}
-          </span>
+          <div className="flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800 pt-3">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <TwitchLogo className={`w-3.5 h-3.5 ${hasTwitch ? "text-[#9146FF]" : "text-zinc-400 dark:text-zinc-600"}`} />
+                <span className="text-sm font-medium">Twitch</span>
+                <span className={`flex items-center gap-1 text-xs ${twitchStatus.text}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full inline-block ${twitchStatus.dot}`} />
+                  {twitchStatus.label}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <YouTubeLogo className={`w-3.5 h-3.5 ${hasYouTube ? "text-[#FF0000]" : "text-zinc-400 dark:text-zinc-600"}`} />
+                <span className="text-sm font-medium">YouTube</span>
+                <span className={`flex items-center gap-1 text-xs ${ytStatus.text}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full inline-block ${ytStatus.dot}`} />
+                  {ytStatus.label}
+                </span>
+              </div>
+            </div>
+            <Link href="/connections" className="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors shrink-0">
+              Manage →
+            </Link>
+          </div>
         </div>
 
-        {/* Quick actions */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link
-            href="/goals"
-            className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-purple-500/50 dark:hover:border-purple-500/40 rounded-xl px-5 py-4 flex items-center justify-between transition-colors"
-          >
-            <div>
-              <p className="text-sm font-semibold">Goals</p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Manage your subscriber goal</p>
-            </div>
-            <span className="text-zinc-400 group-hover:text-purple-500 transition-colors text-lg">→</span>
-          </Link>
-          <Link
-            href="/connections"
-            className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 rounded-xl px-5 py-4 flex items-center justify-between transition-colors"
-          >
-            <div>
-              <p className="text-sm font-semibold">Connections</p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Manage linked accounts</p>
-            </div>
-            <span className="text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors text-lg">→</span>
-          </Link>
-        </div>
 
         {/* Setup banner */}
         {!subscriptionsRegistered && (
@@ -210,7 +223,7 @@ export function DashboardClient({
         </div>
 
         {/* Goals */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-6 pt-4 pb-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Goals</h2>
             <Link href="/goals" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">

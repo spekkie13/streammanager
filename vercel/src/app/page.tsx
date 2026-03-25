@@ -37,9 +37,11 @@ export default async function LandingPage() {
     <div className="min-h-screen flex flex-col bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white">
 
       {/* Nav */}
-      <nav className="px-6 py-5 flex items-center justify-between max-w-5xl mx-auto w-full">
-        <CreatorDeckLogo size="sm" />
-        {/* <SignInButton variant="ghost" /> */}
+      <nav className="sticky top-0 z-30 w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900">
+        <div className="px-6 py-5 flex items-center justify-between max-w-5xl mx-auto w-full">
+          <CreatorDeckLogo size="sm" />
+          {/* <SignInButton variant="ghost" /> */}
+        </div>
       </nav>
 
       {/* Hero */}
