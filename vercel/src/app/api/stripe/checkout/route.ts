@@ -22,10 +22,7 @@ export async function POST(req: NextRequest) {
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/billing`,
-    ...(stripeCustomerId
-      ? { customer: stripeCustomerId }
-      : { customer_creation: "always" }
-    ),
+    ...(stripeCustomerId ? { customer: stripeCustomerId } : {}),
     subscription_data: {
       metadata: { userId: session.userId },
     },

@@ -3,7 +3,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { TIER_LABELS, TIER_MONTHLY_PRICES, TIER_ANNUAL_PRICES } from "@/lib/gates"
 import type { SubscriptionTier } from "@/lib/gates"
-import { env } from "@/lib/env"
 
 type BillingCycle = "monthly" | "annual"
 type PaidTier = "tier1" | "tier2" | "tier3"
