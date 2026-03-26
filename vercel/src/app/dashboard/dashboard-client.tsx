@@ -3,6 +3,9 @@ import { useStreamEvents } from "@/hooks/use-stream-events"
 import Link from "next/link"
 import type { Session } from "next-auth"
 import { AppHeader } from "@/components/app-header"
+import { TwitchLogo, YouTubeLogo } from "@/components/platform-logos"
+import { TYPE_BADGE, TYPE_ICON } from "@/lib/event-types"
+import { formatAmount, formatCount, greeting } from "@/lib/format"
 import type { LiveEvent, LiveEventType } from "@/types/events"
 
 type Props = {
@@ -23,67 +26,6 @@ type Props = {
   followGoal: number | null
   ytMemberTotal: number
   ytMemberGoal: number | null
-}
-
-const TYPE_BADGE: Record<LiveEventType, string> = {
-  sub:       "bg-purple-500/20 text-purple-400 border border-purple-500/40",
-  follow:    "bg-blue-500/20 text-blue-400 border border-blue-500/40",
-  bits:      "bg-yellow-500/20 text-yellow-500 border border-yellow-500/40",
-  raid:      "bg-green-500/20 text-green-500 border border-green-500/40",
-  superchat: "bg-red-500/20 text-red-400 border border-red-500/40",
-  member:    "bg-orange-500/20 text-orange-400 border border-orange-500/40",
-}
-
-const TYPE_ICON: Record<LiveEventType, string> = {
-  sub:       "★",
-  follow:    "♥",
-  bits:      "◆",
-  raid:      "▶",
-  superchat: "💬",
-  member:    "🎖",
-}
-
-function formatAmount(type: LiveEventType, amount: number | null, currency?: string | null): string | null {
-  if (amount === null) return null
-  if (type === "bits") return `${amount.toLocaleString()} bits`
-  if (type === "raid") return `${amount.toLocaleString()} viewers`
-  if (type === "member") return `${amount} mo.`
-  if (type === "superchat") {
-    return currency
-      ? new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount)
-      : `${amount}`
-  }
-  return null
-}
-
-function greeting(): string {
-  const h = new Date().getHours()
-  if (h < 12) return "Good morning"
-  if (h < 18) return "Good afternoon"
-  return "Good evening"
-}
-
-function formatCount(n: number | null): string {
-  if (n === null) return "—"
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
-  return n.toLocaleString()
-}
-
-function TwitchLogo({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z" />
-    </svg>
-  )
-}
-
-function YouTubeLogo({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-    </svg>
-  )
 }
 
 type StatusVariant = "good" | "warning"
@@ -127,6 +69,8 @@ export function DashboardClient({
   const allGood = hasTwitch && subscriptionsRegistered
   const variant: StatusVariant = allGood ? "good" : "warning"
   const s = STATUS_CONFIG[variant]
+
+  void endsAt // tracked server-side
 
   return (
     <div className="min-h-screen">
@@ -353,13 +297,13 @@ export function DashboardClient({
                     ? <YouTubeLogo className="shrink-0 w-3 h-3 text-[#FF0000]" />
                     : <TwitchLogo className="shrink-0 w-3 h-3 text-[#9146FF]" />
                   }
-                  <span className={`shrink-0 text-xs px-2 py-0.5 rounded font-medium ${TYPE_BADGE[event.type]}`}>
-                    {TYPE_ICON[event.type]} {event.type}
+                  <span className={`shrink-0 text-xs px-2 py-0.5 rounded font-medium ${TYPE_BADGE[event.type as LiveEventType]}`}>
+                    {TYPE_ICON[event.type as LiveEventType]} {event.type}
                   </span>
                   <span className="flex-1 text-sm truncate">{event.fromUser}</span>
                   {event.amount !== null && (
                     <span className="text-sm text-zinc-500 dark:text-zinc-400 shrink-0">
-                      {formatAmount(event.type, event.amount, event.currency)}
+                      {formatAmount(event.type as LiveEventType, event.amount, event.currency)}
                     </span>
                   )}
                   <span className="text-xs text-zinc-400 dark:text-zinc-600 shrink-0">

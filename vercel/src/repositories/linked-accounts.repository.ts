@@ -34,7 +34,7 @@ class LinkedAccountsRepository {
   }
 
   // Finds or creates a user+account pair, updates tokens on subsequent sign-ins.
-  // Returns the internal userId and apiKey.
+  // Returns the internal userId, apiKey, and subscription tier.
   async upsertWithUser(data: {
     provider: string
     providerAccountId: string
@@ -42,9 +42,9 @@ class LinkedAccountsRepository {
     displayName: string
     accessToken: string
     refreshToken: string
-  }): Promise<{ userId: string; apiKey: string }> {
+  }): Promise<{ userId: string; apiKey: string; tier: string }> {
     const existing = await db
-      .select({ userId: linkedAccounts.userId, apiKey: users.apiKey })
+      .select({ userId: linkedAccounts.userId, apiKey: users.apiKey, tier: users.tier })
       .from(linkedAccounts)
       .innerJoin(users, eq(users.id, linkedAccounts.userId))
       .where(and(
@@ -72,7 +72,7 @@ class LinkedAccountsRepository {
     const apiKey = randomBytes(32).toString("hex")
     const [newUser] = await db.insert(users).values({ apiKey }).returning()
     await db.insert(linkedAccounts).values({ userId: newUser.id, ...data })
-    return { userId: newUser.id, apiKey }
+    return { userId: newUser.id, apiKey, tier: newUser.tier }
   }
 
   // Links a new account to an existing user (account linking flow).

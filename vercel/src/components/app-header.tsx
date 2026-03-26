@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { label: "Event History", href: "/events" },
   { label: "Analytics",     href: "/analytics" },
   { label: "Goals",         href: "/goals" },
+  { label: "Billing",       href: "/billing" },
 ]
 
 const SETTINGS_ITEMS = [

@@ -1,10 +1,15 @@
-import { pgTable, text, timestamp, integer, uuid, boolean, bigint, unique } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp, integer, uuid, boolean, bigint, unique, pgEnum } from "drizzle-orm/pg-core"
+
+export const subscriptionTier = pgEnum("subscription_tier", ["free", "tier1", "tier2", "tier3"])
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   apiKey: text("api_key").unique().notNull(),
   widgetToken: text("widget_token").unique(),
   onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
+  tier: subscriptionTier("tier").notNull().default("free"),
+  stripeCustomerId: text("stripe_customer_id").unique(),
+  stripeSubscriptionId: text("stripe_subscription_id").unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 

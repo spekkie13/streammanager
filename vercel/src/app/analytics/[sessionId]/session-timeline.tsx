@@ -1,54 +1,8 @@
 "use client"
 import { useState } from "react"
 import type { LiveEvent, LiveEventType } from "@/types/events"
-
-const ALL_TYPES: LiveEventType[] = ["follow", "sub", "bits", "raid", "superchat", "member"]
-
-const TYPE_BADGE: Record<LiveEventType, string> = {
-  sub:       "bg-purple-500/20 text-purple-400 border border-purple-500/40",
-  follow:    "bg-blue-500/20 text-blue-400 border border-blue-500/40",
-  bits:      "bg-yellow-500/20 text-yellow-500 border border-yellow-500/40",
-  raid:      "bg-green-500/20 text-green-500 border border-green-500/40",
-  superchat: "bg-red-500/20 text-red-400 border border-red-500/40",
-  member:    "bg-orange-500/20 text-orange-400 border border-orange-500/40",
-}
-
-const TYPE_ICON: Record<LiveEventType, string> = {
-  sub: "★", follow: "♥", bits: "◆", raid: "▶", superchat: "💬", member: "🎖",
-}
-
-const TYPE_FILTER_STYLE: Record<LiveEventType, string> = {
-  sub:       "border-purple-500/40 text-purple-400 bg-purple-500/10",
-  follow:    "border-blue-500/40 text-blue-400 bg-blue-500/10",
-  bits:      "border-yellow-500/40 text-yellow-500 bg-yellow-500/10",
-  raid:      "border-green-500/40 text-green-500 bg-green-500/10",
-  superchat: "border-red-500/40 text-red-400 bg-red-500/10",
-  member:    "border-orange-500/40 text-orange-400 bg-orange-500/10",
-}
-
-function formatAmount(type: LiveEventType, amount: number | null, currency?: string | null): string | null {
-  if (amount === null) return null
-  if (type === "bits") return `${amount.toLocaleString()} bits`
-  if (type === "raid") return `${amount.toLocaleString()} viewers`
-  if (type === "member") return `${amount} mo.`
-  if (type === "superchat") {
-    return currency
-      ? new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount)
-      : `${amount}`
-  }
-  return null
-}
-
-function formatRelativeTime(sessionStart: string, eventTime: string): string {
-  const diffMs = new Date(eventTime).getTime() - new Date(sessionStart).getTime()
-  if (diffMs < 0) return "+0:00"
-  const totalSecs = Math.floor(diffMs / 1000)
-  const h = Math.floor(totalSecs / 3600)
-  const m = Math.floor((totalSecs % 3600) / 60)
-  const s = totalSecs % 60
-  if (h > 0) return `+${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
-  return `+${m}:${String(s).padStart(2, "0")}`
-}
+import { TYPE_BADGE, TYPE_ICON, TYPE_FILTER_STYLE } from "@/lib/event-types"
+import { formatAmount, formatRelativeTime } from "@/lib/format"
 
 export function SessionTimeline({
   events,
