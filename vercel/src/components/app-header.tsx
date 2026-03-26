@@ -14,6 +14,7 @@ type Props = {
 const NAV_ITEMS = [
   { label: "Dashboard",     href: "/dashboard" },
   { label: "Event History", href: "/events" },
+  { label: "Analytics",     href: "/analytics" },
   { label: "Goals",         href: "/goals" },
 ]
 
