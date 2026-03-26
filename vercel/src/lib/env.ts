@@ -12,4 +12,11 @@ export const env = {
   googleClientId: requireEnv("GOOGLE_CLIENT_ID"),
   googleClientSecret: requireEnv("GOOGLE_CLIENT_SECRET"),
   cronSecret: requireEnv("CRON_SECRET"),
+  stripeSecretKey: requireEnv("STRIPE_SECRET_KEY"),
+  stripeWebhookSecret: requireEnv("STRIPE_WEBHOOK_SECRET"),
+  stripePrices: {
+    tier1: { monthly: requireEnv("STRIPE_PRICE_TIER1_MONTHLY"), annual: requireEnv("STRIPE_PRICE_TIER1_ANNUAL") },
+    tier2: { monthly: requireEnv("STRIPE_PRICE_TIER2_MONTHLY"), annual: requireEnv("STRIPE_PRICE_TIER2_ANNUAL") },
+    tier3: { monthly: requireEnv("STRIPE_PRICE_TIER3_MONTHLY"), annual: requireEnv("STRIPE_PRICE_TIER3_ANNUAL") },
+  },
 }
