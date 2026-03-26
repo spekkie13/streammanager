@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import Link from "next/link"
 import { AppHeader } from "@/components/app-header"
 import { ApiKeyToggle } from "./api-key-toggle"
 import { TIER_LABELS } from "@/lib/gates"
@@ -26,12 +25,7 @@ export default async function AccountPage() {
           </div>
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-sm text-zinc-500 dark:text-zinc-400">Plan</span>
-            <div className="flex items-center gap-3">
-              <Link href="/billing" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">
-                {session.tier === "free" ? "Upgrade →" : "Manage →"}
-              </Link>
-              <span className="text-sm text-zinc-900 dark:text-white">{TIER_LABELS[session.tier]}</span>
-            </div>
+            <span className="text-sm text-zinc-900 dark:text-white">{TIER_LABELS[session.tier]}</span>
           </div>
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-sm text-zinc-500 dark:text-zinc-400">Twitch ID</span>
