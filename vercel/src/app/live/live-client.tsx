@@ -177,6 +177,25 @@ export function LiveClient({
             )}
           </div>
 
+          {/* Spotify */}
+          <div className="p-4 space-y-3">
+            <h2 className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Now Playing</h2>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded bg-zinc-200 dark:bg-zinc-800 shrink-0 flex items-center justify-center text-base">
+                🎵
+              </div>
+              <div className="flex-1 min-w-0 space-y-0.5">
+                <p className="text-xs text-zinc-400 dark:text-zinc-600 italic truncate">Spotify coming soon</p>
+                <p className="text-[10px] text-zinc-300 dark:text-zinc-700 truncate">Connect Spotify to control playback</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-4 text-zinc-300 dark:text-zinc-700">
+              <button disabled title="Previous" className="cursor-not-allowed">⏮</button>
+              <button disabled title="Play / Pause" className="cursor-not-allowed text-lg">⏸</button>
+              <button disabled title="Next" className="cursor-not-allowed">⏭</button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
