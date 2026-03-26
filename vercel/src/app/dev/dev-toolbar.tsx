@@ -30,12 +30,17 @@ export function DevToolbar() {
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-8">
       <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 w-full max-w-sm space-y-6">
-        <div>
-          <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Dev toolbar</p>
-          <h1 className="text-lg font-semibold text-white mt-1">Switch subscription tier</h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            Current: <span className="text-purple-400 font-medium">{TIER_LABELS[current]}</span>
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Dev toolbar</p>
+            <h1 className="text-lg font-semibold text-white mt-1">Switch subscription tier</h1>
+            <p className="text-sm text-zinc-400 mt-1">
+              Current: <span className="text-purple-400 font-medium">{TIER_LABELS[current]}</span>
+            </p>
+          </div>
+          <Link href="/dashboard" className="text-xs text-zinc-400 hover:text-white transition-colors">
+            ← Dashboard
+          </Link>
         </div>
 
         <div className="space-y-2">
@@ -64,12 +69,7 @@ export function DevToolbar() {
           ))}
         </div>
 
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-zinc-600">Only available in development</p>
-          <Link href="/dashboard" className="text-xs text-zinc-400 hover:text-white transition-colors">
-            ← Dashboard
-          </Link>
-        </div>
+        <p className="text-xs text-zinc-600 text-center">Only available in development</p>
       </div>
     </div>
   )
