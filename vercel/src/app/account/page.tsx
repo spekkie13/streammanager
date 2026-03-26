@@ -26,7 +26,7 @@ export default async function AccountPage() {
           </div>
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-sm text-zinc-500 dark:text-zinc-400">Plan</span>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-end gap-0.5">
               <span className="text-sm text-zinc-900 dark:text-white">{TIER_LABELS[session.tier]}</span>
               <Link href="/billing" className="text-xs text-purple-500 hover:text-purple-400 transition-colors">
                 {session.tier === "free" ? "Upgrade →" : "Manage →"}
