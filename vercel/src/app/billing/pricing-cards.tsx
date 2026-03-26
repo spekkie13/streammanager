@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { TIER_LABELS, TIER_MONTHLY_PRICES, TIER_ANNUAL_PRICES } from "@/lib/gates"
 import type { SubscriptionTier } from "@/lib/gates"
+import { WaitlistModal } from "@/components/waitlist-modal"
 
 type BillingCycle = "monthly" | "annual"
 type PaidTier = "tier1" | "tier2" | "tier3"
@@ -42,6 +43,8 @@ const TIER_FEATURES: Record<SubscriptionTier, string[]> = {
 type Props = {
   currentTier: SubscriptionTier
   hasSubscription: boolean
+  waitlistMode: boolean
+  twitchLogin?: string
   prices: {
     tier1: { monthly: string; annual: string }
     tier2: { monthly: string; annual: string }
@@ -49,12 +52,17 @@ type Props = {
   }
 }
 
-export function PricingCards({ currentTier, hasSubscription, prices }: Props) {
+export function PricingCards({ currentTier, hasSubscription, waitlistMode, twitchLogin, prices }: Props) {
   const router = useRouter()
   const [cycle, setCycle] = useState<BillingCycle>("monthly")
   const [loading, setLoading] = useState<string | null>(null)
+  const [waitlistTier, setWaitlistTier] = useState<PaidTier | null>(null)
 
   async function handleUpgrade(tier: PaidTier) {
+    if (waitlistMode) {
+      setWaitlistTier(tier)
+      return
+    }
     const priceId = prices[tier][cycle]
     setLoading(tier)
     try {
@@ -86,6 +94,13 @@ export function PricingCards({ currentTier, hasSubscription, prices }: Props) {
 
   return (
     <div className="space-y-6">
+      {waitlistTier && (
+        <WaitlistModal
+          tier={waitlistTier}
+          twitchLogin={twitchLogin}
+          onClose={() => setWaitlistTier(null)}
+        />
+      )}
       {/* Billing cycle toggle */}
       <div className="flex items-center justify-center gap-1 bg-zinc-100 dark:bg-zinc-800/60 rounded-lg p-1 w-fit mx-auto">
         {(["monthly", "annual"] as BillingCycle[]).map(c => (

@@ -29,6 +29,7 @@ export default async function BillingPage() {
         <PricingCards
           currentTier={session.tier}
           hasSubscription={!!stripeSubscriptionId}
+          waitlistMode={true}
           prices={env.stripePrices}
         />
 

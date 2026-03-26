@@ -114,6 +114,7 @@ export const waitlist = pgTable("waitlist", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").unique().notNull(),
   twitchLogin: text("twitch_login"),
+  interestedTier: text("interested_tier"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
