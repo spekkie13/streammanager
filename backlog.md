@@ -65,6 +65,7 @@ C# Desktop app (lokaal)
 > Sluit de gratis tier af: YouTube events volledig zichtbaar in de live feed zodat de unified dashboard belofte waargemaakt wordt.
 ```
 1.  [6.5]   — YouTube events (superchats, members) in SSE live feed (real-time, not just history)
+             ⚠️  Verificatie vereist YPP-lidmaatschap (superchats/members zijn niet beschikbaar zonder monetisatie) — kan niet lokaal getest worden
 ```
 
 ### 🔨 Fase 3 — OBS widgets (free tier hook)
@@ -82,7 +83,7 @@ C# Desktop app (lokaal)
 6.  [4.1]   — Analytics API route (totalen per dag, per sessie)          ✅ gereed
 7.  [4.2]   — Analytics pagina (grafiek, sessietabel)                    ✅ gereed
 8.  [4.3]   — Sessie detailpagina                                        ✅ gereed
-9.  [4.4]   — 7-dagen limiet op gratis tier (upgrade prompt na 7d)
+9.  [4.4]   — 7-dagen limiet op gratis tier (upgrade prompt na 7d)          ✅ gereed
 10. [5.1]   — Stripe abonnement
 11. [5.2]   — Feature gates per tier
 12. [5.3]   — Billing pagina
