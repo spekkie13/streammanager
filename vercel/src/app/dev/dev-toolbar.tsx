@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { TIER_LABELS, TIER_PRICES } from "@/lib/gates"
 import type { SubscriptionTier } from "@/lib/gates"
@@ -63,7 +64,12 @@ export function DevToolbar() {
           ))}
         </div>
 
-        <p className="text-xs text-zinc-600 text-center">Only available in development</p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-zinc-600">Only available in development</p>
+          <Link href="/dashboard" className="text-xs text-zinc-400 hover:text-white transition-colors">
+            ← Dashboard
+          </Link>
+        </div>
       </div>
     </div>
   )
