@@ -5,12 +5,15 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from "recharts"
 import { AppHeader } from "@/components/app-header"
+import { UpgradeModal } from "@/components/upgrade-modal"
 import type { AnalyticsOverview, AnalyticsTotals, AnalyticsSession, DayBucket } from "@/services"
+import type { SubscriptionTier } from "@/lib/gates"
 
 type Range = "7d" | "30d" | "90d"
 type ChartTab = "activity" | "revenue"
 
 const RANGE_LABELS: Record<Range, string> = { "7d": "7 days", "30d": "30 days", "90d": "90 days" }
+const GATED_RANGES: Range[] = ["30d", "90d"]
 
 const TOOLTIP_STYLE = {
   backgroundColor: "#18181b",
@@ -265,24 +268,30 @@ export function AnalyticsClient({
   initialRange,
   hasYouTube,
   displayName,
+  tier,
+  canSeeExtendedHistory,
 }: {
   initialData: AnalyticsOverview
   initialRange: Range
   hasYouTube: boolean
   displayName: string
+  tier: SubscriptionTier
+  canSeeExtendedHistory: boolean
 }) {
   const [range, setRange] = useState<Range>(initialRange)
   const [chartTab, setChartTab] = useState<ChartTab>("activity")
   const [data, setData] = useState<AnalyticsOverview>(initialData)
   const [loading, setLoading] = useState(false)
   const [selectedTypes, setSelectedTypes] = useState<Set<EventTypeKey>>(new Set())
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
+
+  void tier // available for future per-tier UI differences
 
   function toggleType(key: EventTypeKey) {
     setSelectedTypes(prev => {
       const next = new Set(prev)
       if (next.has(key)) {
         next.delete(key)
-        // if that was the last one, deselect all (show all)
       } else {
         next.add(key)
       }
@@ -291,6 +300,10 @@ export function AnalyticsClient({
   }
 
   const fetchRange = useCallback(async (r: Range) => {
+    if (GATED_RANGES.includes(r) && !canSeeExtendedHistory) {
+      setUpgradeModalOpen(true)
+      return
+    }
     setRange(r)
     setLoading(true)
     try {
@@ -299,11 +312,19 @@ export function AnalyticsClient({
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [canSeeExtendedHistory])
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <AppHeader displayName={displayName} />
+
+      {upgradeModalOpen && (
+        <UpgradeModal
+          requiredTier="tier1"
+          featureName="extended analytics history"
+          onClose={() => setUpgradeModalOpen(false)}
+        />
+      )}
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
 
@@ -311,20 +332,27 @@ export function AnalyticsClient({
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold tracking-tight">Analytics</h1>
           <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/60 rounded-lg p-1">
-            {(["7d", "30d", "90d"] as Range[]).map(r => (
-              <button
-                key={r}
-                onClick={() => fetchRange(r)}
-                disabled={loading}
-                className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
-                  range === r
-                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-                }`}
-              >
-                {RANGE_LABELS[r]}
-              </button>
-            ))}
+            {(["7d", "30d", "90d"] as Range[]).map(r => {
+              const locked = GATED_RANGES.includes(r) && !canSeeExtendedHistory
+              return (
+                <button
+                  key={r}
+                  onClick={() => fetchRange(r)}
+                  disabled={loading}
+                  title={locked ? "Upgrade to Tier 1 to unlock" : undefined}
+                  className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
+                    range === r
+                      ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm"
+                      : locked
+                      ? "text-zinc-400 dark:text-zinc-600 cursor-pointer"
+                      : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                  }`}
+                >
+                  {locked && <span className="text-[10px]">🔒</span>}
+                  {RANGE_LABELS[r]}
+                </button>
+              )
+            })}
           </div>
         </div>
 

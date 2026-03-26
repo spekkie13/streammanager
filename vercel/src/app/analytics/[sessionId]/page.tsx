@@ -109,7 +109,7 @@ export default async function SessionDetailPage({
   const startDate = new Date(s.startedAt)
   const endDate = s.endedAt ? new Date(s.endedAt) : null
 
-  const presentTypes = [...new Set(events.map(e => e.type))] as LiveEventType[]
+  const presentTypes = Array.from(new Set(events.map(e => e.type))) as LiveEventType[]
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">

@@ -28,6 +28,11 @@ class UserRepository {
       .set({ onboardingCompleted: true })
       .where(eq(users.id, userId))
   }
+
+  async getTier(userId: string): Promise<string> {
+    const rows = await db.select({ tier: users.tier }).from(users).where(eq(users.id, userId)).limit(1)
+    return rows[0]?.tier ?? "free"
+  }
 }
 
 export const userRepository = new UserRepository()
