@@ -3,6 +3,15 @@ import { authOptions } from "@/lib/auth"
 import { linkedAccountsRepository } from "@/repositories"
 import { env } from "@/lib/env"
 
+async function getAppToken(): Promise<string> {
+  const res = await fetch(
+    `https://id.twitch.tv/oauth2/token?client_id=${env.twitchClientId}&client_secret=${env.twitchClientSecret}&grant_type=client_credentials`,
+    { method: "POST" },
+  )
+  const data = await res.json()
+  return data.access_token
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions)
   if (!session?.userId || !session?.twitchId) return new Response("Unauthorized", { status: 401 })
@@ -17,23 +26,23 @@ export async function GET() {
   })
   const tokenInfo = validateRes.ok ? await validateRes.json() : null
 
-  // List active EventSub subscriptions from Twitch
+  // Use app token for listing and registration (required for webhook EventSub)
+  const appToken = await getAppToken()
+
   const subsRes = await fetch("https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled", {
-    headers: {
-      Authorization: `Bearer ${twitchAccount.accessToken}`,
-      "Client-Id": env.twitchClientId,
-    },
+    headers: { Authorization: `Bearer ${appToken}`, "Client-Id": env.twitchClientId },
   })
   const subsData = subsRes.ok ? await subsRes.json() : null
+  const chatSub = subsData?.data?.find((s: { type: string; condition: Record<string, string> }) =>
+    s.type === "channel.chat.message" && s.condition.broadcaster_user_id === session.twitchId
+  )
 
-  const chatSub = subsData?.data?.find((s: { type: string }) => s.type === "channel.chat.message")
-
-  // Attempt to register channel.chat.message and capture the raw response
+  // Attempt registration with app token
   const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "")
   const registerRes = await fetch("https://api.twitch.tv/helix/eventsub/subscriptions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${twitchAccount.accessToken}`,
+      Authorization: `Bearer ${appToken}`,
       "Client-Id": env.twitchClientId,
       "Content-Type": "application/json",
     },
