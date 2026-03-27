@@ -1,0 +1,355 @@
+"use client"
+import { useState, useCallback } from "react"
+import Link from "next/link"
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
+} from "recharts"
+import { AppHeader } from "@/components/app-header"
+import { UpgradeModal } from "@/components/upgrade-modal"
+import { CHART_COLORS, CHART_TOOLTIP_STYLE } from "@/lib/chart-config"
+import { formatDuration, formatDateShort, formatAxisDate, formatSuperchatTotal } from "@/lib/format"
+import type { AnalyticsOverview, AnalyticsTotals, AnalyticsSession, DayBucket } from "@/services"
+import type { SubscriptionTier } from "@/lib/gates"
+
+type Range = "7d" | "30d" | "90d"
+type ChartTab = "activity" | "revenue"
+
+const RANGE_LABELS: Record<Range, string> = { "7d": "7 days", "30d": "30 days", "90d": "90 days" }
+const GATED_RANGES: Range[] = ["30d", "90d"]
+
+// ── Summary cards ──────────────────────────────────────────────────────────────
+
+function StatCard({ label, primary, secondary, color, active, dimmed, onClick }: {
+  label: string
+  primary: string
+  secondary?: string
+  color: string
+  active?: boolean
+  dimmed?: boolean
+  onClick?: () => void
+}) {
+  return (
+    <div
+      onClick={onClick}
+      className={`bg-white dark:bg-zinc-900 border rounded-xl px-5 py-4 flex flex-col justify-between gap-3 transition-all duration-150 ${
+        onClick ? "cursor-pointer select-none" : ""
+      } ${
+        active
+          ? "border-zinc-400 dark:border-zinc-500 ring-1 ring-zinc-300 dark:ring-zinc-600"
+          : dimmed
+          ? "border-zinc-200 dark:border-zinc-800 opacity-40"
+          : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">{label}</span>
+      </div>
+      <div>
+        <p className="text-2xl font-bold leading-none">{primary}</p>
+        {secondary && <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">{secondary}</p>}
+      </div>
+    </div>
+  )
+}
+
+type EventTypeKey = "follows" | "subs" | "bits" | "raids" | "superchats" | "members"
+
+function TotalsGrid({
+  totals, hasYouTube, selectedTypes, onToggle,
+}: {
+  totals: AnalyticsTotals
+  hasYouTube: boolean
+  selectedTypes: Set<EventTypeKey>
+  onToggle: (key: EventTypeKey) => void
+}) {
+  const anySelected = selectedTypes.size > 0
+  const isActive = (k: EventTypeKey) => selectedTypes.has(k)
+  const isDimmed = (k: EventTypeKey) => anySelected && !selectedTypes.has(k)
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <StatCard
+        label="Followers"
+        primary={totals.follows.toLocaleString()}
+        color={CHART_COLORS.follows}
+        active={isActive("follows")} dimmed={isDimmed("follows")}
+        onClick={() => onToggle("follows")}
+      />
+      <StatCard
+        label="Subscribers"
+        primary={totals.subs.toLocaleString()}
+        color={CHART_COLORS.subs}
+        active={isActive("subs")} dimmed={isDimmed("subs")}
+        onClick={() => onToggle("subs")}
+      />
+      <StatCard
+        label="Bits"
+        primary={totals.bits.total.toLocaleString()}
+        secondary={`${totals.bits.count} cheers`}
+        color={CHART_COLORS.bits}
+        active={isActive("bits")} dimmed={isDimmed("bits")}
+        onClick={() => onToggle("bits")}
+      />
+      <StatCard
+        label="Raid viewers"
+        primary={totals.raids.total.toLocaleString()}
+        secondary={`${totals.raids.count} raids`}
+        color={CHART_COLORS.raids}
+        active={isActive("raids")} dimmed={isDimmed("raids")}
+        onClick={() => onToggle("raids")}
+      />
+      {hasYouTube && (
+        <>
+          <StatCard
+            label="Super Chats"
+            primary={formatSuperchatTotal(totals.superchats.byCurrency)}
+            secondary={`${totals.superchats.count} superchats`}
+            color={CHART_COLORS.superchats}
+            active={isActive("superchats")} dimmed={isDimmed("superchats")}
+            onClick={() => onToggle("superchats")}
+          />
+          <StatCard
+            label="Members"
+            primary={totals.members.toLocaleString()}
+            color={CHART_COLORS.members}
+            active={isActive("members")} dimmed={isDimmed("members")}
+            onClick={() => onToggle("members")}
+          />
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Chart ──────────────────────────────────────────────────────────────────────
+
+function ActivityChart({ data, selected }: { data: DayBucket[]; selected: Set<EventTypeKey> }) {
+  const show = (k: EventTypeKey) => selected.size === 0 || selected.has(k)
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <BarChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }} barSize={6}>
+        <XAxis dataKey="date" tickFormatter={formatAxisDate} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+        <Tooltip labelFormatter={(v) => formatDateShort(v as string)} contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "rgba(161,161,170,0.08)" }} />
+        <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+        {show("follows")    && <Bar dataKey="follows"        name="Follows"     fill={CHART_COLORS.follows}    stackId="a" radius={[0,0,0,0]} />}
+        {show("subs")       && <Bar dataKey="subs"           name="Subs"        fill={CHART_COLORS.subs}       stackId="a" radius={[0,0,0,0]} />}
+        {show("bits")       && <Bar dataKey="bitsCount"      name="Cheers"      fill={CHART_COLORS.bits}       stackId="a" radius={[0,0,0,0]} />}
+        {show("raids")      && <Bar dataKey="raidsCount"     name="Raids"       fill={CHART_COLORS.raids}      stackId="a" radius={[0,0,0,0]} />}
+        {show("superchats") && <Bar dataKey="superchatsCount" name="Superchats" fill={CHART_COLORS.superchats} stackId="a" radius={[0,0,0,0]} />}
+        {show("members")    && <Bar dataKey="members"        name="Members"     fill={CHART_COLORS.members}    stackId="a" radius={[2,2,0,0]} />}
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+function RevenueChart({ data, selected }: { data: DayBucket[]; selected: Set<EventTypeKey> }) {
+  const show = (k: EventTypeKey) => selected.size === 0 || selected.has(k)
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <BarChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }} barSize={10} barCategoryGap="30%">
+        <XAxis dataKey="date" tickFormatter={formatAxisDate} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+        <Tooltip labelFormatter={(v) => formatDateShort(v as string)} contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "rgba(161,161,170,0.08)" }} />
+        <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+        {show("bits")       && <Bar dataKey="bitsTotal"       name="Bits"        fill={CHART_COLORS.bits}       radius={[3,3,0,0]} />}
+        {show("raids")      && <Bar dataKey="raidViewers"     name="Raid viewers" fill={CHART_COLORS.raids}     radius={[3,3,0,0]} />}
+        {show("superchats") && <Bar dataKey="superchatsTotal" name="Super Chats" fill={CHART_COLORS.superchats} radius={[3,3,0,0]} />}
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+// ── Sessions table ─────────────────────────────────────────────────────────────
+
+function SessionsTable({ sessions }: { sessions: AnalyticsSession[] }) {
+  if (sessions.length === 0) {
+    return (
+      <div className="px-6 py-10 text-center text-sm text-zinc-500">
+        No sessions recorded yet. Sessions are tracked automatically once your Twitch EventSub subscriptions are registered.
+      </div>
+    )
+  }
+
+  return (
+    <div className="divide-y divide-zinc-200 dark:divide-zinc-800/60">
+      {sessions.map(s => (
+        <div key={s.id} className="px-6 py-3 flex items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">
+              {formatDateShort(s.startedAt)}
+              <span className="text-zinc-400 dark:text-zinc-500 font-normal ml-2 tabular-nums">
+                {new Date(s.startedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                {" – "}
+                {s.endedAt
+                  ? new Date(s.endedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+                  : "ongoing"}
+                {" · "}
+                {formatDuration(s.durationMinutes)}
+              </span>
+            </p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 flex items-center gap-3">
+              {s.summary.follows > 0  && <span><span style={{ color: CHART_COLORS.follows  }}>♥</span> {s.summary.follows} follows</span>}
+              {s.summary.subs > 0     && <span><span style={{ color: CHART_COLORS.subs     }}>★</span> {s.summary.subs} subs</span>}
+              {s.summary.bits > 0     && <span><span style={{ color: CHART_COLORS.bits     }}>◆</span> {s.summary.bits.toLocaleString()} bits</span>}
+              {s.summary.raids > 0    && <span><span style={{ color: CHART_COLORS.raids    }}>▶</span> {s.summary.raids.toLocaleString()} viewers raided</span>}
+              {s.summary.follows === 0 && s.summary.subs === 0 && s.summary.bits === 0 && s.summary.raids === 0 && (
+                <span className="italic">No events</span>
+              )}
+            </p>
+          </div>
+          <Link
+            href={`/analytics/${s.id}`}
+            className="text-xs text-purple-500 hover:text-purple-400 transition-colors shrink-0"
+          >
+            View →
+          </Link>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
+
+export function AnalyticsClient({
+  initialData,
+  initialRange,
+  hasYouTube,
+  displayName,
+  tier,
+  canSeeExtendedHistory,
+}: {
+  initialData: AnalyticsOverview
+  initialRange: Range
+  hasYouTube: boolean
+  displayName: string
+  tier: SubscriptionTier
+  canSeeExtendedHistory: boolean
+}) {
+  const [range, setRange] = useState<Range>(initialRange)
+  const [chartTab, setChartTab] = useState<ChartTab>("activity")
+  const [data, setData] = useState<AnalyticsOverview>(initialData)
+  const [loading, setLoading] = useState(false)
+  const [selectedTypes, setSelectedTypes] = useState<Set<EventTypeKey>>(new Set())
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
+
+  void tier // available for future per-tier UI differences
+
+  function toggleType(key: EventTypeKey) {
+    setSelectedTypes(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }
+
+  const fetchRange = useCallback(async (r: Range) => {
+    if (GATED_RANGES.includes(r) && !canSeeExtendedHistory) {
+      setUpgradeModalOpen(true)
+      return
+    }
+    setRange(r)
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/analytics?range=${r}`)
+      if (res.ok) setData(await res.json())
+    } finally {
+      setLoading(false)
+    }
+  }, [canSeeExtendedHistory])
+
+  return (
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <AppHeader displayName={displayName} />
+
+      {upgradeModalOpen && (
+        <UpgradeModal
+          requiredTier="tier1"
+          featureName="extended analytics history"
+          onClose={() => setUpgradeModalOpen(false)}
+        />
+      )}
+
+      <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
+
+        {/* Header + range selector */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold tracking-tight">Analytics</h1>
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/60 rounded-lg p-1">
+            {(["7d", "30d", "90d"] as Range[]).map(r => {
+              const locked = GATED_RANGES.includes(r) && !canSeeExtendedHistory
+              return (
+                <button
+                  key={r}
+                  onClick={() => fetchRange(r)}
+                  disabled={loading}
+                  title={locked ? "Upgrade to Tier 1 to unlock" : undefined}
+                  className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
+                    range === r
+                      ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm"
+                      : locked
+                      ? "text-zinc-400 dark:text-zinc-600 cursor-pointer"
+                      : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                  }`}
+                >
+                  {locked && <span className="text-[10px]">🔒</span>}
+                  {RANGE_LABELS[r]}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Totals */}
+        <div className={loading ? "opacity-50 pointer-events-none transition-opacity" : "transition-opacity"}>
+          <TotalsGrid totals={data.totals} hasYouTube={hasYouTube} selectedTypes={selectedTypes} onToggle={toggleType} />
+        </div>
+
+        {/* Chart */}
+        <div className={`bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden ${loading ? "opacity-50 pointer-events-none" : ""}`}>
+          <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+              {chartTab === "activity" ? "Activity" : "Revenue"}
+            </h2>
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/60 rounded-lg p-1">
+              {(["activity", "revenue"] as ChartTab[]).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setChartTab(t)}
+                  className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors capitalize ${
+                    chartTab === t
+                      ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm"
+                      : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="px-4 py-4">
+            {chartTab === "activity"
+              ? <ActivityChart data={data.byDay} selected={selectedTypes} />
+              : <RevenueChart data={data.byDay} selected={selectedTypes} />
+            }
+          </div>
+        </div>
+
+        {/* Sessions */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
+            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Stream Sessions</h2>
+          </div>
+          <SessionsTable sessions={data.sessions} />
+        </div>
+
+      </main>
+    </div>
+  )
+}

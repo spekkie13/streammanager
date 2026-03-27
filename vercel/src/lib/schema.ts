@@ -1,10 +1,15 @@
-import { pgTable, text, timestamp, integer, uuid, boolean, bigint, unique } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp, integer, uuid, boolean, bigint, unique, pgEnum } from "drizzle-orm/pg-core"
+
+export const subscriptionTier = pgEnum("subscription_tier", ["free", "tier1", "tier2", "tier3"])
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   apiKey: text("api_key").unique().notNull(),
   widgetToken: text("widget_token").unique(),
   onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
+  tier: subscriptionTier("tier").notNull().default("free"),
+  stripeCustomerId: text("stripe_customer_id").unique(),
+  stripeSubscriptionId: text("stripe_subscription_id").unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
@@ -109,6 +114,7 @@ export const waitlist = pgTable("waitlist", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").unique().notNull(),
   twitchLogin: text("twitch_login"),
+  interestedTier: text("interested_tier"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
@@ -156,6 +162,14 @@ export const goals = pgTable("goals", {
 }, (t) => ({
   userTypeUnique: unique().on(t.userId, t.type),
 }))
+
+export const eventReplays = pgTable("event_replays", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  eventData: text("event_data").notNull(), // serialized LiveEvent JSON
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  processedAt: timestamp("processed_at"),
+})
 
 export const ytStreamSessions = pgTable("yt_stream_sessions", {
   id: uuid("id").defaultRandom().primaryKey(),

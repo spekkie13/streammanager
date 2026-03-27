@@ -1,1 +1,9 @@
-﻿-> Compliments service - extension of greeting service
+﻿[ NEXT ] Spotify integration (feature/live-page — do before merging)
+-> OAuth link flow (start + callback, copy Google pattern)
+-> /api/spotify/now-playing route with token refresh
+-> Wire mini player on /live to poll now-playing
+-> Enable connect button on /connections page
+
+fix text commands
+-> !lurk
+-> !followage

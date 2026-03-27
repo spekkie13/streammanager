@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   if (!session?.userId) return new Response("Unauthorized", { status: 401 })
 
   const { provider } = await req.json() as { provider: string }
-  if (!provider || !["youtube", "twitch"].includes(provider)) {
+  if (!provider || !["youtube", "twitch", "spotify"].includes(provider)) {
     return new Response("Invalid provider", { status: 400 })
   }
 

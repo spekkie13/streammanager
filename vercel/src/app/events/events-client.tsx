@@ -3,83 +3,10 @@ import { useState, useEffect, useCallback } from "react"
 import type { LiveEvent, LiveEventType } from "@/types/events"
 import type { EventSortBy, SortOrder, PaginatedEvents } from "@/types/event-filter"
 import { AppHeader } from "@/components/app-header"
-
-function TwitchLogo({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z" />
-    </svg>
-  )
-}
-
-function YouTubeLogo({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-    </svg>
-  )
-}
-
-const EVENT_TYPES: { value: LiveEventType; label: string; activeClass: string }[] = [
-  { value: "sub",       label: "Subs",       activeClass: "bg-purple-500/20 text-purple-500 border-purple-500/40" },
-  { value: "follow",    label: "Follows",    activeClass: "bg-blue-500/20 text-blue-500 border-blue-500/40" },
-  { value: "bits",      label: "Bits",       activeClass: "bg-yellow-500/20 text-yellow-500 border-yellow-500/40" },
-  { value: "raid",      label: "Raids",      activeClass: "bg-green-500/20 text-green-500 border-green-500/40" },
-  { value: "superchat", label: "Superchats", activeClass: "bg-red-500/20 text-red-500 border-red-500/40" },
-  { value: "member",    label: "Members",    activeClass: "bg-orange-500/20 text-orange-500 border-orange-500/40" },
-]
-
-const TYPE_BADGE: Record<LiveEventType, string> = {
-  sub:       "bg-purple-500/20 text-purple-500 border border-purple-500/40",
-  follow:    "bg-blue-500/20 text-blue-500 border border-blue-500/40",
-  bits:      "bg-yellow-500/20 text-yellow-500 border border-yellow-500/40",
-  raid:      "bg-green-500/20 text-green-500 border border-green-500/40",
-  superchat: "bg-red-500/20 text-red-500 border border-red-500/40",
-  member:    "bg-orange-500/20 text-orange-500 border border-orange-500/40",
-}
-
-const TYPE_ICON: Record<LiveEventType, string> = {
-  sub:       "★",
-  follow:    "♥",
-  bits:      "◆",
-  raid:      "▶",
-  superchat: "💬",
-  member:    "🎖",
-}
-
-function formatAmount(type: LiveEventType, amount: number | null, currency?: string | null): string | null {
-  if (amount === null) return null
-  if (type === "bits") return `${amount.toLocaleString()} bits`
-  if (type === "raid") return `${amount.toLocaleString()} viewers`
-  if (type === "member") return `${amount} mo.`
-  if (type === "superchat") {
-    return currency
-      ? new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount)
-      : `${amount}`
-  }
-  return null
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    month: "short", day: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  })
-}
-
-const TIER_LABEL: Record<string, string> = {
-  "1000": "Tier 1",
-  "2000": "Tier 2",
-  "3000": "Tier 3",
-}
-
-const SUB_KIND_LABEL: Record<string, string> = {
-  new: "New subscription",
-  resub: "Resubscription",
-  community_gift: "Gift subscriptions",
-}
-
-const MODAL_TYPES = new Set<LiveEventType>(["sub", "bits", "superchat", "member"])
+import { TwitchLogo, YouTubeLogo } from "@/components/platform-logos"
+import { ReplayButton } from "@/components/replay-button"
+import { EVENT_TYPES, TYPE_BADGE, TYPE_ICON, TWITCH_TIER_LABEL, SUB_KIND_LABEL, MODAL_TYPES } from "@/lib/event-types"
+import { formatAmount, formatDateTime } from "@/lib/format"
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
@@ -141,7 +68,7 @@ function EventDetailModal({ event, onClose }: { event: LiveEvent; onClose: () =>
 
           {event.type === "sub" && (
             <>
-              {event.tier && <DetailRow label="Tier" value={TIER_LABEL[event.tier] ?? event.tier} />}
+              {event.tier && <DetailRow label="Tier" value={TWITCH_TIER_LABEL[event.tier] ?? event.tier} />}
               {event.subKind === "resub" && event.cumulativeMonths != null && (
                 <DetailRow label="Total months" value={`${event.cumulativeMonths} months`} />
               )}
@@ -349,8 +276,9 @@ export function EventsClient({ displayName }: { displayName: string }) {
                       </span>
                     )}
                     <span className="text-xs text-zinc-400 dark:text-zinc-600 shrink-0 w-36 text-right">
-                      {formatDate(event.occurredAt)}
+                      {formatDateTime(event.occurredAt)}
                     </span>
+                    <ReplayButton event={event} />
                   </div>
                 )
               })}

@@ -1,4 +1,5 @@
 import "next-auth"
+import type { SubscriptionTier } from "@/lib/gates"
 
 declare module "next-auth" {
   interface Session {
@@ -7,6 +8,7 @@ declare module "next-auth" {
     youtubeChannelId: string | null
     displayName: string
     apiKey: string
+    tier: SubscriptionTier
     linkingError?: "account_conflict" | "no_youtube_channel"
   }
 }
@@ -18,6 +20,7 @@ declare module "next-auth/jwt" {
     youtubeChannelId: string | null
     displayName: string
     apiKey: string
+    tier: SubscriptionTier
     linkingError?: "account_conflict" | "no_youtube_channel"
   }
 }

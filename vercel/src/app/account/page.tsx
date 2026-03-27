@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { AppHeader } from "@/components/app-header"
 import { ApiKeyToggle } from "./api-key-toggle"
+import { TIER_LABELS } from "@/lib/gates"
 
 export default async function AccountPage() {
   const session = await getServerSession(authOptions)
@@ -21,6 +22,10 @@ export default async function AccountPage() {
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-sm text-zinc-500 dark:text-zinc-400">Display name</span>
             <span className="text-sm text-zinc-900 dark:text-white">{session.displayName}</span>
+          </div>
+          <div className="px-6 py-4 flex items-center justify-between">
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">Plan</span>
+            <span className="text-sm text-zinc-900 dark:text-white">{TIER_LABELS[session.tier]}</span>
           </div>
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-sm text-zinc-500 dark:text-zinc-400">Twitch ID</span>

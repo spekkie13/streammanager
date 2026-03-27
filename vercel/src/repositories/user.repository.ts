@@ -28,6 +28,37 @@ class UserRepository {
       .set({ onboardingCompleted: true })
       .where(eq(users.id, userId))
   }
+
+  async getTier(userId: string): Promise<string> {
+    const rows = await db.select({ tier: users.tier }).from(users).where(eq(users.id, userId)).limit(1)
+    return rows[0]?.tier ?? "free"
+  }
+
+  async setTier(userId: string, tier: string): Promise<void> {
+    await db.update(users).set({ tier: tier as "free" | "tier1" | "tier2" | "tier3" }).where(eq(users.id, userId))
+  }
+
+  async setStripeCustomer(userId: string, customerId: string, subscriptionId: string): Promise<void> {
+    await db.update(users).set({ stripeCustomerId: customerId, stripeSubscriptionId: subscriptionId }).where(eq(users.id, userId))
+  }
+
+  async clearStripeSubscription(userId: string): Promise<void> {
+    await db.update(users).set({ stripeSubscriptionId: null }).where(eq(users.id, userId))
+  }
+
+  async findByStripeCustomerId(customerId: string): Promise<{ id: string; tier: string } | null> {
+    const rows = await db.select({ id: users.id, tier: users.tier }).from(users).where(eq(users.stripeCustomerId, customerId)).limit(1)
+    return rows[0] ?? null
+  }
+
+  async getStripeInfo(userId: string): Promise<{ stripeCustomerId: string | null; stripeSubscriptionId: string | null; tier: string }> {
+    const rows = await db.select({
+      stripeCustomerId: users.stripeCustomerId,
+      stripeSubscriptionId: users.stripeSubscriptionId,
+      tier: users.tier,
+    }).from(users).where(eq(users.id, userId)).limit(1)
+    return rows[0] ?? { stripeCustomerId: null, stripeSubscriptionId: null, tier: "free" }
+  }
 }
 
 export const userRepository = new UserRepository()

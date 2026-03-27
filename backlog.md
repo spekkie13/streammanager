@@ -9,7 +9,7 @@ Next.js app (gedeployed op Vercel)
 ├── Twitch EventSub webhooks          ✅ gereed (subs, follows, bits, raids)
 ├── YouTube Live Chat poller          ✅ gereed  [Epic 6.4] — cron via cron-job.org
 ├── Neon DB (Drizzle ORM)             ✅ gereed
-├── Web dashboard                     ✅ gereed (live feed, sub goal, audience pills, goals page)
+├── Web dashboard                     ✅ gereed (live feed, sub goal, audience pills, goals page, event detail modal, landing page carousel)
 ├── Guided onboarding wizard          ✅ gereed
 └── Analytics & config API            🔴 nog te bouwen
 
@@ -28,6 +28,19 @@ C# Desktop app (lokaal)
 
 ---
 
+## Subscription tiers & upgrade psychology
+
+> **Kernprincipe:** de gratis tier creëert de gewoonte. Elke betaalde tier lost een specifieke frustratie op die de gebruiker zelf ervaart naarmate ze serieuzer gaan streamen. Multi-platform unificatie zit altijd gratis — dat is de identiteit van het product.
+
+| Tier | Prijs | Wat ze krijgen | Upgrade trigger |
+|------|-------|----------------|-----------------|
+| **Free** | gratis | Unified live dashboard (Twitch + YouTube), basisoverlays, laatste 7 dagen event history | Ziet "7 dagen" en wil het grotere plaatje zien |
+| **Tier 1** | $4,99/mo | Volledige analytics history, sessie-breakdowns, platform vergelijkingsgrafiek | Wil alerts en stream control vanuit één plek |
+| **Tier 2** | $11,99/mo | Custom alerts overlay, stream info beheer, simultaan go-live op beide platforms, cross-platform goals | Weet *wat* er gebeurt maar niet *waarom* |
+| **Tier 3** | $19,99/mo | AI stream analyse, VOD transcriptie insights, verbeteringsrapporten, retentie coaching | Al geïnvesteerd — behandelt streamen als carrière |
+
+---
+
 ## Prioriteiten voor marketing-readiness
 
 > **Doel:** een afgerond, verkoopbaar product dat streamers direct waarde biedt op alle aangesloten platformen — voordat zware marketing begint.
@@ -41,61 +54,105 @@ C# Desktop app (lokaal)
 ✅  [UX]         — Audience pills (Twitch + YouTube counts op dashboard)
 ✅  /goals       — Aparte goals pagina met quick access link
 ✅  [7.6]        — YouTubeManage component op connections pagina
+✅  [GOALS]      — Multi-platform goals (Twitch follows, YouTube members) — dashboard cards + goals page
+✅  [UX]         — Event detail modal (sub, bits, superchat, member)
+✅  [UX]         — Landing page screenshot carousel + sticky nav
+✅  [UX]         — Platform status integrated into greeting card
+✅  [UX]         — YouTube subscriber token refresh on expired access token
 ```
 
 ### 🔨 Fase 2 — Integratie completeren (volgende stap)
-> YouTube is half-geïntegreerd: events worden opgeslagen maar niet getoond. Dit sluit de loop.
+> Sluit de gratis tier af: YouTube events volledig zichtbaar in de live feed zodat de unified dashboard belofte waargemaakt wordt.
 ```
-1.  [6.5]   — YouTube events (superchats, members) in live feed + platform badge
-2.  [GOALS] — Multi-platform goals (Twitch follows, Twitch cheers, YouTube members)
-```
-
-### 🔨 Fase 3 — OBS widgets (hoge zichtbaarheid, laag effort)
-> Streamers verwachten overlays. Dit is een sterke hook voor marketing en word-of-mouth.
-```
-3.  [8.1]   — Widget authenticatie (token-based, geen browser sessie nodig)
-4.  [8.3]   — Goal overlay widget (/widget/goal) — animated progress bar in OBS
+1.  [6.5]   — YouTube events (superchats, members) in SSE live feed (real-time, not just history)
+             ⚠️  Verificatie vereist YPP-lidmaatschap (superchats/members zijn niet beschikbaar zonder monetisatie) — kan niet lokaal getest worden
 ```
 
-### 🔨 Fase 4 — Analytics + monetisatie (betaalde tier)
-> Analytics is de duidelijkste reden om te betalen. Stripe volgt direct erna.
+### 🔨 Fase 3 — OBS widgets (free tier hook)
+> Overlays zijn gratis en zichtbaar op stream — sterkste word-of-mouth kanaal. Elke kijker ziet het product in actie.
 ```
-5.  [4.1]   — Analytics API route (totalen per dag, per sessie)
-6.  [4.2]   — Analytics pagina (grafiek, sessietabel)
-7.  [4.3]   — Sessie detailpagina
-8.  [5.1]   — Stripe abonnement
-9.  [5.2]   — Feature gates (analytics achter paywall)
-10. [5.3]   — Billing pagina
+2.  [8.1]   — Widget authenticatie (token-based, geen browser sessie nodig)
+3.  [8.3]   — Goal overlay widget (/widget/goal) — animated progress bar in OBS
+4.  [IDEA-3] — Custom browser sources (event ticker, now-playing, etc.)
+5.  [IDEA-4] — Alert overlay widget (/widget/alerts) — Tier 2 feature
+```
+
+### 🔨 Fase 4 — Analytics + Stripe (Tier 1 activeren)
+> Analytics is de eerste upgrade trigger: gebruiker ziet "7 dagen" en wil meer. Stripe maakt monetisatie mogelijk.
+```
+6.  [4.1]   — Analytics API route (totalen per dag, per sessie)          ✅ gereed
+7.  [4.2]   — Analytics pagina (grafiek, sessietabel)                    ✅ gereed
+8.  [4.3]   — Sessie detailpagina                                        ✅ gereed
+9.  [4.4]   — 7-dagen limiet op gratis tier (upgrade prompt na 7d)          ✅ gereed
+10. [5.1]   — Stripe abonnement
+11. [5.2]   — Feature gates per tier
+12. [5.3]   — Billing pagina
     ↑ SHIP: begin marketing hier — product is verkoopbaar
 ```
 
-### 🔨 Fase 5 — USP: unified chat (differentiator)
-> "All your chats, one screen." Sterkste marketingboodschap voor multi-platform streamers.
+### 🔨 Fase 5 — Tier 2 features (stream control + alerts)
+> Tweede upgrade trigger: gebruiker wil zijn stream beheren en alerts instellen zonder van tab te wisselen.
 ```
-11. [7.1]   — Twitch chat via EventSub
-12. [7.2]   — chat_messages tabel
-13. [7.3]   — YouTube chat → chat_messages
-14. [7.4]   — SSE stream uitbreiden met chat events
-15. [7.5]   — Unified chat UI in dashboard
-16. [8.2]   — Chat overlay widget (/widget/chat) — voor OBS
+13. [IDEA-1] — Stream info bewerken (Twitch title/game, YouTube title/desc)
+14. [IDEA-4] — Alert configuratie UI + /widget/alerts OBS overlay
+15. [7.1]   — Twitch chat via EventSub
+16. [7.2]   — chat_messages tabel
+17. [7.3]   — YouTube chat → chat_messages
+18. [7.4]   — SSE stream uitbreiden met chat events
+19. [7.5]   — Unified chat UI in dashboard
+20. [8.2]   — Chat overlay widget (/widget/chat) — voor OBS
     ↑ Sterkste USP live — intensiveer marketing
 ```
 
-### 🔨 Fase 6 — Verdieping & uitbreiding
+### 🔨 Fase 6 — Tier 3: AI analyse (premium differentiator)
+> Derde upgrade trigger: gebruiker weet wat er gebeurt maar wil begrijpen waarom en hoe te verbeteren.
 ```
-17. [6.6]   — YouTube analytics (superchats, members in analytics pagina)
-18. [4.x]   — Sessie-overzicht Twitch + YouTube gecombineerd
-19. Epic 3  — Configuratie beheren (commands, triggers, macros)
-20. Epic 12 — Lokalisatie & vertaling (next-intl, EN + NL)
+21. [AI-1]  — Session AI analyse (Claude API): engagement mapping, sessie vergelijking, platform groei patronen
+22. [AI-2]  — VOD transcriptie (Whisper API) + energie/pacing analyse
+23. [AI-3]  — YouTube retentie curve integratie (Data API) + AI interpretatie
+24. [AI-4]  — Wekelijks verbeteringsrapport per e-mail (Tier 3)
+25. [6.6]   — YouTube analytics (superchats, members in analytics pagina)
+26. [IDEA-2] — VOD/video beheer (YouTube volledig, Twitch titel+desc + deep-link)
 ```
 
-### 🔮 Fase 7 — Lange termijn
+### 🔨 Fase 7 — Verdieping & uitbreiding
+```
+27. [4.x]   — Sessie-overzicht Twitch + YouTube gecombineerd
+28. Epic 3  — Configuratie beheren (commands, triggers, macros)
+29. Epic 12 — Lokalisatie & vertaling (next-intl, EN + NL)
+```
+
+### 🔮 Fase 8 — Lange termijn
 ```
 Epic 9   — Spotify mini player (OAuth + playback controls)
 Epic 10  — Web migration C# desktop integraties (OBS relay agent)
 Epic 2.3 — OBS & Spotify widgets in dashboard (via desktop app — minder urgent na Epic 10)
 Epic 11  — Personal music player (na validatie van core platform)
 ```
+
+---
+
+## Ideeënlijst — nog niet ingepland
+
+### [IDEA-1] Stream info beheren vanuit dashboard
+Vanuit het dashboard stream info kunnen bewerken voor aangesloten kanalen (Twitch stream title/game, YouTube stream title/description). Directe API calls naar Twitch Helix (`PATCH /channels`) en YouTube Data API (`liveBroadcasts.update`). Vereist schrijf-scopes bij OAuth — controleren of die al aanwezig zijn.
+
+### [IDEA-2] VOD- en videobeheer (Twitch + YouTube)
+Een beheer-interface vergelijkbaar met YouTube Studio en Twitch VOD-manager. Gecombineerde "Content" sectie.
+
+**YouTube:** volledig in-app — titels/beschrijvingen aanpassen, privacy instellen, miniaturen uploaden via `videos.update` + `thumbnails.set`.
+
+**Twitch:** gedeeltelijk in-app — VOD-lijst ophalen via `GET /helix/videos`, titel + beschrijving bewerken via `PATCH /helix/videos`. Zichtbaarheid (public/private) is niet beschikbaar via de publieke API — knop "Manage on Twitch" opent `https://dashboard.twitch.tv/content/video-producer` direct.
+
+### [IDEA-3] Custom OBS browser sources
+Naast de goal-overlay ook andere "custom" browser sources aanbieden die streamers als OBS-bron kunnen toevoegen — bijv. evenement-tickers, chat-overlays, now-playing banners. Zelfde token-based widget authenticatie als [8.1]. Creators kiezen welke bronnen ze activeren en kopiëren de URL naar OBS.
+
+### [IDEA-4] Alert-systeem voor events
+Visuele alerts tonen wanneer er een event binnenkomt (follow, sub, bits, raid, superchat, member). Twee onderdelen:
+- **Configuratie-UI** — alert-stijl, animatie, geluid, drempelwaarden instellen per event type
+- **Alert-overlay widget** — `/widget/alerts` als OBS browser source; luistert via SSE of WebSocket en speelt de alert af
+
+Bouwt voort op [8.1] widget-authenticatie en de bestaande SSE event feed.
 
 > **Waarom deze volgorde?**
 > YouTube is al half-gebouwd — 6.5 sluit de integratie af met minimale inspanning. OBS widgets zijn een concrete, visuele USP die makkelijk te demonstreren zijn in marketing materiaal. Analytics + Stripe maken monetisatie mogelijk. Unified chat is complex maar de sterkste differentiator — die bouwt de grootste marketingboodschap op.
@@ -539,7 +596,12 @@ Required env vars: CRON_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 
 ---
 
-### [6.5] SSE stream en dashboard uitbreiden voor YouTube
+### ✅ [GOALS] Multi-platform goals — DONE
+> Implemented: goals table with type discriminator, Twitch follow + YouTube member goals, three-card dashboard UI, goals page.
+
+---
+
+### [6.5] SSE stream uitbreiden voor YouTube (live feed real-time)
 
 **Doel:** De bestaande realtime event feed en dashboard pagina uitbreiden zodat YouTube events (Super Chats, Members) naast Twitch events worden getoond.
 
