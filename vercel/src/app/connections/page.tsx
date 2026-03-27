@@ -6,6 +6,7 @@ import { eventSubSubscriptionsRepository, linkedAccountsRepository, ytStreamSess
 import { TwitchManage } from "./twitch-manage"
 import { YouTubeConnectButton } from "./youtube-connect"
 import { YouTubeManage } from "./youtube-manage"
+import { SpotifyConnectButton } from "./spotify-connect"
 import { DisconnectButton } from "./disconnect-button"
 import { ConnectionsUpdater } from "./connections-updater"
 import { WidgetTokenSection } from "./widget-token"
@@ -116,6 +117,7 @@ export default async function ConnectionsPage({
 
   const youtubeAccount = linkedAccounts.find(a => a.provider === "youtube")
   const twitchAccount = linkedAccounts.find(a => a.provider === "twitch")
+  const spotifyAccount = linkedAccounts.find(a => a.provider === "spotify")
   const canDisconnect = linkedAccounts.length > 1
   const hasYouTubeError = !!searchParams.error
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook`
@@ -177,10 +179,12 @@ export default async function ConnectionsPage({
           </ConnectionRow>
           <ConnectionRow
             name="Spotify"
-            description="Show your currently playing track in the dashboard."
-            connected={false}
+            description="Show your currently playing track and control playback from the live view."
+            connected={!!spotifyAccount}
             logo={<SpotifyLogo className="w-5 h-5 text-[#1DB954]" />}
-            comingSoon={true}
+            detail={spotifyAccount ? `Connected as ${spotifyAccount.displayName ?? spotifyAccount.login}` : undefined}
+            connectButton={<SpotifyConnectButton />}
+            disconnectButton={spotifyAccount ? <DisconnectButton provider="spotify" /> : undefined}
           />
         </div>
 

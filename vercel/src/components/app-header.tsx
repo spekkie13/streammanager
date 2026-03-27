@@ -13,6 +13,7 @@ type Props = {
 
 const NAV_ITEMS = [
   { label: "Dashboard",     href: "/dashboard" },
+  { label: "Live",          href: "/live" },
   { label: "Event History", href: "/events" },
   { label: "Analytics",     href: "/analytics" },
   { label: "Goals",         href: "/goals" },
@@ -26,6 +27,7 @@ const SETTINGS_ITEMS = [
 ]
 
 const PAGE_NAMES: Record<string, string> = {
+  "/live":        "Live",
   "/events":      "Event History",
   "/goals":       "Goals",
   "/account":     "Account",

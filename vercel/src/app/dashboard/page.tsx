@@ -2,8 +2,8 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
-import { subEvents, subGoals, followEvents, ytMemberEvents } from "@/lib/schema"
-import { eq, count, and, gt, ne } from "drizzle-orm"
+import { subEvents, subGoals, followEvents, ytMemberEvents, streamSessions, ytStreamSessions } from "@/lib/schema"
+import { eq, count, and, gt, ne, isNull } from "drizzle-orm"
 import { liveEventFeedService } from "@/services"
 import { eventSubSubscriptionsRepository, userRepository, linkedAccountsRepository, goalsRepository } from "@/repositories"
 import { DashboardClient } from "./dashboard-client"
@@ -84,7 +84,7 @@ export default async function DashboardPage() {
   const youtubeChannelId = session.youtubeChannelId ?? null
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
-  const [user, goalRows, totalRows, recentEvents, subscriptionsRegistered, linkedAccounts, followTotalRows, ytMemberTotalRows, extraGoals] = await Promise.all([
+  const [user, goalRows, totalRows, recentEvents, subscriptionsRegistered, linkedAccounts, followTotalRows, ytMemberTotalRows, extraGoals, twitchLiveSessions, ytLiveSessions] = await Promise.all([
     userRepository.findById(session.userId),
     broadcasterId ? db.select().from(subGoals).where(eq(subGoals.broadcasterId, broadcasterId)).limit(1) : [],
     broadcasterId ? db.select({ total: count() }).from(subEvents).where(eq(subEvents.broadcasterId, broadcasterId)) : [{ total: 0 }],
@@ -94,6 +94,8 @@ export default async function DashboardPage() {
     broadcasterId ? db.select({ total: count() }).from(followEvents).where(eq(followEvents.broadcasterId, broadcasterId)) : [{ total: 0 }],
     youtubeChannelId ? db.select({ total: count() }).from(ytMemberEvents).where(eq(ytMemberEvents.channelId, youtubeChannelId)) : [{ total: 0 }],
     goalsRepository.findByUserId(session.userId),
+    broadcasterId ? db.select().from(streamSessions).where(and(eq(streamSessions.broadcasterId, broadcasterId), isNull(streamSessions.endedAt))).limit(1) : [],
+    youtubeChannelId ? db.select().from(ytStreamSessions).where(and(eq(ytStreamSessions.channelId, youtubeChannelId), isNull(ytStreamSessions.endedAt))).limit(1) : [],
   ])
 
   if (!user?.onboardingCompleted) redirect("/setup")
@@ -140,6 +142,9 @@ export default async function DashboardPage() {
       followGoal={followGoalRow?.goal ?? null}
       ytMemberTotal={ytMemberTotalRows[0]?.total ?? 0}
       ytMemberGoal={ytMemberGoalRow?.goal ?? null}
+      twitchIsLive={twitchLiveSessions.length > 0}
+      ytIsLive={ytLiveSessions.length > 0}
+      ytLiveTitle={ytLiveSessions[0]?.title ?? null}
     />
   )
 }

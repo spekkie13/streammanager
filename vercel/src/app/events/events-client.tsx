@@ -4,6 +4,7 @@ import type { LiveEvent, LiveEventType } from "@/types/events"
 import type { EventSortBy, SortOrder, PaginatedEvents } from "@/types/event-filter"
 import { AppHeader } from "@/components/app-header"
 import { TwitchLogo, YouTubeLogo } from "@/components/platform-logos"
+import { ReplayButton } from "@/components/replay-button"
 import { EVENT_TYPES, TYPE_BADGE, TYPE_ICON, TWITCH_TIER_LABEL, SUB_KIND_LABEL, MODAL_TYPES } from "@/lib/event-types"
 import { formatAmount, formatDateTime } from "@/lib/format"
 
@@ -277,6 +278,7 @@ export function EventsClient({ displayName }: { displayName: string }) {
                     <span className="text-xs text-zinc-400 dark:text-zinc-600 shrink-0 w-36 text-right">
                       {formatDateTime(event.occurredAt)}
                     </span>
+                    <ReplayButton event={event} />
                   </div>
                 )
               })}
