@@ -28,10 +28,33 @@ export async function GET() {
 
   const chatSub = subsData?.data?.find((s: { type: string }) => s.type === "channel.chat.message")
 
+  // Attempt to register channel.chat.message and capture the raw response
+  const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "")
+  const registerRes = await fetch("https://api.twitch.tv/helix/eventsub/subscriptions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${twitchAccount.accessToken}`,
+      "Client-Id": env.twitchClientId,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      type: "channel.chat.message",
+      version: "1",
+      condition: { broadcaster_user_id: session.twitchId, user_id: session.twitchId },
+      transport: {
+        method: "webhook",
+        callback: `${APP_URL}/api/webhook`,
+        secret: process.env.TWITCH_WEBHOOK_SECRET,
+      },
+    }),
+  })
+  const registerData = await registerRes.json()
+
   return Response.json({
     tokenScopes: tokenInfo?.scopes ?? null,
     hasUserReadChat: tokenInfo?.scopes?.includes("user:read:chat") ?? false,
     chatMessageSubRegistered: !!chatSub,
     chatMessageSub: chatSub ?? null,
+    registrationAttempt: { status: registerRes.status, body: registerData },
   })
 }
