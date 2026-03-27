@@ -1,7 +1,7 @@
 let appAccessToken: string | null = null
 let tokenExpiry = 0
 
-// Subscriptions that use an app access token
+// All webhook EventSub subscriptions use an app access token
 const APP_SUB_TYPES = [
   { type: "channel.subscribe", version: "1" },
   { type: "channel.subscription.message", version: "1" },
@@ -11,10 +11,6 @@ const APP_SUB_TYPES = [
   { type: "channel.follow", version: "2" },
   { type: "channel.cheer", version: "1" },
   { type: "channel.raid", version: "1" },
-]
-
-// Subscriptions that require a user access token with specific scopes
-const USER_SUB_TYPES = [
   { type: "channel.chat.message", version: "1" },
 ]
 
@@ -94,27 +90,14 @@ class TwitchEventSubService {
     return null
   }
 
-  async registerSubscriptions(
-    broadcasterId: string,
-    userAccessToken?: string,
-  ): Promise<{ id: string; type: string; status: string }[]> {
+  async registerSubscriptions(broadcasterId: string): Promise<{ id: string; type: string; status: string }[]> {
     const appToken = await this.getAppAccessToken()
     const existing = await this.fetchExistingByBroadcaster(appToken, broadcasterId)
     const results: { id: string; type: string; status: string }[] = []
 
-    // App token subscriptions
     for (const { type, version } of APP_SUB_TYPES) {
       const result = await this.registerSubType(type, version, broadcasterId, appToken, existing)
       if (result) results.push(result)
-    }
-
-    // User token subscriptions (require user:read:chat etc.)
-    if (userAccessToken) {
-      const userExisting = await this.fetchExistingByBroadcaster(userAccessToken, broadcasterId)
-      for (const { type, version } of USER_SUB_TYPES) {
-        const result = await this.registerSubType(type, version, broadcasterId, userAccessToken, userExisting)
-        if (result) results.push(result)
-      }
     }
 
     return results

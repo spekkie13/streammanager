@@ -1019,4 +1019,31 @@ A built-in music player for the creator's own copyright-free music library, play
 
 ---
 
+## [UX] Spotify queue — rectangle mini cards
+
+**Omschrijving:** Turn the individual songs in the Spotify queue (up next panel) into mini cards styled as rectangles. Each song in the queue should be its own visually distinct card (rectangular shape) rather than a plain list item.
+
+**Aandachtspunten:**
+- Keep the horizontal overflow scroll behaviour that's already in place
+- Consistent card sizing so the queue feels scannable at a glance
+- Match the existing Spotify panel colour palette / dark theme
+
+**Afhankelijkheden:** Epic 9 (Spotify mini player) — queue panel already exists.
+
+---
+
+## [BUG] YouTube cron returning HTTP 400
+
+**Omschrijving:** Investigate why the YouTube Live Chat poller cron job (cron-job.org) is returning an HTTP 400 response. Determine whether the error originates from the cron trigger hitting the Next.js API route, or from a downstream call to the YouTube Data API v3.
+
+**Aandachtspunten:**
+- Check the poll-chat API route for request validation issues
+- Verify the `Authorization` / `CRON_SECRET` header is still correct in cron-job.org config
+- Inspect YouTube API error body — 400 could be an invalid `liveChatId`, expired token, or malformed request
+- Check if `yt_stream_sessions` has a stale/invalid active session that causes a bad API call
+
+**Afhankelijkheden:** Epic 6.4 (YouTube Live Chat poller).
+
+---
+
 *Backlog gecorrigeerd op basis van werkelijke codebase: Next.js + Neon DB + **Drizzle ORM** + NextAuth Twitch OAuth (webapp) en C# desktop app met OBS, Spotify en Twitch integraties. EventSub webhooks (geen polling). Bestaande tabellen: `users`, `sub_events`, `sub_goals`, `eventsub_subscriptions`.*
