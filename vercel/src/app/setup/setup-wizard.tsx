@@ -7,7 +7,7 @@ type Props = {
   displayName: string
 }
 
-type Step = 1 | 2 | 3
+type Step = 1 | 2 | 3 | 4
 
 export function SetupWizard({ displayName }: Props) {
   const [step, setStep] = useState<Step>(1)
@@ -29,12 +29,11 @@ export function SetupWizard({ displayName }: Props) {
     setRegistering(false)
   }
 
-  async function complete() {
+  async function complete(destination: "/dashboard" | "/connections" = "/dashboard") {
     setCompleting(true)
-    // Fire backfill in the background — don't block navigation on it
     fetch("/api/onboarding/backfill", { method: "POST" })
     await fetch("/api/onboarding/complete", { method: "POST" })
-    router.push("/dashboard")
+    router.push(destination)
   }
 
   return (
@@ -45,7 +44,7 @@ export function SetupWizard({ displayName }: Props) {
 
       {/* Step indicator */}
       <div className="flex items-center justify-center gap-2">
-        {([1, 2, 3] as Step[]).map(s => (
+        {([1, 2, 3, 4] as Step[]).map(s => (
           <div
             key={s}
             className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -83,7 +82,7 @@ export function SetupWizard({ displayName }: Props) {
       {step === 2 && (
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 space-y-6">
           <div className="space-y-2">
-            <p className="text-xs font-medium text-purple-500 uppercase tracking-wider">Step 1 of 1</p>
+            <p className="text-xs font-medium text-purple-500 uppercase tracking-wider">Step 1 of 2</p>
             <h2 className="text-xl font-bold">Connect Twitch events</h2>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
               This registers your channel with Twitch so CreatorDeck receives follows, subs, bits, and raids in real time. It only needs to be done once.
@@ -104,8 +103,37 @@ export function SetupWizard({ displayName }: Props) {
         </div>
       )}
 
-      {/* Step 3 — Done */}
+      {/* Step 3 — YouTube (optional) */}
       {step === 3 && (
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 space-y-6">
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-purple-500 uppercase tracking-wider">Step 2 of 2</p>
+            <h2 className="text-xl font-bold">Connect YouTube</h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              Stream on YouTube too? Link your channel to unify Super Chats, memberships, and live events alongside Twitch — all in one dashboard.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <button
+              onClick={() => complete("/connections")}
+              disabled={completing}
+              className="w-full bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white text-sm font-medium px-6 py-3 rounded-xl transition-colors"
+            >
+              {completing ? "Just a moment..." : "Connect YouTube"}
+            </button>
+            <button
+              onClick={() => setStep(4)}
+              disabled={completing}
+              className="w-full text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors py-1"
+            >
+              Skip for now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4 — Done */}
+      {step === 4 && (
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 space-y-6 text-center">
           <div className="space-y-3">
             <div className="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto">
@@ -117,7 +145,7 @@ export function SetupWizard({ displayName }: Props) {
             </p>
           </div>
           <button
-            onClick={complete}
+            onClick={() => complete("/dashboard")}
             disabled={completing}
             className="w-full bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white text-sm font-medium px-6 py-3 rounded-xl transition-colors"
           >

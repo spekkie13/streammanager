@@ -15,4 +15,5 @@ export type LiveEvent = {
   cumulativeMonths?: number | null // sub resub
   isAnonymous?: boolean           // bits
   levelName?: string | null       // member
+  isReplay?: boolean              // re-rolled from history
 }

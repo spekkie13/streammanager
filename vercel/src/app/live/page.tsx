@@ -48,6 +48,7 @@ export default async function LivePage() {
   const linkedAccounts = await linkedAccountsRepository.findByUserId(session.userId)
   const twitchAccount = linkedAccounts.find(a => a.provider === "twitch")
   const ytAccount = linkedAccounts.find(a => a.provider === "youtube")
+  const spotifyAccount = linkedAccounts.find(a => a.provider === "spotify")
 
   const [streamInfo, recentEvents, goalRows, extraGoals, followTotalRows, ytMemberTotalRows, subTotalRows] = await Promise.all([
     twitchAccount?.accessToken ? fetchStreamInfo(broadcasterId, twitchAccount.accessToken) : Promise.resolve<StreamInfo>({ isLive: false, title: null, category: null, viewerCount: null, startedAt: null }),
@@ -67,6 +68,7 @@ export default async function LivePage() {
     <LiveClient
       displayName={session.displayName}
       hasYouTube={!!ytAccount}
+      hasSpotify={!!spotifyAccount}
       streamInfo={streamInfo}
       initialEvents={recentEvents.events}
       subGoal={subGoalRow ? { goal: subGoalRow.goal, initialCount: subGoalRow.initialCount, endsAt: subGoalRow.endsAt?.toISOString() ?? null } : null}

@@ -26,6 +26,9 @@ type Props = {
   followGoal: number | null
   ytMemberTotal: number
   ytMemberGoal: number | null
+  twitchIsLive: boolean
+  ytIsLive: boolean
+  ytLiveTitle: string | null
 }
 
 type StatusVariant = "good" | "warning"
@@ -49,7 +52,7 @@ export function DashboardClient({
   session, goal, initialCount, endsAt, total, initialEvents,
   subscriptionsRegistered, followerCount, subCount, ytSubCount,
   hasYouTube, followerGrowth, subGrowth, followTotal, followGoal,
-  ytMemberTotal, ytMemberGoal,
+  ytMemberTotal, ytMemberGoal, twitchIsLive, ytIsLive, ytLiveTitle,
 }: Props) {
   const events = useStreamEvents(initialEvents)
 
@@ -97,18 +100,32 @@ export function DashboardClient({
               <div className="flex items-center gap-2">
                 <TwitchLogo className={`w-3.5 h-3.5 ${hasTwitch ? "text-[#9146FF]" : "text-zinc-400 dark:text-zinc-600"}`} />
                 <span className="text-sm font-medium">Twitch</span>
-                <span className={`flex items-center gap-1 text-xs ${twitchStatus.text}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full inline-block ${twitchStatus.dot}`} />
-                  {twitchStatus.label}
-                </span>
+                {twitchIsLive ? (
+                  <span className="flex items-center gap-1 text-xs text-red-500 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full inline-block bg-red-500 animate-pulse" />
+                    Live
+                  </span>
+                ) : (
+                  <span className={`flex items-center gap-1 text-xs ${twitchStatus.text}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full inline-block ${twitchStatus.dot}`} />
+                    {twitchStatus.label}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <YouTubeLogo className={`w-3.5 h-3.5 ${hasYouTube ? "text-[#FF0000]" : "text-zinc-400 dark:text-zinc-600"}`} />
                 <span className="text-sm font-medium">YouTube</span>
-                <span className={`flex items-center gap-1 text-xs ${ytStatus.text}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full inline-block ${ytStatus.dot}`} />
-                  {ytStatus.label}
-                </span>
+                {ytIsLive ? (
+                  <span className="flex items-center gap-1 text-xs text-red-500 font-medium" title={ytLiveTitle ?? undefined}>
+                    <span className="w-1.5 h-1.5 rounded-full inline-block bg-red-500 animate-pulse" />
+                    Live
+                  </span>
+                ) : (
+                  <span className={`flex items-center gap-1 text-xs ${ytStatus.text}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full inline-block ${ytStatus.dot}`} />
+                    {ytStatus.label}
+                  </span>
+                )}
               </div>
             </div>
             <Link href="/connections" className="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors shrink-0">

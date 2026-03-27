@@ -163,6 +163,14 @@ export const goals = pgTable("goals", {
   userTypeUnique: unique().on(t.userId, t.type),
 }))
 
+export const eventReplays = pgTable("event_replays", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  eventData: text("event_data").notNull(), // serialized LiveEvent JSON
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  processedAt: timestamp("processed_at"),
+})
+
 export const ytStreamSessions = pgTable("yt_stream_sessions", {
   id: uuid("id").defaultRandom().primaryKey(),
   channelId: text("channel_id").notNull(),

@@ -143,3 +143,6 @@ apphost.exe
 *.pdb
 *.exe
 *.xml
+/vercel/env.example
+/vercel/env.local
+/vercel/env.local - backup
