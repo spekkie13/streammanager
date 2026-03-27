@@ -4,6 +4,7 @@ import Link from "next/link"
 import { AppHeader } from "@/components/app-header"
 import { TYPE_BADGE, TYPE_ICON } from "@/lib/event-types"
 import { useStreamEvents } from "@/hooks/use-stream-events"
+import { useChatMessages } from "@/hooks/use-chat-messages"
 import { ReplayButton } from "@/components/replay-button"
 import type { LiveEvent } from "@/types/events"
 import type { StreamInfo } from "./page"
@@ -207,6 +208,7 @@ export function LiveClient({
   subGoal, subTotal, followGoal, followTotal, ytMemberGoal, ytMemberTotal,
 }: Props) {
   const events = useStreamEvents(initialEvents)
+  const chatMessages = useChatMessages()
   return (
     <div className="fixed inset-0 bg-zinc-50 dark:bg-zinc-950 flex flex-col">
       <AppHeader displayName={displayName} />
@@ -250,16 +252,25 @@ export function LiveClient({
           </div>
 
           {/* Chat body */}
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center overflow-hidden">
-            <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-lg">
-              💬
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Unified chat coming soon</p>
-              <p className="text-xs text-zinc-400 dark:text-zinc-600">
-                Twitch {hasYouTube ? "and YouTube " : ""}chat will appear here in real time
+          <div className="flex-1 overflow-y-auto flex flex-col-reverse px-4 py-2 gap-0.5">
+            {chatMessages.length === 0 ? (
+              <p className="text-xs text-zinc-400 dark:text-zinc-600 italic text-center py-8">
+                No messages yet — chat will appear here in real time
               </p>
-            </div>
+            ) : (
+              [...chatMessages].reverse().map(msg => (
+                <div key={msg.id} className="flex items-baseline gap-1.5 py-0.5 group">
+                  <span className={`text-[10px] px-1 py-0.5 rounded font-semibold shrink-0 ${
+                    msg.platform === "twitch"
+                      ? "bg-purple-500/15 text-purple-400"
+                      : "bg-red-500/15 text-red-400"
+                  }`}>
+                    {msg.userDisplayName ?? msg.userLogin ?? "anon"}
+                  </span>
+                  <span className="text-xs text-zinc-700 dark:text-zinc-300 break-words min-w-0">{msg.message}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
