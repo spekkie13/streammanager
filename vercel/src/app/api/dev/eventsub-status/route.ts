@@ -60,6 +60,9 @@ export async function GET() {
   const registerData = await registerRes.json()
 
   return Response.json({
+    tokenClientId: tokenInfo?.client_id ?? null,
+    appClientId: env.twitchClientId,
+    clientIdMatch: tokenInfo?.client_id === env.twitchClientId,
     tokenScopes: tokenInfo?.scopes ?? null,
     hasUserReadChat: tokenInfo?.scopes?.includes("user:read:chat") ?? false,
     chatMessageSubRegistered: !!chatSub,
