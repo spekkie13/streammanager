@@ -1,7 +1,8 @@
 let appAccessToken: string | null = null
 let tokenExpiry = 0
 
-const SUB_TYPES = [
+// Subscriptions that use an app access token
+const APP_SUB_TYPES = [
   { type: "channel.subscribe", version: "1" },
   { type: "channel.subscription.message", version: "1" },
   { type: "channel.subscription.gift", version: "1" },
@@ -10,6 +11,11 @@ const SUB_TYPES = [
   { type: "channel.follow", version: "2" },
   { type: "channel.cheer", version: "1" },
   { type: "channel.raid", version: "1" },
+]
+
+// Subscriptions that require a user access token with specific scopes
+const USER_SUB_TYPES = [
+  { type: "channel.chat.message", version: "1" },
 ]
 
 class TwitchEventSubService {
@@ -29,6 +35,7 @@ class TwitchEventSubService {
   private buildCondition(type: string, broadcasterId: string): Record<string, string> {
     if (type === "channel.follow") return { broadcaster_user_id: broadcasterId, moderator_user_id: broadcasterId }
     if (type === "channel.raid") return { to_broadcaster_user_id: broadcasterId }
+    if (type === "channel.chat.message") return { broadcaster_user_id: broadcasterId, user_id: broadcasterId }
     return { broadcaster_user_id: broadcasterId }
   }
 
@@ -51,41 +58,65 @@ class TwitchEventSubService {
     return map
   }
 
-  async registerSubscriptions(broadcasterId: string): Promise<{ id: string; type: string; status: string }[]> {
-    const token = await this.getAppAccessToken()
+  private async registerSubType(
+    type: string,
+    version: string,
+    broadcasterId: string,
+    token: string,
+    existing: Record<string, { id: string; status: string }>,
+  ): Promise<{ id: string; type: string; status: string } | null> {
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook`
-
-    // Fetch existing subscriptions upfront so 409s can be resolved to real IDs
-    const existing = await this.fetchExistingByBroadcaster(token, broadcasterId)
-
-    const results = []
-    for (const { type, version } of SUB_TYPES) {
-      const res = await fetch("https://api.twitch.tv/helix/eventsub/subscriptions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Client-Id": process.env.TWITCH_CLIENT_ID!,
-          "Content-Type": "application/json",
+    const res = await fetch("https://api.twitch.tv/helix/eventsub/subscriptions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Client-Id": process.env.TWITCH_CLIENT_ID!,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type,
+        version,
+        condition: this.buildCondition(type, broadcasterId),
+        transport: {
+          method: "webhook",
+          callback: callbackUrl,
+          secret: process.env.TWITCH_WEBHOOK_SECRET,
         },
-        body: JSON.stringify({
-          type,
-          version,
-          condition: this.buildCondition(type, broadcasterId),
-          transport: {
-            method: "webhook",
-            callback: callbackUrl,
-            secret: process.env.TWITCH_WEBHOOK_SECRET,
-          },
-        }),
-      })
+      }),
+    })
 
-      const data = await res.json()
-      if (res.ok && data.data?.[0]) {
-        results.push({ id: data.data[0].id, type, status: data.data[0].status })
-      } else if (res.status === 409 && existing[type]) {
-        results.push({ id: existing[type].id, type, status: existing[type].status })
+    const data = await res.json()
+    if (res.ok && data.data?.[0]) {
+      return { id: data.data[0].id, type, status: data.data[0].status }
+    } else if (res.status === 409 && existing[type]) {
+      return { id: existing[type].id, type, status: existing[type].status }
+    }
+    return null
+  }
+
+  async registerSubscriptions(
+    broadcasterId: string,
+    userAccessToken?: string,
+  ): Promise<{ id: string; type: string; status: string }[]> {
+    const appToken = await this.getAppAccessToken()
+    const existing = await this.fetchExistingByBroadcaster(appToken, broadcasterId)
+    const results: { id: string; type: string; status: string }[] = []
+
+    // App token subscriptions
+    for (const { type, version } of APP_SUB_TYPES) {
+      const result = await this.registerSubType(type, version, broadcasterId, appToken, existing)
+      if (result) results.push(result)
+    }
+
+    // User token subscriptions (require user:read:chat etc.)
+    if (userAccessToken) {
+      const userExisting = await this.fetchExistingByBroadcaster(userAccessToken, broadcasterId)
+      for (const { type, version } of USER_SUB_TYPES) {
+        const result = await this.registerSubType(type, version, broadcasterId, userAccessToken, userExisting)
+        if (result) results.push(result)
       }
     }
+
     return results
   }
 }
