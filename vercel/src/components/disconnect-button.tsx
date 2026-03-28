@@ -2,14 +2,12 @@
 import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import {DisconnectButtonProps} from "@/props/disconnect-button.props";
+import {AppRouterInstance} from "next/dist/shared/lib/app-router-context.shared-runtime";
 
-type Props = {
-  provider: string
-}
-
-export function DisconnectButton({ provider }: Props) {
+export function DisconnectButton({ provider }: DisconnectButtonProps) {
   const { update } = useSession()
-  const router = useRouter()
+  const router: AppRouterInstance = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -22,7 +20,6 @@ export function DisconnectButton({ provider }: Props) {
       body: JSON.stringify({ provider }),
     })
     if (res.ok) {
-      // Refresh session JWT from DB so UI reflects the disconnected state immediately
       await update()
       router.refresh()
     } else {

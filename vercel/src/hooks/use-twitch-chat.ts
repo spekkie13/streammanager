@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 
 export type TwitchChatMessage = {
   id: string
-  platform: "twitch"
+  platform: "twitch" | "youtube"
   userDisplayName: string
   message: string
   occurredAt: string

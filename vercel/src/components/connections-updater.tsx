@@ -1,16 +1,16 @@
 "use client"
 import { useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { useSearchParams, useRouter } from "next/navigation"
+import {useSearchParams, useRouter, ReadonlyURLSearchParams} from "next/navigation"
+import {AppRouterInstance} from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 export function ConnectionsUpdater() {
   const { update } = useSession()
-  const searchParams = useSearchParams()
-  const router = useRouter()
+  const searchParams: ReadonlyURLSearchParams = useSearchParams()
+  const router: AppRouterInstance = useRouter()
 
   useEffect(() => {
     if (searchParams.get("linked")) {
-      // Trigger a session refresh so the JWT picks up the newly linked account from DB
       update().then(() => router.replace("/connections"))
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
