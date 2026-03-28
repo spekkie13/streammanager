@@ -4,7 +4,7 @@ import Link from "next/link"
 import { AppHeader } from "@/components/app-header"
 import { TYPE_BADGE, TYPE_ICON } from "@/lib/event-types"
 import { useStreamEvents } from "@/hooks/use-stream-events"
-import { useChatMessages } from "@/hooks/use-chat-messages"
+import { useTwitchChat } from "@/hooks/use-twitch-chat"
 import { ReplayButton } from "@/components/replay-button"
 import type { LiveEvent } from "@/types/events"
 import type { StreamInfo } from "./page"
@@ -29,6 +29,7 @@ type SimpleGoal = { goal: number }
 
 type Props = {
   displayName: string
+  twitchLogin: string
   hasYouTube: boolean
   hasSpotify: boolean
   streamInfo: StreamInfo
@@ -204,11 +205,11 @@ function SpotifyPlayer({ hasSpotify }: { hasSpotify: boolean }) {
 }
 
 export function LiveClient({
-  displayName, hasYouTube, hasSpotify, streamInfo, initialEvents,
+  displayName, twitchLogin, hasYouTube, hasSpotify, streamInfo, initialEvents,
   subGoal, subTotal, followGoal, followTotal, ytMemberGoal, ytMemberTotal,
 }: Props) {
   const events = useStreamEvents(initialEvents)
-  const chatMessages = useChatMessages()
+  const chatMessages = useTwitchChat(twitchLogin)
   return (
     <div className="fixed inset-0 bg-zinc-50 dark:bg-zinc-950 flex flex-col">
       <AppHeader displayName={displayName} />
@@ -259,13 +260,9 @@ export function LiveClient({
               </p>
             ) : (
               [...chatMessages].reverse().map(msg => (
-                <div key={msg.id} className="flex items-baseline gap-1.5 py-0.5 group">
-                  <span className={`text-[10px] px-1 py-0.5 rounded font-semibold shrink-0 ${
-                    msg.platform === "twitch"
-                      ? "bg-purple-500/15 text-purple-400"
-                      : "bg-red-500/15 text-red-400"
-                  }`}>
-                    {msg.userDisplayName ?? msg.userLogin ?? "anon"}
+                <div key={msg.id} className="flex items-baseline gap-1.5 py-0.5">
+                  <span className="text-[10px] px-1 py-0.5 rounded font-semibold shrink-0 bg-purple-500/15 text-purple-400">
+                    {msg.userDisplayName}
                   </span>
                   <span className="text-xs text-zinc-700 dark:text-zinc-300 break-words min-w-0">{msg.message}</span>
                 </div>
