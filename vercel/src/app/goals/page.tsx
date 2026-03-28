@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
 import { subEvents, subGoals, followEvents, ytMemberEvents } from "@/lib/schema"
 import { eq, count } from "drizzle-orm"
-import { AppHeader } from "@/components/app-header"
+import { AppHeader } from "@/app/dashboard/app-header"
 import { linkedAccountsRepository, goalsRepository } from "@/repositories"
 import { GoalsClient } from "./goals-client"
 import {LinkedAccount} from "@/types/entities";

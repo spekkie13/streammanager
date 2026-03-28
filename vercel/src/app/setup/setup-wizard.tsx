@@ -2,6 +2,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { CreatorDeckLogo } from "@/components/creator-deck-logo"
+import {AppRouterInstance} from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 type Props = {
   displayName: string
@@ -14,7 +15,7 @@ export function SetupWizard({ displayName }: Props) {
   const [registering, setRegistering] = useState(false)
   const [regStatus, setRegStatus] = useState<"idle" | "success" | "error">("idle")
   const [completing, setCompleting] = useState(false)
-  const router = useRouter()
+  const router: AppRouterInstance = useRouter()
 
   async function registerSubscriptions() {
     setRegistering(true)

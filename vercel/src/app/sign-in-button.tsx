@@ -2,12 +2,13 @@
 import { signIn } from "next-auth/react"
 import { TwitchLogo, YouTubeLogo } from "@/components/platform-logos";
 import { SignInButtonProps } from "@/props/sign-in-button.props";
+import {PLATFORM_TWITCH} from "@/types/platform";
 
 export function SignInButton({ variant = "primary" }: SignInButtonProps) {
   if (variant === "ghost") {
     return (
       <button
-        onClick={() => signIn("twitch", { callbackUrl: "/dashboard" })}
+        onClick={() => signIn(PLATFORM_TWITCH, { callbackUrl: "/dashboard" })}
         className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
       >
         Sign in
@@ -18,7 +19,7 @@ export function SignInButton({ variant = "primary" }: SignInButtonProps) {
   return (
     <div className="flex flex-col sm:flex-row items-center gap-3">
       <button
-        onClick={() => signIn("twitch", { callbackUrl: "/dashboard" })}
+        onClick={() => signIn(PLATFORM_TWITCH, { callbackUrl: "/dashboard" })}
         className="inline-flex items-center gap-2.5 bg-purple-500 hover:bg-purple-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm w-full sm:w-auto justify-center"
       >
         <TwitchLogo />

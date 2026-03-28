@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 
 export function WaitlistForm() {
   const [email, setEmail] = useState("")
@@ -11,7 +11,7 @@ export function WaitlistForm() {
     e.preventDefault()
     setState("loading")
 
-    const res = await fetch("/api/waitlist", {
+    const res: Response = await fetch("/api/waitlist", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, twitchLogin }),

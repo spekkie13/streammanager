@@ -2,8 +2,7 @@ import { getServerSession, Session } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import {
-  AppHeader, ConnectionRow, ConnectionsUpdater, DisconnectButton,
-  SpotifyConnectButton, SpotifyLogo,
+  SpotifyLogo,
   TwitchLogo, TwitchManage,
   WidgetTokenSection,
   YouTubeConnectButton, YouTubeLogo, YouTubeManage
@@ -11,6 +10,12 @@ import {
 import { eventSubSubscriptionsRepository, linkedAccountsRepository, ytStreamSessionsRepository } from "@/repositories"
 import { LinkedAccount } from "@/types/entities";
 import { fromSearchError } from "@/services/connections.service";
+import {PLATFORM_SPOTIFY, PLATFORM_TWITCH, PLATFORM_YOUTUBE} from "@/types/platform";
+import {ConnectionsUpdater} from "@/app/connections/connections-updater";
+import {ConnectionRow} from "@/app/connections/connection-row";
+import {AppHeader} from "@/app/dashboard/app-header";
+import {DisconnectButton} from "@/app/connections/disconnect-button";
+import {SpotifyConnectButton} from "@/app/connections/spotify-connect";
 
 export default async function ConnectionsPage({ searchParams }: {
   searchParams: { error?: string; linked?: string }
@@ -27,9 +32,9 @@ export default async function ConnectionsPage({ searchParams }: {
     ? await ytStreamSessionsRepository.isActive(session.youtubeChannelId)
     : false
 
-  const youtubeAccount: LinkedAccount | undefined = linkedAccounts.find(a => a.provider === "youtube")
-  const twitchAccount: LinkedAccount | undefined = linkedAccounts.find(a => a.provider === "twitch")
-  const spotifyAccount: LinkedAccount | undefined = linkedAccounts.find(a => a.provider === "spotify")
+  const youtubeAccount: LinkedAccount | undefined = linkedAccounts.find((a: LinkedAccount) => a.provider === PLATFORM_YOUTUBE)
+  const twitchAccount: LinkedAccount | undefined = linkedAccounts.find((a: LinkedAccount) => a.provider === PLATFORM_TWITCH)
+  const spotifyAccount: LinkedAccount | undefined = linkedAccounts.find((a: LinkedAccount) => a.provider === PLATFORM_SPOTIFY)
   const canDisconnect: boolean = linkedAccounts.length > 1
   const hasYouTubeError: boolean = !!searchParams.error
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook`

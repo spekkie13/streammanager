@@ -14,7 +14,7 @@ export default function BillingSuccessPage() {
   const [tier, setTier] = useState<SubscriptionTier | null>(null)
 
   useEffect(() => {
-    const sessionId = searchParams.get("session_id")
+    const sessionId: string | null = searchParams.get("session_id")
     if (!sessionId) {
       router.replace("/billing")
       return

@@ -1,4 +1,4 @@
-﻿import {linkedAccountsRepository} from "@/repositories";
+﻿import { linkedAccountsRepository } from "@/repositories";
 
 class YoutubeService {
     async fetchYouTubeSubCount(
@@ -12,10 +12,10 @@ class YoutubeService {
             })
 
         try {
-            let res = await doFetch(accessToken)
+            let res: Response = await doFetch(accessToken)
 
             if (res.status === 401 && refreshToken) {
-                const newToken = await this.refreshYouTubeToken(refreshToken)
+                const newToken: string | null = await this.refreshYouTubeToken(refreshToken)
                 if (!newToken) return null
                 await linkedAccountsRepository.updateAccessToken("youtube", channelId, newToken)
                 res = await doFetch(newToken)
@@ -30,7 +30,7 @@ class YoutubeService {
 
     async refreshYouTubeToken(refreshToken: string): Promise<string | null> {
         try {
-            const res = await fetch("https://oauth2.googleapis.com/token", {
+            const res: Response = await fetch("https://oauth2.googleapis.com/token", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: new URLSearchParams({

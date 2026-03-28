@@ -3,9 +3,8 @@ import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
-import { ThemeToggle } from "./theme-toggle"
-import { CreatorDeckLogo } from "./creator-deck-logo"
-import { FeedbackButton } from "./feedback-button"
+import { CreatorDeckLogo, ThemeToggle } from "@/components"
+import {FeedbackButton} from "@/app/dashboard/feedback-button";
 
 type Props = {
   displayName: string

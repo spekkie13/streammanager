@@ -11,7 +11,7 @@ function dayKey(isoString: string): string {
   return isoString.slice(0, 10)
 }
 
-class AnalyticsService {
+export class AnalyticsService {
   async getOverview(
     broadcasterId: string,
     youtubeChannelId: string | null,

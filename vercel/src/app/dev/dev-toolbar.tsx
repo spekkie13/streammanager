@@ -25,7 +25,7 @@ export function DevToolbar() {
     }
   }
 
-  const current = session?.tier ?? "free"
+  const current: SubscriptionTier = session?.tier ?? "free"
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-8">

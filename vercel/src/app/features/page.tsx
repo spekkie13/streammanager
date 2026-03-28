@@ -1,11 +1,11 @@
-import { getServerSession } from "next-auth"
+import {getServerSession, Session} from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { AppHeader } from "@/components/app-header"
+import { AppHeader } from "@/app/dashboard/app-header"
 import { FeatureRow } from "@/app/features/feature-row";
 
 export default async function FeaturesPage() {
-  const session = await getServerSession(authOptions)
+  const session: Session | null = await getServerSession(authOptions)
   if (!session) redirect("/")
 
   return (

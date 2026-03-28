@@ -1,5 +1,4 @@
-"use client"
-import { useEffect, useRef, useState } from "react"
+import React, {RefObject, useEffect, useRef, useState} from "react"
 import { TIER_LABELS } from "@/lib/gates"
 import type { SubscriptionTier } from "@/lib/gates"
 
@@ -12,7 +11,7 @@ type Props = {
 export function WaitlistModal({ tier, twitchLogin, onClose }: Props) {
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle")
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef: RefObject<HTMLInputElement> = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -25,7 +24,7 @@ export function WaitlistModal({ tier, twitchLogin, onClose }: Props) {
     e.preventDefault()
     setStatus("loading")
     try {
-      const res = await fetch("/api/waitlist", {
+      const res: Response = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, twitchLogin, interestedTier: tier }),

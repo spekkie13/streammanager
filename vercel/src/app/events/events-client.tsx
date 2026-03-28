@@ -2,12 +2,12 @@
 import { useState, useEffect, useCallback } from "react"
 import type { LiveEvent, LiveEventType } from "@/types/events"
 import type { EventSortBy, SortOrder, PaginatedEvents } from "@/types/event-filter"
-import { AppHeader } from "@/components/app-header"
+import { AppHeader } from "@/app/dashboard/app-header"
 import { TwitchLogo, YouTubeLogo } from "@/components/platform-logos"
 import { ReplayButton } from "@/components/replay-button"
 import { EVENT_TYPES, TYPE_BADGE, TYPE_ICON, MODAL_TYPES } from "@/lib/event-types"
 import { formatAmount, formatDateTime } from "@/lib/format"
-import {EventDetailModal} from "@/components/event-detail-modal";
+import {EventDetailModal} from "@/app/events/event-detail-modal";
 
 export function EventsClient({ displayName }: { displayName: string }) {
   const [activeTypes, setActiveTypes] = useState<Set<LiveEventType>>(new Set())

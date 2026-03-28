@@ -2,10 +2,10 @@
 import { useState } from "react"
 import { TIER_LABELS, TIER_MONTHLY_PRICES, TIER_ANNUAL_PRICES } from "@/lib/gates"
 import type { SubscriptionTier } from "@/lib/gates"
-import { WaitlistModal } from "@/components/waitlist-modal"
-import {Spinner} from "@/components/spinner";
-import {Feature} from "@/components/feature";
-import {CurrentPlanBadge} from "@/components/current-plan-badge";
+import { WaitlistModal } from "@/app/billing/waitlist-modal"
+import {Spinner} from "@/app/billing/spinner";
+import {Feature} from "@/app/billing/feature";
+import {CurrentPlanBadge} from "@/app/billing/current-plan-badge";
 import {PricingCardProps} from "@/props/pricing-card.props";
 import {BillingCycle, PAID_TIERS, PaidTier, TIER_FEATURES} from "@/constants/billing";
 
@@ -23,7 +23,7 @@ export function PricingCards({ currentTier, hasSubscription, waitlistMode, twitc
     const priceId: string = prices[tier][cycle]
     setLoading(tier)
     try {
-      const res = await fetch("/api/stripe/checkout", {
+      const res: Response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ priceId }),

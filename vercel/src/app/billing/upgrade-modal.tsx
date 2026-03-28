@@ -1,8 +1,6 @@
-"use client"
-
 import { useEffect } from "react"
 import Link from "next/link"
-import { TIER_LABELS, TIER_PRICES, type SubscriptionTier } from "@/lib/gates"
+import { TIER_LABELS, TIER_MONTHLY_PRICES, type SubscriptionTier } from "@/lib/gates"
 
 const TIER_PERKS: Record<SubscriptionTier, string[]> = {
   free: [],
@@ -54,7 +52,7 @@ export function UpgradeModal({ requiredTier, featureName, onClose }: Props) {
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-purple-500">
-              {TIER_LABELS[requiredTier]} · {TIER_PRICES[requiredTier]}
+              {TIER_LABELS[requiredTier]} · {TIER_MONTHLY_PRICES[requiredTier]}
             </span>
             <button
               onClick={onClose}

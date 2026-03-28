@@ -1,4 +1,7 @@
 import type { LiveEventType } from "@/types/events"
+import {GoalBarProps} from "@/props/goal-bar.props";
+import {useStreamEvents} from "@/hooks/use-stream-events";
+import {useTwitchChat} from "@/hooks/use-twitch-chat";
 
 export function formatAmount(type: LiveEventType, amount: number | null, currency?: string | null): string | null {
   if (amount === null) return null
@@ -13,11 +16,11 @@ export function formatAmount(type: LiveEventType, amount: number | null, currenc
   return null
 }
 
-export function formatDuration(minutes: number | null): string {
-  if (minutes === null) return "Live"
+export function formatDuration(minutes: number | null, fallback: string): string {
+  if (minutes === null) return fallback;
   if (minutes < 60) return `${minutes}m`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
+  const h: number = Math.floor(minutes / 60)
+  const m: number = minutes % 60
   return m === 0 ? `${h}h` : `${h}h ${m}m`
 }
 
@@ -76,9 +79,24 @@ export function formatRelativeTime(sessionStart: string, eventTime: string): str
   return `+${m}:${String(s).padStart(2, "0")}`
 }
 
+export function formatUptime(startedAt: string) {
+  const started = new Date(startedAt)
+  const now = new Date()
+  const mins: number = Math.floor((now.getTime() - started.getTime()) / 60000)
+  const h: number = Math.floor(mins / 60)
+  const m: number = mins % 60
+
+  return `${h}h ${m}m`
+}
+
 export function greeting(): string {
   const h = new Date().getHours()
   if (h < 12) return "Good morning"
   if (h < 18) return "Good afternoon"
   return "Good evening"
+}
+
+export function toDateInputValue(iso: string | null): string {
+  if (!iso) return ""
+  return iso.slice(0, 10)
 }

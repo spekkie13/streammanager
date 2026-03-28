@@ -11,6 +11,7 @@ import {twitchService} from "@/services/twitch.service";
 import {youtubeService} from "@/services/youtube.service";
 import {LinkedAccount} from "@/types/entities";
 import {GoalRow} from "@/repositories/goals.repository";
+import {PLATFORM_TWITCH, PLATFORM_YOUTUBE} from "@/types/platform";
 
 export default async function DashboardPage() {
   const session: Session | null = await getServerSession(authOptions)
@@ -36,8 +37,8 @@ export default async function DashboardPage() {
 
   if (!user?.onboardingCompleted) redirect("/setup")
 
-  const twitchAccount: LinkedAccount | undefined = linkedAccounts.find((a: LinkedAccount) => a.provider === "twitch")
-  const ytAccount: LinkedAccount | undefined = linkedAccounts.find((a: LinkedAccount) => a.provider === "youtube")
+  const twitchAccount: LinkedAccount | undefined = linkedAccounts.find((a: LinkedAccount) => a.provider === PLATFORM_TWITCH)
+  const ytAccount: LinkedAccount | undefined = linkedAccounts.find((a: LinkedAccount) => a.provider === PLATFORM_YOUTUBE)
 
   const [followerCount, subCount, ytSubCount, followerGrowthRows, subGrowthRows] = await Promise.all([
     twitchAccount?.accessToken ? twitchService.fetchTwitchFollowerCount(broadcasterId, twitchAccount.accessToken) : null,

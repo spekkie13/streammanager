@@ -1,7 +1,7 @@
 "use client"
 import { useStreamEvents } from "@/hooks/use-stream-events"
 import Link from "next/link"
-import { AppHeader } from "@/components/app-header"
+import { AppHeader } from "@/app/dashboard/app-header"
 import { TwitchLogo, YouTubeLogo } from "@/components/platform-logos"
 import { TYPE_BADGE, TYPE_ICON } from "@/lib/event-types"
 import { formatAmount, formatCount, greeting } from "@/lib/format"

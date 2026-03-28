@@ -1,12 +1,12 @@
-import { getServerSession } from "next-auth"
+import {getServerSession, Session} from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { AppHeader } from "@/components/app-header"
+import { AppHeader } from "@/app/dashboard/app-header"
 import { ApiKeyToggle } from "./api-key-toggle"
 import { TIER_LABELS } from "@/lib/gates"
 
 export default async function AccountPage() {
-  const session = await getServerSession(authOptions)
+  const session: Session | null = await getServerSession(authOptions)
   if (!session) redirect("/")
 
   return (

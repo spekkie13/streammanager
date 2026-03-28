@@ -1,7 +1,7 @@
 import {getServerSession, Session} from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { AppHeader } from "@/components/app-header"
+import { AppHeader } from "@/app/dashboard/app-header"
 import { TIER_LABELS } from "@/lib/gates"
 import { env } from "@/lib/env"
 import { userRepository } from "@/repositories"
@@ -11,7 +11,7 @@ export default async function BillingPage() {
   const session: Session | null = await getServerSession(authOptions)
   if (!session) redirect("/")
 
-  const { stripeSubscriptionId } = await userRepository.getStripeInfo(session.userId)
+  const stripeInfo = await userRepository.getStripeInfo(session.userId)
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
@@ -28,7 +28,7 @@ export default async function BillingPage() {
 
         <PricingCards
           currentTier={session.tier}
-          hasSubscription={!!stripeSubscriptionId}
+          hasSubscription={!!stripeInfo.stripeSubscriptionId}
           waitlistMode={true}
           prices={env.stripePrices}
         />
