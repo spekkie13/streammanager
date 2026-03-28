@@ -6,6 +6,7 @@ import { TYPE_BADGE, TYPE_ICON } from "@/lib/event-types"
 import { useStreamEvents } from "@/hooks/use-stream-events"
 import { useTwitchChat } from "@/hooks/use-twitch-chat"
 import { ReplayButton } from "@/components/replay-button"
+import { TwitchLogo, YouTubeLogo } from "@/components/platform-logos"
 import type { LiveEvent } from "@/types/events"
 import type { StreamInfo } from "./page"
 
@@ -261,7 +262,10 @@ export function LiveClient({
             ) : (
               [...chatMessages].reverse().map(msg => (
                 <div key={msg.id} className="flex items-baseline gap-2 py-0.5">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0 bg-purple-500/15 text-purple-400 leading-tight">T</span>
+                  {msg.platform === "youtube"
+                    ? <YouTubeLogo className="w-3.5 h-3.5 shrink-0 text-[#FF0000] self-center" />
+                    : <TwitchLogo className="w-3.5 h-3.5 shrink-0 text-[#9146FF] self-center" />
+                  }
                   <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 shrink-0">{msg.userDisplayName}</span>
                   <span className="text-sm text-zinc-600 dark:text-zinc-400 break-words min-w-0">{msg.message}</span>
                 </div>
