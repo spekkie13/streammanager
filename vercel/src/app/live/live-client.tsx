@@ -253,18 +253,17 @@ export function LiveClient({
           </div>
 
           {/* Chat body */}
-          <div className="flex-1 overflow-y-auto flex flex-col-reverse px-4 py-2 gap-0.5">
+          <div className="flex-1 overflow-y-auto flex flex-col-reverse px-4 py-2 gap-1">
             {chatMessages.length === 0 ? (
-              <p className="text-xs text-zinc-400 dark:text-zinc-600 italic text-center py-8">
+              <p className="text-sm text-zinc-400 dark:text-zinc-600 italic text-center py-8">
                 No messages yet — chat will appear here in real time
               </p>
             ) : (
               [...chatMessages].reverse().map(msg => (
-                <div key={msg.id} className="flex items-baseline gap-1.5 py-0.5">
-                  <span className="text-[10px] px-1 py-0.5 rounded font-semibold shrink-0 bg-purple-500/15 text-purple-400">
-                    {msg.userDisplayName}
-                  </span>
-                  <span className="text-xs text-zinc-700 dark:text-zinc-300 break-words min-w-0">{msg.message}</span>
+                <div key={msg.id} className="flex items-baseline gap-2 py-0.5">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0 bg-purple-500/15 text-purple-400 leading-tight">T</span>
+                  <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 shrink-0">{msg.userDisplayName}</span>
+                  <span className="text-sm text-zinc-600 dark:text-zinc-400 break-words min-w-0">{msg.message}</span>
                 </div>
               ))
             )}
