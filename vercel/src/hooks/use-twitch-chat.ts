@@ -43,6 +43,7 @@ export function useTwitchChat(channelLogin: string): TwitchChatMessage[] {
         ws = new WebSocket("wss://irc-ws.chat.twitch.tv:443")
 
         ws.onopen = () => {
+          console.log("[TwitchChat] WebSocket connected, authenticating as", login)
           ws!.send("CAP REQ :twitch.tv/tags twitch.tv/commands")
           ws!.send(`PASS oauth:${token}`)
           ws!.send(`NICK ${login.toLowerCase()}`)
@@ -55,6 +56,8 @@ export function useTwitchChat(channelLogin: string): TwitchChatMessage[] {
           const incoming: TwitchChatMessage[] = []
 
           for (const line of lines) {
+            console.log("[TwitchChat]", line)
+
             if (line.startsWith("PING")) {
               ws?.send("PONG :tmi.twitch.tv")
               continue
@@ -93,15 +96,20 @@ export function useTwitchChat(channelLogin: string): TwitchChatMessage[] {
           }
         }
 
-        ws.onerror = () => ws?.close()
+        ws.onerror = (err) => {
+          console.error("[TwitchChat] WebSocket error", err)
+          ws?.close()
+        }
 
-        ws.onclose = () => {
+        ws.onclose = (evt) => {
+          console.log("[TwitchChat] WebSocket closed", evt.code, evt.reason)
           if (pingInterval) clearInterval(pingInterval)
           if (!unmounted) {
             reconnectTimeout = setTimeout(connect, 3_000)
           }
         }
-      } catch {
+      } catch (err) {
+        console.error("[TwitchChat] connect error", err)
         if (!unmounted) {
           reconnectTimeout = setTimeout(connect, 5_000)
         }
