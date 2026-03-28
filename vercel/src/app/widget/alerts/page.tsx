@@ -1,46 +1,18 @@
 "use client"
-import { useState, useEffect, useRef, useCallback } from "react"
-import { useSearchParams } from "next/navigation"
+import { useState, useEffect, useRef, useCallback, MutableRefObject } from "react"
+import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation"
 import type { LiveEvent } from "@/types/events"
-import { formatAmount } from "@/lib/format"
-import { TWITCH_TIER_LABEL } from "@/lib/event-types"
-
-const ALERT_CONFIG: Record<string, { label: string; color: string }> = {
-  sub:       { label: "NEW SUBSCRIBER", color: "#9146FF" },
-  follow:    { label: "NEW FOLLOWER",   color: "#4299E1" },
-  bits:      { label: "BITS CHEERED",   color: "#F59E0B" },
-  raid:      { label: "INCOMING RAID",  color: "#22C55E" },
-  superchat: { label: "SUPER CHAT",     color: "#EF4444" },
-  member:    { label: "NEW MEMBER",     color: "#F97316" },
-}
-
-function alertSubtitle(event: LiveEvent): string | null {
-  if (event.type === "sub") {
-    if (event.subKind === "community_gift" && event.amount != null)
-      return `Gifted ${event.amount} subscription${event.amount !== 1 ? "s" : ""}`
-    if (event.subKind === "resub" && event.cumulativeMonths != null)
-      return `${event.cumulativeMonths} months`
-    return event.tier ? (TWITCH_TIER_LABEL[event.tier] ?? null) : null
-  }
-  if (event.type === "bits" || event.type === "raid")
-    return formatAmount(event.type, event.amount, null)
-  if (event.type === "superchat")
-    return formatAmount("superchat", event.amount, event.currency)
-  if (event.type === "member") {
-    if (event.levelName) return event.levelName
-    if (event.amount != null) return `${event.amount} month${event.amount !== 1 ? "s" : ""}`
-  }
-  return null
-}
+import { alertSubtitle } from "@/services/alerts.service";
+import {ALERT_CONFIG, AlertsType} from "@/services/alerts.types";
 
 export default function AlertsWidget() {
-  const params = useSearchParams()
-  const token = params.get("token") ?? ""
-  const holdDuration = (parseInt(params.get("duration") ?? "6")) * 1000
-  const fontSize = parseInt(params.get("fontSize") ?? "0") || 18
+  const params: ReadonlyURLSearchParams = useSearchParams()
+  const token: string = params.get("token") ?? ""
+  const holdDuration: number = (parseInt(params.get("duration") ?? "6")) * 1000
+  const fontSize: number = parseInt(params.get("fontSize") ?? "0") || 18
 
-  const queueRef = useRef<LiveEvent[]>([])
-  const busyRef = useRef(false)
+  const queueRef: MutableRefObject<LiveEvent[]> = useRef<LiveEvent[]>([])
+  const busyRef: MutableRefObject<boolean> = useRef(false)
   const [current, setCurrent] = useState<LiveEvent | null>(null)
   const [visible, setVisible] = useState(false)
 
@@ -51,7 +23,7 @@ export default function AlertsWidget() {
 
   const showNext = useCallback(() => {
     if (busyRef.current || queueRef.current.length === 0) return
-    const next = queueRef.current.shift()!
+    const next: LiveEvent = queueRef.current.shift()!
     busyRef.current = true
     setCurrent(next)
     setVisible(false)
@@ -87,8 +59,8 @@ export default function AlertsWidget() {
 
   if (!current) return null
 
-  const config = ALERT_CONFIG[current.type] ?? { label: current.type.toUpperCase(), color: "#6B7280" }
-  const subtitle = alertSubtitle(current)
+  const config: AlertsType = ALERT_CONFIG.find(c => c.name === current.type) ?? { name: current.type, label: current.type.toUpperCase(), color: '#6B7280' };
+  const subtitle: string | null = alertSubtitle(current)
 
   return (
     <div className="fixed inset-0 flex items-end justify-center p-6 pointer-events-none select-none">

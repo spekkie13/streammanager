@@ -1,23 +1,21 @@
 import { NextRequest } from "next/server"
-import { getServerSession } from "next-auth"
+import {getServerSession, Session} from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { chatMessagesRepository } from "@/repositories"
-
-const POLL_INTERVAL_MS = 2000
-const INITIAL_LOOKBACK_MS = 5 * 60 * 1000
+import {INITIAL_LOOKBACK_MS, POLL_INTERVAL_MS} from "@/constants/chat_api";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session: Session | null = await getServerSession(authOptions)
   if (!session?.twitchId) return new Response("Unauthorized", { status: 401 })
 
-  const broadcasterId = session.twitchId
+  const broadcasterId: string = session.twitchId
 
   const stream = new ReadableStream({
     async start(controller) {
       const encode = (data: unknown) =>
         new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`)
 
-      let lastSent = new Date(Date.now() - INITIAL_LOOKBACK_MS)
+      let lastSent: Date = new Date(Date.now() - INITIAL_LOOKBACK_MS)
 
       const poll = async () => {
         try {

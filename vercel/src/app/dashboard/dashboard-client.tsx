@@ -1,77 +1,38 @@
 "use client"
 import { useStreamEvents } from "@/hooks/use-stream-events"
 import Link from "next/link"
-import type { Session } from "next-auth"
 import { AppHeader } from "@/components/app-header"
 import { TwitchLogo, YouTubeLogo } from "@/components/platform-logos"
 import { TYPE_BADGE, TYPE_ICON } from "@/lib/event-types"
 import { formatAmount, formatCount, greeting } from "@/lib/format"
 import type { LiveEvent, LiveEventType } from "@/types/events"
-
-type Props = {
-  session: Session
-  goal: number
-  initialCount: number
-  endsAt: string | null
-  total: number
-  initialEvents: LiveEvent[]
-  subscriptionsRegistered: boolean
-  followerCount: number | null
-  subCount: number | null
-  ytSubCount: number | null
-  hasYouTube: boolean
-  followerGrowth: number
-  subGrowth: number
-  followTotal: number
-  followGoal: number | null
-  ytMemberTotal: number
-  ytMemberGoal: number | null
-  twitchIsLive: boolean
-  ytIsLive: boolean
-  ytLiveTitle: string | null
-}
-
-type StatusVariant = "good" | "warning"
-
-const STATUS_CONFIG: Record<StatusVariant, { label: string; subtext: string; pill: string; dot: string }> = {
-  good: {
-    label: "All good",
-    subtext: "Everything is set up and ready to go. Have a great stream!",
-    pill: "bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400",
-    dot: "bg-green-500",
-  },
-  warning: {
-    label: "Action required",
-    subtext: "There are a few things to set up before you're ready to go.",
-    pill: "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400",
-    dot: "bg-amber-500",
-  },
-}
+import {DashboardProps} from "@/props/dashboard.props";
+import {PlatformStatusInfo, STATUS_CONFIG, StatusInfo, StatusVariant} from "@/constants/dashboard";
 
 export function DashboardClient({
   session, goal, initialCount, endsAt, total, initialEvents,
   subscriptionsRegistered, followerCount, subCount, ytSubCount,
   hasYouTube, followerGrowth, subGrowth, followTotal, followGoal,
   ytMemberTotal, ytMemberGoal, twitchIsLive, ytIsLive, ytLiveTitle,
-}: Props) {
-  const events = useStreamEvents(initialEvents)
+}: DashboardProps) {
+  const events: LiveEvent[] = useStreamEvents(initialEvents)
 
-  const displayTotal = total + initialCount
-  const progress = Math.min((displayTotal / goal) * 100, 100)
+  const displayTotal: number = total + initialCount
+  const progress: number = Math.min((displayTotal / goal) * 100, 100)
 
-  const hasTwitch = !!session.twitchId
-  const twitchStatus = !hasTwitch
+  const hasTwitch: boolean = !!session.twitchId
+  const twitchStatus: PlatformStatusInfo = !hasTwitch
     ? { dot: "bg-zinc-400 dark:bg-zinc-600", text: "text-zinc-400 dark:text-zinc-500", label: "Not connected" }
     : !subscriptionsRegistered
     ? { dot: "bg-amber-500", text: "text-amber-500", label: "Action required" }
     : { dot: "bg-green-500", text: "text-green-500", label: "Connected" }
-  const ytStatus = hasYouTube
+  const ytStatus: PlatformStatusInfo = hasYouTube
     ? { dot: "bg-green-500", text: "text-green-500", label: "Connected" }
     : { dot: "bg-zinc-400 dark:bg-zinc-600", text: "text-zinc-400 dark:text-zinc-500", label: "Not connected" }
 
-  const allGood = hasTwitch && subscriptionsRegistered
+  const allGood: boolean = hasTwitch && subscriptionsRegistered
   const variant: StatusVariant = allGood ? "good" : "warning"
-  const s = STATUS_CONFIG[variant]
+  const s: StatusInfo = STATUS_CONFIG[variant]
 
   void endsAt // tracked server-side
 

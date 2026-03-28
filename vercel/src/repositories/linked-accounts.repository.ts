@@ -87,7 +87,7 @@ class LinkedAccountsRepository {
     accessToken: string
     refreshToken: string
   }): Promise<void> {
-    const existing = await this.findByProvider(data.provider, data.providerAccountId)
+    const existing: LinkedAccount | null = await this.findByProvider(data.provider, data.providerAccountId)
 
     if (existing && existing.userId !== userId) {
       // Check if the conflicting user is orphaned (only has this one account)

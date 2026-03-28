@@ -1,4 +1,4 @@
-import { getServerSession } from "next-auth"
+import {getServerSession, Session} from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { AppHeader } from "@/components/app-header"
@@ -8,7 +8,7 @@ import { userRepository } from "@/repositories"
 import { PricingCards } from "./pricing-cards"
 
 export default async function BillingPage() {
-  const session = await getServerSession(authOptions)
+  const session: Session | null = await getServerSession(authOptions)
   if (!session) redirect("/")
 
   const { stripeSubscriptionId } = await userRepository.getStripeInfo(session.userId)

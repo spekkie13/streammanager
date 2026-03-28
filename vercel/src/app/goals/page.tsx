@@ -1,4 +1,4 @@
-import { getServerSession } from "next-auth"
+import {getServerSession, Session} from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
@@ -7,13 +7,15 @@ import { eq, count } from "drizzle-orm"
 import { AppHeader } from "@/components/app-header"
 import { linkedAccountsRepository, goalsRepository } from "@/repositories"
 import { GoalsClient } from "./goals-client"
+import {LinkedAccount} from "@/types/entities";
+import {GoalRow} from "@/repositories/goals.repository";
 
 export default async function GoalsPage() {
-  const session = await getServerSession(authOptions)
+  const session: Session | null = await getServerSession(authOptions)
   if (!session) redirect("/")
 
-  const broadcasterId = session.twitchId ?? ""
-  const youtubeChannelId = session.youtubeChannelId ?? null
+  const broadcasterId: string = session.twitchId ?? ""
+  const youtubeChannelId: string | null = session.youtubeChannelId ?? null
 
   const [goalRows, subTotalRows, followTotalRows, ytMemberTotalRows, linkedAccounts, extraGoals] = await Promise.all([
     broadcasterId ? db.select().from(subGoals).where(eq(subGoals.broadcasterId, broadcasterId)).limit(1) : [],
@@ -24,12 +26,12 @@ export default async function GoalsPage() {
     goalsRepository.findByUserId(session.userId),
   ])
 
-  const hasTwitch = !!linkedAccounts.find(a => a.provider === "twitch")
-  const hasYouTube = !!linkedAccounts.find(a => a.provider === "youtube")
+  const hasTwitch: boolean = !!linkedAccounts.find((a: LinkedAccount) => a.provider === "twitch")
+  const hasYouTube: boolean = !!linkedAccounts.find((a: LinkedAccount) => a.provider === "youtube")
 
   const subGoalRow = goalRows[0]
-  const followGoalRow = extraGoals.find(g => g.type === "twitch_follow") ?? null
-  const ytMemberGoalRow = extraGoals.find(g => g.type === "youtube_member") ?? null
+  const followGoalRow: GoalRow | null = extraGoals.find((g: GoalRow) => g.type === "twitch_follow") ?? null
+  const ytMemberGoalRow: GoalRow | null = extraGoals.find((g: GoalRow) => g.type === "youtube_member") ?? null
 
   return (
     <div className="min-h-screen">

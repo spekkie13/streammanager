@@ -1,7 +1,6 @@
 let appAccessToken: string | null = null
 let tokenExpiry = 0
 
-// All webhook EventSub subscriptions use an app access token
 const APP_SUB_TYPES = [
   { type: "channel.subscribe", version: "1" },
   { type: "channel.subscription.message", version: "1" },

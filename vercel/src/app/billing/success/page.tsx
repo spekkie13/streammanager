@@ -1,14 +1,15 @@
 "use client"
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter, useSearchParams } from "next/navigation"
+import {ReadonlyURLSearchParams, useRouter, useSearchParams} from "next/navigation"
 import { TIER_LABELS } from "@/lib/gates"
 import type { SubscriptionTier } from "@/lib/gates"
+import {AppRouterInstance} from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 export default function BillingSuccessPage() {
   const { update } = useSession()
-  const router = useRouter()
-  const searchParams = useSearchParams()
+  const router: AppRouterInstance = useRouter()
+  const searchParams: ReadonlyURLSearchParams = useSearchParams()
   const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying")
   const [tier, setTier] = useState<SubscriptionTier | null>(null)
 
@@ -21,7 +22,7 @@ export default function BillingSuccessPage() {
 
     async function verify() {
       try {
-        const res = await fetch(`/api/stripe/verify-checkout?session_id=${sessionId}`)
+        const res: Response = await fetch(`/api/stripe/verify-checkout?session_id=${sessionId}`)
         if (!res.ok) throw new Error("Verification failed")
         const data = await res.json()
         setTier(data.tier)

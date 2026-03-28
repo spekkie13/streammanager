@@ -1,29 +1,19 @@
 "use client"
 import { useEffect, useState, useCallback } from "react"
-import { useSearchParams } from "next/navigation"
-
-type GoalData = {
-  current: number
-  goal: number
-  label: string
-  platform: "twitch" | "youtube"
-}
-
-const PLATFORM_COLOR: Record<string, string> = {
-  twitch: "#9146FF",
-  youtube: "#FF0000",
-}
+import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation"
+import { PLATFORM_COLOR } from "@/constants/colors";
+import { WidgetGoalData } from "@/services/widget-goal.types";
 
 export default function GoalWidget() {
-  const params = useSearchParams()
-  const token = params.get("token") ?? ""
-  const type = params.get("type") ?? "twitch_sub"
-  const customLabel = params.get("label") ?? ""
-  const barColor = params.get("color") ?? ""
-  const fontSize = parseInt(params.get("fontSize") ?? "0") || 16
-  const bgOpacity = Math.min(1, Math.max(0, parseFloat(params.get("bg") ?? "0")))
+  const params: ReadonlyURLSearchParams = useSearchParams()
+  const token: string = params.get("token") ?? ""
+  const type: string = params.get("type") ?? "twitch_sub"
+  const customLabel: string = params.get("label") ?? ""
+  const barColor: string = params.get("color") ?? ""
+  const fontSize: number = parseInt(params.get("fontSize") ?? "0") || 16
+  const bgOpacity: number = Math.min(1, Math.max(0, parseFloat(params.get("bg") ?? "0")))
 
-  const [data, setData] = useState<GoalData | null>(null)
+  const [data, setData] = useState<WidgetGoalData | null>(null)
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -52,9 +42,9 @@ export default function GoalWidget() {
   if (!token || error) return null
   if (!data) return null
 
-  const progress = Math.min((data.current / data.goal) * 100, 100)
-  const label = customLabel || data.label
-  const color = barColor || PLATFORM_COLOR[data.platform] || "#9146FF"
+  const progress: number = Math.min((data.current / data.goal) * 100, 100)
+  const label: string = customLabel || data.label
+  const color: string = barColor || PLATFORM_COLOR[data.platform] || "#9146FF"
 
   return (
     <div

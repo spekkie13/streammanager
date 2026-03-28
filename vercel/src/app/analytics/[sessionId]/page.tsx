@@ -7,21 +7,13 @@ import { AppHeader } from "@/components/app-header"
 import type { AnalyticsTotals } from "@/services"
 import type { LiveEventType } from "@/types/events"
 import { SessionTimeline } from "./session-timeline"
-
-const COLORS: Record<string, string> = {
-  follow:    "#3b82f6",
-  sub:       "#a855f7",
-  bits:      "#eab308",
-  raid:      "#22c55e",
-  superchat: "#ef4444",
-  member:    "#f97316",
-}
+import {EVENT_COLORS} from "@/constants/colors";
 
 function formatDuration(minutes: number | null): string {
   if (minutes === null) return "Ongoing"
   if (minutes < 60) return `${minutes}m`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
+  const h: number = Math.floor(minutes / 60)
+  const m: number = minutes % 60
   return m === 0 ? `${h}h` : `${h}h ${m}m`
 }
 
@@ -34,7 +26,7 @@ function formatCurrency(amount: number, currency: string): string {
 }
 
 function formatSuperchatTotal(byCurrency: Record<string, number>): string {
-  const entries = Object.entries(byCurrency)
+  const entries: [string, number][] = Object.entries(byCurrency)
   if (entries.length === 0) return "—"
   if (entries.length === 1) return formatCurrency(entries[0][1], entries[0][0])
   const [topCur, topAmt] = entries.sort((a, b) => b[1] - a[1])[0]
@@ -64,30 +56,38 @@ function StatCard({ label, primary, secondary, color }: {
 function TotalsRow({ totals }: { totals: AnalyticsTotals }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-      <StatCard label="Followers"    primary={totals.follows.toLocaleString()}          color={COLORS.follow} />
-      <StatCard label="Subscribers"  primary={totals.subs.toLocaleString()}             color={COLORS.sub} />
+      <StatCard
+          label="Followers"
+          primary={totals.follows.toLocaleString()}
+          color={EVENT_COLORS.follow}
+      />
+      <StatCard
+          label="Subscribers"
+          primary={totals.subs.toLocaleString()}
+          color={EVENT_COLORS.sub}
+      />
       <StatCard
         label="Bits"
         primary={totals.bits.total.toLocaleString()}
         secondary={`${totals.bits.count} cheers`}
-        color={COLORS.bits}
+        color={EVENT_COLORS.bits}
       />
       <StatCard
         label="Raid viewers"
         primary={totals.raids.total.toLocaleString()}
         secondary={`${totals.raids.count} raids`}
-        color={COLORS.raid}
+        color={EVENT_COLORS.raid}
       />
       {totals.superchats.count > 0 && (
         <StatCard
           label="Super Chats"
           primary={formatSuperchatTotal(totals.superchats.byCurrency)}
           secondary={`${totals.superchats.count} superchats`}
-          color={COLORS.superchat}
+          color={EVENT_COLORS.superchat}
         />
       )}
       {totals.members > 0 && (
-        <StatCard label="Members" primary={totals.members.toLocaleString()} color={COLORS.member} />
+        <StatCard label="Members" primary={totals.members.toLocaleString()} color={EVENT_COLORS.member} />
       )}
     </div>
   )

@@ -1,12 +1,6 @@
 import { subEventsRepository, followEventsRepository, ytMemberEventsRepository, subGoalsRepository, goalsRepository } from "@/repositories"
 import type { GoalType } from "@/repositories/goals.repository"
-
-type WidgetGoalData = {
-  current: number
-  goal: number
-  label: string
-  platform: "twitch" | "youtube"
-}
+import {WidgetGoalData} from "@/services/widget-goal.types";
 
 class WidgetGoalService {
   async getGoalData(

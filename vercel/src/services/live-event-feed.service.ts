@@ -1,6 +1,7 @@
 import { subEventsRepository, followEventsRepository, cheerEventsRepository, raidEventsRepository, ytSuperChatEventsRepository, ytMemberEventsRepository } from "@/repositories"
 import type { LiveEvent, LiveEventType } from "@/types/events"
 import type { EventFilter, PaginatedEvents } from "@/types/event-filter"
+import { mapCheerToEvent, mapFollowToEvent, mapMemberToEvent, mapRaidToEvent, mapSubToEvent, mapSuperchatToEvent } from "@/lib/event-mappers"
 
 class LiveEventFeedService {
   async getFilteredEvents(filter: EventFilter): Promise<PaginatedEvents> {
@@ -20,12 +21,12 @@ class LiveEventFeedService {
     ])
 
     const all: LiveEvent[] = [
-      ...subs.map(e => ({ id: e.id, type: "sub" as const, platform: "twitch" as const, fromUser: e.userDisplayName ?? e.gifterDisplayName ?? "Anonymous", amount: e.giftCount, occurredAt: e.occurredAt.toISOString(), tier: e.tier, subKind: e.kind, cumulativeMonths: e.cumulativeMonths ?? null, message: e.message ?? null })),
-      ...follows.map(e => ({ id: e.id, type: "follow" as const, platform: "twitch" as const, fromUser: e.userDisplayName ?? "Anonymous", amount: null, occurredAt: e.occurredAt.toISOString() })),
-      ...cheers.map(e => ({ id: e.id, type: "bits" as const, platform: "twitch" as const, fromUser: e.isAnonymous ? "Anonymous" : (e.userDisplayName ?? "Anonymous"), amount: e.bits, occurredAt: e.occurredAt.toISOString(), message: e.message ?? null, isAnonymous: e.isAnonymous })),
-      ...raids.map(e => ({ id: e.id, type: "raid" as const, platform: "twitch" as const, fromUser: e.fromBroadcasterDisplayName, amount: e.viewerCount, occurredAt: e.occurredAt.toISOString() })),
-      ...superchats.map(e => ({ id: e.id, type: "superchat" as const, platform: "youtube" as const, fromUser: e.userDisplayName ?? "Anonymous", amount: e.amountMicros / 1_000_000, currency: e.currency, occurredAt: e.occurredAt.toISOString(), message: e.message ?? null })),
-      ...members.map(e => ({ id: e.id, type: "member" as const, platform: "youtube" as const, fromUser: e.userDisplayName ?? "Anonymous", amount: e.memberMonths, occurredAt: e.occurredAt.toISOString(), levelName: e.levelName ?? null })),
+      ...subs.map(mapSubToEvent),
+      ...follows.map(mapFollowToEvent),
+      ...cheers.map(mapCheerToEvent),
+      ...raids.map(mapRaidToEvent),
+      ...superchats.map(mapSuperchatToEvent),
+      ...members.map(mapMemberToEvent),
     ]
 
     all.sort((a, b) => {
@@ -55,12 +56,12 @@ class LiveEventFeedService {
     ])
 
     const events: LiveEvent[] = [
-      ...subs.map(e => ({ id: e.id, type: "sub" as const, platform: "twitch" as const, fromUser: e.userDisplayName ?? e.gifterDisplayName ?? "Anonymous", amount: e.giftCount, occurredAt: e.occurredAt.toISOString(), tier: e.tier, subKind: e.kind, cumulativeMonths: e.cumulativeMonths ?? null, message: e.message ?? null })),
-      ...follows.map(e => ({ id: e.id, type: "follow" as const, platform: "twitch" as const, fromUser: e.userDisplayName ?? "Anonymous", amount: null, occurredAt: e.occurredAt.toISOString() })),
-      ...cheers.map(e => ({ id: e.id, type: "bits" as const, platform: "twitch" as const, fromUser: e.isAnonymous ? "Anonymous" : (e.userDisplayName ?? "Anonymous"), amount: e.bits, occurredAt: e.occurredAt.toISOString(), message: e.message ?? null, isAnonymous: e.isAnonymous })),
-      ...raids.map(e => ({ id: e.id, type: "raid" as const, platform: "twitch" as const, fromUser: e.fromBroadcasterDisplayName, amount: e.viewerCount, occurredAt: e.occurredAt.toISOString() })),
-      ...superchats.map(e => ({ id: e.id, type: "superchat" as const, platform: "youtube" as const, fromUser: e.userDisplayName ?? "Anonymous", amount: e.amountMicros / 1_000_000, currency: e.currency, occurredAt: e.occurredAt.toISOString(), message: e.message ?? null })),
-      ...members.map(e => ({ id: e.id, type: "member" as const, platform: "youtube" as const, fromUser: e.userDisplayName ?? "Anonymous", amount: e.memberMonths, occurredAt: e.occurredAt.toISOString(), levelName: e.levelName ?? null })),
+      ...subs.map(mapSubToEvent),
+      ...follows.map(mapFollowToEvent),
+      ...cheers.map(mapCheerToEvent),
+      ...raids.map(mapRaidToEvent),
+      ...superchats.map(mapSuperchatToEvent),
+      ...members.map(mapMemberToEvent),
     ]
 
     return events.sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())

@@ -24,7 +24,7 @@ export function SessionTimeline({
     })
   }
 
-  const filtered = activeFilters.size === 0
+  const filtered: LiveEvent[] = activeFilters.size === 0
     ? events
     : events.filter(e => activeFilters.has(e.type))
 

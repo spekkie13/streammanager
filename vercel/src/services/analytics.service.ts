@@ -1,61 +1,9 @@
 import { and, asc, count, desc, eq, gte, lte, sql, sum } from "drizzle-orm"
 import { db } from "@/lib/db"
-import {
-  cheerEvents, followEvents, raidEvents, streamSessions,
-  subEvents, ytMemberEvents, ytSuperChatEvents,
-} from "@/lib/schema"
+import { cheerEvents, followEvents, raidEvents, streamSessions, subEvents, ytMemberEvents, ytSuperChatEvents } from "@/lib/schema"
 import type { LiveEvent } from "@/types/events"
-
-export type AnalyticsTotals = {
-  follows: number
-  subs: number
-  bits: { count: number; total: number }
-  raids: { count: number; total: number }
-  superchats: { count: number; byCurrency: Record<string, number> }
-  members: number
-}
-
-export type DayBucket = {
-  date: string
-  // Activity tab (counts)
-  follows: number
-  subs: number
-  bitsCount: number
-  raidsCount: number
-  superchatsCount: number
-  members: number
-  // Revenue tab (amounts)
-  bitsTotal: number
-  raidViewers: number
-  superchatsTotal: number // sum of amountMicros/1M — approximate if multi-currency
-}
-
-export type SessionSummary = {
-  follows: number
-  subs: number
-  bits: number   // total bits
-  raids: number  // total viewers
-}
-
-export type AnalyticsSession = {
-  id: string
-  startedAt: string
-  endedAt: string | null
-  durationMinutes: number | null
-  summary: SessionSummary
-}
-
-export type AnalyticsOverview = {
-  totals: AnalyticsTotals
-  byDay: DayBucket[]
-  sessions: AnalyticsSession[]
-}
-
-export type SessionDetail = {
-  session: AnalyticsSession
-  totals: AnalyticsTotals
-  events: LiveEvent[]
-}
+import { AnalyticsOverview, AnalyticsSession, AnalyticsTotals, DayBucket, SessionDetail } from "@/services/analytics.types"
+import { mapCheerToEvent, mapFollowToEvent, mapRaidToEvent, mapSubToEvent } from "@/lib/event-mappers"
 
 const DAY = sql`'day'`
 
@@ -69,125 +17,86 @@ class AnalyticsService {
     youtubeChannelId: string | null,
     since: Date,
   ): Promise<AnalyticsOverview> {
-    const hasTwitch = !!broadcasterId
-    const hasYT = !!youtubeChannelId
+    const hasTwitch: boolean = !!broadcasterId
+    const hasYT: boolean = !!youtubeChannelId
 
-    const [
-      followTotals,
-      subTotals,
-      bitsTotals,
-      raidTotals,
-      superchatTotals,
-      memberTotals,
-      followsByDay,
-      subsByDay,
-      bitsByDay,
-      raidsByDay,
-      superchatsByDay,
-      membersByDay,
-      sessionRows,
-    ] = await Promise.all([
-      // ── Totals ────────────────────────────────────────────────────────────
+    const [twitchResults, ytResults] = await Promise.all([
+      // ── Twitch queries (checked once) ─────────────────────────────────────
       hasTwitch
-        ? db.select({ count: count() }).from(followEvents)
-            .where(and(eq(followEvents.broadcasterId, broadcasterId), gte(followEvents.occurredAt, since)))
-        : Promise.resolve([{ count: 0 }]),
+        ? Promise.all([
+            // Totals
+            db.select({ count: count() }).from(followEvents)
+              .where(and(eq(followEvents.broadcasterId, broadcasterId), gte(followEvents.occurredAt, since))),
+            db.select({ count: count() }).from(subEvents)
+              .where(and(eq(subEvents.broadcasterId, broadcasterId), gte(subEvents.occurredAt, since))),
+            db.select({ count: count(), total: sum(cheerEvents.bits) }).from(cheerEvents)
+              .where(and(eq(cheerEvents.broadcasterId, broadcasterId), gte(cheerEvents.occurredAt, since))),
+            db.select({ count: count(), total: sum(raidEvents.viewerCount) }).from(raidEvents)
+              .where(and(eq(raidEvents.broadcasterId, broadcasterId), gte(raidEvents.occurredAt, since))),
+            // By day
+            db.select({ day: sql<string>`date_trunc(${DAY}, ${followEvents.occurredAt})::text`, count: count() })
+              .from(followEvents)
+              .where(and(eq(followEvents.broadcasterId, broadcasterId), gte(followEvents.occurredAt, since)))
+              .groupBy(sql`date_trunc(${DAY}, ${followEvents.occurredAt})`),
+            db.select({ day: sql<string>`date_trunc(${DAY}, ${subEvents.occurredAt})::text`, count: count() })
+              .from(subEvents)
+              .where(and(eq(subEvents.broadcasterId, broadcasterId), gte(subEvents.occurredAt, since)))
+              .groupBy(sql`date_trunc(${DAY}, ${subEvents.occurredAt})`),
+            db.select({ day: sql<string>`date_trunc(${DAY}, ${cheerEvents.occurredAt})::text`, count: count(), total: sum(cheerEvents.bits) })
+              .from(cheerEvents)
+              .where(and(eq(cheerEvents.broadcasterId, broadcasterId), gte(cheerEvents.occurredAt, since)))
+              .groupBy(sql`date_trunc(${DAY}, ${cheerEvents.occurredAt})`),
+            db.select({ day: sql<string>`date_trunc(${DAY}, ${raidEvents.occurredAt})::text`, count: count(), total: sum(raidEvents.viewerCount) })
+              .from(raidEvents)
+              .where(and(eq(raidEvents.broadcasterId, broadcasterId), gte(raidEvents.occurredAt, since)))
+              .groupBy(sql`date_trunc(${DAY}, ${raidEvents.occurredAt})`),
+            // Sessions
+            db.select().from(streamSessions)
+              .where(and(eq(streamSessions.broadcasterId, broadcasterId), gte(streamSessions.startedAt, since)))
+              .orderBy(desc(streamSessions.startedAt)),
+          ])
+        : Promise.resolve([
+            [{ count: 0 }],
+            [{ count: 0 }],
+            [{ count: 0, total: null as string | null }],
+            [{ count: 0, total: null as string | null }],
+            [] as { day: string; count: number }[],
+            [] as { day: string; count: number }[],
+            [] as { day: string; count: number; total: string | null }[],
+            [] as { day: string; count: number; total: string | null }[],
+            [] as (typeof streamSessions.$inferSelect)[],
+          ] as const),
 
-      hasTwitch
-        ? db.select({ count: count() }).from(subEvents)
-            .where(and(eq(subEvents.broadcasterId, broadcasterId), gte(subEvents.occurredAt, since)))
-        : Promise.resolve([{ count: 0 }]),
-
-      hasTwitch
-        ? db.select({ count: count(), total: sum(cheerEvents.bits) }).from(cheerEvents)
-            .where(and(eq(cheerEvents.broadcasterId, broadcasterId), gte(cheerEvents.occurredAt, since)))
-        : Promise.resolve([{ count: 0, total: null }]),
-
-      hasTwitch
-        ? db.select({ count: count(), total: sum(raidEvents.viewerCount) }).from(raidEvents)
-            .where(and(eq(raidEvents.broadcasterId, broadcasterId), gte(raidEvents.occurredAt, since)))
-        : Promise.resolve([{ count: 0, total: null }]),
-
+      // ── YouTube queries (checked once) ────────────────────────────────────
       hasYT
-        ? db.select({
-            currency: ytSuperChatEvents.currency,
-            count: count(),
-            total: sum(ytSuperChatEvents.amountMicros),
-          }).from(ytSuperChatEvents)
-            .where(and(eq(ytSuperChatEvents.channelId, youtubeChannelId!), gte(ytSuperChatEvents.occurredAt, since)))
-            .groupBy(ytSuperChatEvents.currency)
-        : Promise.resolve([] as { currency: string; count: number; total: string | null }[]),
-
-      hasYT
-        ? db.select({ count: count() }).from(ytMemberEvents)
-            .where(and(eq(ytMemberEvents.channelId, youtubeChannelId!), gte(ytMemberEvents.occurredAt, since)))
-        : Promise.resolve([{ count: 0 }]),
-
-      // ── By day ────────────────────────────────────────────────────────────
-      hasTwitch
-        ? db.select({
-            day: sql<string>`date_trunc(${DAY}, ${followEvents.occurredAt})::text`,
-            count: count(),
-          }).from(followEvents)
-            .where(and(eq(followEvents.broadcasterId, broadcasterId), gte(followEvents.occurredAt, since)))
-            .groupBy(sql`date_trunc(${DAY}, ${followEvents.occurredAt})`)
-        : Promise.resolve([] as { day: string; count: number }[]),
-
-      hasTwitch
-        ? db.select({
-            day: sql<string>`date_trunc(${DAY}, ${subEvents.occurredAt})::text`,
-            count: count(),
-          }).from(subEvents)
-            .where(and(eq(subEvents.broadcasterId, broadcasterId), gte(subEvents.occurredAt, since)))
-            .groupBy(sql`date_trunc(${DAY}, ${subEvents.occurredAt})`)
-        : Promise.resolve([] as { day: string; count: number }[]),
-
-      hasTwitch
-        ? db.select({
-            day: sql<string>`date_trunc(${DAY}, ${cheerEvents.occurredAt})::text`,
-            count: count(),
-            total: sum(cheerEvents.bits),
-          }).from(cheerEvents)
-            .where(and(eq(cheerEvents.broadcasterId, broadcasterId), gte(cheerEvents.occurredAt, since)))
-            .groupBy(sql`date_trunc(${DAY}, ${cheerEvents.occurredAt})`)
-        : Promise.resolve([] as { day: string; count: number; total: string | null }[]),
-
-      hasTwitch
-        ? db.select({
-            day: sql<string>`date_trunc(${DAY}, ${raidEvents.occurredAt})::text`,
-            count: count(),
-            total: sum(raidEvents.viewerCount),
-          }).from(raidEvents)
-            .where(and(eq(raidEvents.broadcasterId, broadcasterId), gte(raidEvents.occurredAt, since)))
-            .groupBy(sql`date_trunc(${DAY}, ${raidEvents.occurredAt})`)
-        : Promise.resolve([] as { day: string; count: number; total: string | null }[]),
-
-      hasYT
-        ? db.select({
-            day: sql<string>`date_trunc(${DAY}, ${ytSuperChatEvents.occurredAt})::text`,
-            count: count(),
-            total: sum(ytSuperChatEvents.amountMicros),
-          }).from(ytSuperChatEvents)
-            .where(and(eq(ytSuperChatEvents.channelId, youtubeChannelId!), gte(ytSuperChatEvents.occurredAt, since)))
-            .groupBy(sql`date_trunc(${DAY}, ${ytSuperChatEvents.occurredAt})`)
-        : Promise.resolve([] as { day: string; count: number; total: string | null }[]),
-
-      hasYT
-        ? db.select({
-            day: sql<string>`date_trunc(${DAY}, ${ytMemberEvents.occurredAt})::text`,
-            count: count(),
-          }).from(ytMemberEvents)
-            .where(and(eq(ytMemberEvents.channelId, youtubeChannelId!), gte(ytMemberEvents.occurredAt, since)))
-            .groupBy(sql`date_trunc(${DAY}, ${ytMemberEvents.occurredAt})`)
-        : Promise.resolve([] as { day: string; count: number }[]),
-
-      // ── Sessions ──────────────────────────────────────────────────────────
-      hasTwitch
-        ? db.select().from(streamSessions)
-            .where(and(eq(streamSessions.broadcasterId, broadcasterId), gte(streamSessions.startedAt, since)))
-            .orderBy(desc(streamSessions.startedAt))
-        : Promise.resolve([]),
+        ? Promise.all([
+            // Totals
+            db.select({ currency: ytSuperChatEvents.currency, count: count(), total: sum(ytSuperChatEvents.amountMicros) })
+              .from(ytSuperChatEvents)
+              .where(and(eq(ytSuperChatEvents.channelId, youtubeChannelId!), gte(ytSuperChatEvents.occurredAt, since)))
+              .groupBy(ytSuperChatEvents.currency),
+            db.select({ count: count() }).from(ytMemberEvents)
+              .where(and(eq(ytMemberEvents.channelId, youtubeChannelId!), gte(ytMemberEvents.occurredAt, since))),
+            // By day
+            db.select({ day: sql<string>`date_trunc(${DAY}, ${ytSuperChatEvents.occurredAt})::text`, count: count(), total: sum(ytSuperChatEvents.amountMicros) })
+              .from(ytSuperChatEvents)
+              .where(and(eq(ytSuperChatEvents.channelId, youtubeChannelId!), gte(ytSuperChatEvents.occurredAt, since)))
+              .groupBy(sql`date_trunc(${DAY}, ${ytSuperChatEvents.occurredAt})`),
+            db.select({ day: sql<string>`date_trunc(${DAY}, ${ytMemberEvents.occurredAt})::text`, count: count() })
+              .from(ytMemberEvents)
+              .where(and(eq(ytMemberEvents.channelId, youtubeChannelId!), gte(ytMemberEvents.occurredAt, since)))
+              .groupBy(sql`date_trunc(${DAY}, ${ytMemberEvents.occurredAt})`),
+          ])
+        : Promise.resolve([
+            [] as { currency: string; count: number; total: string | null }[],
+            [{ count: 0 }],
+            [] as { day: string; count: number; total: string | null }[],
+            [] as { day: string; count: number }[],
+          ] as const),
     ])
+
+    const [followTotals, subTotals, bitsTotals, raidTotals, followsByDay, subsByDay, bitsByDay, raidsByDay, sessionRows] = twitchResults
+    const [superchatTotals, memberTotals, superchatsByDay, membersByDay] = ytResults
 
     // ── Build totals ────────────────────────────────────────────────────────
     const byCurrency: Record<string, number> = {}
@@ -344,10 +253,10 @@ class AnalyticsService {
     ])
 
     const events: LiveEvent[] = [
-      ...follows.map(e => ({ id: e.id, type: "follow" as const, platform: "twitch" as const, fromUser: e.userDisplayName ?? "Anonymous", amount: null, occurredAt: e.occurredAt.toISOString() })),
-      ...subs.map(e => ({ id: e.id, type: "sub" as const, platform: "twitch" as const, fromUser: e.userDisplayName ?? e.gifterDisplayName ?? "Anonymous", amount: e.giftCount, occurredAt: e.occurredAt.toISOString(), tier: e.tier, subKind: e.kind, cumulativeMonths: e.cumulativeMonths ?? null, message: e.message ?? null })),
-      ...cheers.map(e => ({ id: e.id, type: "bits" as const, platform: "twitch" as const, fromUser: e.isAnonymous ? "Anonymous" : (e.userDisplayName ?? "Anonymous"), amount: e.bits, occurredAt: e.occurredAt.toISOString(), message: e.message ?? null, isAnonymous: e.isAnonymous })),
-      ...raids.map(e => ({ id: e.id, type: "raid" as const, platform: "twitch" as const, fromUser: e.fromBroadcasterDisplayName, amount: e.viewerCount, occurredAt: e.occurredAt.toISOString() })),
+      ...follows.map(mapFollowToEvent),
+      ...subs.map(mapSubToEvent),
+      ...cheers.map(mapCheerToEvent),
+      ...raids.map(mapRaidToEvent),
     ].sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime())
 
     const totals: AnalyticsTotals = {

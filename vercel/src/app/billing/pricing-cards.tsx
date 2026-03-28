@@ -1,59 +1,16 @@
 "use client"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { TIER_LABELS, TIER_MONTHLY_PRICES, TIER_ANNUAL_PRICES } from "@/lib/gates"
 import type { SubscriptionTier } from "@/lib/gates"
 import { WaitlistModal } from "@/components/waitlist-modal"
+import {Spinner} from "@/components/spinner";
+import {Feature} from "@/components/feature";
+import {CurrentPlanBadge} from "@/components/current-plan-badge";
+import {PricingCardProps} from "@/props/pricing-card.props";
+import {BillingCycle, PAID_TIERS, PaidTier, TIER_FEATURES} from "@/constants/billing";
 
-type BillingCycle = "monthly" | "annual"
-type PaidTier = "tier1" | "tier2" | "tier3"
 
-const PAID_TIERS: PaidTier[] = ["tier1", "tier2", "tier3"]
-
-const TIER_FEATURES: Record<SubscriptionTier, string[]> = {
-  free: [
-    "Unified live dashboard (Twitch + YouTube)",
-    "Real-time event feed",
-    "Basic OBS overlays",
-    "Goals tracking",
-    "7-day event history",
-  ],
-  tier1: [
-    "Everything in Free",
-    "Full analytics history (30d / 90d)",
-    "Per-session breakdowns",
-    "Platform comparison charts",
-  ],
-  tier2: [
-    "Everything in Tier 1",
-    "Custom alert overlays for OBS",
-    "Stream info management (title, game)",
-    "Cross-platform goals",
-    "Simultaneous go-live on Twitch + YouTube",
-  ],
-  tier3: [
-    "Everything in Tier 2",
-    "AI stream analysis",
-    "VOD transcription insights",
-    "Weekly improvement reports",
-    "Retention coaching",
-  ],
-}
-
-type Props = {
-  currentTier: SubscriptionTier
-  hasSubscription: boolean
-  waitlistMode: boolean
-  twitchLogin?: string
-  prices: {
-    tier1: { monthly: string; annual: string }
-    tier2: { monthly: string; annual: string }
-    tier3: { monthly: string; annual: string }
-  }
-}
-
-export function PricingCards({ currentTier, hasSubscription, waitlistMode, twitchLogin, prices }: Props) {
-  const router = useRouter()
+export function PricingCards({ currentTier, hasSubscription, waitlistMode, twitchLogin, prices }: PricingCardProps) {
   const [cycle, setCycle] = useState<BillingCycle>("monthly")
   const [loading, setLoading] = useState<string | null>(null)
   const [waitlistTier, setWaitlistTier] = useState<PaidTier | null>(null)
@@ -63,7 +20,7 @@ export function PricingCards({ currentTier, hasSubscription, waitlistMode, twitc
       setWaitlistTier(tier)
       return
     }
-    const priceId = prices[tier][cycle]
+    const priceId: string = prices[tier][cycle]
     setLoading(tier)
     try {
       const res = await fetch("/api/stripe/checkout", {
@@ -208,32 +165,5 @@ export function PricingCards({ currentTier, hasSubscription, waitlistMode, twitc
         </p>
       )}
     </div>
-  )
-}
-
-function CurrentPlanBadge() {
-  return (
-    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-      <span className="bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold px-3 py-1 rounded-full">
-        Current plan
-      </span>
-    </div>
-  )
-}
-
-function Feature({ text }: { text: string }) {
-  return (
-    <li className="flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-      <span className="text-purple-500 mt-0.5 shrink-0">✓</span>
-      {text}
-    </li>
-  )
-}
-
-function Spinner() {
-  return (
-    <span className="flex items-center justify-center">
-      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-    </span>
   )
 }

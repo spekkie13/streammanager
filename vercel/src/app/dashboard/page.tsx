@@ -1,4 +1,4 @@
-import { getServerSession } from "next-auth"
+import {getServerSession, Session} from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
@@ -7,81 +7,17 @@ import { eq, count, and, gt, ne, isNull } from "drizzle-orm"
 import { liveEventFeedService } from "@/services"
 import { eventSubSubscriptionsRepository, userRepository, linkedAccountsRepository, goalsRepository } from "@/repositories"
 import { DashboardClient } from "./dashboard-client"
-
-async function fetchTwitchFollowerCount(broadcasterId: string, accessToken: string): Promise<number | null> {
-  try {
-    const res = await fetch(
-      `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${broadcasterId}&first=1`,
-      { headers: { Authorization: `Bearer ${accessToken}`, "Client-Id": process.env.TWITCH_CLIENT_ID! } },
-    )
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.total ?? null
-  } catch { return null }
-}
-
-async function fetchTwitchSubCount(broadcasterId: string, accessToken: string): Promise<number | null> {
-  try {
-    const res = await fetch(
-      `https://api.twitch.tv/helix/subscriptions?broadcaster_id=${broadcasterId}&first=1`,
-      { headers: { Authorization: `Bearer ${accessToken}`, "Client-Id": process.env.TWITCH_CLIENT_ID! } },
-    )
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.total ?? null
-  } catch { return null }
-}
-
-async function refreshYouTubeToken(refreshToken: string): Promise<string | null> {
-  try {
-    const res = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: refreshToken,
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      }),
-    })
-    const data = await res.json()
-    return data.access_token ?? null
-  } catch { return null }
-}
-
-async function fetchYouTubeSubCount(
-  accessToken: string,
-  refreshToken: string | null,
-  channelId: string,
-): Promise<number | null> {
-  const doFetch = (token: string) =>
-    fetch("https://www.googleapis.com/youtube/v3/channels?part=statistics&mine=true", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-
-  try {
-    let res = await doFetch(accessToken)
-
-    if (res.status === 401 && refreshToken) {
-      const newToken = await refreshYouTubeToken(refreshToken)
-      if (!newToken) return null
-      await linkedAccountsRepository.updateAccessToken("youtube", channelId, newToken)
-      res = await doFetch(newToken)
-    }
-
-    if (!res.ok) return null
-    const data = await res.json()
-    const raw = data.items?.[0]?.statistics?.subscriberCount
-    return raw !== undefined ? parseInt(raw) : null
-  } catch { return null }
-}
+import {twitchService} from "@/services/twitch.service";
+import {youtubeService} from "@/services/youtube.service";
+import {LinkedAccount} from "@/types/entities";
+import {GoalRow} from "@/repositories/goals.repository";
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions)
+  const session: Session | null = await getServerSession(authOptions)
   if (!session) redirect("/")
 
-  const broadcasterId = session.twitchId ?? ""
-  const youtubeChannelId = session.youtubeChannelId ?? null
+  const broadcasterId: string = session.twitchId ?? ""
+  const youtubeChannelId: string | null = session.youtubeChannelId ?? null
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
   const [user, goalRows, totalRows, recentEvents, subscriptionsRegistered, linkedAccounts, followTotalRows, ytMemberTotalRows, extraGoals, twitchLiveSessions, ytLiveSessions] = await Promise.all([
@@ -100,13 +36,13 @@ export default async function DashboardPage() {
 
   if (!user?.onboardingCompleted) redirect("/setup")
 
-  const twitchAccount = linkedAccounts.find(a => a.provider === "twitch")
-  const ytAccount = linkedAccounts.find(a => a.provider === "youtube")
+  const twitchAccount: LinkedAccount | undefined = linkedAccounts.find((a: LinkedAccount) => a.provider === "twitch")
+  const ytAccount: LinkedAccount | undefined = linkedAccounts.find((a: LinkedAccount) => a.provider === "youtube")
 
   const [followerCount, subCount, ytSubCount, followerGrowthRows, subGrowthRows] = await Promise.all([
-    twitchAccount?.accessToken ? fetchTwitchFollowerCount(broadcasterId, twitchAccount.accessToken) : null,
-    twitchAccount?.accessToken ? fetchTwitchSubCount(broadcasterId, twitchAccount.accessToken) : null,
-    ytAccount?.accessToken ? fetchYouTubeSubCount(ytAccount.accessToken, ytAccount.refreshToken ?? null, ytAccount.providerAccountId) : null,
+    twitchAccount?.accessToken ? twitchService.fetchTwitchFollowerCount(broadcasterId, twitchAccount.accessToken) : null,
+    twitchAccount?.accessToken ? twitchService.fetchTwitchSubCount(broadcasterId, twitchAccount.accessToken) : null,
+    ytAccount?.accessToken ? youtubeService.fetchYouTubeSubCount(ytAccount.accessToken, ytAccount.refreshToken ?? null, ytAccount.providerAccountId) : null,
     broadcasterId
       ? db.select({ total: count() }).from(followEvents).where(and(eq(followEvents.broadcasterId, broadcasterId), gt(followEvents.occurredAt, thirtyDaysAgo)))
       : Promise.resolve([{ total: 0 }]),
@@ -115,13 +51,13 @@ export default async function DashboardPage() {
       : Promise.resolve([{ total: 0 }]),
   ])
 
-  const goal = goalRows[0]?.goal ?? 100
-  const initialCount = goalRows[0]?.initialCount ?? 0
-  const endsAt = goalRows[0]?.endsAt?.toISOString() ?? null
-  const total = totalRows[0]?.total ?? 0
+  const goal: number = goalRows[0]?.goal ?? 100
+  const initialCount: number = goalRows[0]?.initialCount ?? 0
+  const endsAt: string | null = goalRows[0]?.endsAt?.toISOString() ?? null
+  const total: number = totalRows[0]?.total ?? 0
 
-  const followGoalRow = extraGoals.find(g => g.type === "twitch_follow") ?? null
-  const ytMemberGoalRow = extraGoals.find(g => g.type === "youtube_member") ?? null
+  const followGoalRow: GoalRow | null = extraGoals.find(g => g.type === "twitch_follow") ?? null
+  const ytMemberGoalRow: GoalRow | null = extraGoals.find(g => g.type === "youtube_member") ?? null
 
   return (
     <DashboardClient
