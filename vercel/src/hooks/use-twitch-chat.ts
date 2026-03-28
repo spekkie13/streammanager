@@ -44,9 +44,9 @@ export function useTwitchChat(channelLogin: string): TwitchChatMessage[] {
 
         ws.onopen = () => {
           console.log("[TwitchChat] WebSocket connected, authenticating as", login)
-          ws!.send("CAP REQ :twitch.tv/tags twitch.tv/commands")
           ws!.send(`PASS oauth:${token}`)
           ws!.send(`NICK ${login.toLowerCase()}`)
+          ws!.send("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership")
           ws!.send(`JOIN #${channelLogin.toLowerCase()}`)
           pingInterval = setInterval(() => ws?.send("PING :tmi.twitch.tv"), 240_000)
         }
