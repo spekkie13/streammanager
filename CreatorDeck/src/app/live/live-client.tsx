@@ -45,7 +45,7 @@ export function LiveClient({
         <div className="flex-1 flex flex-col border-r border-zinc-200 dark:border-zinc-800 min-h-0">
 
           {/* Spotify mini player */}
-          <div className="shrink-0 px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="shrink-0 h-36 px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800">
             <SpotifyPlayer hasSpotify={hasSpotify} />
           </div>
 

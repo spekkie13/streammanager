@@ -1,4 +1,4 @@
-﻿import {useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {NowPlaying, QueueTrack} from "@/types/spotify";
 import Link from "next/link";
 
@@ -74,9 +74,9 @@ export function SpotifyPlayer({ hasSpotify }: { hasSpotify: boolean }) {
     const pct = nowPlaying.duration > 0 ? (progressMs / nowPlaying.duration) * 100 : 0
 
     return (
-        <div className="flex items-start gap-3">
+        <div className="flex items-stretch gap-3 h-full">
             {/* Now playing */}
-            <div className="w-[340px] shrink-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 space-y-2">
+            <div className="w-[340px] shrink-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 flex flex-col justify-between">
                 <div className="flex items-center gap-2.5">
                     {nowPlaying.albumArt ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -103,16 +103,16 @@ export function SpotifyPlayer({ hasSpotify }: { hasSpotify: boolean }) {
 
             {/* Queue */}
             {queue.length > 0 && (
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 min-w-0 flex-1 overflow-hidden">
-                    <p className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-600 uppercase tracking-wider mb-1.5">Up next</p>
-                    <div className="flex gap-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-                        {queue.map((item, i) => (
-                            <div key={i} className="flex flex-col items-center gap-1 shrink-0 w-14">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 min-w-0 flex-1 flex flex-col overflow-hidden">
+                    <p className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-600 uppercase tracking-wider mb-1.5 shrink-0">Up next</p>
+                    <div className="flex gap-2 flex-1 min-h-0">
+                        {queue.slice(0, 5).map((item, i) => (
+                            <div key={i} className="flex flex-col flex-1 min-w-0 gap-1">
                                 {item.albumArt ? (
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={item.albumArt} alt="" className="w-10 h-10 rounded object-cover" />
+                                    <img src={item.albumArt} alt="" className="w-full aspect-square rounded object-cover" />
                                 ) : (
-                                    <div className="w-10 h-10 rounded bg-zinc-100 dark:bg-zinc-800" />
+                                    <div className="w-full aspect-square rounded bg-zinc-100 dark:bg-zinc-800" />
                                 )}
                                 <p className="text-[10px] text-zinc-700 dark:text-zinc-300 truncate w-full text-center leading-tight">{item.track}</p>
                                 <p className="text-[9px] text-zinc-400 dark:text-zinc-600 truncate w-full text-center leading-tight">{item.artist}</p>

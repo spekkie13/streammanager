@@ -71,8 +71,8 @@ C# Desktop app (lokaal)
 ### 🔨 Fase 3 — OBS widgets (free tier hook)
 > Overlays zijn gratis en zichtbaar op stream — sterkste word-of-mouth kanaal. Elke kijker ziet het product in actie.
 ```
-2.  [8.1]   — Widget authenticatie (token-based, geen browser sessie nodig)
-3.  [8.3]   — Goal overlay widget (/widget/goal) — animated progress bar in OBS
+2.  [8.1]   — Widget authenticatie (token-based, geen browser sessie nodig)      ✅ gereed
+3.  [8.3]   — Goal overlay widget (/widget/goal) — animated progress bar in OBS      ✅ gereed
 4.  [IDEA-3] — Custom browser sources (event ticker, now-playing, etc.)
 5.  [IDEA-4] — Alert overlay widget (/widget/alerts) — Tier 2 feature
 ```
