@@ -61,6 +61,15 @@ C# Desktop app (lokaal)
 ✅  [UX]         — YouTube subscriber token refresh on expired access token
 ```
 
+### 🔨 Fase 1b — Polish & refinement (voor verdere uitbouw)
+> Bestaande features afmaken en consistenter maken voordat nieuwe functionaliteit wordt gebouwd. Zorgt dat het product er klaar uitziet voor echte gebruikers.
+```
+-   [POLISH-1] — Live pagina verfijnen (layout, Spotify player/queue tweaks, spacing, responsive)
+-   [POLISH-2] — Dashboard: alle aangesloten accounts tonen hun verbindingsstatus (Twitch, YouTube, Spotify) — ook wanneer niet verbonden, met duidelijke connect CTA
+-   [POLISH-3] — Connections pagina doorlopen op consistentie en volledigheid per platform
+-   [POLISH-4] — Algemene UI tweaks: typografie, witruimte, dark mode inconsistenties, lege states
+```
+
 ### 🔨 Fase 2 — Integratie completeren (volgende stap)
 > Sluit de gratis tier af: YouTube events volledig zichtbaar in de live feed zodat de unified dashboard belofte waargemaakt wordt.
 ```
