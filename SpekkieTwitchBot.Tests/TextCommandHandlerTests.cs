@@ -18,8 +18,8 @@ public class TextCommandHandlerTests : IDisposable
 
     private TextCommandHandler CreateHandler() => new(_FilePath);
 
-    private static ChatCommandReceived Cmd(string command) =>
-        new("mid", "uid", "user", UserRole.Viewer, command, "", $"!{command}");
+    private static ChatCommandReceived Cmd(string command, string username = "user") =>
+        new("mid", "uid", username, UserRole.Viewer, command, "", $"!{command}");
 
     // ── Initial state ────────────────────────────────────────────────────────
 
@@ -125,6 +125,17 @@ public class TextCommandHandlerTests : IDisposable
         string result = CreateHandler().HandleCommand(Cmd("doesnotexist"));
 
         Assert.Equal("Unknown Command", result);
+    }
+
+    [Fact]
+    public void HandleCommand_ResponseWithUsernamePlaceholder_ReplacesWithActualUsername()
+    {
+        TextCommandHandler handler = CreateHandler();
+        handler.AddCommand("add", "!lurk", "Enjoy your lurk {username}!");
+
+        string result = handler.HandleCommand(Cmd("lurk", "SpekkieClashes"));
+
+        Assert.Equal("Enjoy your lurk SpekkieClashes!", result);
     }
 
     // ── Case insensitivity of action ─────────────────────────────────────────

@@ -31,10 +31,10 @@ public class TextCommandHandler : ITextCommandHandler
     public string HandleCommand(ChatCommandReceived command)
     {
         string reply = "Unknown Command";
-        
+
         foreach (TextCommand comm in _commands.Where(comm => comm.Command == $"!{command.CommandText}"))
         {
-            reply = comm.Response ?? "";
+            reply = (comm.Response ?? "").Replace("{username}", command.Username);
         }
         return reply;
     }
