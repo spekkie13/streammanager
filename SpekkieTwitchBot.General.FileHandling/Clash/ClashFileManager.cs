@@ -48,6 +48,10 @@ public class ClashFileManager
         fileName = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}current war id.txt";
         if (!_FileSetup.FileExists(fileName))
             _FileSetup.CreateFile(fileName);
+
+        _FileWriter.Write(
+            $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}war-stats-overlay.html",
+            WarOverlayHtml.Content);
     }
 
     private void SetupOutputFolder()

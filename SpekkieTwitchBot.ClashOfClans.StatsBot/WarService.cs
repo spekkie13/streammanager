@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using SpekkieClassLibrary.ClashOfClans.Ccn;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Constants;
@@ -165,7 +166,44 @@ public class WarService(
 
         await ProcessTeam(clan: runTimeWar.Clan, team: "home", teamFolder: ClashConstants.HomeFolder);
         await ProcessTeam(clan: runTimeWar.Opponent, team: "away", teamFolder: ClashConstants.AwayFolder);
+        await WriteWarJson(runTimeWar);
     }
+
+    private Task WriteWarJson(RunTimeWar war)
+    {
+        var data = new
+        {
+            home = BuildTeamJson(war.Clan, "home"),
+            away = BuildTeamJson(war.Opponent, "away")
+        };
+        string path = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}war-data.json";
+        return writer.WriteAsync(path, JsonConvert.SerializeObject(data));
+    }
+
+    private static object BuildTeamJson(RunTimeClan clan, string team) => new
+    {
+        name = clan.Name,
+        logo = $"logo {team}.png",
+        score = clan.Stars,
+        pct = Math.Round(clan.DestructionPercentage, 2).ToString("F2") + "%",
+        players = clan.Members
+            .OrderBy(m => m.MapPosition)
+            .Select(m =>
+            {
+                RunTimeAttack? atk = m.Attacks?.FirstOrDefault();
+                return new
+                {
+                    name = m.Name,
+                    mapPosition = m.MapPosition,
+                    stars = atk != null ? (int?)atk.Stars : null,
+                    pct = atk != null ? (string?)(atk.DestructionPercentage + "%") : null,
+                    time = atk != null
+                        ? $"{(int)atk.Duration / 60}:{(int)atk.Duration % 60:D2}"
+                        : ""
+                };
+            })
+            .ToList()
+    };
 
     private async Task<byte[]> GetTeamLogoAsync(RunTimeClan clan)
     {
