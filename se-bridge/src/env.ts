@@ -6,6 +6,6 @@ function requireEnv(name: string): string {
 
 export const env = {
   creatorDeckUrl: requireEnv('CREATORDECK_URL'),
-  northflankWebhookSecret: requireEnv('NORTHFLANK_WEBHOOK_SECRET'),
+  bridgeSecret: requireEnv('BRIDGE_SECRET'),
   port: parseInt(process.env['PORT'] ?? '3001', 10),
 }

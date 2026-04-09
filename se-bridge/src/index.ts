@@ -1,32 +1,44 @@
-import express from 'express'
-import { env } from './env'
 import { ChannelRegistry } from './registry'
 import { creatorDeckClient } from './creatordeck-client'
-import { buildManagementRouter } from './management-api'
+
+const SYNC_INTERVAL_MS = 5 * 60 * 1000
+
+async function syncAccounts(registry: ChannelRegistry): Promise<void> {
+  const accounts = await creatorDeckClient.fetchActiveAccounts()
+  const fetched = new Map(accounts.map(a => [a.channelId, a.jwtToken]))
+
+  // Start new connections
+  for (const [channelId, jwtToken] of fetched) {
+    registry.register(channelId, jwtToken)
+  }
+
+  // Stop connections for accounts that have been removed
+  for (const channelId of registry.activeChannelIds()) {
+    if (!fetched.has(channelId)) {
+      registry.deregister(channelId)
+    }
+  }
+}
 
 async function main(): Promise<void> {
   const registry = new ChannelRegistry()
 
-  // Bootstrap: restore all active SE connections from CreatorDeck
   console.log('[bridge] fetching active SE accounts from CreatorDeck...')
   try {
-    const accounts = await creatorDeckClient.fetchActiveAccounts()
-    console.log(`[bridge] bootstrapping ${accounts.length} channel(s)`)
-    for (const account of accounts) {
-      registry.register(account.channelId, account.accessToken, account.refreshToken)
-    }
+    await syncAccounts(registry)
+    console.log('[bridge] initial sync complete')
   } catch (err) {
-    console.error('[bridge] bootstrap failed — starting with no connections:', err)
+    console.error('[bridge] initial sync failed — starting with no connections:', err)
   }
 
-  // Start management API
-  const app = express()
-  app.use(express.json())
-  app.use('/', buildManagementRouter(registry))
-
-  app.listen(env.port, () => {
-    console.log(`[bridge] management API listening on port ${env.port}`)
-  })
+  setInterval(async () => {
+    console.log('[bridge] syncing accounts...')
+    try {
+      await syncAccounts(registry)
+    } catch (err) {
+      console.error('[bridge] sync failed:', err)
+    }
+  }, SYNC_INTERVAL_MS)
 }
 
 main().catch(err => {
