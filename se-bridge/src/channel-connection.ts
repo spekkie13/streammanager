@@ -45,7 +45,8 @@ export class ChannelConnection {
     })
 
     this.socket.on('event', (data: Record<string, unknown>) => {
-      if (data['topic'] !== 'channel.chat.message') return
+      console.log(`[bridge] ${this.channelId}: raw event:`, JSON.stringify(data))
+      if (data['type'] !== 'chat-message') return
       const msg = this.extractMessage(data)
       if (!msg) return
       creatorDeckClient
@@ -89,21 +90,16 @@ export class ChannelConnection {
     occurredAt: string
   } | null {
     const payload = data['data'] as Record<string, unknown> | undefined
-    const snippet = payload?.['snippet'] as Record<string, unknown> | undefined
-    const authorDetails = payload?.['authorDetails'] as Record<string, unknown> | undefined
-
-    const message =
-      (snippet?.['displayMessage'] as string | undefined) ??
-      ((snippet?.['textMessageDetails'] as Record<string, unknown> | undefined)?.['messageText'] as string | undefined)
+    const message = (payload?.['text'] ?? payload?.['message']) as string | undefined
 
     if (!message) return null
 
     return {
-      eventId: (data['id'] as string | undefined) ?? `${this.channelId}-${Date.now()}`,
-      userDisplayName: (authorDetails?.['displayName'] as string | undefined) ?? null,
-      userId: (authorDetails?.['channelId'] as string | undefined) ?? null,
+      eventId: (data['_id'] as string | undefined) ?? `${this.channelId}-${Date.now()}`,
+      userDisplayName: (payload?.['displayName'] as string | undefined) ?? null,
+      userId: (payload?.['providerId'] as string | undefined) ?? null,
       message,
-      occurredAt: (data['ts'] as string | undefined) ?? new Date().toISOString(),
+      occurredAt: (data['createdAt'] as string | undefined) ?? new Date().toISOString(),
     }
   }
 }
