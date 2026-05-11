@@ -24,6 +24,7 @@ public class TwitchEventSubClient : ITwitchEvents
 
     public event Func<FollowHappened, CancellationToken, Task>? OnFollow;
     public event Func<SubHappened, CancellationToken, Task>? OnSub;
+    public event Func<BitsHappened, CancellationToken, Task>? OnBits;
     public event Func<ChannelPointRedeemed, CancellationToken, Task>? OnChannelPointRedeemed;
 
     public TwitchEventSubClient(
@@ -176,6 +177,10 @@ public class TwitchEventSubClient : ITwitchEvents
             new { broadcaster_user_id = _ChannelId },
             sessionId, ct);
 
+        await SubscribeAsync("channel.cheer", "1",
+            new { broadcaster_user_id = _ChannelId },
+            sessionId, ct);
+
         await SubscribeAsync("channel.channel_points_custom_reward_redemption.add", "1",
             new { broadcaster_user_id = _ChannelId },
             sessionId, ct);
@@ -291,6 +296,25 @@ public class TwitchEventSubClient : ITwitchEvents
                     TotalMonths: null,
                     GiftCount: total,
                     Message: null,
+                    Timestamp: DateTimeOffset.UtcNow
+                ), ct);
+                break;
+            }
+
+            case "channel.cheer":
+            {
+                bool isAnon = evt.TryGetProperty("is_anonymous", out JsonElement anonProp) && anonProp.GetBoolean();
+                string userId = isAnon ? "" : (evt.TryGetProperty("user_id", out JsonElement uidProp) ? uidProp.GetString() ?? "" : "");
+                string userName = isAnon ? "" : (evt.TryGetProperty("user_name", out JsonElement unameProp) ? unameProp.GetString() ?? "" : "");
+                int bits = evt.TryGetProperty("bits", out JsonElement bitsProp) ? bitsProp.GetInt32() : 0;
+                string? message = evt.TryGetProperty("message", out JsonElement msgProp) ? msgProp.GetString() : null;
+
+                await RaiseAsync(OnBits, new BitsHappened(
+                    UserId: userId,
+                    UserName: userName,
+                    IsAnonymous: isAnon,
+                    Bits: bits,
+                    Message: message,
                     Timestamp: DateTimeOffset.UtcNow
                 ), ct);
                 break;

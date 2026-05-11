@@ -16,6 +16,7 @@ using SpekkieTwitchBot.Systems.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Marathon;
 using SpekkieTwitchBot.ClashOfClans.StatsBot;
 using SpekkieTwitchBot.General.FileHandling.Clash;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
@@ -27,6 +28,7 @@ using SpekkieTwitchBot.Events;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 using SpekkieTwitchBot.Systems.StreamStats;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.EventSub;
+using SpekkieTwitchBot.Systems.StreamElements;
 using SpekkieClassLibrary.Events;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using SpotifyAuthService;
@@ -183,6 +185,8 @@ public static class Program
                 services.AddSingleton<ChatCommandFeature>();
                 services.AddSingleton<ChatMessageFeature>();
                 services.AddSingleton<TimedMessagesFeature>();
+                services.AddSingleton<IMarathonTimeCalculator, MarathonTimeCalculator>();
+                services.AddSingleton<MarathonTimerFeature>();
                 services.AddSingleton<TwitchEventRouter>();
                 
                 // -----------------------
@@ -279,6 +283,13 @@ public static class Program
                 services.AddSingleton<EventTimerService.EventTimerService>();
                 services.AddSingleton<IEventTimerService>(sp => sp.GetRequiredService<EventTimerService.EventTimerService>());
                 services.AddHostedService(sp => sp.GetRequiredService<EventTimerService.EventTimerService>());
+
+                // -----------------------
+                // StreamElements
+                // -----------------------
+                services.AddSingleton<StreamElementsSocketIoClient>();
+                services.AddSingleton<StreamElementsClient>();
+                services.AddHostedService<StreamElementsHostedService>();
 
                 // -----------------------
                 // Hosted Services (Twitch)

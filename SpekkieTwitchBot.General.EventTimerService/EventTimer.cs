@@ -26,7 +26,9 @@ namespace EventTimerService
         private void SetupTimer()
         {
             string remainingTime = _TimerFileReader.ReadRemainingTime();
-            _RemainingTime = TimeSpan.Parse(remainingTime);
+            _RemainingTime = TimeSpan.TryParse(remainingTime, out TimeSpan parsed)
+                ? parsed
+                : TimeSpan.Zero;
         }
 
         private void CountDownTick(object? state)
@@ -71,12 +73,14 @@ namespace EventTimerService
         public void AddTime(TimeSpan extraTime)
         {
             _RemainingTime += extraTime;
+            WriteFile();
             _Logger.LogInfo($"Added {extraTime}, new remaining time: {_RemainingTime}");
         }
 
         public void SetRemainingTime(TimeSpan time)
         {
             _RemainingTime = time;
+            WriteFile();
         }
 
         public TimeSpan GetRemainingTime()

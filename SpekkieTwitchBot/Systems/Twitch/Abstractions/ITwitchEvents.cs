@@ -6,6 +6,7 @@ public interface ITwitchEvents
 {
     event Func<FollowHappened, CancellationToken, Task> OnFollow;
     event Func<SubHappened, CancellationToken, Task> OnSub;
+    event Func<BitsHappened, CancellationToken, Task> OnBits;
     event Func<ChannelPointRedeemed, CancellationToken, Task> OnChannelPointRedeemed;
     
     Task ConnectAsync(CancellationToken cancellationToken = default);

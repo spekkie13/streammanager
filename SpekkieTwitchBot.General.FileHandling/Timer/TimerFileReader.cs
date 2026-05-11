@@ -6,9 +6,13 @@ public class TimerFileReader
 {
     public string ReadRemainingTime()
     {
-        string[] lines = File.ReadAllLines(
-            Path.Combine(BotPaths.BaseDir, "Output", "Timer", "timer.txt"));
-        
-        return lines[0];
+        string path = Path.Combine(BotPaths.BaseDir, "Output", "Timer", "timer.txt");
+
+        if (!File.Exists(path)) return "00:00:00";
+
+        string[] lines = File.ReadAllLines(path);
+        return lines.Length > 0 && !string.IsNullOrWhiteSpace(lines[0])
+            ? lines[0]
+            : "00:00:00";
     }
 }

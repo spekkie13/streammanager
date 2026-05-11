@@ -1,6 +1,7 @@
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Marathon;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Routing;
@@ -12,7 +13,8 @@ public sealed class TwitchEventRouter(
     ChatMessageFeature chatMessages,
     FollowSubFeature followSub,
     ChannelPointsFeature channelPoints,
-    TimedMessagesFeature timedMessages)
+    TimedMessagesFeature timedMessages,
+    MarathonTimerFeature marathon)
 {
     public async Task InitializeAsync(CancellationToken ct)
     {
@@ -27,6 +29,7 @@ public sealed class TwitchEventRouter(
 
         events.OnFollow += OnFollow;
         events.OnSub += OnSub;
+        events.OnBits += OnBits;
         events.OnChannelPointRedeemed += OnChannelPointRedeemed;
     }
 
@@ -37,6 +40,7 @@ public sealed class TwitchEventRouter(
 
         events.OnFollow -= OnFollow;
         events.OnSub -= OnSub;
+        events.OnBits -= OnBits;
         events.OnChannelPointRedeemed -= OnChannelPointRedeemed;
     }
 
@@ -50,7 +54,12 @@ public sealed class TwitchEventRouter(
         => followSub.HandleFollowAsync(ev, ct);
 
     private Task OnSub(SubHappened ev, CancellationToken ct)
-        => followSub.HandleSubAsync(ev, ct);
+        => Task.WhenAll(
+            followSub.HandleSubAsync(ev, ct),
+            marathon.HandleSubAsync(ev, ct));
+
+    private Task OnBits(BitsHappened ev, CancellationToken ct)
+        => marathon.HandleBitsAsync(ev, ct);
 
     private async Task OnChannelPointRedeemed(ChannelPointRedeemed ev, CancellationToken ct)
     {
