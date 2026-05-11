@@ -66,7 +66,7 @@ namespace EventTimerService
         public void RestartTimer()
         {
             StopTimer(); // Ensure it stops first
-            _RemainingTime = new TimeSpan(6, 0, 0); // Reset to 6 hours
+            _RemainingTime = new TimeSpan(7, 0, 0); // Reset to 7 hours (marathon starting time)
             StartTimer();
         }
 

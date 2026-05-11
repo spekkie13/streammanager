@@ -164,9 +164,12 @@ public class WarService(
             manager.SaveWarId(runTimeWar.PreparationStartTime);
         }
 
-        await ProcessTeam(clan: runTimeWar.Clan, team: "home", teamFolder: ClashConstants.HomeFolder);
-        await ProcessTeam(clan: runTimeWar.Opponent, team: "away", teamFolder: ClashConstants.AwayFolder);
-        await WriteWarJson(runTimeWar);
+        if (runTimeWar.State is "preparation" or "inWar")
+        {
+            await ProcessTeam(clan: runTimeWar.Clan, team: "home", teamFolder: ClashConstants.HomeFolder);
+            await ProcessTeam(clan: runTimeWar.Opponent, team: "away", teamFolder: ClashConstants.AwayFolder);
+            await WriteWarJson(runTimeWar);
+        }
     }
 
     private Task WriteWarJson(RunTimeWar war)

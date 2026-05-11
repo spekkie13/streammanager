@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using SpekkieClassLibrary.Constants;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
@@ -14,12 +15,11 @@ public class TwitchEventSubClient : ITwitchEvents
     private readonly ITwitchAuthTokenProvider _Tokens;
     private readonly ICustomTwitchHttpClient _Http;
     private readonly EventSubWebSocketClient _Ws;
-
-    private static readonly Uri DefaultUri = new("wss://eventsub.wss.twitch.tv/ws");
+    private readonly Uri _DefaultUri;
 
     private string? _ChannelId;
     private CancellationToken _RunCt;
-    private Uri _ReconnectUri = DefaultUri;
+    private Uri _ReconnectUri;
     private int _ReconnectAttempt;
 
     public event Func<FollowHappened, CancellationToken, Task>? OnFollow;
@@ -31,12 +31,19 @@ public class TwitchEventSubClient : ITwitchEvents
         Logger log,
         ITwitchAuthTokenProvider tokens,
         ICustomTwitchHttpClient http,
-        EventSubWebSocketClient ws)
+        EventSubWebSocketClient ws,
+        IConfiguration configuration)
     {
         _Log = log;
         _Tokens = tokens;
         _Http = http;
         _Ws = ws;
+
+        string url = configuration["EventSub:WebSocketUrl"] ?? "wss://eventsub.wss.twitch.tv/ws";
+        _DefaultUri = new Uri(url);
+        _ReconnectUri = _DefaultUri;
+
+        _Log.LogWarning($"[EventSub] WebSocket URL: {url}");
 
         _Ws.OnConnected += HandleConnected;
         _Ws.OnMessage += HandleMessage;
@@ -47,7 +54,7 @@ public class TwitchEventSubClient : ITwitchEvents
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
         _RunCt = cancellationToken;
-        _ReconnectUri = DefaultUri;
+        _ReconnectUri = _DefaultUri;
 
         var identity = await _Tokens.ReadIdentityAsync(cancellationToken);
         _ChannelId = identity.ChannelId;
@@ -110,7 +117,7 @@ public class TwitchEventSubClient : ITwitchEvents
 
                 _Log.LogWarning($"[EventSub] session_welcome session_id={sessionId}");
                 _ReconnectAttempt = 0;
-                _ReconnectUri = DefaultUri;
+                _ReconnectUri = _DefaultUri;
                 await SubscribeToEventsAsync(sessionId, ct);
                 break;
             }

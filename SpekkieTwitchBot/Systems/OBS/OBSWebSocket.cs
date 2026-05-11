@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -177,10 +177,11 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger) : IObsWeb
         if (!reqStatus)
         {
             JObject? status = (JObject?) result["requestStatus"];
-            string code = result["code"]?.ToString() ?? "";
+            string code = status?["code"]?.ToString() ?? "";
+            _ = int.TryParse(code, out int errorCode);
             throw new ErrorResponseException(
                 $"ErrorCode: {code}{(status != null && status.TryGetValue("comment", out JToken? s) ? $", Comment: {s}" : "")}",
-                Convert.ToInt32(code));
+                errorCode);
         }
 
         if (!result.ContainsKey("responseData")) return new JObject();

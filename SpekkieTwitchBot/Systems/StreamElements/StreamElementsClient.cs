@@ -15,6 +15,7 @@ public sealed class StreamElementsClient
     private int _reconnectAttempt;
 
     public event Func<DonationHappened, CancellationToken, Task>? OnDonation;
+    public event Func<SubHappened, CancellationToken, Task>? OnSub;
 
     public StreamElementsClient(
         StreamElementsSocketIoClient socket,
