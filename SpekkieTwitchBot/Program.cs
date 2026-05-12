@@ -60,6 +60,7 @@ public static class Program
 
         using (host)
         {
+            await host.Services.GetRequiredService<FeatureFlagService>().InitializeAsync();
             host.Services.GetRequiredService<WarObsHandler>().Register();
 
             Console.WriteLine("[BOOT] Starting host...");
@@ -141,6 +142,9 @@ public static class Program
                 // -----------------------
                 // Core
                 // -----------------------
+                services.AddSingleton<FeatureFlagService>();
+                services.AddSingleton<IFeatureFlagService>(sp => sp.GetRequiredService<FeatureFlagService>());
+
                 services.AddSingleton<HttpClient>();
                 services.AddSingleton<WebsocketClient>(_ => new WebsocketClient(new Uri("ws://localhost:4455")));
                 services.AddSingleton<Logger>();

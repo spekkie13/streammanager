@@ -17,7 +17,8 @@ public class WarService(
     CcnHttpClient ccnClient,
     WarStatus warStatus,
     IStreamEventBus eventBus,
-    Logger logger)
+    Logger logger,
+    IFeatureFlagService featureFlags)
     : BackgroundService, IWarService
 {
     private readonly Dictionary<string, byte[]> _LogoCache = new();
@@ -127,6 +128,7 @@ public class WarService(
 
     private async Task ProcessWar(RunTimeWar runTimeWar)
     {
+        if (!featureFlags.IsEnabled("War")) return;
         if (runTimeWar.Clan == null || runTimeWar.Opponent == null)
         {
             logger.LogWarning("No war detected...");

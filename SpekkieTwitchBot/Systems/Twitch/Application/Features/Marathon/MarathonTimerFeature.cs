@@ -9,10 +9,12 @@ public sealed class MarathonTimerFeature(
     IEventTimerService timer,
     IMarathonTimeCalculator calculator,
     ITwitchChat chat,
-    Logger logger)
+    Logger logger,
+    IFeatureFlagService featureFlags)
 {
     public async Task HandleSubAsync(SubHappened e, CancellationToken ct)
     {
+        if (!featureFlags.IsEnabled("Marathon")) return;
         TimeSpan added = calculator.CalculateForSub(e);
         if (added <= TimeSpan.Zero) return;
 
@@ -28,6 +30,7 @@ public sealed class MarathonTimerFeature(
 
     public async Task HandleBitsAsync(BitsHappened e, CancellationToken ct)
     {
+        if (!featureFlags.IsEnabled("Marathon")) return;
         TimeSpan added = calculator.CalculateForBits(e.Bits);
         if (added <= TimeSpan.Zero) return;
 
@@ -40,6 +43,7 @@ public sealed class MarathonTimerFeature(
 
     public async Task HandleDonationAsync(string userName, decimal euros, CancellationToken ct)
     {
+        if (!featureFlags.IsEnabled("Marathon")) return;
         TimeSpan added = calculator.CalculateForDonation(euros);
         if (added <= TimeSpan.Zero) return;
 
