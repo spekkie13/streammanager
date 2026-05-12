@@ -24,13 +24,11 @@
 		<ProjectReference Include="..\SpekkieTwitchBot.Common.SpekkieClassLibrary\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.General.FileHandling\SpekkieTwitchBot.General.FileHandling.csproj" />
 		<ProjectReference Include="..\SpekkieTwitchBot.Spotify.SpotifyService\SpekkieTwitchBot.Spotify.SpotifyService.csproj" />
-		<ProjectReference Include="..\SpekkieTwitchBot.Twitch\SpekkieTwitchBot.Twitch.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Folder Include="Systems\OBS\Abstractions\" />
 	  <Folder Include="Systems\OBS\Features\" />
-	  <Folder Include="Systems\OBS\Websocket\" />
 	</ItemGroup>
 
 </Project>

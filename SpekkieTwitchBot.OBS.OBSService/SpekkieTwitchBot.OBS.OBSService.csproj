@@ -11,7 +11,6 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\SpekkieTwitchBot.Common.SpekkieClassLibrary\SpekkieTwitchBot.Common.SpekkieClassLibrary.csproj" />
 	  <ProjectReference Include="..\SpekkieTwitchBot.General.FileHandling\SpekkieTwitchBot.General.FileHandling.csproj" />
-	  <ProjectReference Include="..\SpekkieTwitchBot.Twitch\SpekkieTwitchBot.Twitch.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

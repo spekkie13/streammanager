@@ -5,7 +5,7 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
 public sealed class ChatMessageFeature(ITwitchChat chat, ITwitchChannelInfoClient channelInfo)
 {
-    private readonly HashSet<string> _SeenThisStream = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _SeenThisStream = new(StringComparer.OrdinalIgnoreCase);
     private string? _CurrentStreamId;
     private DateTime _LastStreamIdFetch = DateTime.MinValue;
     private static readonly TimeSpan StreamIdCacheDuration = TimeSpan.FromMinutes(5);

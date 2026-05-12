@@ -30,6 +30,8 @@ using SpekkieTwitchBot.Systems.StreamStats;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.EventSub;
 using SpekkieTwitchBot.Systems.StreamElements;
 using SpekkieClassLibrary.Events;
+using SpekkieTwitchBot.Systems.OBS.Websocket;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfaces;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using SpotifyAuthService;
 using WebsocketClient = Websocket.Client.WebsocketClient;

@@ -1,5 +1,6 @@
 ﻿using EventTimerService;
 using SpekkieTwitchBot.General.FileHandling.Timer;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfaces;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 

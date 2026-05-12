@@ -17,15 +17,15 @@ public class FollowSubFeature(
     Logger logger)
     : IDisposable
 {
-    private FileSystemWatcher? _goalsWatcher;
-    private CancellationTokenSource? _watcherDebounce;
-    private CancellationTokenSource? _musicResumeDebounce;
-    private CancellationToken _stopToken;
-    private int _currentSubCount;
+    private FileSystemWatcher? _GoalsWatcher;
+    private CancellationTokenSource? _WatcherDebounce;
+    private CancellationTokenSource? _MusicResumeDebounce;
+    private CancellationToken _StopToken;
+    private int _CurrentSubCount;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        _stopToken = cancellationToken;
+        _StopToken = cancellationToken;
 
         string latestFollower = await api.GetLatestFollower(cancellationToken);
         string latestSubscriberRaw = await fileReader.ReadLatestSubDisplayAsync();
@@ -35,10 +35,10 @@ public class FollowSubFeature(
         int totalFollowers = await api.GetFollowerCount(cancellationToken);
 
         StreamGoalsConfig? goalsConfig = await fileReader.ReadGoalsConfigAsync();
-        _currentSubCount = goalsConfig?.SubGoal.CurrentAmount ?? 0;
+        _CurrentSubCount = goalsConfig?.SubGoal.CurrentAmount ?? 0;
 
         files.WriteLatestFollowerHtml(latestFollower, totalFollowers);
-        files.WriteLatestSubHtml(latestSubscriber, _currentSubCount);
+        files.WriteLatestSubHtml(latestSubscriber, _CurrentSubCount);
         if (goalsConfig != null) files.WriteSubGoalHtml(goalsConfig);
 
         StartGoalsWatcher();
@@ -48,18 +48,18 @@ public class FollowSubFeature(
     {
         string dir = Path.Combine(BotPaths.BaseDir, "Settings");
 
-        _goalsWatcher = new FileSystemWatcher(dir, "goals.json")
+        _GoalsWatcher = new FileSystemWatcher(dir, "goals.json")
         {
             NotifyFilter = NotifyFilters.LastWrite,
             EnableRaisingEvents = true
         };
-        _goalsWatcher.Changed += OnGoalsConfigChanged;
+        _GoalsWatcher.Changed += OnGoalsConfigChanged;
     }
 
     private void OnGoalsConfigChanged(object sender, FileSystemEventArgs e)
     {
-        CancellationTokenSource newCts = CancellationTokenSource.CreateLinkedTokenSource(_stopToken);
-        CancellationTokenSource? oldCts = Interlocked.Exchange(ref _watcherDebounce, newCts);
+        CancellationTokenSource newCts = CancellationTokenSource.CreateLinkedTokenSource(_StopToken);
+        CancellationTokenSource? oldCts = Interlocked.Exchange(ref _WatcherDebounce, newCts);
         oldCts?.Cancel();
         oldCts?.Dispose();
 
@@ -82,8 +82,8 @@ public class FollowSubFeature(
 
     private void DebounceMusicResume()
     {
-        CancellationTokenSource newCts = CancellationTokenSource.CreateLinkedTokenSource(_stopToken);
-        CancellationTokenSource? oldCts = Interlocked.Exchange(ref _musicResumeDebounce, newCts);
+        CancellationTokenSource newCts = CancellationTokenSource.CreateLinkedTokenSource(_StopToken);
+        CancellationTokenSource? oldCts = Interlocked.Exchange(ref _MusicResumeDebounce, newCts);
         oldCts?.Cancel();
         oldCts?.Dispose();
 
@@ -105,11 +105,11 @@ public class FollowSubFeature(
 
     public void Dispose()
     {
-        _goalsWatcher?.Dispose();
-        _watcherDebounce?.Cancel();
-        _watcherDebounce?.Dispose();
-        _musicResumeDebounce?.Cancel();
-        _musicResumeDebounce?.Dispose();
+        _GoalsWatcher?.Dispose();
+        _WatcherDebounce?.Cancel();
+        _WatcherDebounce?.Dispose();
+        _MusicResumeDebounce?.Cancel();
+        _MusicResumeDebounce?.Dispose();
     }
 
     public async Task HandleFollowAsync(FollowHappened e, CancellationToken cancellationToken = default)
@@ -134,11 +134,11 @@ public class FollowSubFeature(
         await files.WriteMostRecentSubscriberAsync(latestSubscriber, cancellationToken);
 
         int increment = e.Kind == SubKind.CommunityGift ? e.GiftCount : 1;
-        _currentSubCount += increment;
+        _CurrentSubCount += increment;
 
-        await files.WriteTotalSubscribersAsync(_currentSubCount, cancellationToken);
-        files.WriteLatestSubHtml(latestSubscriber, _currentSubCount);
-        await WriteSubGoalAsync(_currentSubCount, cancellationToken);
+        await files.WriteTotalSubscribersAsync(_CurrentSubCount, cancellationToken);
+        files.WriteLatestSubHtml(latestSubscriber, _CurrentSubCount);
+        await WriteSubGoalAsync(_CurrentSubCount, cancellationToken);
 
         await chat.SendAsync(message: FormatChatThanks(e), cancellationToken);
     }

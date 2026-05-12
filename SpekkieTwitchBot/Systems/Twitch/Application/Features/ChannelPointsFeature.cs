@@ -11,25 +11,12 @@ using SpotifyAuthService;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 
-public class ChannelPointsFeature
+public class ChannelPointsFeature(
+    ICustomTwitchHttpClient client,
+    ITwitchAuthTokenProvider tokens,
+    ISpotifyService spotify,
+    Logger logger)
 {
-    private readonly ICustomTwitchHttpClient _Client;
-    private readonly ITwitchAuthTokenProvider _Tokens;
-    private readonly ISpotifyService _SpotifyService;
-    private readonly Logger _Logger;
-
-    public ChannelPointsFeature(
-        ICustomTwitchHttpClient client,
-        ITwitchAuthTokenProvider tokens,
-        ISpotifyService spotify,
-        Logger logger)
-    {
-        _Client = client;
-        _Tokens = tokens;
-        _SpotifyService = spotify;
-        _Logger = logger;
-    }
-    
     public async Task<string> OnRedeemedAsync(ChannelPointRedeemed e, CancellationToken ct)
     {
         // Guardrails
@@ -46,8 +33,8 @@ public class ChannelPointsFeature
 
                 string result = await HandleSongRedemption(input, e.RedemptionId, e.RewardId, ct);
 
-                _Logger.LogInfo(result);
-                _Logger.LogInfo($"Redeemed: {e.RewardTitle} by {e.UserName}");
+                logger.LogInfo(result);
+                logger.LogInfo($"Redeemed: {e.RewardTitle} by {e.UserName}");
                 return $"@{e.UserName} {result}";
             }
             case "Hydrate":
@@ -56,14 +43,14 @@ public class ChannelPointsFeature
             }
 
             default:
-                _Logger.LogInfo($"Redeemed: {e.RewardTitle} (ignored)");
+                logger.LogInfo($"Redeemed: {e.RewardTitle} (ignored)");
                 return "Ignored";
         }
     }
     
     private async Task<string> HandleSongRedemption(string input, string redemptionId, string rewardId, CancellationToken ct)
     {
-        string result = await _SpotifyService.AddSongToQueueAsync(input, ct);
+        string result = await spotify.AddSongToQueueAsync(input, ct);
         bool success = !result.Equals("Error", StringComparison.OrdinalIgnoreCase);
 
         string status = success
@@ -89,7 +76,7 @@ public class ChannelPointsFeature
         bool isUserInputRequired = true;
         if (parts.Length > 3)
             isUserInputRequired = parts[^1] != "0";
-        TwitchGeneralFile auth = await _Tokens.ReadIdentityAsync(CancellationToken.None);
+        TwitchGeneralFile auth = await tokens.ReadIdentityAsync(CancellationToken.None);
         string url = $"{TwitchConstants.TwitchChannelRewardsUrl}{auth.ChannelId}";
         string rewardInfo = JsonConvert.SerializeObject(new
         {
@@ -100,21 +87,21 @@ public class ChannelPointsFeature
         });
         StringContent content = new(rewardInfo, Encoding.UTF8, "application/json");
 
-        HttpResponseMessage response = await _Client.PostAsync(url, content).ConfigureAwait(false);
+        HttpResponseMessage response = await client.PostAsync(url, content).ConfigureAwait(false);
         string responseMessage = response.IsSuccessStatusCode
             ? "Custom reward created successfully!"
             : $"Failed to create custom reward. Status code: {response.StatusCode}";
-        _Logger.LogInfo(responseMessage);
+        logger.LogInfo(responseMessage);
         return responseMessage;
     }
 
     public async Task<List<ChannelPointData>> GetCustomRedemptions(CancellationToken ct)
     {
-        TwitchGeneralFile auth = await _Tokens.ReadIdentityAsync(ct);
+        TwitchGeneralFile auth = await tokens.ReadIdentityAsync(ct);
         string? broadcasterId = auth.ChannelId;
         
         string url = $"{TwitchConstants.TwitchChannelRewardsUrl}{broadcasterId}";
-        HttpResponseMessage message = await _Client.GetAsync(url, ct);
+        HttpResponseMessage message = await client.GetAsync(url, ct);
         if (!message.IsSuccessStatusCode) return [];
         
         string response = await message.Content.ReadAsStringAsync(ct);
@@ -131,7 +118,7 @@ public class ChannelPointsFeature
         string? status,
         CancellationToken ct)
     {
-        TwitchGeneralFile auth = await _Tokens.ReadIdentityAsync(ct);
+        TwitchGeneralFile auth = await tokens.ReadIdentityAsync(ct);
         string? broadcasterId = auth.ChannelId;
         
         if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(broadcasterId) || string.IsNullOrEmpty(rewardId) || string.IsNullOrEmpty(status))
@@ -142,6 +129,6 @@ public class ChannelPointsFeature
             Encoding.UTF8, "application/json");
 
         string requestUrl = $"{TwitchConstants.TwitchChannelRedemptionsUrl}{broadcasterId}&reward_id={rewardId}&id={id}";
-        await _Client.PatchAsync(requestUrl, requestContent, ct);
+        await client.PatchAsync(requestUrl, requestContent, ct);
     }
 }

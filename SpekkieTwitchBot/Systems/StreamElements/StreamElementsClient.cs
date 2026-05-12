@@ -7,12 +7,12 @@ namespace SpekkieTwitchBot.Systems.StreamElements;
 
 public sealed class StreamElementsClient
 {
-    private readonly StreamElementsSocketIoClient _socket;
-    private readonly FileReader _fileReader;
-    private readonly Logger _logger;
+    private readonly StreamElementsSocketIoClient _Socket;
+    private readonly FileReader _FileReader;
+    private readonly Logger _Logger;
 
-    private CancellationToken _runCt;
-    private int _reconnectAttempt;
+    private CancellationToken _RunCt;
+    private int _ReconnectAttempt;
 
     public event Func<DonationHappened, CancellationToken, Task>? OnDonation;
     public event Func<SubHappened, CancellationToken, Task>? OnSub;
@@ -22,32 +22,32 @@ public sealed class StreamElementsClient
         FileReader fileReader,
         Logger logger)
     {
-        _socket = socket;
-        _fileReader = fileReader;
-        _logger = logger;
+        _Socket = socket;
+        _FileReader = fileReader;
+        _Logger = logger;
 
-        _socket.OnSocketConnected += HandleSocketConnected;
-        _socket.OnSocketEvent += HandleSocketEvent;
-        _socket.OnSocketDisconnected += HandleSocketDisconnected;
+        _Socket.OnSocketConnected += HandleSocketConnected;
+        _Socket.OnSocketEvent += HandleSocketEvent;
+        _Socket.OnSocketDisconnected += HandleSocketDisconnected;
     }
 
     public async Task ConnectAsync(CancellationToken ct)
     {
-        _runCt = ct;
-        _reconnectAttempt = 0;
-        await _socket.ConnectAsync(ct).ConfigureAwait(false);
+        _RunCt = ct;
+        _ReconnectAttempt = 0;
+        await _Socket.ConnectAsync(ct).ConfigureAwait(false);
     }
 
     public async Task DisconnectAsync(CancellationToken ct)
     {
-        await _socket.CloseAsync(ct).ConfigureAwait(false);
+        await _Socket.CloseAsync(ct).ConfigureAwait(false);
     }
 
     private void HandleSocketConnected()
     {
-        _ = Task.Run(() => AuthenticateAsync(_runCt), _runCt)
+        _ = Task.Run(() => AuthenticateAsync(_RunCt), _RunCt)
             .ContinueWith(
-                t => { if (t.Exception != null) _logger.LogError(t.Exception.ToString()); },
+                t => { if (t.Exception != null) _Logger.LogError(t.Exception.ToString()); },
                 TaskContinuationOptions.OnlyOnFaulted);
     }
 
@@ -56,12 +56,12 @@ public sealed class StreamElementsClient
         string jwt = ReadJwtToken();
         if (string.IsNullOrWhiteSpace(jwt))
         {
-            _logger.LogError("[StreamElements] No JWT token in Settings/StreamElements.json — donations will not be tracked");
+            _Logger.LogError("[StreamElements] No JWT token in Settings/StreamElements.json — donations will not be tracked");
             return;
         }
 
-        await _socket.EmitAsync("authenticate", new { method = "jwt", token = jwt }, ct).ConfigureAwait(false);
-        _logger.LogWarning("[StreamElements] Authenticate sent");
+        await _Socket.EmitAsync("authenticate", new { method = "jwt", token = jwt }, ct).ConfigureAwait(false);
+        _Logger.LogWarning("[StreamElements] Authenticate sent");
     }
 
     private string ReadJwtToken()
@@ -69,7 +69,7 @@ public sealed class StreamElementsClient
         string path = Path.Combine(BotPaths.BaseDir, "Settings", "StreamElements.json");
         try
         {
-            string json = _fileReader.Read(path);
+            string json = _FileReader.Read(path);
             using JsonDocument doc = JsonDocument.Parse(json);
             return doc.RootElement.TryGetProperty("JwtToken", out JsonElement prop)
                 ? prop.GetString() ?? ""
@@ -77,16 +77,16 @@ public sealed class StreamElementsClient
         }
         catch (Exception ex)
         {
-            _logger.LogError($"[StreamElements] Failed to read settings: {ex.Message}");
+            _Logger.LogError($"[StreamElements] Failed to read settings: {ex.Message}");
             return "";
         }
     }
 
     private void HandleSocketEvent(string eventName, string dataJson)
     {
-        _ = Task.Run(() => ProcessEventAsync(eventName, dataJson, _runCt), _runCt)
+        _ = Task.Run(() => ProcessEventAsync(eventName, dataJson, _RunCt), _RunCt)
             .ContinueWith(
-                t => { if (t.Exception != null) _logger.LogError(t.Exception.ToString()); },
+                t => { if (t.Exception != null) _Logger.LogError(t.Exception.ToString()); },
                 TaskContinuationOptions.OnlyOnFaulted);
     }
 
@@ -95,12 +95,12 @@ public sealed class StreamElementsClient
         switch (eventName)
         {
             case "authenticated":
-                _reconnectAttempt = 0;
-                _logger.LogWarning("[StreamElements] Authenticated — listening for donations");
+                _ReconnectAttempt = 0;
+                _Logger.LogWarning("[StreamElements] Authenticated — listening for donations");
                 break;
 
             case "unauthorized":
-                _logger.LogError("[StreamElements] Authentication failed — check JWT token in StreamElements.json");
+                _Logger.LogError("[StreamElements] Authentication failed — check JWT token in StreamElements.json");
                 break;
 
             case "event":
@@ -125,7 +125,7 @@ public sealed class StreamElementsClient
                     ? m.GetString()
                     : null;
 
-                _logger.LogInfo($"[StreamElements] Tip received: €{amount} from {username}");
+                _Logger.LogInfo($"[StreamElements] Tip received: €{amount} from {username}");
 
                 await RaiseAsync(OnDonation, new DonationHappened(
                     UserName: username,
@@ -141,25 +141,25 @@ public sealed class StreamElementsClient
 
     private void HandleSocketDisconnected(string? reason)
     {
-        _logger.LogWarning($"[StreamElements] Disconnected. Reason={reason ?? "unknown"}");
+        _Logger.LogWarning($"[StreamElements] Disconnected. Reason={reason ?? "unknown"}");
 
         _ = Task.Run(async () =>
         {
             try
             {
                 TimeSpan delay = NextReconnectDelay();
-                _logger.LogWarning($"[StreamElements] Reconnecting in {delay.TotalSeconds:0}s...");
-                await Task.Delay(delay, _runCt).ConfigureAwait(false);
-                await _socket.ConnectAsync(_runCt).ConfigureAwait(false);
+                _Logger.LogWarning($"[StreamElements] Reconnecting in {delay.TotalSeconds:0}s...");
+                await Task.Delay(delay, _RunCt).ConfigureAwait(false);
+                await _Socket.ConnectAsync(_RunCt).ConfigureAwait(false);
             }
             catch (OperationCanceledException) { }
-        }, _runCt);
+        }, _RunCt);
     }
 
     private TimeSpan NextReconnectDelay()
     {
-        _reconnectAttempt = Math.Min(_reconnectAttempt + 1, 8);
-        double baseMs = Math.Pow(2, _reconnectAttempt) * 250;
+        _ReconnectAttempt = Math.Min(_ReconnectAttempt + 1, 8);
+        double baseMs = Math.Pow(2, _ReconnectAttempt) * 250;
         int jitter = Random.Shared.Next(0, 250);
         return TimeSpan.FromMilliseconds(Math.Min(baseMs + jitter, 30_000));
     }

@@ -2,6 +2,7 @@
 using SpekkieClassLibrary.Twitch.Commands;
 using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfaces;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 

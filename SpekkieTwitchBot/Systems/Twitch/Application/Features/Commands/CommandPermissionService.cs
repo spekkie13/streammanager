@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch;
 using SpekkieTwitchBot.General.FileHandling.Common;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfaces;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
@@ -16,7 +17,7 @@ public class CommandPermissionService : ICommandPermissionService
             return true; // not configured = open to everyone
 
         if (!Enum.TryParse(requiredRoleStr, ignoreCase: true, out UserRole requiredRole))
-            return true; // unrecognised value in config = open to everyone
+            return true; // unrecognized value in config = open to everyone
 
         return userRole >= requiredRole;
     }

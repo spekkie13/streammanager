@@ -11,11 +11,10 @@ public class SpotifyCommandHandlerTests
 {
     private readonly Mock<ISpotifyService> _Spotify = new();
     private readonly Mock<SpotifyFileWriter> _FileWriter = new(MockBehavior.Loose, null!);
-    private readonly Mock<ISpotifySearchService> _Search = new();
     private readonly Mock<ITwitchChannelInfoClient> _ChannelInfo = new();
 
     private SpotifyCommandHandler CreateHandler() =>
-        new(_Spotify.Object, _FileWriter.Object, _Search.Object, _ChannelInfo.Object);
+        new(_Spotify.Object, _FileWriter.Object, _ChannelInfo.Object);
 
     // ── HandlePlaySpecificSongCommand ────────────────────────────────────────
 

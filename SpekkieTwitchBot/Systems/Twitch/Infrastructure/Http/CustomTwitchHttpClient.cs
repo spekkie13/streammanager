@@ -8,21 +8,15 @@ using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 
-public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInfoClient
+public class CustomTwitchHttpClient(ITwitchAuthTokenProvider tokens) : ICustomTwitchHttpClient, ITwitchChannelInfoClient
 {
     private readonly HttpClient _Client = new();
-    private readonly ITwitchAuthTokenProvider _Tokens;
     private readonly SemaphoreSlim _HeaderLock = new(1, 1);
-    
-    public CustomTwitchHttpClient(ITwitchAuthTokenProvider tokens)
-    {
-        _Tokens = tokens;
-    }
 
     private async Task EnsureHeadersAsync(CancellationToken cancellationToken)
     {
-        string clientId = await _Tokens.GetClientIdAsync(cancellationToken);
-        string accessToken = await _Tokens.GetUserAccessTokenAsync(cancellationToken);
+        string clientId = await tokens.GetClientIdAsync(cancellationToken);
+        string accessToken = await tokens.GetUserAccessTokenAsync(cancellationToken);
 
         _Client.DefaultRequestHeaders.Remove("client-id");
         _Client.DefaultRequestHeaders.Remove("broadcaster_id");
@@ -44,7 +38,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
             HttpResponseMessage response = await send();
             if (response.StatusCode != HttpStatusCode.Unauthorized) return response;
 
-            await _Tokens.ForceRefreshAsync(ct);
+            await tokens.ForceRefreshAsync(ct);
             await EnsureHeadersAsync(ct);
 
             response.Dispose();
@@ -67,7 +61,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<int> GetFollowerCount(CancellationToken ct = default)
     {
-        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        TwitchGeneralFile identity = await tokens.ReadIdentityAsync(ct);
         string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={identity.ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return 0;
@@ -77,7 +71,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<string> GetLatestFollower(CancellationToken ct = default)
     {
-        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        TwitchGeneralFile identity = await tokens.ReadIdentityAsync(ct);
         string url = $"{TwitchConstants.TwitchFollowersUrl}?broadcaster_id={identity.ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return "N/A";
@@ -87,7 +81,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<int> GetSubscriberCount(CancellationToken ct = default)
     {
-        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        TwitchGeneralFile identity = await tokens.ReadIdentityAsync(ct);
         string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={identity.ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return 0;
@@ -97,7 +91,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<string> GetLatestSubscriber(CancellationToken ct = default)
     {
-        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        TwitchGeneralFile identity = await tokens.ReadIdentityAsync(ct);
         string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={identity.ChannelId}&first=100";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return "N/A";
@@ -111,7 +105,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<string?> GetCurrentStreamIdAsync(CancellationToken ct = default)
     {
-        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        TwitchGeneralFile identity = await tokens.ReadIdentityAsync(ct);
         string url = $"{TwitchConstants.TwitchStreamsUrl}?user_id={identity.ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return null;
@@ -121,7 +115,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<DateTimeOffset?> GetStreamStartTimeAsync(CancellationToken ct = default)
     {
-        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        TwitchGeneralFile identity = await tokens.ReadIdentityAsync(ct);
         string url = $"{TwitchConstants.TwitchStreamsUrl}?user_id={identity.ChannelId}";
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return null;
@@ -135,7 +129,7 @@ public class CustomTwitchHttpClient : ICustomTwitchHttpClient, ITwitchChannelInf
 
     public async Task<string?> CreateClipAsync(CancellationToken ct = default)
     {
-        TwitchGeneralFile identity = await _Tokens.ReadIdentityAsync(ct);
+        TwitchGeneralFile identity = await tokens.ReadIdentityAsync(ct);
         string url = $"{TwitchConstants.TwitchClipsUrl}?broadcaster_id={identity.ChannelId}";
         using HttpResponseMessage msg = await PostAsync(url, new StringContent(""), ct);
         if (!msg.IsSuccessStatusCode) return null;

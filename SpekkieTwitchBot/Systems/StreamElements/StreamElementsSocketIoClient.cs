@@ -12,9 +12,9 @@ public sealed class StreamElementsSocketIoClient(Logger logger)
     private static readonly Uri RealtimeUri = new(
         "wss://realtime.streamelements.com/socket.io/?EIO=3&transport=websocket");
 
-    private ClientWebSocket? _ws;
-    private CancellationTokenSource? _cts;
-    private readonly SemaphoreSlim _sendLock = new(1, 1);
+    private ClientWebSocket? _Ws;
+    private CancellationTokenSource? _Cts;
+    private readonly SemaphoreSlim _SendLock = new(1, 1);
 
     public event Action? OnSocketConnected;
     public event Action<string, string>? OnSocketEvent; // (eventName, dataJson)
@@ -24,14 +24,14 @@ public sealed class StreamElementsSocketIoClient(Logger logger)
     {
         await CloseAsync(ct).ConfigureAwait(false);
 
-        _ws = new ClientWebSocket();
-        _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        _Ws = new ClientWebSocket();
+        _Cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
         try
         {
             logger.LogWarning("[SE WS] Connecting...");
-            await _ws.ConnectAsync(RealtimeUri, _cts.Token).ConfigureAwait(false);
-            _ = Task.Run(() => ReceiveLoop(_cts.Token), _cts.Token);
+            await _Ws.ConnectAsync(RealtimeUri, _Cts.Token).ConfigureAwait(false);
+            _ = Task.Run(() => ReceiveLoop(_Cts.Token), _Cts.Token);
         }
         catch (Exception ex)
         {
@@ -42,43 +42,43 @@ public sealed class StreamElementsSocketIoClient(Logger logger)
 
     public async Task EmitAsync(string eventName, object data, CancellationToken ct)
     {
-        string payload = JsonSerializer.Serialize(new object[] { eventName, data });
+        string payload = JsonSerializer.Serialize(new[] { eventName, data });
         await SendRawAsync($"42{payload}", ct).ConfigureAwait(false);
     }
 
     public async Task CloseAsync(CancellationToken ct)
     {
-        try { _cts?.Cancel(); } catch { /* ignore */ }
+        try { _Cts?.Cancel(); } catch { /* ignore */ }
 
-        if (_ws is not null)
+        if (_Ws is not null)
         {
             try
             {
-                if (_ws.State is WebSocketState.Open or WebSocketState.CloseReceived)
-                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "closing", ct).ConfigureAwait(false);
+                if (_Ws.State is WebSocketState.Open or WebSocketState.CloseReceived)
+                    await _Ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "closing", ct).ConfigureAwait(false);
             }
             catch { /* ignore */ }
-            try { _ws.Dispose(); } catch { /* ignore */ }
-            _ws = null;
+            try { _Ws.Dispose(); } catch { /* ignore */ }
+            _Ws = null;
         }
 
-        try { _cts?.Dispose(); } catch { /* ignore */ }
-        _cts = null;
+        try { _Cts?.Dispose(); } catch { /* ignore */ }
+        _Cts = null;
     }
 
     private async Task SendRawAsync(string message, CancellationToken ct)
     {
-        if (_ws is not { State: WebSocketState.Open }) return;
+        if (_Ws is not { State: WebSocketState.Open }) return;
 
-        await _sendLock.WaitAsync(ct).ConfigureAwait(false);
+        await _SendLock.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             byte[] bytes = Encoding.UTF8.GetBytes(message);
-            await _ws.SendAsync(bytes, WebSocketMessageType.Text, true, ct).ConfigureAwait(false);
+            await _Ws.SendAsync(bytes, WebSocketMessageType.Text, true, ct).ConfigureAwait(false);
         }
         finally
         {
-            _sendLock.Release();
+            _SendLock.Release();
         }
     }
 
@@ -91,9 +91,9 @@ public sealed class StreamElementsSocketIoClient(Logger logger)
 
             while (!ct.IsCancellationRequested)
             {
-                if (_ws is not { State: WebSocketState.Open }) break;
+                if (_Ws is not { State: WebSocketState.Open }) break;
 
-                WebSocketReceiveResult result = await _ws.ReceiveAsync(buffer, ct).ConfigureAwait(false);
+                WebSocketReceiveResult result = await _Ws.ReceiveAsync(buffer, ct).ConfigureAwait(false);
 
                 if (result.MessageType == WebSocketMessageType.Close)
                 {

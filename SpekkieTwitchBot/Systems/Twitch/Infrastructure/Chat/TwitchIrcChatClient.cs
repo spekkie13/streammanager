@@ -111,7 +111,7 @@ public sealed class TwitchIrcChatClient : ITwitchChat
         if (!line.Contains("PRIVMSG", StringComparison.Ordinal))
             return;
 
-        // 3) Parse IRC -> domein event
+        // 3) Parse IRC ⇾ domein event
         IrcMessage msg = IrcMessage.Parse(line);
 
         ChatMessageReceived chat = new ChatMessageReceived(

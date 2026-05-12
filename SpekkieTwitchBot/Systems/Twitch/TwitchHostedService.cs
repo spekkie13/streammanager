@@ -10,15 +10,15 @@ namespace SpekkieTwitchBot.Systems.Twitch;
 
 public sealed class TwitchHostedService : IHostedService
 {
-    private readonly ITwitchChat _chat;
-    private readonly ITwitchEvents _events;
-    private readonly TwitchEventRouter _router;
-    private readonly Logger _logger;
-    private readonly IHostApplicationLifetime _lifetime;
+    private readonly ITwitchChat _Chat;
+    private readonly ITwitchEvents _Events;
+    private readonly TwitchEventRouter _Router;
+    private readonly Logger _Logger;
+    private readonly IHostApplicationLifetime _Lifetime;
     
-    private Task? _runTask;
-    private CancellationTokenSource? _cts;
-    private int _started;
+    private Task? _RunTask;
+    private CancellationTokenSource? _Cts;
+    private int _Started;
 
     public TwitchHostedService(
         ITwitchChat chat,
@@ -31,11 +31,11 @@ public sealed class TwitchHostedService : IHostedService
         GeneralFileSetup generalFileSetup
     )
     {
-        _chat = chat;
-        _events = events;
-        _router = router;
-        _logger = logger;
-        _lifetime = lifetime;
+        _Chat = chat;
+        _Events = events;
+        _Router = router;
+        _Logger = logger;
+        _Lifetime = lifetime;
         _ = twitchFileSetup;   // resolved to run file setup on boot
         _ = timerFileSetup;
         _ = generalFileSetup;
@@ -44,35 +44,35 @@ public sealed class TwitchHostedService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
 
-        // guard: StartAsync kan in rare gevallen 2x worden aangeroepen (of bij retry patterns)
-        if (Interlocked.Exchange(ref _started, 1) == 1)
+        // guard: StartAsync kan in rare gevallen 2 keer worden aangeroepen (of bij retry patterns)
+        if (Interlocked.Exchange(ref _Started, 1) == 1)
         {
             return Task.CompletedTask;
         }
         
-        _logger.LogInfo("[BOOT] TwitchHostedService starting (logger).");
+        _Logger.LogInfo("[BOOT] TwitchHostedService starting (logger).");
 
-        _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        _router.Wire();
+        _Router.Wire();
         
         // Belangrijk: log faults van RunAsync, anders lijkt het alsof hij nooit startte
-        _runTask = Task.Run(() => RunAsync(_cts.Token), CancellationToken.None);
+        _RunTask = Task.Run(() => RunAsync(_Cts.Token), CancellationToken.None);
 
-        _ = _runTask.ContinueWith(t =>
+        _ = _RunTask.ContinueWith(t =>
         {
             if (t.IsFaulted)
             {
                 Exception? ex = t.Exception?.GetBaseException() ?? t.Exception;
-                _logger.LogError("[BOOT] TwitchHostedService RunAsync FAULTED: " + ex);
+                _Logger.LogError("[BOOT] TwitchHostedService RunAsync FAULTED: " + ex);
             }
             else if (t.IsCanceled)
             {
-                _logger.LogInfo("[BOOT] TwitchHostedService RunAsync canceled.");
+                _Logger.LogInfo("[BOOT] TwitchHostedService RunAsync canceled.");
             }
             else
             {
-                _logger.LogInfo("[BOOT] TwitchHostedService RunAsync completed.");
+                _Logger.LogInfo("[BOOT] TwitchHostedService RunAsync completed.");
             }
         }, TaskScheduler.Default);
 
@@ -83,49 +83,49 @@ public sealed class TwitchHostedService : IHostedService
     {
         try
         {
-            await WithTimeout(token => _chat.ConnectAsync(token), ct, TimeSpan.FromSeconds(15), "chat.ConnectAsync")
+            await WithTimeout(token => _Chat.ConnectAsync(token), ct, TimeSpan.FromSeconds(15), "chat.ConnectAsync")
                 .ConfigureAwait(false);
 
-            await WithTimeout(token => _events.ConnectAsync(token), ct, TimeSpan.FromSeconds(15), "events.ConnectAsync")
+            await WithTimeout(token => _Events.ConnectAsync(token), ct, TimeSpan.FromSeconds(15), "events.ConnectAsync")
                 .ConfigureAwait(false);
 
-            await _router.InitializeAsync(ct).ConfigureAwait(false);
+            await _Router.InitializeAsync(ct).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            _logger.LogError("[BOOT] TwitchHostedService failed: " + ex);
-            _lifetime.StopApplication();
+            _Logger.LogError("[BOOT] TwitchHostedService failed: " + ex);
+            _Lifetime.StopApplication();
         }
         finally
         {
-            _logger.LogWarning("TwitchHostedService FINALLY/EXIT");
+            _Logger.LogWarning("TwitchHostedService FINALLY/EXIT");
         }
     }
 
     public async Task StopAsync(CancellationToken ct)
     {
-        _logger.LogInfo("[BOOT] TwitchHostedService stopping.");
+        _Logger.LogInfo("[BOOT] TwitchHostedService stopping.");
 
-        try { _cts?.Cancel(); } catch { /* ignore */ }
+        try { _Cts?.Cancel(); } catch { /* ignore */ }
 
-        try { _router.Unwire(); } catch { /* ignore */ }
+        try { _Router.Unwire(); } catch { /* ignore */ }
 
         // Disconnect best-effort (no throw)
-        try { await _events.DisconnectAsync(ct).ConfigureAwait(false); } catch { /* ignore */ }
-        try { await _chat.DisconnectAsync(ct).ConfigureAwait(false); } catch { /* ignore */ }
+        try { await _Events.DisconnectAsync(ct).ConfigureAwait(false); } catch { /* ignore */ }
+        try { await _Chat.DisconnectAsync(ct).ConfigureAwait(false); } catch { /* ignore */ }
 
-        if (_runTask is not null)
+        if (_RunTask is not null)
         {
             try
             {
-                await Task.WhenAny(_runTask, Task.Delay(TimeSpan.FromSeconds(5), ct)).ConfigureAwait(false);
+                await Task.WhenAny(_RunTask, Task.Delay(TimeSpan.FromSeconds(5), ct)).ConfigureAwait(false);
             }
             catch { /* ignore */ }
         }
 
-        try { _cts?.Dispose(); } catch { /* ignore */ }
-        _cts = null;
-        _runTask = null;
+        try { _Cts?.Dispose(); } catch { /* ignore */ }
+        _Cts = null;
+        _RunTask = null;
     }
 
     private static async Task WithTimeout(

@@ -6,6 +6,7 @@ using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfaces;
 
 namespace SpekkieTwitchBot.Tests;
 

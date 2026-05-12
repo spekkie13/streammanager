@@ -7,41 +7,41 @@ namespace SpekkieTwitchBot.Systems.StreamElements;
 
 public sealed class StreamElementsHostedService : IHostedService
 {
-    private readonly StreamElementsClient _client;
-    private readonly MarathonTimerFeature _marathon;
-    private readonly Logger _logger;
-    private CancellationTokenSource? _cts;
+    private readonly StreamElementsClient _Client;
+    private readonly MarathonTimerFeature _Marathon;
+    private readonly Logger _Logger;
+    private CancellationTokenSource? _Cts;
 
     public StreamElementsHostedService(
         StreamElementsClient client,
         MarathonTimerFeature marathon,
         Logger logger)
     {
-        _client = client;
-        _marathon = marathon;
-        _logger = logger;
+        _Client = client;
+        _Marathon = marathon;
+        _Logger = logger;
 
-        _client.OnDonation += HandleDonation;
+        _Client.OnDonation += HandleDonation;
     }
 
     public Task StartAsync(CancellationToken ct)
     {
-        _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        _ = Task.Run(() => _client.ConnectAsync(_cts.Token), CancellationToken.None);
-        _logger.LogInfo("[StreamElements] Hosted service starting");
+        _Cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        _ = Task.Run(() => _Client.ConnectAsync(_Cts.Token), CancellationToken.None);
+        _Logger.LogInfo("[StreamElements] Hosted service starting");
         return Task.CompletedTask;
     }
 
     public async Task StopAsync(CancellationToken ct)
     {
-        _logger.LogInfo("[StreamElements] Hosted service stopping");
-        _client.OnDonation -= HandleDonation;
-        try { _cts?.Cancel(); } catch { /* ignore */ }
-        await _client.DisconnectAsync(ct).ConfigureAwait(false);
-        try { _cts?.Dispose(); } catch { /* ignore */ }
-        _cts = null;
+        _Logger.LogInfo("[StreamElements] Hosted service stopping");
+        _Client.OnDonation -= HandleDonation;
+        try { _Cts?.Cancel(); } catch { /* ignore */ }
+        await _Client.DisconnectAsync(ct).ConfigureAwait(false);
+        try { _Cts?.Dispose(); } catch { /* ignore */ }
+        _Cts = null;
     }
 
     private Task HandleDonation(DonationHappened e, CancellationToken ct)
-        => _marathon.HandleDonationAsync(e.UserName, e.Amount, ct);
+        => _Marathon.HandleDonationAsync(e.UserName, e.Amount, ct);
 }

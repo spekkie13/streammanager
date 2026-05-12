@@ -1,6 +1,6 @@
 using SpekkieClassLibrary.OBS.Types;
 
-namespace SpekkieTwitchBot.Systems.OBS;
+namespace SpekkieTwitchBot.Systems.OBS.Websocket;
 
 public interface IObsWebSocket
 {

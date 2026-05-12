@@ -158,7 +158,7 @@ public class FollowSubFeatureTests
     [Fact]
     public async Task HandleSub_WithGoalsConfig_WritesSubGoalHtml()
     {
-        var config = new StreamGoalsConfig(1000, new SubGoalConfig(50, 10, "reward", "beloning", DateOnly.FromDateTime(DateTime.Today.AddDays(30))));
+        StreamGoalsConfig config = new StreamGoalsConfig(1000, new SubGoalConfig(50, 10, "reward", "beloning", DateOnly.FromDateTime(DateTime.Today.AddDays(30))));
         _FileReader.Setup(r => r.ReadGoalsConfigAsync()).ReturnsAsync(config);
         _Api.Setup(a => a.GetSubscriberCount(It.IsAny<CancellationToken>())).ReturnsAsync(100);
 

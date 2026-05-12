@@ -1,5 +1,6 @@
 using SpekkieClassLibrary.Events;
 using SpekkieTwitchBot.ClashOfClans.StatsBot;
+using SpekkieTwitchBot.Systems.OBS.Websocket;
 
 namespace SpekkieTwitchBot.Systems.OBS;
 

@@ -6,7 +6,7 @@ namespace SpekkieTwitchBot.ClashOfClans.StatsBot;
 
 public class CcnHttpClient(Logger logger)
 {
-    private readonly HttpClient _HttpClient = new HttpClient();
+    private readonly HttpClient _HttpClient = new();
 
     private const string BaseUrl = "https://api.competitiveclash.network";
 

@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,7 +12,7 @@ using SpekkieTwitchBot.General.FileHandling;
 using Websocket.Client;
 using Monitor = SpekkieClassLibrary.OBS.Types.Monitor;
 
-namespace SpekkieTwitchBot.Systems.OBS;
+namespace SpekkieTwitchBot.Systems.OBS.Websocket;
 
 public class ObsWebSocket(WebsocketClient wsConnection, Logger logger) : IObsWebSocket
 {
