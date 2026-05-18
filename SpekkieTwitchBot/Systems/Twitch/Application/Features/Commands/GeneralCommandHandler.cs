@@ -55,6 +55,7 @@ public class GeneralCommandHandler(
             ["!starttimer"] = _ => Task.FromResult(timerCommandHandler.HandleStartTimerCommand()),
             ["!addtime"]    = _ => Task.FromResult(timerCommandHandler.HandleAddTimeToTimerCommand(commandArgs)),
             ["!settime"]    = _ => Task.FromResult(timerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs)),
+            ["!marathon"]   = _ => timerCommandHandler.HandleMarathonCommand(commandArgs),
 
             ["!war"]          = _ => Task.FromResult(clashCommandHandler.HandleSetWarStatsCommand(commandArgs)),
             ["!setplayertag"] = _ => clashCommandHandler.HandleAddPlayerTagCommand(commandArgs),

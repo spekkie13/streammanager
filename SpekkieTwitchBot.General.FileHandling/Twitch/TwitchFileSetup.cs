@@ -21,6 +21,7 @@ public class TwitchFileSetup
         SetupGoalsConfig();
         SetupStreamStatsConfig();
         SetupTimedMessagesConfig();
+        SetupFeaturesConfig();
     }
 
     private void SetupGoalsConfig()
@@ -88,6 +89,26 @@ public class TwitchFileSetup
                       "IntervalMinutes": 30
                     }
                   ]
+                }
+                """);
+        }
+    }
+
+    private void SetupFeaturesConfig()
+    {
+        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}";
+        string file = $"{dir}features.json";
+
+        if (!_FileSetup.DirExists(dir))
+            _FileSetup.CreateDir(dir);
+
+        if (!_FileSetup.FileExists(file))
+        {
+            using FileStream fs = new(file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+            using StreamWriter sw = new(fs);
+            sw.Write("""
+                {
+                  "Marathon": false
                 }
                 """);
         }

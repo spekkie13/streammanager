@@ -1,5 +1,6 @@
 using EventTimerService;
 using Moq;
+using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Timer;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
@@ -9,7 +10,10 @@ public class TimerCommandHandlerTests
 {
     private readonly Mock<IEventTimerService> _TimerService = new();
     private readonly Mock<ITimerFileWriter> _TimerFileWriter = new();
-    private TimerCommandHandler CreateHandler() => new(_TimerService.Object, _TimerFileWriter.Object);
+    private readonly Mock<IFeatureFlagService> _FeatureFlags = new();
+
+    
+    private TimerCommandHandler CreateHandler() => new(_TimerService.Object, _TimerFileWriter.Object, _FeatureFlags.Object);
 
     [Fact]
     public void HandleAddTimeToTimer_Seconds_AddsCorrectAmount()

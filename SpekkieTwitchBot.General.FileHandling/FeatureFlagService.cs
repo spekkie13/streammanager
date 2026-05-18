@@ -23,6 +23,15 @@ public sealed class FeatureFlagService(Logger logger, string? flagsPath = null) 
     public bool IsEnabled(string flag) =>
         _Flags.TryGetValue(flag, out bool enabled) && enabled;
 
+    public async Task SetEnabledAsync(string flag, bool value)
+    {
+        Dictionary<string, bool> updated = new(_Flags) { [flag] = value };
+        Interlocked.Exchange(ref _Flags, updated);
+
+        string json = JsonSerializer.Serialize(updated, new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(FlagsPath, json);
+    }
+
     private void StartWatcher()
     {
         string dir = Path.GetDirectoryName(FlagsPath)!;

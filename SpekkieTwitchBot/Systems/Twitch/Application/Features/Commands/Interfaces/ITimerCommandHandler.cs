@@ -6,4 +6,5 @@ public interface ITimerCommandHandler
     string HandleStartTimerCommand();
     string HandleAddTimeToTimerCommand(string timeToAdd);
     string HandleSetTimeOnTimerCommand(string time);
+    Task<string> HandleMarathonCommand(string args);
 }

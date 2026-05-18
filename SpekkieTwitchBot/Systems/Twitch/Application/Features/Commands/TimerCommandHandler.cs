@@ -1,4 +1,5 @@
 ﻿using EventTimerService;
+using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Timer;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfaces;
 
@@ -8,11 +9,13 @@ public class TimerCommandHandler : ITimerCommandHandler
 {
     private readonly IEventTimerService _eventTimerService;
     private readonly ITimerFileWriter _timerFileWriter;
+    private readonly IFeatureFlagService _featureFlags;
 
-    public TimerCommandHandler(IEventTimerService eventTimerService, ITimerFileWriter timerFileWriter)
+    public TimerCommandHandler(IEventTimerService eventTimerService, ITimerFileWriter timerFileWriter, IFeatureFlagService featureFlags)
     {
         _eventTimerService = eventTimerService;
         _timerFileWriter = timerFileWriter;
+        _featureFlags = featureFlags;
     }
     
     public string HandlePauseTimerCommand()
@@ -62,6 +65,18 @@ public class TimerCommandHandler : ITimerCommandHandler
                 return "Invalid format. Usage: !addtime <number>s/m/h (e.g. 30s, 5m, 1h)";
         }
         return message;
+    }
+
+    public async Task<string> HandleMarathonCommand(string args)
+    {
+        bool enable = args.Trim().Equals("on", StringComparison.OrdinalIgnoreCase);
+        bool disable = args.Trim().Equals("off", StringComparison.OrdinalIgnoreCase);
+
+        if (!enable && !disable)
+            return "Usage: !marathon on / !marathon off";
+
+        await _featureFlags.SetEnabledAsync("Marathon", enable);
+        return enable ? "Marathon timer ingeschakeld — support acties tellen nu mee!" : "Marathon timer uitgeschakeld.";
     }
 
     public string HandleSetTimeOnTimerCommand(string time)
