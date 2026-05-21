@@ -102,16 +102,15 @@ public class TwitchFileSetup
         if (!_FileSetup.DirExists(dir))
             _FileSetup.CreateDir(dir);
 
-        if (!_FileSetup.FileExists(file))
-        {
-            using FileStream fs = new(file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-            using StreamWriter sw = new(fs);
-            sw.Write("""
-                {
-                  "Marathon": false
-                }
-                """);
-        }
+        if (_FileSetup.FileExists(file)) return;
+        
+        using FileStream fs = new(file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        using StreamWriter sw = new(fs);
+        sw.Write("""
+                 {
+                   "Marathon": true
+                 }
+                 """);
     }
 
     private void SetupFile(string filename, bool clearOnBoot)
