@@ -98,4 +98,25 @@ public class IrcMessageTests
 
         Assert.Equal("hello: world: test", msg.Message);
     }
+
+    [Fact]
+    public void Unescape_DecodesIrcv3Escapes()
+    {
+        Assert.Equal("are you there?", IrcTags.Unescape(@"are\syou\sthere?"));
+        Assert.Equal("a;b", IrcTags.Unescape(@"a\:b"));
+        Assert.Equal(@"a\b", IrcTags.Unescape(@"a\\b"));
+    }
+
+    [Fact]
+    public void Unescape_NoEscapes_ReturnsInput()
+    {
+        Assert.Equal("plain text", IrcTags.Unescape("plain text"));
+        Assert.Equal("", IrcTags.Unescape(""));
+    }
+
+    [Fact]
+    public void Unescape_TrailingBackslash_IsDropped()
+    {
+        Assert.Equal("abc", IrcTags.Unescape(@"abc\"));
+    }
 }

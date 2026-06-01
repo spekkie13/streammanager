@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using SpekkieClassLibrary.Twitch;
 using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.General.FileHandling;
@@ -119,9 +118,18 @@ public sealed class TwitchIrcChatClient : ITwitchChat
             UserId: msg.Tags.GetValueOrDefault("user-id", ""),
             Username: msg.Tags.GetValueOrDefault("display-name", msg.Username),
             Text: msg.Message,
-            CustomRewardId: msg.Tags.GetValueOrDefault("custom-reward-id", "")
-        );
-        _Log.LogWarning(JsonConvert.SerializeObject(chat));
+            CustomRewardId: msg.Tags.GetValueOrDefault("custom-reward-id", ""))
+        {
+            Login = msg.Username,
+            Color = msg.Tags.GetValueOrDefault("color", ""),
+            Badges = msg.Tags.GetValueOrDefault("badges", ""),
+            Emotes = msg.Tags.GetValueOrDefault("emotes", ""),
+            Bits = int.TryParse(msg.Tags.GetValueOrDefault("bits", ""), out int bits) ? bits : 0,
+            IsFirstMessage = msg.Tags.GetValueOrDefault("first-msg", "0") == "1",
+            IsHighlighted = msg.Tags.GetValueOrDefault("msg-id", "") == "highlighted-message",
+            ReplyParentDisplayName = IrcTags.Unescape(msg.Tags.GetValueOrDefault("reply-parent-display-name", "")),
+            ReplyParentBody = IrcTags.Unescape(msg.Tags.GetValueOrDefault("reply-parent-msg-body", ""))
+        };
 
         if (!string.IsNullOrWhiteSpace(chat.CustomRewardId))
         {

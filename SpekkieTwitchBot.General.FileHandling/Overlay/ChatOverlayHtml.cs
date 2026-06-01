@@ -51,12 +51,46 @@ public static class ChatOverlayHtml
             animation: fadein 0.25s ease-out;
           }
 
-          .msg .user {
-            font-weight: 700;
-            margin-right: 6px;
+          .msg.highlighted { background: rgba(116, 75, 191, 0.85); }
+          .msg.first { box-shadow: inset 3px 0 0 #00d2d3; }
+          .msg.action .text { font-style: italic; }
+
+          .reply {
+            display: block;
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 2px;
           }
 
+          .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            padding: 2px 5px;
+            margin-right: 4px;
+            border-radius: 4px;
+            vertical-align: middle;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+          }
+          .badge.broadcaster { background: #e91916; }
+          .badge.moderator   { background: #00ad03; }
+          .badge.vip         { background: #e005b9; }
+          .badge.subscriber  { background: #6441a5; }
+
+          .msg .user { font-weight: 700; margin-right: 2px; }
+          .msg .sep  { margin-right: 6px; opacity: 0.7; }
           .msg .text { color: #f1f3ff; }
+
+          .emote { height: 1.5em; vertical-align: middle; margin: -2px 1px; }
+
+          .bits {
+            display: inline-block;
+            margin-left: 6px;
+            font-weight: 700;
+            color: #ad79ff;
+          }
 
           @keyframes fadein {
             from { opacity: 0; transform: translateY(6px); }
@@ -69,7 +103,7 @@ public static class ChatOverlayHtml
         <script>
           var COLORS = ["#ff6b6b","#feca57","#1dd1a1","#54a0ff","#5f27cd","#ff9ff3","#00d2d3","#ff9f43"];
 
-          // Stable per-user color from a simple string hash.
+          // Fallback color (hash of name) when Twitch sent no color tag.
           function colorFor(name) {
             var h = 0;
             for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
@@ -82,18 +116,80 @@ public static class ChatOverlayHtml
             return d.innerHTML;
           }
 
+          // Render text/emote segments (emotes as Twitch CDN images); fall back to plain text.
+          function renderBody(m) {
+            var segs = m.segments;
+            if (!segs || !segs.length) return escapeHtml(m.text);
+            var out = "";
+            for (var i = 0; i < segs.length; i++) {
+              var s = segs[i];
+              if (s.type === "emote") {
+                var url = "https://static-cdn.jtvnw.net/emoticons/v2/"
+                  + encodeURIComponent(s.emoteId) + "/default/dark/2.0";
+                out += '<img class="emote" src="' + url + '" alt="' + escapeHtml(s.text)
+                  + '" title="' + escapeHtml(s.text) + '">';
+              } else {
+                out += escapeHtml(s.text);
+              }
+            }
+            return out;
+          }
+
+          // Render the role badges we know how to style, in Twitch's usual order.
+          function badgeChips(m) {
+            var order = [
+              ["broadcaster", m.isBroadcaster],
+              ["moderator",   m.isMod],
+              ["vip",         m.isVip],
+              ["subscriber",  m.isSubscriber]
+            ];
+            var html = "";
+            for (var i = 0; i < order.length; i++) {
+              if (order[i][1]) {
+                var label = order[i][0] === "subscriber" ? "sub" : order[i][0];
+                html += '<span class="badge ' + order[i][0] + '">' + label + '</span>';
+              }
+            }
+            return html;
+          }
+
+          function renderMsg(m) {
+            var color = (m.color && m.color.length) ? m.color : colorFor(m.login || m.user || "");
+            var cls = "msg";
+            if (m.isHighlighted) cls += " highlighted";
+            if (m.isFirstMessage) cls += " first";
+            if (m.isAction) cls += " action";
+
+            var html = '<div class="' + cls + '">';
+
+            if (m.replyParent) {
+              html += '<span class="reply">↳ @' + escapeHtml(m.replyParent.user)
+                + ': ' + escapeHtml(m.replyParent.text) + '</span>';
+            }
+
+            html += badgeChips(m);
+            html += '<span class="user" style="color:' + color + '">' + escapeHtml(m.user) + '</span>';
+
+            // /me: no separator, whole line takes the user color.
+            if (m.isAction) {
+              html += '<span class="text" style="color:' + color + '"> ' + renderBody(m) + '</span>';
+            } else {
+              html += '<span class="sep">:</span><span class="text">' + renderBody(m) + '</span>';
+            }
+
+            if (m.bits && m.bits > 0) {
+              html += '<span class="bits">✦ ' + m.bits + '</span>';
+            }
+
+            html += '</div>';
+            return html;
+          }
+
           function render(state) {
             var chat = document.getElementById("chat");
             var msgs = (state && state.messages) || [];
             var html = "";
-            for (var i = 0; i < msgs.length; i++) {
-              var m = msgs[i];
-              html += '<div class="msg">'
-                + '<span class="user" style="color:' + colorFor(m.user || "") + '">'
-                + escapeHtml(m.user) + '</span>'
-                + '<span class="text">' + escapeHtml(m.text) + '</span>'
-                + '</div>';
-            }
+            for (var i = 0; i < msgs.length; i++) html += renderMsg(msgs[i]);
             chat.innerHTML = html;
           }
 

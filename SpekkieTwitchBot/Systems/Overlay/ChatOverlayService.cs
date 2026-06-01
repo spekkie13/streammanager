@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.Overlay;
@@ -23,6 +24,10 @@ public sealed class ChatOverlayService(
     private const int MaxMessages = 25;
     private static readonly TimeSpan WriteInterval = TimeSpan.FromSeconds(1);
 
+    // /me messages arrive wrapped as <0x01>ACTION <text><0x01>.
+    private const char ActionMarker = (char)1;
+    private static readonly string ActionPrefix = ActionMarker + "ACTION ";
+
     // Third-party chat bots whose messages should not appear on the overlay.
     private static readonly HashSet<string> BotDenylist = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -45,12 +50,31 @@ public sealed class ChatOverlayService(
     {
         if (!ShouldInclude(e, _botName)) return;
 
+        (string text, bool isAction) = StripAction(e.Text);
+        List<string> badges = ParseBadges(e.Badges);
+
         ChatOverlayMessage msg = new()
         {
             Id = e.MessageId,
             User = e.Username,
-            Text = e.Text,
-            At = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)
+            Login = e.Login,
+            UserId = e.UserId,
+            Text = text,
+            Segments = BuildSegments(text, e.Emotes),
+            At = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
+            Color = e.Color,
+            Badges = badges,
+            IsBroadcaster = HasBadge(badges, "broadcaster"),
+            IsMod = HasBadge(badges, "moderator"),
+            IsVip = HasBadge(badges, "vip"),
+            IsSubscriber = HasBadge(badges, "subscriber") || HasBadge(badges, "founder"),
+            IsAction = isAction,
+            IsFirstMessage = e.IsFirstMessage,
+            IsHighlighted = e.IsHighlighted,
+            Bits = e.Bits,
+            ReplyParent = string.IsNullOrEmpty(e.ReplyParentDisplayName)
+                ? null
+                : new ChatReplyParent { User = e.ReplyParentDisplayName, Text = e.ReplyParentBody }
         };
 
         lock (_gate)
@@ -65,9 +89,92 @@ public sealed class ChatOverlayService(
     public static bool ShouldInclude(ChatMessageReceived e, string botName)
     {
         if (string.IsNullOrWhiteSpace(e.Text) || e.Text.StartsWith('!')) return false;
-        if (!string.IsNullOrEmpty(botName) && string.Equals(e.Username, botName, StringComparison.OrdinalIgnoreCase)) return false;
-        if (BotDenylist.Contains(e.Username)) return false;
+
+        string key = string.IsNullOrEmpty(e.Login) ? e.Username : e.Login;
+        if (!string.IsNullOrEmpty(botName) && string.Equals(key, botName, StringComparison.OrdinalIgnoreCase)) return false;
+        if (BotDenylist.Contains(key)) return false;
         return true;
+    }
+
+    private static (string text, bool isAction) StripAction(string text)
+    {
+        if (text.Length > ActionPrefix.Length && text[^1] == ActionMarker &&
+            text.StartsWith(ActionPrefix, StringComparison.Ordinal))
+            return (text.Substring(ActionPrefix.Length, text.Length - ActionPrefix.Length - 1), true);
+        return (text, false);
+    }
+
+    // Badges tag is "name/version,name/version"; keep the ordered tokens for the overlay.
+    private static List<string> ParseBadges(string badges) =>
+        string.IsNullOrEmpty(badges)
+            ? []
+            : badges.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+    private static bool HasBadge(List<string> badges, string name) =>
+        badges.Any(b => b.StartsWith(name + "/", StringComparison.OrdinalIgnoreCase) ||
+                        b.Equals(name, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Splits message text into text/emote runs from the IRC emotes tag
+    /// ("id:start-end,start-end/id2:start-end"). Positions are Unicode codepoint indices, so we
+    /// index by <see cref="Rune"/> rather than UTF-16 char. Returns [] when there are no emotes;
+    /// out-of-range positions (e.g. /me offset quirks) are skipped so the text still renders.
+    /// </summary>
+    public static List<ChatMessageSegment> BuildSegments(string text, string emotesTag)
+    {
+        if (string.IsNullOrEmpty(emotesTag)) return [];
+
+        List<(int start, int end, string id)> ranges = [];
+        foreach (string emote in emotesTag.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            string[] idAndPositions = emote.Split(':', 2);
+            if (idAndPositions.Length != 2) continue;
+
+            string id = idAndPositions[0];
+            foreach (string pos in idAndPositions[1].Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                string[] se = pos.Split('-', 2);
+                if (se.Length == 2 && int.TryParse(se[0], out int s) && int.TryParse(se[1], out int en))
+                    ranges.Add((s, en, id));
+            }
+        }
+        if (ranges.Count == 0) return [];
+        ranges.Sort((a, b) => a.start.CompareTo(b.start));
+
+        List<Rune> runes = [];
+        foreach (Rune r in text.EnumerateRunes()) runes.Add(r);
+
+        List<ChatMessageSegment> segments = [];
+        int cursor = 0;
+        foreach ((int start, int end, string id) in ranges)
+        {
+            // Skip overlapping/invalid/out-of-range ranges; remaining text still renders.
+            if (start < cursor || end < start || end >= runes.Count) continue;
+
+            if (start > cursor)
+                segments.Add(TextSegment(runes, cursor, start - cursor));
+            segments.Add(new ChatMessageSegment
+            {
+                Type = "emote",
+                EmoteId = id,
+                Text = RuneString(runes, start, end - start + 1)
+            });
+            cursor = end + 1;
+        }
+        if (cursor < runes.Count)
+            segments.Add(TextSegment(runes, cursor, runes.Count - cursor));
+
+        return segments;
+    }
+
+    private static ChatMessageSegment TextSegment(List<Rune> runes, int start, int length) =>
+        new() { Type = "text", Text = RuneString(runes, start, length) };
+
+    private static string RuneString(List<Rune> runes, int start, int length)
+    {
+        StringBuilder sb = new();
+        for (int i = start; i < start + length; i++) sb.Append(runes[i].ToString());
+        return sb.ToString();
     }
 
     /// <summary>Current buffer contents, oldest first. Primarily for tests.</summary>
