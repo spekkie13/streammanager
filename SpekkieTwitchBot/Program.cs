@@ -307,6 +307,10 @@ public static class Program
                 // Overlay
                 // -----------------------
                 services.AddHostedService<OverlayStateService>();
+
+                // Single instance shared between the router (Append) and the hosted writer loop.
+                services.AddSingleton<ChatOverlayService>();
+                services.AddHostedService(sp => sp.GetRequiredService<ChatOverlayService>());
             });
     }
 }

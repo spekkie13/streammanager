@@ -31,11 +31,11 @@ public class SpotifyCommandHandlerTests
     }
 
     [Fact]
-    public async Task PlaySpecificSong_NonAdminUser_ReturnsEmpty()
+    public async Task PlaySpecificSong_NonAdminUser_ReturnsBroadcasterOnlyMessageAndDoesNotPlay()
     {
         string result = await CreateHandler().HandlePlaySpecificSongCommand("songuri", "randomviewer");
 
-        Assert.Equal("", result);
+        Assert.Contains("broadcaster", result);
         _Spotify.Verify(s => s.PlaySpecificSongAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

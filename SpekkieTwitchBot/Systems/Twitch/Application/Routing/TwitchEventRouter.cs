@@ -1,3 +1,4 @@
+using SpekkieTwitchBot.Systems.Overlay;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Models;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
@@ -11,6 +12,7 @@ public sealed class TwitchEventRouter(
     ITwitchEvents events,
     ChatCommandFeature chatCommands,
     ChatMessageFeature chatMessages,
+    ChatOverlayService chatOverlay,
     FollowSubFeature followSub,
     ChannelPointsFeature channelPoints,
     TimedMessagesFeature timedMessages,
@@ -48,7 +50,10 @@ public sealed class TwitchEventRouter(
         => chatCommands.OnCommandAsync(ev);
 
     private Task OnChatMessageReceived(ChatMessageReceived ev)
-        => chatMessages.OnMessageAsync(ev);
+    {
+        chatOverlay.Append(ev);
+        return chatMessages.OnMessageAsync(ev);
+    }
 
     private Task OnFollow(FollowHappened ev, CancellationToken ct)
         => followSub.HandleFollowAsync(ev, ct);

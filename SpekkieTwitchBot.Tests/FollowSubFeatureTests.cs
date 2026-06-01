@@ -16,7 +16,7 @@ public class FollowSubFeatureTests
     private readonly Mock<ITwitchFileWriter> _Files = new();
     private readonly Mock<ITwitchFileReader> _FileReader = new();
     private readonly Mock<ISpotifyService> _Spotify = new();
-    private readonly Mock<Logger> _Logger = new();
+    private readonly Mock<Logger> _Logger = new(MockBehavior.Loose, null!);
 
     private FollowSubFeature CreateFeature() =>
         new(_Chat.Object, _Api.Object, _Files.Object, _FileReader.Object, _Spotify.Object, _Logger.Object);

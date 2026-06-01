@@ -72,6 +72,9 @@ public class FeatureFlagServiceTests : IDisposable
         await Task.Delay(700); // wait for debounce (500ms) + read margin
 
         Assert.True(svc.IsEnabled("Marathon"));
-        _Logger.Verify(l => l.LogError(It.IsAny<string>()), Times.Once);
+        // A single file write can raise multiple FileSystemWatcher events that the 500ms debounce
+        // won't always coalesce, so the invalid JSON may be logged more than once. We only care
+        // that the failure was logged at all (and that old values were retained, asserted above).
+        _Logger.Verify(l => l.LogError(It.IsAny<string>()), Times.AtLeastOnce);
     }
 }

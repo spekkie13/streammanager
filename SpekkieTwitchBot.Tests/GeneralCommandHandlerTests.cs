@@ -13,9 +13,9 @@ public class GeneralCommandHandlerTests
     private readonly Mock<GeneralFileReader> _Reader = new(MockBehavior.Loose, null!);
     private readonly Mock<GeneralFileWriter> _Writer = new(MockBehavior.Loose, null!);
     private readonly Mock<ITextCommandHandler> _Text = new();
-    private readonly Mock<SpotifyCommandHandler> _Spotify = new(MockBehavior.Loose, null!, null!, null!, null!);
+    private readonly Mock<SpotifyCommandHandler> _Spotify = new(MockBehavior.Loose, null!, null!, null!);
     private readonly Mock<ObsCommandHandler> _Obs = new(MockBehavior.Loose, null!);
-    private readonly Mock<TimerCommandHandler> _Timer = new(MockBehavior.Loose, null!, null!);
+    private readonly Mock<TimerCommandHandler> _Timer = new(MockBehavior.Loose, null!, null!, null!);
     private readonly Mock<TwitchCommandHandler> _Twitch = new(MockBehavior.Loose, null!, null!);
     private readonly Mock<ClashCommandHandler> _Clash = new(MockBehavior.Loose, null!, null!);
     private readonly Mock<ITwitchFileReader> _TwitchFileReader = new();

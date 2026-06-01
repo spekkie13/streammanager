@@ -9,4 +9,5 @@ public class OverlayState
     public OverlayEventInfo Event { get; init; } = new();
     public OverlayWar War { get; init; } = new();
     public OverlaySupport Support { get; init; } = new();
+    public OverlayInfo Info { get; init; } = new();
 }

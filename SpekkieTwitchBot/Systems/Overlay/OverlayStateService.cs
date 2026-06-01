@@ -1,7 +1,5 @@
 using System.Globalization;
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Events;
@@ -26,14 +24,6 @@ public class OverlayStateService(
     Logger logger)
     : BackgroundService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-    };
-
     private static readonly string OutputPath =
         Path.Combine(BotPaths.BaseDir, "Output", "overlay-state.json");
 
@@ -127,39 +117,18 @@ public class OverlayStateService(
                     SubscriberCount = _subscriberCount,
                     NowPlaying = new OverlayNowPlaying { Title = title, Artist = artist },
                     Socials = _eventConfig.Socials
-                }
+                },
+                Info = _eventConfig.Info
             };
 
-            string json = JsonSerializer.Serialize(state, JsonOptions);
-            await WriteAtomicAsync(OutputPath, json, ct);
+            string json = JsonSerializer.Serialize(state, OverlayJson.Options);
+            await OverlayJson.WriteAtomicAsync(OutputPath, json, ct);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             logger.LogError($"[Overlay] Error writing overlay state: {ex.Message}");
         }
-    }
-
-    // The overlay polls this file ~1x/sec, so the write must never expose a partial
-    // file: serialize to a sibling temp file, flush to disk, then atomically replace.
-    private static async Task WriteAtomicAsync(string path, string json, CancellationToken ct)
-    {
-        string? dir = Path.GetDirectoryName(path);
-        if (!string.IsNullOrEmpty(dir))
-            Directory.CreateDirectory(dir);
-
-        string tmp = path + ".tmp";
-        await using (FileStream fs = new(tmp, FileMode.Create, FileAccess.Write, FileShare.None))
-        await using (StreamWriter sw = new(fs))
-        {
-            await sw.WriteAsync(json.AsMemory(), ct);
-            await sw.FlushAsync(ct);
-            fs.Flush(flushToDisk: true);
-        }
-
-        // File.Move with overwrite maps to MoveFileEx(MOVEFILE_REPLACE_EXISTING) on Windows,
-        // which is atomic for same-volume moves; the overlay always sees a complete file.
-        File.Move(tmp, path, overwrite: true);
     }
 
     private async Task<(string title, string artist)> GetNowPlayingAsync(CancellationToken ct)

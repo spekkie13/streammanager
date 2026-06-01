@@ -49,14 +49,14 @@ public class TimerCommandHandlerTests
     }
 
     [Fact]
-    public void HandleAddTimeToTimer_NoSuffix_ReturnsEmptyAndDoesNotSetTime()
+    public void HandleAddTimeToTimer_NoSuffix_ReturnsUsageMessageAndDoesNotSetTime()
     {
         _TimerService.Setup(t => t.GetRemainingTime()).Returns(TimeSpan.Zero);
 
         string result = CreateHandler().HandleAddTimeToTimerCommand("42");
 
         _TimerService.Verify(t => t.SetRemainingTime(It.IsAny<TimeSpan>()), Times.Never);
-        Assert.Equal("", result);
+        Assert.Contains("Usage", result);
     }
 
     [Fact]
