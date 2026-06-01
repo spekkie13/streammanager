@@ -110,7 +110,9 @@ public class CustomTwitchHttpClient(ITwitchAuthTokenProvider tokens) : ICustomTw
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return null;
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
-        return json["data"]?[0]?["id"]?.ToString();
+        // data is an empty array when the channel is offline; indexing [0] would throw.
+        JArray? data = json["data"] as JArray;
+        return data is { Count: > 0 } ? data[0]?["id"]?.ToString() : null;
     }
 
     public async Task<DateTimeOffset?> GetStreamStartTimeAsync(CancellationToken ct = default)
@@ -120,7 +122,8 @@ public class CustomTwitchHttpClient(ITwitchAuthTokenProvider tokens) : ICustomTw
         using HttpResponseMessage msg = await GetAsync(url, ct);
         if (!msg.IsSuccessStatusCode) return null;
         JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
-        string? startedAt = json["data"]?[0]?["started_at"]?.ToString();
+        JArray? data = json["data"] as JArray;
+        string? startedAt = data is { Count: > 0 } ? data[0]?["started_at"]?.ToString() : null;
         if (startedAt == null) return null;
         return DateTimeOffset.TryParse(startedAt, null, System.Globalization.DateTimeStyles.AssumeUniversal, out DateTimeOffset result)
             ? result.ToUniversalTime()

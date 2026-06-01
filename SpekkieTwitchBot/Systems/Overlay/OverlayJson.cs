@@ -19,7 +19,9 @@ internal static class OverlayJson
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
-    // Serialize to a sibling temp file, flush to disk, then atomically replace.
+    // Serialize to a sibling temp file, flush to disk, then atomically replace. If a reader holds
+    // the destination open (an OBS browser source polls these files), the rename can be denied on
+    // Windows; fall back to an in-place, read-shareable write instead.
     public static async Task WriteAtomicAsync(string path, string json, CancellationToken ct)
     {
         string? dir = Path.GetDirectoryName(path);
@@ -35,8 +37,25 @@ internal static class OverlayJson
             fs.Flush(flushToDisk: true);
         }
 
-        // File.Move with overwrite maps to MoveFileEx(MOVEFILE_REPLACE_EXISTING) on Windows,
-        // which is atomic for same-volume moves; the overlay always sees a complete file.
-        File.Move(tmp, path, overwrite: true);
+        try
+        {
+            // File.Move with overwrite maps to MoveFileEx(MOVEFILE_REPLACE_EXISTING) on Windows,
+            // which is atomic for same-volume moves; the overlay then sees a complete file.
+            File.Move(tmp, path, overwrite: true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // The destination is locked by a concurrent reader, which blocks the rename. Overwrite
+            // it in place with FileShare.ReadWrite so the reader can keep reading; a poll that lands
+            // mid-write sees a partial file and is retried by the overlay on its next tick.
+            await using (FileStream fs = new(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+            await using (StreamWriter sw = new(fs))
+            {
+                await sw.WriteAsync(json.AsMemory(), ct);
+                await sw.FlushAsync(ct);
+            }
+
+            try { File.Delete(tmp); } catch { /* best effort */ }
+        }
     }
 }
