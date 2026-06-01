@@ -29,6 +29,7 @@ using SpekkieTwitchBot.Systems.Twitch.Infrastructure.Http;
 using SpekkieTwitchBot.Systems.StreamStats;
 using SpekkieTwitchBot.Systems.Twitch.Infrastructure.EventSub;
 using SpekkieTwitchBot.Systems.StreamElements;
+using SpekkieTwitchBot.Systems.Overlay;
 using SpekkieClassLibrary.Events;
 using SpekkieTwitchBot.Systems.OBS.Websocket;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfaces;
@@ -301,6 +302,11 @@ public static class Program
                 // Hosted Services (Twitch)
                 // -----------------------
                 services.AddHostedService<TwitchHostedService>();
+
+                // -----------------------
+                // Overlay
+                // -----------------------
+                services.AddHostedService<OverlayStateService>();
             });
     }
 }

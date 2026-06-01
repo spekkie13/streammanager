@@ -23,8 +23,10 @@ public class WarService(
 {
     private readonly Dictionary<string, byte[]> _LogoCache = new();
     private string? _LastWarState;
+    private volatile RunTimeWar? _LastKnownWar;
 
     public bool IsWarActive => _LastWarState is "preparation" or "inWar";
+    public RunTimeWar? LastKnownWar => _LastKnownWar;
     private CancellationTokenSource? _WatcherDebounce;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -139,6 +141,8 @@ public class WarService(
             }
             return;
         }
+
+        _LastKnownWar = runTimeWar;
 
         switch (runTimeWar.State)
         {
