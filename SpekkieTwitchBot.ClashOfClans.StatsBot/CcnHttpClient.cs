@@ -33,4 +33,28 @@ public class CcnHttpClient(Logger logger)
             return null;
         }
     }
+
+    public async Task<CcnPlayerInfo?> GetPlayerInfoAsync(string playerTag, CancellationToken ct = default)
+    {
+        try
+        {
+            string encoded = playerTag.Replace("#", "%23");
+            string url = $"{BaseUrl}/players/basicinfo?player={encoded}";
+
+            HttpResponseMessage response = await _HttpClient.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogWarning($"[CCN] Player info request failed for '{playerTag}': {(int)response.StatusCode}");
+                return null;
+            }
+
+            string json = await response.Content.ReadAsStringAsync(ct);
+            return JsonConvert.DeserializeObject<CcnPlayerInfo>(json);
+        }
+        catch (Exception e)
+        {
+            logger.LogWarning($"[CCN] GetPlayerInfoAsync failed for '{playerTag}': {e.Message}");
+            return null;
+        }
+    }
 }

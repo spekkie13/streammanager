@@ -1,3 +1,5 @@
+using System.Globalization;
+using SpekkieClassLibrary.ClashOfClans.Ccn;
 using SpekkieClassLibrary.ClashOfClans.War;
 
 namespace SpekkieClassLibrary.Overlay;
@@ -41,7 +43,8 @@ public static class SpotlightMapper
     /// position has no member — the spotlight is never half-populated.
     /// </summary>
     public static ActivePlayer BuildActivePlayer(
-        RunTimeWar? war, bool isWarActive, string? team, int? position, string updatedAt)
+        RunTimeWar? war, bool isWarActive, string? team, int? position, string updatedAt,
+        SpotlightCareer? career = null)
     {
         if (war == null || !isWarActive || team == null || position == null)
             return ActivePlayer.Inactive(updatedAt);
@@ -68,7 +71,8 @@ public static class SpotlightMapper
             Name = member.Name,
             TownHall = member.TownhallLevel,
             Attack = ToSpotlightAttack(member.Attacks?.FirstOrDefault()),
-            Defense = ToSpotlightAttack(member.BestOpponentAttack)
+            Defense = ToSpotlightAttack(member.BestOpponentAttack),
+            Career = career
         };
     }
 
@@ -80,4 +84,39 @@ public static class SpotlightMapper
             Pct = atk.DestructionPercentage + "%",
             Duration = $"{(int)atk.Duration / 60}:{(int)atk.Duration % 60:D2}"
         };
+
+    /// <summary>
+    /// Maps a CCN player's basic info into the career block. Returns null when CCN has no usable data,
+    /// so the field is simply omitted from active-player.json.
+    /// </summary>
+    public static SpotlightCareer? BuildCareer(CcnPlayerInfo? info)
+    {
+        if (info == null) return null;
+
+        SpotlightStatLine? offense = ToStatLine(info.StatsOffense);
+        SpotlightStatLine? defense = ToStatLine(info.StatsDefense);
+        if (offense == null && defense == null) return null;
+
+        return new SpotlightCareer { Offense = offense, Defense = defense };
+    }
+
+    private static SpotlightStatLine? ToStatLine(CcnStatLine? s)
+    {
+        if (s == null) return null;
+
+        return new SpotlightStatLine
+        {
+            Attacks = s.Attacks,
+            Triples = s.Triples,
+            Doubles = s.Doubles,
+            Singles = s.Singles,
+            Zeros = s.Zeros,
+            TripleRate = s.Attacks > 0
+                ? Math.Round(100.0 * s.Triples / s.Attacks, 1).ToString("0.#", CultureInfo.InvariantCulture) + "%"
+                : "0%",
+            AvgStars = Math.Round(s.AvgStars, 2),
+            AvgPct = Math.Round(s.AvgPerc, 1).ToString("0.#", CultureInfo.InvariantCulture) + "%",
+            AvgDuration = $"{(int)s.AvgDuration / 60}:{(int)s.AvgDuration % 60:D2}"
+        };
+    }
 }

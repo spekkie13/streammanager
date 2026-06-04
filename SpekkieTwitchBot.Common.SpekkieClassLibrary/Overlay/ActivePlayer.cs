@@ -17,6 +17,7 @@ public class ActivePlayer
     public int? TownHall { get; init; }
     public SpotlightAttack? Attack { get; init; }
     public SpotlightAttack? Defense { get; init; }
+    public SpotlightCareer? Career { get; init; }
 
     public static ActivePlayer Inactive(string updatedAt) => new()
     {

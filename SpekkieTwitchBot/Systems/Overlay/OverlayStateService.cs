@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Hosting;
+using SpekkieClassLibrary.ClashOfClans.Ccn;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Events;
 using SpekkieClassLibrary.Overlay;
@@ -20,6 +21,7 @@ public class OverlayStateService(
     WarService warService,
     OverlayModeController modeController,
     SpotlightSelectionReader selectionReader,
+    CcnHttpClient ccn,
     ITwitchChannelInfoClient twitchApi,
     ITwitchAuthTokenProvider tokens,
     ISpotifyService spotify,
@@ -50,6 +52,11 @@ public class OverlayStateService(
     private FileSystemWatcher? _configWatcher;
     private CancellationTokenSource? _watcherDebounce;
     private CancellationToken _stopToken;
+
+    // CCN career stats keyed by player tag. Cached for the current war (cleared when the war changes)
+    // so we hit CCN at most once per player per war rather than every tick. Null = CCN had no data.
+    private readonly Dictionary<string, CcnPlayerInfo?> _careerCache = new();
+    private string? _careerCacheWarId;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -151,7 +158,7 @@ public class OverlayStateService(
     {
         try
         {
-            ActivePlayer activePlayer = BuildActivePlayer();
+            ActivePlayer activePlayer = await BuildActivePlayerAsync(ct);
             string json = JsonSerializer.Serialize(activePlayer, ActivePlayerOptions);
             await OverlayJson.WriteAtomicAsync(ActivePlayerPath, json, ct);
         }
@@ -162,12 +169,42 @@ public class OverlayStateService(
         }
     }
 
-    private ActivePlayer BuildActivePlayer()
+    private async Task<ActivePlayer> BuildActivePlayerAsync(CancellationToken ct)
     {
         string now = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
         SpotlightSelection? selection = selectionReader.Read();
-        return SpotlightMapper.BuildActivePlayer(
-            warService.LastKnownWar, warService.IsWarActive, selection?.Team, selection?.Position, now);
+        RunTimeWar? war = warService.LastKnownWar;
+
+        ActivePlayer player = SpotlightMapper.BuildActivePlayer(
+            war, warService.IsWarActive, selection?.Team, selection?.Position, now);
+
+        // Enrich with the player's CCN career stats (offense/defense), keyed by their tag.
+        if (player is { Active: true, Tag: { Length: > 0 } tag })
+        {
+            CcnPlayerInfo? info = await GetCareerAsync(tag, player.WarId ?? "", ct);
+            SpotlightCareer? career = SpotlightMapper.BuildCareer(info);
+            if (career != null)
+                player = SpotlightMapper.BuildActivePlayer(
+                    war, warService.IsWarActive, selection?.Team, selection?.Position, now, career);
+        }
+
+        return player;
+    }
+
+    private async Task<CcnPlayerInfo?> GetCareerAsync(string tag, string warId, CancellationToken ct)
+    {
+        if (_careerCacheWarId != warId)
+        {
+            _careerCache.Clear();
+            _careerCacheWarId = warId;
+        }
+
+        if (_careerCache.TryGetValue(tag, out CcnPlayerInfo? cached))
+            return cached;
+
+        CcnPlayerInfo? info = await ccn.GetPlayerInfoAsync(tag, ct);
+        _careerCache[tag] = info;
+        return info;
     }
 
     private async Task<(string title, string artist)> GetNowPlayingAsync(CancellationToken ct)
