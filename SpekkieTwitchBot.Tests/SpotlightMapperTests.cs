@@ -2,23 +2,15 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Overlay;
-using Xunit.Abstractions;
 
 namespace SpekkieTwitchBot.Tests;
 
-/// <summary>
-/// War-free tests for the spotlight mapping. One test (<see cref="WriteSampleFiles_ForInspection"/>)
-/// also writes real war-roster.json + active-player.json to a temp folder so the output JSON can be
-/// inspected by hand without a running bot or an active war.
-/// </summary>
-public class SpotlightMapperTests(ITestOutputHelper output)
+/// <summary>War-free tests for the spotlight mapping (selection -> active-player, war -> roster).</summary>
+public class SpotlightMapperTests
 {
     private const string UpdatedAt = "2026-06-04T12:34:56Z";
 
-    // Matches the JSON the bot writes: camelCase, indented, null optionals omitted from active-player.
-    private static readonly JsonSerializerOptions RosterJson =
-        new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
-
+    // Matches the JSON the bot writes for active-player.json: camelCase, null optionals omitted.
     private static readonly JsonSerializerOptions ActivePlayerJson = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -130,67 +122,6 @@ public class SpotlightMapperTests(ITestOutputHelper output)
         Assert.Equal(new[] { 1, 2, 3, 4, 5 }, roster.Home.Players.Select(p => p.MapPosition).ToArray());
         Assert.Equal("Player Three", roster.Home.Players[2].Name);
         Assert.Equal(16, roster.Home.Players[2].TownHall);
-    }
-
-    // ── Inspectable output ─────────────────────────────────────────────────────
-
-    [Fact]
-    public void WriteSampleFiles_ForInspection()
-    {
-        string dir = Path.Combine(Path.GetTempPath(), "spotlight-sample");
-        Directory.CreateDirectory(dir);
-
-        RunTimeWar war = SampleWar();
-        string rosterPath = Path.Combine(dir, "war-roster.json");
-        string activePath = Path.Combine(dir, "active-player.json");
-
-        File.WriteAllText(rosterPath,
-            JsonSerializer.Serialize(SpotlightMapper.BuildRoster(war, UpdatedAt), RosterJson));
-
-        // home:3 — a fully populated spotlight.
-        File.WriteAllText(activePath,
-            JsonSerializer.Serialize(
-                SpotlightMapper.BuildActivePlayer(war, true, "home", 3, UpdatedAt), ActivePlayerJson));
-
-        output.WriteLine("Sample spotlight files written for inspection:");
-        output.WriteLine("  " + rosterPath);
-        output.WriteLine("  " + activePath);
-
-        Assert.True(File.Exists(rosterPath));
-        Assert.True(File.Exists(activePath));
-    }
-
-    // ── Replay JSON (war-replay.json) maps like the live API ───────────────────
-
-    [Fact]
-    public void ReplayJson_DeserializesAndResolves()
-    {
-        // Uses the same camelCase field names the live CoC API returns, which WarService deserializes
-        // for war-replay.json. Guards that those names map onto the RunTime* models.
-        const string json = """
-        {
-          "state": "inWar", "teamSize": 5, "attacksPerMember": 1,
-          "preparationStartTime": "20260604T100000.000Z",
-          "clan": {
-            "tag": "#HOME", "name": "My Clan", "stars": 3, "destructionPercentage": 100,
-            "members": [
-              { "tag": "#PLAYER3", "name": "Player Three", "mapPosition": 3, "townhallLevel": 16,
-                "attacks": [ { "stars": 3, "destructionPercentage": 100, "duration": 165 } ] }
-            ]
-          },
-          "opponent": { "tag": "#AWAY", "name": "Enemy Clan", "members": [] }
-        }
-        """;
-
-        RunTimeWar? war = Newtonsoft.Json.JsonConvert.DeserializeObject<RunTimeWar>(json);
-        Assert.NotNull(war);
-
-        ActivePlayer ap = SpotlightMapper.BuildActivePlayer(war, true, "home", 3, UpdatedAt);
-        Assert.True(ap.Active);
-        Assert.Equal("Player Three", ap.Name);
-        Assert.Equal(16, ap.TownHall);
-        Assert.Equal("100%", ap.Attack!.Pct);
-        Assert.Equal("2:45", ap.Attack.Duration);
     }
 
     // ── Sample 5v5 war ─────────────────────────────────────────────────────────

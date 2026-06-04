@@ -57,3 +57,6 @@ Set-Content "$set\spotlight-selection.txt" "home:3"   # spotlight your player 3
 Set-Content "$set\spotlight-selection.txt" "away:2"   # spotlight enemy player 2
 Set-Content "$set\spotlight-selection.txt" "off"      # hide
 ```
+
+> Note: the `.bat` scripts use the `<nul set /p` idiom, which returns errorlevel 1 even on success
+> (it reads from nul). The documented setup methods ignore exit codes, so this is harmless.
