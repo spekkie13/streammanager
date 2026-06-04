@@ -33,11 +33,7 @@ public class ClashFileManager
         if (!_FileSetup.DirExists(ClashConstants.OutputDir))
             _FileSetup.CreateDir(ClashConstants.OutputDir);
 
-        string fileName = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}player tag.txt";
-        if (!_FileSetup.FileExists(fileName))
-            _FileSetup.CreateFile(fileName);
-
-        fileName = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt";
+        string fileName = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt";
         if (!_FileSetup.FileExists(fileName))
             _FileSetup.CreateFile(fileName);
 

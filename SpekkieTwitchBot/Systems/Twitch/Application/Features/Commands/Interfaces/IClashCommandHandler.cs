@@ -3,5 +3,4 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfac
 public interface IClashCommandHandler
 {
     string HandleSetWarStatsCommand(string argument);
-    Task<string> HandleAddPlayerTagCommand(string playerTag);
 }

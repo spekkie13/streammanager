@@ -104,15 +104,4 @@ public class ClashCommandHandlerTests
 
         Assert.Equal("Usage: !war on | !war off | !war auto", result);
     }
-
-    [Fact]
-    public async Task AddPlayerTag_UpdatesAndReturnsConfirmation()
-    {
-        _War.Setup(w => w.UpdatePlayerTag("#ABC123")).Returns(Task.CompletedTask);
-
-        string result = await CreateHandler().HandleAddPlayerTagCommand("#ABC123");
-
-        _War.Verify(w => w.UpdatePlayerTag("#ABC123"));
-        Assert.Contains("#ABC123", result);
-    }
 }
