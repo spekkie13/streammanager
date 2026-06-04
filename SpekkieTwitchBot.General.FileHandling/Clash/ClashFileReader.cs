@@ -19,11 +19,6 @@ public class ClashFileReader : IFileReader
 
     public Task<string> ReadAsync(string filePath) => Task.FromResult(Read(filePath));
 
-    public string ReadPlayerTag(string filePath)
-    {
-        return Read(filePath);
-    }
-
     /*public static int CountClanTags(string filePath)
     {
         int lineCount = 0;

@@ -58,7 +58,6 @@ public class GeneralCommandHandler(
             ["!marathon"]   = _ => timerCommandHandler.HandleMarathonCommand(commandArgs),
 
             ["!war"]          = _ => Task.FromResult(clashCommandHandler.HandleSetWarStatsCommand(commandArgs)),
-            ["!setplayertag"] = _ => clashCommandHandler.HandleAddPlayerTagCommand(commandArgs),
 
             ["!subgoal"] = HandleSubGoalCommand,
             ["!subdoel"] = HandleSubGoalCommand,

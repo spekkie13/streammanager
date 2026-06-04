@@ -1,7 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Constants;
 
@@ -90,20 +89,6 @@ public class CocHttpClient
         string url = $"{ClashConstants.ClanApiBaseUrl}{clanTag.Replace("#", "%23")}/currentwar";
         string json = await RetrieveWarData(url);
         return JsonConvert.DeserializeObject<RunTimeWar>(json);
-    }
-
-    public async Task<string> GetPlayerClan(string playerTag)
-    {
-        string url = ClashConstants.PlayerApiBaseUrl + playerTag.Replace("#", "%23");
-
-        HttpResponseMessage response = await _HttpClient.GetAsync(url);
-        string json = await response.Content.ReadAsStringAsync();
-        JObject jsonObject = JObject.Parse(json);
-
-        JToken? clanData = jsonObject["clan"];
-        string clanTag = clanData?["tag"]?.ToString() ?? "";
-
-        return clanTag;
     }
 
     private async Task<string> RetrieveWarData(string url)

@@ -48,7 +48,6 @@ public class WarService(
     {
         string dir = ClashConstants.OutputDir;
         WatchFile(dir, "clan tag.txt", stoppingToken);
-        WatchFile(dir, "player tag.txt", stoppingToken);
     }
 
     private void WatchFile(string dir, string file, CancellationToken stoppingToken)
@@ -100,25 +99,8 @@ public class WarService(
 
             if (string.IsNullOrEmpty(clanTag))
             {
-                string playerTagPath = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}player tag.txt";
-                string playerTag = (await reader.ReadAsync(playerTagPath)).Replace("\r", "").Replace("\n", "").Trim();
-
-                if (string.IsNullOrEmpty(playerTag))
-                {
-                    logger.LogWarning("[CoC] Both clan tag and player tag are empty — skipping war fetch");
-                    return;
-                }
-
-                logger.LogWarning("[CoC] Clan tag is empty — looking up clan from player tag");
-                clanTag = await client.GetPlayerClan(playerTag);
-
-                if (string.IsNullOrEmpty(clanTag))
-                {
-                    logger.LogWarning("[CoC] Could not resolve clan tag from player tag — player may not be in a clan");
-                    return;
-                }
-
-                await writer.WriteAsync(clanTagPath, clanTag);
+                logger.LogWarning("[CoC] Clan tag is empty — skipping war fetch");
+                return;
             }
 
             RunTimeWar? runTimeWar = await client.FetchWar(clanTag);
@@ -314,19 +296,4 @@ public class WarService(
     }
 
     public WarDisplayMode GetWarMode() => warStatus.Mode;
-
-    public async Task UpdatePlayerTag(string playerTag)
-    {
-        try
-        {
-            string playerFile = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}player tag.txt";
-            await writer.WriteAsync(playerFile, playerTag);
-            string clanTag = await client.GetPlayerClan(playerTag);
-            await writer.WriteAsync($"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt", clanTag);
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e.StackTrace ?? e.Message);
-        }
-    }
 }

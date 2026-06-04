@@ -45,10 +45,4 @@ public class ClashCommandHandler(IWarService warService, IObsWebSocket obsWebSoc
             _ => "War mode updated"
         };
     }
-
-    public async Task<string> HandleAddPlayerTagCommand(string playerTag)
-    {
-        await warService.UpdatePlayerTag(playerTag);
-        return $"Updated player tag to: {playerTag}";
-    }
 }
