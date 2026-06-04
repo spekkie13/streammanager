@@ -1,0 +1,70 @@
+{
+  "state": "inWar",
+  "teamSize": 5,
+  "attacksPerMember": 1,
+  "preparationStartTime": "20260604T100000.000Z",
+  "startTime": "20260604T130000.000Z",
+  "endTime": "20260605T130000.000Z",
+  "clan": {
+    "tag": "#HOME",
+    "name": "My Clan",
+    "clanLevel": 10,
+    "attacks": 4,
+    "stars": 9,
+    "destructionPercentage": 91.5,
+    "badgeUrls": {
+      "small": "https://api-assets.clashofclans.com/badges/70/placeholder.png",
+      "medium": "https://api-assets.clashofclans.com/badges/200/placeholder.png",
+      "large": "https://api-assets.clashofclans.com/badges/512/placeholder.png"
+    },
+    "members": [
+      {
+        "tag": "#PLAYER1", "name": "Player One", "mapPosition": 1, "townhallLevel": 16,
+        "attacks": [ { "order": 1, "attackerTag": "#PLAYER1", "defenderTag": "#ENEMY1", "stars": 2, "destructionPercentage": 95, "duration": 130 } ]
+      },
+      {
+        "tag": "#PLAYER2", "name": "Player Two", "mapPosition": 2, "townhallLevel": 15,
+        "attacks": [ { "order": 2, "attackerTag": "#PLAYER2", "defenderTag": "#ENEMY2", "stars": 1, "destructionPercentage": 60, "duration": 95 } ]
+      },
+      {
+        "tag": "#PLAYER3", "name": "Player Three", "mapPosition": 3, "townhallLevel": 16,
+        "attacks": [ { "order": 3, "attackerTag": "#PLAYER3", "defenderTag": "#ENEMY3", "stars": 3, "destructionPercentage": 100, "duration": 165 } ],
+        "opponentAttacks": 1,
+        "bestOpponentAttack": { "order": 4, "attackerTag": "#ENEMY4", "defenderTag": "#PLAYER3", "stars": 2, "destructionPercentage": 78, "duration": 110 }
+      },
+      {
+        "tag": "#PLAYER4", "name": "Player Four", "mapPosition": 4, "townhallLevel": 15,
+        "attacks": [ { "order": 5, "attackerTag": "#PLAYER4", "defenderTag": "#ENEMY4", "stars": 0, "destructionPercentage": 12, "duration": 40 } ]
+      },
+      {
+        "tag": "#PLAYER5", "name": "Player Five", "mapPosition": 5, "townhallLevel": 14
+      }
+    ]
+  },
+  "opponent": {
+    "tag": "#AWAY",
+    "name": "Enemy Clan",
+    "clanLevel": 12,
+    "attacks": 3,
+    "stars": 6,
+    "destructionPercentage": 70.0,
+    "badgeUrls": {
+      "small": "https://api-assets.clashofclans.com/badges/70/placeholder.png",
+      "medium": "https://api-assets.clashofclans.com/badges/200/placeholder.png",
+      "large": "https://api-assets.clashofclans.com/badges/512/placeholder.png"
+    },
+    "members": [
+      {
+        "tag": "#ENEMY1", "name": "Enemy One", "mapPosition": 1, "townhallLevel": 16,
+        "attacks": [ { "order": 6, "attackerTag": "#ENEMY1", "defenderTag": "#PLAYER1", "stars": 2, "destructionPercentage": 88, "duration": 140 } ]
+      },
+      {
+        "tag": "#ENEMY2", "name": "Enemy Two", "mapPosition": 2, "townhallLevel": 16,
+        "attacks": [ { "order": 7, "attackerTag": "#ENEMY2", "defenderTag": "#PLAYER2", "stars": 3, "destructionPercentage": 100, "duration": 150 } ]
+      },
+      { "tag": "#ENEMY3", "name": "Enemy Three", "mapPosition": 3, "townhallLevel": 15 },
+      { "tag": "#ENEMY4", "name": "Enemy Four", "mapPosition": 4, "townhallLevel": 15 },
+      { "tag": "#ENEMY5", "name": "Enemy Five", "mapPosition": 5, "townhallLevel": 14 }
+    ]
+  }
+}

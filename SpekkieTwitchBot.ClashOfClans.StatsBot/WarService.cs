@@ -1,9 +1,12 @@
+using System.Globalization;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using SpekkieClassLibrary.ClashOfClans.Ccn;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Constants;
 using SpekkieClassLibrary.Events;
+using SpekkieClassLibrary.Overlay;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Clash;
 
@@ -92,6 +95,8 @@ public class WarService(
     {
         try
         {
+            if (await TryProcessReplayWar()) return;
+
             string clanTagPath = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}clan tag.txt";
             string clanTag = (await reader.ReadAsync(clanTagPath)).Replace("\r", "").Replace("\n", "").Trim();
 
@@ -125,6 +130,37 @@ public class WarService(
         catch (Exception e)
         {
             logger.LogError(e.StackTrace ?? e.Message);
+        }
+    }
+
+    // Dev/functional-test seam: if Output/ClashOfClans/war-replay.json exists, process it as the
+    // current war instead of calling the live CoC API. This drives the real pipeline (war-data.json,
+    // war-roster.json, LastKnownWar/IsWarActive -> active-player.json) so the Live Attack Spotlight can
+    // be exercised end to end without an active war. Delete the file to return to live data. Requires
+    // the "War" feature flag to be enabled, same as live.
+    private async Task<bool> TryProcessReplayWar()
+    {
+        string path = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}war-replay.json";
+        if (!File.Exists(path)) return false;
+
+        try
+        {
+            string json = await reader.ReadAsync(path);
+            RunTimeWar? war = JsonConvert.DeserializeObject<RunTimeWar>(json);
+            if (war?.Clan == null || war.Opponent == null)
+            {
+                logger.LogWarning("[CoC] war-replay.json present but invalid (missing clan/opponent) — ignoring");
+                return false;
+            }
+
+            logger.LogWarning("[CoC] war-replay.json present — processing replay war instead of live data");
+            await ProcessWar(war);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"[CoC] Failed to process war-replay.json: {ex.Message}");
+            return false;
         }
     }
 
@@ -175,7 +211,25 @@ public class WarService(
             await ProcessTeam(clan: runTimeWar.Clan, team: "home", teamFolder: ClashConstants.HomeFolder);
             await ProcessTeam(clan: runTimeWar.Opponent, team: "away", teamFolder: ClashConstants.AwayFolder);
             await WriteWarJson(runTimeWar);
+            await WriteWarRoster(runTimeWar);
         }
+    }
+
+    // Stable roster (identity only) for the Live Attack Spotlight: lets the operator map a StreamDeck
+    // button (team + map position) to a player. Live attack stats live in active-player.json, written
+    // by the overlay layer — never here.
+    private Task WriteWarRoster(RunTimeWar war)
+    {
+        WarRoster roster = SpotlightMapper.BuildRoster(
+            war, DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+
+        string path = $"{ClashConstants.OutputDir}{Path.DirectorySeparatorChar}war-roster.json";
+        string json = JsonConvert.SerializeObject(roster, new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            Formatting = Formatting.Indented
+        });
+        return writer.WriteAsync(path, json);
     }
 
     private Task WriteWarJson(RunTimeWar war)
@@ -219,21 +273,32 @@ public class WarService(
         if (_LogoCache.TryGetValue(clan.Tag, out byte[]? cached))
             return cached;
 
-        CcnClanInfo? ccnInfo = await ccnClient.GetClanInfoAsync(clan.Tag);
-        byte[] logo;
-        if (!string.IsNullOrEmpty(ccnInfo?.LogoUrl))
+        // A logo fetch (CCN or the CoC asset CDN) must never abort the whole war update — that would
+        // drop war-data.json and war-roster.json over a cosmetic image. On failure, degrade to a blank
+        // logo. This also lets war-replay.json drive the pipeline offline / with placeholder badges.
+        try
         {
-            logger.LogInfo($"[CCN] Using CCN logo for '{clan.Name}'");
-            logo = await client.GetByteArrayAsync(ccnInfo.LogoUrl);
-        }
-        else
-        {
-            logger.LogInfo($"[CCN] '{clan.Name}' not found on CCN, using CoC badge");
-            logo = await client.GetByteArrayAsync(clan.BadgeUrls.Large);
-        }
+            CcnClanInfo? ccnInfo = await ccnClient.GetClanInfoAsync(clan.Tag);
+            byte[] logo;
+            if (!string.IsNullOrEmpty(ccnInfo?.LogoUrl))
+            {
+                logger.LogInfo($"[CCN] Using CCN logo for '{clan.Name}'");
+                logo = await client.GetByteArrayAsync(ccnInfo.LogoUrl);
+            }
+            else
+            {
+                logger.LogInfo($"[CCN] '{clan.Name}' not found on CCN, using CoC badge");
+                logo = await client.GetByteArrayAsync(clan.BadgeUrls.Large);
+            }
 
-        _LogoCache[clan.Tag] = logo;
-        return logo;
+            _LogoCache[clan.Tag] = logo;
+            return logo;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning($"[CoC] Could not fetch logo for '{clan.Name}', using blank: {ex.Message}");
+            return [];
+        }
     }
 
     private async Task ProcessTeam(RunTimeClan clan, string team, string teamFolder)

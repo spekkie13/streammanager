@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Events;
@@ -17,6 +18,8 @@ namespace SpekkieTwitchBot.Systems.Overlay;
 
 public class OverlayStateService(
     WarService warService,
+    OverlayModeController modeController,
+    SpotlightSelectionReader selectionReader,
     ITwitchChannelInfoClient twitchApi,
     ITwitchAuthTokenProvider tokens,
     ISpotifyService spotify,
@@ -26,6 +29,14 @@ public class OverlayStateService(
 {
     private static readonly string OutputPath =
         Path.Combine(BotPaths.BaseDir, "Output", "overlay-state.json");
+
+    private static readonly string ActivePlayerPath =
+        Path.Combine(BotPaths.BaseDir, "Output", "ClashOfClans", "active-player.json");
+
+    // Same shape as the other overlay files, but omit null optionals so an inactive spotlight is just
+    // { "active": false, "updatedAt": ... } rather than a wall of empty fields.
+    private static readonly JsonSerializerOptions ActivePlayerOptions =
+        new(OverlayJson.Options) { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
     private static readonly string ConfigPath =
         Path.Combine(BotPaths.BaseDir, "Settings", "overlay-event.json");
@@ -54,6 +65,7 @@ public class OverlayStateService(
         while (!stoppingToken.IsCancellationRequested)
         {
             await WriteOverlayStateAsync(stoppingToken);
+            await WriteActivePlayerAsync(stoppingToken);
             await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken).ConfigureAwait(false);
         }
     }
@@ -99,7 +111,7 @@ public class OverlayStateService(
 
             OverlayState state = new()
             {
-                Mode = "war",
+                Mode = modeController.Resolve(),
                 UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
                 IsWarActive = warService.IsWarActive,
                 AccountName = _accountName,
@@ -129,6 +141,33 @@ public class OverlayStateService(
         {
             logger.LogError($"[Overlay] Error writing overlay state: {ex.Message}");
         }
+    }
+
+    // Live Attack Spotlight: resolve the StreamDeck selection against the current in-memory war and
+    // publish a self-contained active-player.json. The current war is the source of truth — we never
+    // read war-roster.json back. Any of: no selection, no active war, or a missing position yields an
+    // inactive payload. Never throws into the loop.
+    private async Task WriteActivePlayerAsync(CancellationToken ct)
+    {
+        try
+        {
+            ActivePlayer activePlayer = BuildActivePlayer();
+            string json = JsonSerializer.Serialize(activePlayer, ActivePlayerOptions);
+            await OverlayJson.WriteAtomicAsync(ActivePlayerPath, json, ct);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            logger.LogError($"[Overlay] Error writing active player: {ex.Message}");
+        }
+    }
+
+    private ActivePlayer BuildActivePlayer()
+    {
+        string now = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
+        SpotlightSelection? selection = selectionReader.Read();
+        return SpotlightMapper.BuildActivePlayer(
+            warService.LastKnownWar, warService.IsWarActive, selection?.Team, selection?.Position, now);
     }
 
     private async Task<(string title, string artist)> GetNowPlayingAsync(CancellationToken ct)
