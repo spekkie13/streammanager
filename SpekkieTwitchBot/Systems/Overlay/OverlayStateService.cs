@@ -20,6 +20,7 @@ namespace SpekkieTwitchBot.Systems.Overlay;
 public class OverlayStateService(
     WarService warService,
     OverlayModeController modeController,
+    OverlayLayoutController layoutController,
     SpotlightSelectionReader selectionReader,
     CcnHttpClient ccn,
     ITwitchChannelInfoClient twitchApi,
@@ -119,6 +120,7 @@ public class OverlayStateService(
             OverlayState state = new()
             {
                 Mode = modeController.Resolve(),
+                Layout = layoutController.Resolve(),
                 UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
                 IsWarActive = warService.IsWarActive,
                 AccountName = _accountName,

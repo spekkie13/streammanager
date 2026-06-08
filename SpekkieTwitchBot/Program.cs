@@ -307,6 +307,7 @@ public static class Program
                 // Overlay
                 // -----------------------
                 services.AddSingleton<OverlayModeController>();
+                services.AddSingleton<OverlayLayoutController>();
                 services.AddSingleton<SpotlightSelectionReader>();
                 services.AddHostedService<OverlayStateService>();
 

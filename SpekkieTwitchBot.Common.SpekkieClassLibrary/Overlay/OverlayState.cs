@@ -3,6 +3,7 @@ namespace SpekkieClassLibrary.Overlay;
 public class OverlayState
 {
     public string Mode { get; init; } = "war";
+    public string Layout { get; init; } = "clashLandscape";
     public string UpdatedAt { get; init; } = "";
     public bool IsWarActive { get; init; }
     public string AccountName { get; init; } = "";

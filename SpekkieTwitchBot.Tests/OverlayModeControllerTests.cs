@@ -32,6 +32,8 @@ public class OverlayModeControllerTests : IDisposable
     [InlineData("war")]
     [InlineData("farming")]
     [InlineData("event")]
+    [InlineData("startingSoon")]
+    [InlineData("brb")]
     public void Resolve_ManualMode_ReturnsThatMode(string mode)
     {
         WriteOverride(mode);
@@ -43,6 +45,15 @@ public class OverlayModeControllerTests : IDisposable
     {
         WriteOverride("  EVENT \n");
         Assert.Equal("event", Create(warActive: false).Resolve());
+    }
+
+    // The browser overlay matches the camelCase scene name, so resolution must return the canonical
+    // casing regardless of how the override file is cased.
+    [Fact]
+    public void Resolve_ManualMode_ReturnsCanonicalCasing()
+    {
+        WriteOverride("  STARTINGSOON \n");
+        Assert.Equal("startingSoon", Create(warActive: true).Resolve());
     }
 
     // ── Automatic mode ─────────────────────────────────────────────────────────

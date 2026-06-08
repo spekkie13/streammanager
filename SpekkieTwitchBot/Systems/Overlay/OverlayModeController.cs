@@ -7,8 +7,10 @@ namespace SpekkieTwitchBot.Systems.Overlay;
 /// <summary>
 /// Resolves the overlay mode written into overlay-state.json. Mode is automatic by default but can
 /// be manually overridden via Settings/overlay-mode-override.txt:
-///   - "war" / "farming" / "event" -> that mode is forced.
+///   - "war" / "farming" / "event" / "startingSoon" / "brb" -> that mode is forced.
 ///   - "auto", empty, missing, or anything unrecognized -> automatic mode.
+/// Matching is case-insensitive and trimmed, but the canonical casing (e.g. "startingSoon") is
+/// returned so the browser overlay's mode comparison matches.
 /// Automatic mode v1: "war" when a war is active, otherwise "farming".
 /// The file is re-read on every call so edits take effect on the writer's next tick.
 /// </summary>
@@ -17,8 +19,8 @@ public sealed class OverlayModeController
     private static readonly string DefaultOverridePath =
         Path.Combine(BotPaths.BaseDir, "Settings", "overlay-mode-override.txt");
 
-    private static readonly HashSet<string> ManualModes =
-        new(StringComparer.OrdinalIgnoreCase) { OverlayModes.War, OverlayModes.Farming, OverlayModes.Event };
+    private static readonly string[] ManualModes =
+        { OverlayModes.War, OverlayModes.Farming, OverlayModes.Event, OverlayModes.StartingSoon, OverlayModes.Brb };
 
     private readonly IWarService _warService;
     private readonly Logger _logger;
@@ -37,7 +39,11 @@ public sealed class OverlayModeController
     public string Resolve()
     {
         string ovr = ReadOverride();
-        if (ManualModes.Contains(ovr)) return ovr.ToLowerInvariant();
+
+        // Return the canonical constant (not the raw input) so casing like "startingSoon" is preserved
+        // for the browser overlay, while still matching the file value case-insensitively.
+        string? manual = Array.Find(ManualModes, m => string.Equals(m, ovr, StringComparison.OrdinalIgnoreCase));
+        if (manual != null) return manual;
 
         WarnOnUnrecognized(ovr);
 
