@@ -158,4 +158,52 @@ public class CustomTwitchHttpClient(ITwitchAuthTokenProvider tokens) : ICustomTw
         string? lastGame = chanJson["data"]?[0]?["game_name"]?.ToString();
         return (lastGame, login);
     }
+
+    public async Task<(bool IsSubscriber, string? Tier)> IsUserSubscribedAsync(string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId)) return (false, null);
+        TwitchGeneralFile identity = await tokens.ReadIdentityAsync(ct);
+        return await LookupSubscriptionAsync(identity.ChannelId, userId, ct);
+    }
+
+    public async Task<(string? Login, string? LastGame, bool IsSubscriber, string? Tier)> GetSubscriberShoutoutInfoAsync(
+        string username, CancellationToken ct = default)
+    {
+        string userUrl = $"{TwitchConstants.TwitchUsersUrl}?login={username}";
+        using HttpResponseMessage userMsg = await GetAsync(userUrl, ct);
+        if (!userMsg.IsSuccessStatusCode) return (null, null, false, null);
+        JObject userJson = JObject.Parse(await userMsg.Content.ReadAsStringAsync(ct));
+        string? userId = userJson["data"]?[0]?["id"]?.ToString();
+        string? login = userJson["data"]?[0]?["login"]?.ToString();
+        if (userId == null) return (null, null, false, null);
+
+        TwitchGeneralFile identity = await tokens.ReadIdentityAsync(ct);
+        (bool isSubscriber, string? tier) = await LookupSubscriptionAsync(identity.ChannelId, userId, ct);
+
+        string channelUrl = $"{TwitchConstants.TwitchChannelsUrl}?broadcaster_id={userId}";
+        using HttpResponseMessage chanMsg = await GetAsync(channelUrl, ct);
+        string? lastGame = chanMsg.IsSuccessStatusCode
+            ? JObject.Parse(await chanMsg.Content.ReadAsStringAsync(ct))["data"]?[0]?["game_name"]?.ToString()
+            : null;
+
+        return (login, lastGame, isSubscriber, tier);
+    }
+
+    // Queries the broadcaster's subscriptions for a single user. A non-empty data array means the
+    // user is currently subscribed; the tier ("1000"/"2000"/"3000") comes back on that entry.
+    private async Task<(bool IsSubscriber, string? Tier)> LookupSubscriptionAsync(
+        string? broadcasterId, string userId, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(broadcasterId)) return (false, null);
+
+        string url = $"{TwitchConstants.TwitchSubscribersUrl}?broadcaster_id={broadcasterId}&user_id={userId}";
+        using HttpResponseMessage msg = await GetAsync(url, ct);
+        if (!msg.IsSuccessStatusCode) return (false, null);
+
+        JObject json = JObject.Parse(await msg.Content.ReadAsStringAsync(ct));
+        JToken? entry = (json["data"] as JArray)?.FirstOrDefault();
+        if (entry == null) return (false, null);
+
+        return (true, entry["tier"]?.ToString());
+    }
 }

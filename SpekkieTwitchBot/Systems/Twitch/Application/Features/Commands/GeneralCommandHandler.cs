@@ -44,6 +44,9 @@ public class GeneralCommandHandler(
             ["!uptime"]           = twitchCommandHandler.HandleUptimeCommand,
             ["!clip"]             = twitchCommandHandler.HandleClipCommand,
             ["!so"]               = t => twitchCommandHandler.HandleShoutoutCommand(commandArgs, t),
+            ["!subso"]            = t => twitchCommandHandler.HandleSubShoutoutCommand(commandArgs, t),
+            ["!nextbase"]         = twitchCommandHandler.HandleNextBaseCommand,
+            ["!basequeue"]        = twitchCommandHandler.HandleBaseQueueCommand,
 
             ["!setscene"]        = _ => Task.FromResult(obsCommandHandler.HandleSetSceneCommand(commandArgs)),
             ["!mutemic"]         = _ => Task.FromResult(obsCommandHandler.HandleSetInputMute("microphone")),

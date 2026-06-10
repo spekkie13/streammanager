@@ -5,7 +5,9 @@ using SpekkieClassLibrary.Twitch.Events.ChannelPoint;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.BaseReview;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
+using SpekkieTwitchBot.Systems.Twitch.Models.BaseReview;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 using SpotifyAuthService;
 
@@ -14,6 +16,8 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features;
 public class ChannelPointsFeature(
     ICustomTwitchHttpClient client,
     ITwitchAuthTokenProvider tokens,
+    ITwitchChannelInfoClient channelInfo,
+    BaseReviewQueueService baseReviewQueue,
     ISpotifyService spotify,
     Logger logger)
 {
@@ -36,6 +40,16 @@ public class ChannelPointsFeature(
                 logger.LogInfo(result);
                 logger.LogInfo($"Redeemed: {e.RewardTitle} by {e.UserName}");
                 return $"@{e.UserName} {result}";
+            }
+            case "Base Review":
+            {
+                string input = e.UserInput ?? "";
+                if (string.IsNullOrWhiteSpace(input))
+                    return "Please include your base link or player tag when redeeming a Base Review.";
+
+                string result = await HandleBaseReviewRedemption(e, input.Trim(), ct);
+                logger.LogInfo($"Redeemed: {e.RewardTitle} by {e.UserName}");
+                return result;
             }
             case "Hydrate":
             {
@@ -61,7 +75,31 @@ public class ChannelPointsFeature(
 
         return success ? $"Successfully added {result} to the queue" : $"Failed to add song to the queue";
     }
-    
+
+    private async Task<string> HandleBaseReviewRedemption(ChannelPointRedeemed e, string input, CancellationToken ct)
+    {
+        (bool isSubscriber, string? tier) = string.IsNullOrEmpty(e.UserId)
+            ? (false, null)
+            : await channelInfo.IsUserSubscribedAsync(e.UserId, ct);
+
+        BaseReviewEntry entry = new(
+            UserId: e.UserId,
+            UserName: e.UserName,
+            Input: input,
+            IsSubscriber: isSubscriber,
+            Tier: tier,
+            RedeemedAt: e.RedeemedAt,
+            RedemptionId: e.RedemptionId,
+            RewardId: e.RewardId);
+
+        int position = await baseReviewQueue.EnqueueAsync(entry, ct);
+
+        await UpdateRedemptionStatus(e.RedemptionId, e.RewardId, TwitchConstants.ChannelPointStatusFulfilled, ct);
+
+        string priorityNote = isSubscriber ? " (sub priority ⭐)" : "";
+        return $"@{e.UserName} your base was added to the review queue at position {position}{priorityNote}!";
+    }
+
     public async Task<string> CreateRedemption(string commandArgs)
     {
         string[] parts = commandArgs.Split("|");
