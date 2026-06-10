@@ -16,6 +16,7 @@ using SpekkieTwitchBot.Systems.Twitch;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.BaseReview;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Marathon;
 using SpekkieTwitchBot.ClashOfClans.StatsBot;
 using SpekkieTwitchBot.General.FileHandling.Clash;
@@ -187,6 +188,7 @@ public static class Program
                 // -----------------------
                 // Features + Router
                 // -----------------------
+                services.AddSingleton<BaseReviewQueueService>();
                 services.AddSingleton<ChannelPointsFeature>();
                 services.AddSingleton<FollowSubFeature>();
                 services.AddSingleton<ChatCommandFeature>();

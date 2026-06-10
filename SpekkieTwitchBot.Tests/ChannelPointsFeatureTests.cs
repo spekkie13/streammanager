@@ -3,21 +3,32 @@ using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features.BaseReview;
 using SpekkieTwitchBot.Systems.Twitch.Models.Auth;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 using SpotifyAuthService;
 
 namespace SpekkieTwitchBot.Tests;
 
-public class ChannelPointsFeatureTests
+public class ChannelPointsFeatureTests : IDisposable
 {
     private readonly Mock<ICustomTwitchHttpClient> _Client = new();
     private readonly Mock<ITwitchAuthTokenProvider> _Tokens = new();
+    private readonly Mock<ITwitchChannelInfoClient> _ChannelInfo = new();
     private readonly Mock<ISpotifyService> _Spotify = new();
     private readonly Mock<Logger> _Logger = new(MockBehavior.Loose, null!);
 
+    private readonly string _queuePath =
+        Path.Combine(Path.GetTempPath(), $"base-review-queue-{Guid.NewGuid():N}.json");
+
     private ChannelPointsFeature CreateFeature() =>
-        new(_Client.Object, _Tokens.Object, _Spotify.Object, _Logger.Object);
+        new(_Client.Object, _Tokens.Object, _ChannelInfo.Object,
+            new BaseReviewQueueService(_Logger.Object, _queuePath), _Spotify.Object, _Logger.Object);
+
+    public void Dispose()
+    {
+        if (File.Exists(_queuePath)) File.Delete(_queuePath);
+    }
 
     private static ChannelPointRedeemed Redemption(string title, string? input = "spotify:track:abc") =>
         new("rid1", "rwid1", title, "uid", "user1", input, DateTimeOffset.UtcNow);
@@ -116,6 +127,44 @@ public class ChannelPointsFeatureTests
         _Client.Verify(c => c.PatchAsync(
             It.IsAny<string>(),
             It.Is<StringContent>(sc => sc.ReadAsStringAsync().Result.Contains("CANCELED")),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // ── Base Review ──────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task OnRedeemed_BaseReview_NoInput_ReturnsGuidance()
+    {
+        string result = await CreateFeature().OnRedeemedAsync(Redemption("Base Review", null), CancellationToken.None);
+        Assert.Contains("base link", result);
+    }
+
+    [Fact]
+    public async Task OnRedeemed_BaseReview_Subscriber_EnqueuesWithPriorityNote()
+    {
+        SetupStatusUpdate();
+        _ChannelInfo.Setup(c => c.IsUserSubscribedAsync("uid", It.IsAny<CancellationToken>()))
+                    .ReturnsAsync((true, "1000"));
+
+        string result = await CreateFeature()
+            .OnRedeemedAsync(Redemption("Base Review", "my-base-link"), CancellationToken.None);
+
+        Assert.Contains("position 1", result);
+        Assert.Contains("sub priority", result);
+    }
+
+    [Fact]
+    public async Task OnRedeemed_BaseReview_MarksFulfilled()
+    {
+        SetupStatusUpdate();
+        _ChannelInfo.Setup(c => c.IsUserSubscribedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync((false, null));
+
+        await CreateFeature().OnRedeemedAsync(Redemption("Base Review", "my-base-link"), CancellationToken.None);
+
+        _Client.Verify(c => c.PatchAsync(
+            It.IsAny<string>(),
+            It.Is<StringContent>(sc => sc.ReadAsStringAsync().Result.Contains("FULFILLED")),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

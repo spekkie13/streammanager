@@ -6,4 +6,7 @@ public interface ITwitchCommandHandler
     Task<string> HandleUptimeCommand(CancellationToken ct);
     Task<string> HandleClipCommand(CancellationToken ct);
     Task<string> HandleShoutoutCommand(string username, CancellationToken ct);
+    Task<string> HandleSubShoutoutCommand(string username, CancellationToken ct);
+    Task<string> HandleNextBaseCommand(CancellationToken ct);
+    Task<string> HandleBaseQueueCommand(CancellationToken ct);
 }
