@@ -10,9 +10,18 @@ public sealed class ChatMessageFeature(ITwitchChat chat, ITwitchChannelInfoClien
     private DateTime _LastStreamIdFetch = DateTime.MinValue;
     private static readonly TimeSpan StreamIdCacheDuration = TimeSpan.FromMinutes(5);
 
+    // Users the greeting should never reply to (the streamer and chat bots).
+    private static readonly HashSet<string> GreetingDenylist = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "itsspekkie", "streamelements"
+    };
+
     public async Task OnMessageAsync(ChatMessageReceived e, CancellationToken cancellationToken = default)
     {
         if (e.Text.StartsWith('!')) return;
+
+        string key = string.IsNullOrEmpty(e.Login) ? e.Username : e.Login;
+        if (GreetingDenylist.Contains(key)) return;
 
         if (DateTime.UtcNow - _LastStreamIdFetch >= StreamIdCacheDuration)
         {
