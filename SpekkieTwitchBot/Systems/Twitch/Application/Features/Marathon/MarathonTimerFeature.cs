@@ -21,7 +21,7 @@ public sealed class MarathonTimerFeature(
         timer.AddTime(added);
 
         string who = e.Kind == SubKind.CommunityGift
-            ? e.GifterUserName ?? "iemand"
+            ? e.GifterUserName ?? "someone"
             : e.RecipientUserName;
 
         await chat.SendAsync(FormatAddedMessage(who, added), ct);
@@ -36,7 +36,7 @@ public sealed class MarathonTimerFeature(
 
         timer.AddTime(added);
 
-        string who = e.IsAnonymous ? "anoniem" : e.UserName;
+        string who = e.IsAnonymous ? "anonymous" : e.UserName;
         await chat.SendAsync(FormatAddedMessage(who, added), ct);
         logger.LogInfo($"[MarathonTimer] +{added.TotalMinutes:0.##} min via {e.Bits} bits by {who}");
     }
@@ -50,17 +50,17 @@ public sealed class MarathonTimerFeature(
         timer.AddTime(added);
 
         await chat.SendAsync(FormatAddedMessage(userName, added), ct);
-        logger.LogInfo($"[MarathonTimer] +{added.TotalMinutes:0.##} min via €{euros} donatie by {userName}");
+        logger.LogInfo($"[MarathonTimer] +{added.TotalMinutes:0.##} min via €{euros} donation by {userName}");
     }
 
     private static string FormatAddedMessage(string who, TimeSpan added)
     {
         string formatted = added.TotalHours >= 1
-            ? $"{(int)added.TotalHours}u {added.Minutes:00}m"
+            ? $"{(int)added.TotalHours}h {added.Minutes:00}m"
             : added.TotalMinutes >= 1
                 ? $"{(int)added.TotalMinutes}m {added.Seconds:00}s"
                 : $"{(int)added.TotalSeconds}s";
 
-        return $"@{who} +{formatted} op de marathon timer!";
+        return $"@{who} +{formatted} added to the marathon timer!";
     }
 }
