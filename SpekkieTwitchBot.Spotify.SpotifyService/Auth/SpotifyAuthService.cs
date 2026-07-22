@@ -12,6 +12,9 @@ public class SpotifyAuthService
     private readonly SpotifyFileReader _SpotifyFileReader;
     private readonly Logger _Logger;
     private static SpotifyAuth? _SpotifyAuth;
+    // The auth file is re-read on every (re)configure; only log when its contents actually changed so a
+    // reconnect loop can't fill the log with identical "Spotify Auth loaded" lines.
+    private static string? _LastLoggedAuth;
 
     public SpotifyAuthService(SpotifyFileReader spotifyFileReader, Logger logger)
     {
@@ -23,7 +26,14 @@ public class SpotifyAuthService
     {
         string jsonData = _SpotifyFileReader.ReadSpotifyAuthFile();
         _SpotifyAuth = JsonConvert.DeserializeObject<SpotifyAuth>(jsonData) ?? new SpotifyAuth();
-        _Logger.LogInfo($"Spotify Auth loaded: client_id={_SpotifyAuth.ClientId}, client_secret=***, token=***, refresh_token=***");
+
+        string fingerprint = $"{_SpotifyAuth.ClientId}|{_SpotifyAuth.RefreshToken}";
+        if (fingerprint != _LastLoggedAuth)
+        {
+            _LastLoggedAuth = fingerprint;
+            _Logger.LogInfo($"Spotify Auth loaded: client_id={_SpotifyAuth.ClientId}, client_secret=***, token=***, refresh_token=***");
+        }
+
         return _SpotifyAuth;
     }
     
@@ -100,19 +110,33 @@ public class SpotifyAuthService
     private async Task<string> RefreshAccessTokenAsync(SpotifyAuth spotifyAuth)
     {
         using HttpClient client = new HttpClient();
+        // Refresh tokens can contain characters that are not form-body safe (-, _, =) — encode them so a
+        // valid token is never rejected as a malformed grant.
         StringContent requestBody = new StringContent(
-            $"grant_type=refresh_token&refresh_token={spotifyAuth.RefreshToken}",
+            $"grant_type=refresh_token&refresh_token={Uri.EscapeDataString(spotifyAuth.RefreshToken ?? "")}",
             Encoding.UTF8, "application/x-www-form-urlencoded");
 
         client.DefaultRequestHeaders.Add("Authorization", GetBasicAuthHeader(spotifyAuth.ClientId, spotifyAuth.ClientSecret));
 
         HttpResponseMessage response = await client.PostAsync("https://accounts.spotify.com/api/token", requestBody);
-        response.EnsureSuccessStatusCode();
-
         string responseData = await response.Content.ReadAsStringAsync();
-        TokenResponse? tokenData = JsonConvert.DeserializeObject<TokenResponse>(responseData);
 
-        return tokenData?.AccessToken ?? "";
+        if (!response.IsSuccessStatusCode)
+        {
+            // Spotify says exactly what is wrong in the body (e.g. "invalid_grant" = the refresh token was
+            // revoked and needs a one-time re-auth). Surfacing it beats a bare 400.
+            string reason = $"token refresh failed: {(int)response.StatusCode} {response.ReasonPhrase} — {responseData}";
+            _Logger.LogError($"[SPOTIFY] {reason}");
+            throw new SpotifyAuthException(reason);
+        }
+
+        TokenResponse? tokenData = JsonConvert.DeserializeObject<TokenResponse>(responseData);
+        string? accessToken = tokenData?.AccessToken;
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+            throw new SpotifyAuthException("token refresh returned no access_token");
+
+        return accessToken;
     }
     
     private static string GetBasicAuthHeader(string? clientId, string? clientSecret)

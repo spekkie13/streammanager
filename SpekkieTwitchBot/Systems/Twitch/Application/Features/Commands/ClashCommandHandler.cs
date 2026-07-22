@@ -1,11 +1,13 @@
 using SpekkieTwitchBot.ClashOfClans.StatsBot;
+using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.OBS;
 using SpekkieTwitchBot.Systems.OBS.Websocket;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfaces;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
-public class ClashCommandHandler(IWarService warService, IObsWebSocket obsWebSocket) : IClashCommandHandler
+public class ClashCommandHandler(IWarService warService, IObsWebSocket obsWebSocket, Logger? logger = null)
+    : IClashCommandHandler
 {
     public string HandleSetWarStatsCommand(string argument)
     {
@@ -23,8 +25,6 @@ public class ClashCommandHandler(IWarService warService, IObsWebSocket obsWebSoc
         warService.SetWarMode(mode.Value);
 
         string sceneName = obsWebSocket.GetCurrentProgramScene();
-        int chatBoxId = obsWebSocket.GetSceneItemId(sceneName: sceneName, sourceName: "Chatbox", searchOffset: 0);
-        int warStatsId = obsWebSocket.GetSceneItemId(sceneName: sceneName, sourceName: "War Stats", searchOffset: 0);
 
         bool showWar = mode switch
         {
@@ -34,8 +34,9 @@ public class ClashCommandHandler(IWarService warService, IObsWebSocket obsWebSoc
             _ => false
         };
 
-        obsWebSocket.SetSceneItemEnabled(sceneName: sceneName, sceneItemId: chatBoxId, sceneItemEnabled: !showWar);
-        obsWebSocket.SetSceneItemEnabled(sceneName: sceneName, sceneItemId: warStatsId, sceneItemEnabled: showWar);
+        // Best-effort: the current scene may not contain these sources (OBS ErrorCode 600).
+        ObsSceneItems.TrySetEnabled(obsWebSocket, sceneName, "Chatbox", !showWar, logger);
+        ObsSceneItems.TrySetEnabled(obsWebSocket, sceneName, "War Stats", showWar, logger);
 
         return mode switch
         {

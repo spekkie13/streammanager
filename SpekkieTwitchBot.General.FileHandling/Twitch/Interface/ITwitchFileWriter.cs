@@ -13,4 +13,6 @@ public interface ITwitchFileWriter
     void WriteLatestSubHtml(string subText, int totalSubs);
     void WriteSubGoalHtml(StreamGoalsConfig config);
     void WriteGoalsConfig(StreamGoalsConfig config);
+    void WriteSupportTotals(SupportTotals totals);
+    void WriteSupportTotalsHtml(SupportTotals totals);
 }

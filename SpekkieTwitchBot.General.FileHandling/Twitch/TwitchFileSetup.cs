@@ -40,11 +40,13 @@ public class TwitchFileSetup
                 {
                   "followerGoal": 1000,
                   "subGoal": {
-                    "goal": 50,
                     "current": 0,
-                    "rewardEn": "describe your reward here in English",
-                    "rewardNl": "beschrijf je beloning hier in het Nederlands",
-                    "endDate": "2026-12-31"
+                    "endDate": "2026-12-31",
+                    "tiers": [
+                      { "goal": 25, "rewardEn": "first reward in English", "rewardNl": "eerste beloning in het Nederlands" },
+                      { "goal": 50, "rewardEn": "second reward in English", "rewardNl": "tweede beloning in het Nederlands" },
+                      { "goal": 100, "rewardEn": "third reward in English", "rewardNl": "derde beloning in het Nederlands" }
+                    ]
                   }
                 }
                 """);

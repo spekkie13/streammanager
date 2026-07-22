@@ -1,6 +1,7 @@
 ﻿using EventTimerService;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Timer;
+using SpekkieTwitchBot.Systems.Overlay;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfaces;
 
 namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
@@ -10,23 +11,27 @@ public class TimerCommandHandler : ITimerCommandHandler
     private readonly IEventTimerService _eventTimerService;
     private readonly ITimerFileWriter _timerFileWriter;
     private readonly IFeatureFlagService _featureFlags;
+    private readonly IOverlayTimerWriter _overlayTimerWriter;
 
-    public TimerCommandHandler(IEventTimerService eventTimerService, ITimerFileWriter timerFileWriter, IFeatureFlagService featureFlags)
+    public TimerCommandHandler(IEventTimerService eventTimerService, ITimerFileWriter timerFileWriter, IFeatureFlagService featureFlags, IOverlayTimerWriter overlayTimerWriter)
     {
         _eventTimerService = eventTimerService;
         _timerFileWriter = timerFileWriter;
         _featureFlags = featureFlags;
+        _overlayTimerWriter = overlayTimerWriter;
     }
-    
-    public string HandlePauseTimerCommand()
+
+    public async Task<string> HandlePauseTimerCommand(CancellationToken ct)
     {
         _eventTimerService.StopTimer();
+        await _overlayTimerWriter.SetTimerRunningAsync(false, ct);
         return $"Pausing timer at: {_eventTimerService.GetRemainingTime()}";
     }
 
-    public string HandleStartTimerCommand()
+    public async Task<string> HandleStartTimerCommand(CancellationToken ct)
     {
         _eventTimerService.StartTimer();
+        await _overlayTimerWriter.SetTimerRunningAsync(true, ct);
         return $"Resuming timer at: {_eventTimerService.GetRemainingTime()}";
     }
 

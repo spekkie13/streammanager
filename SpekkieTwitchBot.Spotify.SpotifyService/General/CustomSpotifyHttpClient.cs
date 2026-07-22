@@ -14,8 +14,15 @@ public sealed class CustomSpotifyHttpClient
     private readonly Logger _Logger;
     private readonly Auth.SpotifyAuthService _SpotifyAuthService;
 
+    // After a failed auth (revoked refresh token, bad secret) every caller used to re-run the full
+    // load+refresh — once per 5-second overlay tick — spamming the log and burning a Spotify token
+    // request each time. Failures are cached and retried at most once per cooldown instead.
+    private static readonly TimeSpan AuthRetryCooldown = TimeSpan.FromMinutes(5);
+
     private readonly SemaphoreSlim _SetupLock = new(1, 1);
     private volatile bool _IsConfigured;
+    private DateTime _NextAuthAttemptUtc = DateTime.MinValue;
+    private string? _LastAuthError;
 
     public CustomSpotifyHttpClient(HttpClient client, Auth.SpotifyAuthService spotifyAuthService, Logger logger)
     {
@@ -33,23 +40,44 @@ public sealed class CustomSpotifyHttpClient
         {
             if (_IsConfigured) return;
 
+            // Still inside the cooldown from a previous failure — fail fast and silently.
+            if (DateTime.UtcNow < _NextAuthAttemptUtc)
+                throw new Auth.SpotifyAuthException(_LastAuthError ?? "Spotify auth unavailable");
+
             _Logger.LogInfo("[SPOTIFY] EnsureConfigured START");
 
-            SpotifyAuth spotifyAuth = _SpotifyAuthService.GetSpotifyAuth();
+            try
+            {
+                SpotifyAuth spotifyAuth = _SpotifyAuthService.GetSpotifyAuth();
 
-            spotifyAuth = await _SpotifyAuthService.FixAuth(spotifyAuth).ConfigureAwait(false);
+                spotifyAuth = await _SpotifyAuthService.FixAuth(spotifyAuth).ConfigureAwait(false);
 
-            // headers safe zetten (remove/replace)
-            if (_Client.DefaultRequestHeaders.Contains("client-id"))
-                _Client.DefaultRequestHeaders.Remove("client-id");
+                // headers safe zetten (remove/replace)
+                if (_Client.DefaultRequestHeaders.Contains("client-id"))
+                    _Client.DefaultRequestHeaders.Remove("client-id");
 
-            _Client.DefaultRequestHeaders.Add("client-id", spotifyAuth.ClientId);
-            _Client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", spotifyAuth.Token);
+                _Client.DefaultRequestHeaders.Add("client-id", spotifyAuth.ClientId);
+                _Client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", spotifyAuth.Token);
 
-            _IsConfigured = true;
+                _IsConfigured = true;
+                _NextAuthAttemptUtc = DateTime.MinValue;
+                _LastAuthError = null;
 
-            _Logger.LogInfo("[SPOTIFY] EnsureConfigured END");
+                _Logger.LogInfo("[SPOTIFY] EnsureConfigured END");
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _LastAuthError = ex.Message;
+                _NextAuthAttemptUtc = DateTime.UtcNow.Add(AuthRetryCooldown);
+                _Logger.LogError(
+                    $"[SPOTIFY] Auth failed, retrying in {AuthRetryCooldown.TotalMinutes:0} min: {ex.Message}");
+                throw;
+            }
         }
         finally
         {

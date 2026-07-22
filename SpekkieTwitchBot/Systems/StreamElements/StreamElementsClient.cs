@@ -61,7 +61,7 @@ public sealed class StreamElementsClient
         }
 
         await _Socket.EmitAsync("authenticate", new { method = "jwt", token = jwt }, ct).ConfigureAwait(false);
-        _Logger.LogWarning("[StreamElements] Authenticate sent");
+        _Logger.LogInfo("[StreamElements] Authenticate sent");
     }
 
     private string ReadJwtToken()
@@ -96,7 +96,7 @@ public sealed class StreamElementsClient
         {
             case "authenticated":
                 _ReconnectAttempt = 0;
-                _Logger.LogWarning("[StreamElements] Authenticated — listening for donations");
+                _Logger.LogInfo("[StreamElements] Authenticated — listening for donations");
                 break;
 
             case "unauthorized":

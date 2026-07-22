@@ -2,6 +2,7 @@ using EventTimerService;
 using Moq;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Timer;
+using SpekkieTwitchBot.Systems.Overlay;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands;
 
 namespace SpekkieTwitchBot.Tests;
@@ -11,9 +12,9 @@ public class TimerCommandHandlerTests
     private readonly Mock<IEventTimerService> _TimerService = new();
     private readonly Mock<ITimerFileWriter> _TimerFileWriter = new();
     private readonly Mock<IFeatureFlagService> _FeatureFlags = new();
+    private readonly Mock<IOverlayTimerWriter> _OverlayTimerWriter = new();
 
-    
-    private TimerCommandHandler CreateHandler() => new(_TimerService.Object, _TimerFileWriter.Object, _FeatureFlags.Object);
+    private TimerCommandHandler CreateHandler() => new(_TimerService.Object, _TimerFileWriter.Object, _FeatureFlags.Object, _OverlayTimerWriter.Object);
 
     [Fact]
     public void HandleAddTimeToTimer_Seconds_AddsCorrectAmount()
@@ -76,24 +77,26 @@ public class TimerCommandHandlerTests
     }
 
     [Fact]
-    public void HandlePauseTimer_StopsTimerAndReturnsRemainingTime()
+    public async Task HandlePauseTimer_StopsTimerWritesOverlayFalseAndReturnsRemainingTime()
     {
         _TimerService.Setup(t => t.GetRemainingTime()).Returns(new TimeSpan(0, 4, 30));
 
-        string result = CreateHandler().HandlePauseTimerCommand();
+        string result = await CreateHandler().HandlePauseTimerCommand(CancellationToken.None);
 
         _TimerService.Verify(t => t.StopTimer());
+        _OverlayTimerWriter.Verify(w => w.SetTimerRunningAsync(false, It.IsAny<CancellationToken>()));
         Assert.Contains("00:04:30", result);
     }
 
     [Fact]
-    public void HandleStartTimer_StartsTimerAndReturnsRemainingTime()
+    public async Task HandleStartTimer_StartsTimerWritesOverlayTrueAndReturnsRemainingTime()
     {
         _TimerService.Setup(t => t.GetRemainingTime()).Returns(new TimeSpan(1, 0, 0));
 
-        string result = CreateHandler().HandleStartTimerCommand();
+        string result = await CreateHandler().HandleStartTimerCommand(CancellationToken.None);
 
         _TimerService.Verify(t => t.StartTimer());
+        _OverlayTimerWriter.Verify(w => w.SetTimerRunningAsync(true, It.IsAny<CancellationToken>()));
         Assert.Contains("01:00:00", result);
     }
 

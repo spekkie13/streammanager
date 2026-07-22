@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using System.Net.WebSockets;
+using Microsoft.Extensions.Hosting;
 using SpekkieClassLibrary.OBS.Communication;
 using SpekkieClassLibrary.OBS.Enum;
 using SpekkieClassLibrary.OBS.Events;
@@ -117,19 +118,26 @@ public class ObsWebsocketService : IHostedService
         _KeepAliveTokenSource.Cancel();
 
         if (e.ObsCloseCode == ObsCloseCodes.AuthenticationFailed)
+        {
             _GeneralLogger.LogError("Authentication Failed");
-        else if (e.WebsocketDisconnectionInfo.Exception != null)
-            _GeneralLogger.LogWarning($@"Connection failed: 
-                                     CloseCode: {e.ObsCloseCode} 
-                                     Desc: {e.WebsocketDisconnectionInfo.CloseStatusDescription} 
-                                     Exception:{e.WebsocketDisconnectionInfo.Exception?.Message}\n
-                                     Type: {e.WebsocketDisconnectionInfo.Type}");
+            return;
+        }
+
+        string detail = $"CloseCode: {e.ObsCloseCode}, " +
+                        $"Desc: {e.WebsocketDisconnectionInfo.CloseStatusDescription}, " +
+                        $"Exception: {e.WebsocketDisconnectionInfo.Exception?.Message}, " +
+                        $"Type: {e.WebsocketDisconnectionInfo.Type}";
+
+        // Closing OBS ends the session with a clean close frame (1000 NormalClosure / 1001 GoingAway,
+        // "Server stopping"). That's the expected end of a stream, not a failure worth a WARN.
+        bool cleanClose = e.WebsocketDisconnectionInfo.Exception == null &&
+                          e.WebsocketDisconnectionInfo.CloseStatus is
+                              WebSocketCloseStatus.NormalClosure or WebSocketCloseStatus.EndpointUnavailable;
+
+        if (cleanClose)
+            _GeneralLogger.LogInfo($"OBS disconnected: {detail}");
         else
-            _GeneralLogger.LogWarning($@"Connection failed: 
-                                     CloseCode: {e.ObsCloseCode} 
-                                     Desc: {e.WebsocketDisconnectionInfo.CloseStatusDescription} 
-                                     Exception:{e.WebsocketDisconnectionInfo.Exception?.Message}\n
-                                     Type: {e.WebsocketDisconnectionInfo.Type}");
+            _GeneralLogger.LogWarning($"Connection failed: {detail}");
     }
 
     private void OnStreamStateChanged(object? sender, StreamStateChangedEventArgs args)

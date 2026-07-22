@@ -133,23 +133,49 @@ public class FollowSubFeature(
         string latestSubscriber = FormatLatestSub(e);
         await files.WriteMostRecentSubscriberAsync(latestSubscriber, cancellationToken);
 
+        int previous = _CurrentSubCount;
         int increment = e.Kind == SubKind.CommunityGift ? e.GiftCount : 1;
         _CurrentSubCount += increment;
 
         await files.WriteTotalSubscribersAsync(_CurrentSubCount, cancellationToken);
         files.WriteLatestSubHtml(latestSubscriber, _CurrentSubCount);
-        await WriteSubGoalAsync(_CurrentSubCount, cancellationToken);
+        StreamGoalsConfig? goals = await WriteSubGoalAsync(_CurrentSubCount, cancellationToken);
 
         await chat.SendAsync(message: FormatChatThanks(e), cancellationToken);
+
+        if (goals != null)
+            await AnnounceSubGoalReachedAsync(goals.SubGoal, previous, _CurrentSubCount, cancellationToken);
     }
 
-    private async Task WriteSubGoalAsync(int current, CancellationToken ct)
+    private async Task<StreamGoalsConfig?> WriteSubGoalAsync(int current, CancellationToken ct)
     {
         StreamGoalsConfig? config = await fileReader.ReadGoalsConfigAsync();
-        if (config == null) return;
+        if (config == null) return null;
         StreamGoalsConfig updated = config with { SubGoal = config.SubGoal with { CurrentAmount = current } };
         files.WriteGoalsConfig(updated);
         files.WriteSubGoalHtml(updated);
+        return updated;
+    }
+
+    // Announce when this sub pushed the count across one or more milestones. The highest tier crossed
+    // wins (a community gift can clear several at once), and the new next goal is teased so viewers see
+    // what's coming. Because the count is loaded from goals.json on startup, an already-reached tier has
+    // previous >= goal and never re-announces.
+    private async Task AnnounceSubGoalReachedAsync(SubGoalConfig sub, int previous, int current, CancellationToken ct)
+    {
+        SubGoalTier? reached = sub.Tiers?
+            .Where(t => previous < t.Goal && t.Goal <= current)
+            .MaxBy(t => t.Goal);
+        if (reached == null) return;
+
+        string message = $"🎉 Sub goal of {reached.Goal} reached! Reward unlocked: {reached.RewardEn}";
+
+        // sub carries the updated CurrentAmount, so NextTier is the milestone now in front of us.
+        SubGoalTier? next = sub.NextTier;
+        if (next != null)
+            message += $" — Next goal: {next.Goal} subs for {next.RewardEn}!";
+
+        await chat.SendAsync(message, ct);
     }
 
     private static string FormatLatestSub(SubHappened e)

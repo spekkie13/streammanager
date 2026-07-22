@@ -83,11 +83,11 @@ public sealed class TwitchIrcWebSocketTransport
                 }
                 else if (t.IsCanceled)
                 {
-                    _Log.LogWarning("[IRC-WS] ReceiveLoop canceled");
+                    _Log.LogInfo("[IRC-WS] ReceiveLoop canceled");
                 }
                 else
                 {
-                    _Log.LogWarning("[IRC-WS] ReceiveLoop completed");
+                    _Log.LogInfo("[IRC-WS] ReceiveLoop completed");
                 }
             }, TaskScheduler.Default);
         }
@@ -137,9 +137,9 @@ public sealed class TwitchIrcWebSocketTransport
                 using CancellationTokenSource waitCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 waitCts.CancelAfter(DisconnectTimeout);
 
-                _Log.LogWarning($"[IRC-WS] Waiting for ReceiveLoop (timeout={DisconnectTimeout.TotalSeconds:0}s) ...");
+                _Log.LogInfo($"[IRC-WS] Waiting for ReceiveLoop (timeout={DisconnectTimeout.TotalSeconds:0}s) ...");
                 await recvTask.WaitAsync(waitCts.Token).ConfigureAwait(false);
-                _Log.LogWarning("[IRC-WS] ReceiveLoop stopped");
+                _Log.LogInfo("[IRC-WS] ReceiveLoop stopped");
             }
             catch (OperationCanceledException)
             {
@@ -153,19 +153,19 @@ public sealed class TwitchIrcWebSocketTransport
 
         if (ws is null)
         {
-            _Log.LogWarning("[IRC-WS] DisconnectAsync: ws already null");
+            _Log.LogInfo("[IRC-WS] DisconnectAsync: ws already null");
             try { runCts?.Dispose(); } catch { /* ignore */ }
-            _Log.LogWarning("[IRC-WS] DisconnectAsync done");
+            _Log.LogInfo("[IRC-WS] DisconnectAsync done");
             return;
         }
 
         try
         {
-            _Log.LogWarning($"[IRC-WS] DisconnectAsync: state={ws.State}");
+            _Log.LogInfo($"[IRC-WS] DisconnectAsync: state={ws.State}");
             if (ws.State is WebSocketState.Open or WebSocketState.CloseReceived)
             {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "bye", ct).ConfigureAwait(false);
-                _Log.LogWarning("[IRC-WS] CloseAsync done");
+                _Log.LogInfo("[IRC-WS] CloseAsync done");
             }
         }
         catch (Exception ex)
@@ -176,7 +176,7 @@ public sealed class TwitchIrcWebSocketTransport
         try { ws.Dispose(); } catch { /* ignore */ }
         try { runCts?.Dispose(); } catch { /* ignore */ }
 
-        _Log.LogWarning("[IRC-WS] DisconnectAsync done");
+        _Log.LogInfo("[IRC-WS] DisconnectAsync done");
     }
 
     public async Task SendRawAsync(string line, CancellationToken ct)
@@ -196,7 +196,7 @@ public sealed class TwitchIrcWebSocketTransport
 
         // Never log oauth/tokens in plaintext
         string preview = SanitizeForLog(line);
-        _Log.LogWarning($"[IRC-WS] SEND: {Trunc(preview, 200)}");
+        _Log.LogInfo($"[IRC-WS] SEND: {Trunc(preview, 200)}");
 
         byte[] bytes = Encoding.UTF8.GetBytes(line + "\r\n");
         await ws.SendAsync(bytes, WebSocketMessageType.Text, true, ct).ConfigureAwait(false);
@@ -204,7 +204,7 @@ public sealed class TwitchIrcWebSocketTransport
 
     private async Task ReceiveLoop(CancellationToken ct)
     {
-        _Log.LogWarning("[IRC-WS] ReceiveLoop begin");
+        _Log.LogInfo("[IRC-WS] ReceiveLoop begin");
 
         byte[] buffer = new byte[16 * 1024];
         StringBuilder sb = new StringBuilder();
@@ -216,13 +216,13 @@ public sealed class TwitchIrcWebSocketTransport
                 ClientWebSocket? ws = _Ws;
                 if (ws is null)
                 {
-                    _Log.LogWarning("[IRC-WS] ReceiveLoop break: ws null");
+                    _Log.LogInfo("[IRC-WS] ReceiveLoop break: ws null");
                     break;
                 }
 
                 if (ws.State != WebSocketState.Open)
                 {
-                    _Log.LogWarning($"[IRC-WS] ReceiveLoop break: ws state={ws.State}");
+                    _Log.LogInfo($"[IRC-WS] ReceiveLoop break: ws state={ws.State}");
                     break;
                 }
 
@@ -254,7 +254,7 @@ public sealed class TwitchIrcWebSocketTransport
                         line.Contains("PRIVMSG", StringComparison.Ordinal) ||
                         line.Contains("NOTICE", StringComparison.Ordinal))
                     {
-                        _Log.LogWarning($"[IRC-WS] RECV: {Trunc(SanitizeForLog(line), 200)}");
+                        _Log.LogInfo($"[IRC-WS] RECV: {Trunc(SanitizeForLog(line), 200)}");
                     }
 
                     Func<string, Task>? handler = OnRawLine;
@@ -269,7 +269,7 @@ public sealed class TwitchIrcWebSocketTransport
         }
         catch (OperationCanceledException)
         {
-            _Log.LogWarning("[IRC-WS] ReceiveLoop canceled");
+            _Log.LogInfo("[IRC-WS] ReceiveLoop canceled");
         }
         catch (Exception ex)
         {
@@ -278,7 +278,7 @@ public sealed class TwitchIrcWebSocketTransport
         }
         finally
         {
-            _Log.LogWarning("[IRC-WS] ReceiveLoop ended -> OnDisconnected");
+            _Log.LogInfo("[IRC-WS] ReceiveLoop ended -> OnDisconnected");
             FireDisconnectedOnce("Receive loop ended");
         }
     }

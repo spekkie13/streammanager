@@ -10,4 +10,5 @@ public interface ITwitchFileReader
     public Task<string> ReadMostRecentSubFileAsync();
     public Task<string> ReadLatestSubDisplayAsync();
     public Task<StreamGoalsConfig?> ReadGoalsConfigAsync();
+    public Task<SupportTotals?> ReadSupportTotalsAsync();
 }

@@ -1721,8 +1721,13 @@ public class ObsWebSocket(WebsocketClient wsConnection, Logger logger) : IObsWeb
 
         bool sceneItemEnabled;
         bool isGroup;
-        
-        switch (eventType)
+
+        // obs-websocket sends the bare event name ("StreamStateChanged"); the cases below are keyed on the
+        // matching event member ("OnStreamStateChanged"). Without normalizing, every event fell through to
+        // the "Unsupported Event" default — which is why live stream start/stop was never detected.
+        string eventKey = eventType.StartsWith("On", StringComparison.Ordinal) ? eventType : "On" + eventType;
+
+        switch (eventKey)
         {
             case nameof(OnCurrentProgramSceneChanged):
                 sceneName = bodyObj["sceneName"]?.ToString() ?? "";

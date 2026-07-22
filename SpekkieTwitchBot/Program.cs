@@ -196,6 +196,7 @@ public static class Program
                 services.AddSingleton<TimedMessagesFeature>();
                 services.AddSingleton<IMarathonTimeCalculator, MarathonTimeCalculator>();
                 services.AddSingleton<MarathonTimerFeature>();
+                services.AddSingleton<SupportTotalsFeature>();
                 services.AddSingleton<TwitchEventRouter>();
                 
                 // -----------------------
@@ -246,6 +247,8 @@ public static class Program
                 services.AddSingleton<ITwitchCommandHandler>(sp => sp.GetRequiredService<TwitchCommandHandler>());
                 services.AddSingleton<ClashCommandHandler>();
                 services.AddSingleton<IClashCommandHandler>(sp => sp.GetRequiredService<ClashCommandHandler>());
+                services.AddSingleton<AfkCommandHandler>();
+                services.AddSingleton<IAfkCommandHandler>(sp => sp.GetRequiredService<AfkCommandHandler>());
                 services.AddSingleton<GeneralCommandHandler>();
                 services.AddSingleton<IGeneralCommandHandler>(sp => sp.GetRequiredService<GeneralCommandHandler>());
                 services.AddSingleton<ICommandPermissionService, CommandPermissionService>();
@@ -311,7 +314,14 @@ public static class Program
                 services.AddSingleton<OverlayModeController>();
                 services.AddSingleton<OverlayLayoutController>();
                 services.AddSingleton<SpotlightSelectionReader>();
-                services.AddHostedService<OverlayStateService>();
+
+                // Single instance shared between the hosted writer loop and the !afk/!back and
+                // !pausetimer/!starttimer commands (via IOverlayAfkWriter / IOverlayTimerWriter), so the
+                // bot stays the only writer of overlay-state.json.
+                services.AddSingleton<OverlayStateService>();
+                services.AddSingleton<IOverlayAfkWriter>(sp => sp.GetRequiredService<OverlayStateService>());
+                services.AddSingleton<IOverlayTimerWriter>(sp => sp.GetRequiredService<OverlayStateService>());
+                services.AddHostedService(sp => sp.GetRequiredService<OverlayStateService>());
 
                 // Single instance shared between the router (Append) and the hosted writer loop.
                 services.AddSingleton<ChatOverlayService>();

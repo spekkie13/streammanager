@@ -58,4 +58,12 @@ public class TwitchFileReader : ITwitchFileReader
         if (string.IsNullOrWhiteSpace(json)) return null;
         return JsonSerializer.Deserialize<StreamGoalsConfig>(json);
     }
+
+    public async Task<SupportTotals?> ReadSupportTotalsAsync()
+    {
+        string file = $"{BaseDir}{OutputDir}{Path.DirectorySeparatorChar}support-totals.json";
+        string json = await _FileReader.ReadAsync(file);
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        return JsonSerializer.Deserialize<SupportTotals>(json);
+    }
 }

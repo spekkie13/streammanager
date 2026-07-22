@@ -43,7 +43,7 @@ public class TwitchEventSubClient : ITwitchEvents
         _DefaultUri = new Uri(url);
         _ReconnectUri = _DefaultUri;
 
-        _Log.LogWarning($"[EventSub] WebSocket URL: {url}");
+        _Log.LogInfo($"[EventSub] WebSocket URL: {url}");
 
         _Ws.OnConnected += HandleConnected;
         _Ws.OnMessage += HandleMessage;
@@ -59,19 +59,19 @@ public class TwitchEventSubClient : ITwitchEvents
         var identity = await _Tokens.ReadIdentityAsync(cancellationToken);
         _ChannelId = identity.ChannelId;
 
-        _Log.LogWarning("[EventSub] ConnectAsync starting");
+        _Log.LogInfo("[EventSub] ConnectAsync starting");
         await _Ws.ConnectAsync(_ReconnectUri, cancellationToken);
     }
 
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
-        _Log.LogWarning("[EventSub] DisconnectAsync");
+        _Log.LogInfo("[EventSub] DisconnectAsync");
         await _Ws.CloseAsync(cancellationToken);
     }
 
     private void HandleConnected()
     {
-        _Log.LogWarning("[EventSub] Connected — awaiting session_welcome");
+        _Log.LogInfo("[EventSub] Connected — awaiting session_welcome");
     }
 
     private void HandleDisconnected(string? reason)
@@ -115,7 +115,7 @@ public class TwitchEventSubClient : ITwitchEvents
                     .GetProperty("id")
                     .GetString()!;
 
-                _Log.LogWarning($"[EventSub] session_welcome session_id={sessionId}");
+                _Log.LogInfo($"[EventSub] session_welcome session_id={sessionId}");
                 _ReconnectAttempt = 0;
                 _ReconnectUri = _DefaultUri;
                 await SubscribeToEventsAsync(sessionId, ct);
@@ -145,7 +145,7 @@ public class TwitchEventSubClient : ITwitchEvents
                     .GetProperty("reconnect_url")
                     .GetString()!;
 
-                _Log.LogWarning($"[EventSub] session_reconnect to {reconnectUrl}");
+                _Log.LogInfo($"[EventSub] session_reconnect to {reconnectUrl}");
                 _ReconnectUri = new Uri(reconnectUrl);
                 _Ws.ForceReconnect("session_reconnect");
                 break;
@@ -207,7 +207,7 @@ public class TwitchEventSubClient : ITwitchEvents
         using HttpResponseMessage response = await _Http.PostAsync(TwitchConstants.TwitchEventSubSubscriptionsUrl, content, ct);
 
         if (response.IsSuccessStatusCode)
-            _Log.LogWarning($"[EventSub] Subscribed to {type}");
+            _Log.LogInfo($"[EventSub] Subscribed to {type}");
         else
         {
             string body = await response.Content.ReadAsStringAsync(ct);

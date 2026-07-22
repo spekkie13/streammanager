@@ -1,10 +1,11 @@
 using SpekkieClassLibrary.Events;
 using SpekkieTwitchBot.ClashOfClans.StatsBot;
+using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.Systems.OBS.Websocket;
 
 namespace SpekkieTwitchBot.Systems.OBS;
 
-public class WarObsHandler(IObsWebSocket obs, IStreamEventBus eventBus, WarStatus warStatus)
+public class WarObsHandler(IObsWebSocket obs, IStreamEventBus eventBus, WarStatus warStatus, Logger logger)
 {
     public void Register()
     {
@@ -16,13 +17,20 @@ public class WarObsHandler(IObsWebSocket obs, IStreamEventBus eventBus, WarStatu
         if (warStatus.Mode != WarDisplayMode.Auto)
             return Task.CompletedTask;
 
-        string sceneName = obs.GetCurrentProgramScene();
+        try
+        {
+            string sceneName = obs.GetCurrentProgramScene();
 
-        int chatBoxId = obs.GetSceneItemId(sceneName, "Chatbox", 0);
-        obs.SetSceneItemEnabled(sceneName, chatBoxId, !e.IsActive);
-
-        int warStatsId = obs.GetSceneItemId(sceneName, "War Stats", 0);
-        obs.SetSceneItemEnabled(sceneName, warStatsId, e.IsActive);
+            // Best-effort: scenes without these sources are skipped rather than throwing into the event bus.
+            ObsSceneItems.TrySetEnabled(obs, sceneName, "Chatbox", !e.IsActive, logger);
+            ObsSceneItems.TrySetEnabled(obs, sceneName, "War Stats", e.IsActive, logger);
+        }
+        catch (Exception ex)
+        {
+            // OBS not connected / scene lookup failed — the overlay state is still correct, so don't
+            // let it take down the war-state handler.
+            logger.LogError($"[OBS] War state toggle failed: {ex.Message}");
+        }
 
         return Task.CompletedTask;
     }

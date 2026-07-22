@@ -73,7 +73,7 @@ public class WarService(
             try
             {
                 await Task.Delay(500, cts.Token);
-                logger.LogWarning("[CoC] Tag file changed — triggering immediate war fetch");
+                logger.LogInfo("[CoC] Tag file changed — triggering immediate war fetch");
                 await FetchWar();
             }
             catch (OperationCanceledException) { }
@@ -127,7 +127,11 @@ public class WarService(
             return;
         }
 
-        _LastKnownWar = runTimeWar;
+        // A "notInWar" response comes back as a placeholder: clan blocks present but empty (no name,
+        // null Members). Publishing that as the last known war blanks the overlay and used to make the
+        // 5-second overlay writer throw every tick, so only keep wars that actually carry a roster.
+        if (HasRoster(runTimeWar))
+            _LastKnownWar = runTimeWar;
 
         switch (runTimeWar.State)
         {
@@ -136,7 +140,10 @@ public class WarService(
                 logger.LogInfo($"Tracking war: {runTimeWar.Clan.Name} vs {runTimeWar.Opponent.Name}, Status: {ClashConstants.WarStatus[runTimeWar.State.ToUpper()]}");
                 break;
             default:
-                logger.LogInfo($"{runTimeWar.Clan.Name} is currently not in war");
+                // The placeholder response carries no clan name, so fall back to the tag / a generic label.
+                string clanLabel = new[] { runTimeWar.Clan.Name, runTimeWar.Clan.Tag }
+                    .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s)) ?? "Clan";
+                logger.LogInfo($"{clanLabel} is currently not in war");
                 break;
         }
         logger.LogInfo("Updated: " + DateTime.Now);
@@ -163,6 +170,9 @@ public class WarService(
             await WriteWarRoster(runTimeWar);
         }
     }
+
+    private static bool HasRoster(RunTimeWar war) =>
+        war.Clan?.Members is { Count: > 0 } && war.Opponent?.Members is { Count: > 0 };
 
     // Stable roster (identity only) for the Live Attack Spotlight: lets the operator map a StreamDeck
     // button (team + map position) to a player. Live attack stats live in active-player.json, written

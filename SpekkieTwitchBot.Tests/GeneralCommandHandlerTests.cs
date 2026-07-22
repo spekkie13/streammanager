@@ -15,16 +15,17 @@ public class GeneralCommandHandlerTests
     private readonly Mock<ITextCommandHandler> _Text = new();
     private readonly Mock<SpotifyCommandHandler> _Spotify = new(MockBehavior.Loose, null!, null!, null!);
     private readonly Mock<ObsCommandHandler> _Obs = new(MockBehavior.Loose, null!);
-    private readonly Mock<TimerCommandHandler> _Timer = new(MockBehavior.Loose, null!, null!, null!);
+    private readonly Mock<TimerCommandHandler> _Timer = new(MockBehavior.Loose, null!, null!, null!, null!);
     private readonly Mock<TwitchCommandHandler> _Twitch = new(MockBehavior.Loose, null!, null!, null!);
-    private readonly Mock<ClashCommandHandler> _Clash = new(MockBehavior.Loose, null!, null!);
+    private readonly Mock<ClashCommandHandler> _Clash = new(MockBehavior.Loose, null!, null!, null!);
+    private readonly Mock<IAfkCommandHandler> _Afk = new();
     private readonly Mock<ITwitchFileReader> _TwitchFileReader = new();
 
     private GeneralCommandHandler CreateHandler() => new(
         _Reader.Object, _Writer.Object,
         _Text.Object, _Spotify.Object, _Obs.Object,
         _Timer.Object, _Twitch.Object, _Clash.Object,
-        _TwitchFileReader.Object);
+        _Afk.Object, _TwitchFileReader.Object);
 
     private static ChatCommandReceived Cmd(string command, string args = "", string user = "viewer") =>
         new("mid", "uid", user, UserRole.Viewer, command, args, $"!{command} {args}");
