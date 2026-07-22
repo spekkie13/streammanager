@@ -26,10 +26,10 @@ public sealed class EventSubWebSocketClient(Logger logger)
 
         try
         {
-            logger.LogWarning($"[EventSub WS] Connecting to {uri}...");
+            logger.LogInfo($"[EventSub WS] Connecting to {uri}...");
             await _Ws.ConnectAsync(uri, _Cts.Token).ConfigureAwait(false);
 
-            logger.LogWarning("[EventSub WS] Connected");
+            logger.LogInfo("[EventSub WS] Connected");
             OnConnected?.Invoke();
 
             _ = Task.Run(() => ReceiveLoop(_Cts.Token), ct);

@@ -15,6 +15,7 @@ public class GeneralCommandHandler(
     ITimerCommandHandler timerCommandHandler,
     ITwitchCommandHandler twitchCommandHandler,
     IClashCommandHandler clashCommandHandler,
+    IAfkCommandHandler afkCommandHandler,
     ITwitchFileReader twitchFileReader)
     : IGeneralCommandHandler
 {
@@ -54,11 +55,13 @@ public class GeneralCommandHandler(
             ["!standardvolumes"] = _ => Task.FromResult(obsCommandHandler.HandleSetStandardVolumes()),
             ["!volumezero"]      = _ => Task.FromResult(obsCommandHandler.HandleVolumeZero()),
 
-            ["!pausetimer"] = _ => Task.FromResult(timerCommandHandler.HandlePauseTimerCommand()),
-            ["!starttimer"] = _ => Task.FromResult(timerCommandHandler.HandleStartTimerCommand()),
+            ["!pausetimer"] = ct => timerCommandHandler.HandlePauseTimerCommand(ct),
+            ["!starttimer"] = ct => timerCommandHandler.HandleStartTimerCommand(ct),
             ["!addtime"]    = _ => Task.FromResult(timerCommandHandler.HandleAddTimeToTimerCommand(commandArgs)),
             ["!settime"]    = _ => Task.FromResult(timerCommandHandler.HandleSetTimeOnTimerCommand(commandArgs)),
             ["!marathon"]   = _ => timerCommandHandler.HandleMarathonCommand(commandArgs),
+            ["!afk"]        = afkCommandHandler.HandleAfkCommand,
+            ["!back"]       = afkCommandHandler.HandleBackCommand,
 
             ["!war"]          = _ => Task.FromResult(clashCommandHandler.HandleSetWarStatsCommand(commandArgs)),
 
@@ -86,9 +89,13 @@ public class GeneralCommandHandler(
         StreamGoalsConfig? config = await twitchFileReader.ReadGoalsConfigAsync();
         if (config == null) return "No sub goal configured.";
         SubGoalConfig sub = config.SubGoal;
+        SubGoalTier? next = sub.NextTier;
+        if (next == null)
+            return $"All sub goals reached — {sub.CurrentAmount} subs! 🎉 | Alle sub doelen behaald — {sub.CurrentAmount} subs! 🎉";
+
         int daysRemaining = Math.Max(0, sub.EndDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber);
-        return $"Sub goal: {sub.CurrentAmount}/{sub.Goal} subs before {sub.EndDate:MMM d} ({daysRemaining} days left) — Reward: {sub.RewardEn} " +
-               $"| Sub doel: {sub.CurrentAmount}/{sub.Goal} subs voor {sub.EndDate:d MMM} ({daysRemaining} dagen over) — Beloning: {sub.RewardNl}";
+        return $"Sub goal: {sub.CurrentAmount}/{next.Goal} subs before {sub.EndDate:MMM d} ({daysRemaining} days left) — Reward: {next.RewardEn} " +
+               $"| Sub doel: {sub.CurrentAmount}/{next.Goal} subs voor {sub.EndDate:d MMM} ({daysRemaining} dagen over) — Beloning: {next.RewardNl}";
     }
 
     private string HandleAfgeleidCommand()

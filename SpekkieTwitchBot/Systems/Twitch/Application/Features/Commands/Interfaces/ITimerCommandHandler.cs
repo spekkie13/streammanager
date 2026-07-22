@@ -2,8 +2,8 @@ namespace SpekkieTwitchBot.Systems.Twitch.Application.Features.Commands.Interfac
 
 public interface ITimerCommandHandler
 {
-    string HandlePauseTimerCommand();
-    string HandleStartTimerCommand();
+    Task<string> HandlePauseTimerCommand(CancellationToken ct);
+    Task<string> HandleStartTimerCommand(CancellationToken ct);
     string HandleAddTimeToTimerCommand(string timeToAdd);
     string HandleSetTimeOnTimerCommand(string time);
     Task<string> HandleMarathonCommand(string args);

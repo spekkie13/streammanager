@@ -98,7 +98,7 @@ public sealed class TwitchHostedService : IHostedService
         }
         finally
         {
-            _Logger.LogWarning("TwitchHostedService FINALLY/EXIT");
+            _Logger.LogInfo("TwitchHostedService FINALLY/EXIT");
         }
     }
 

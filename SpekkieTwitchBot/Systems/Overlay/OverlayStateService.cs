@@ -6,12 +6,16 @@ using SpekkieClassLibrary.ClashOfClans.Ccn;
 using SpekkieClassLibrary.ClashOfClans.War;
 using SpekkieClassLibrary.Events;
 using SpekkieClassLibrary.Overlay;
+using SpekkieClassLibrary.Twitch;
 using SpekkieTwitchBot.ClashOfClans.StatsBot;
 using SpekkieTwitchBot.General.FileHandling;
 using SpekkieTwitchBot.General.FileHandling.Common;
 using SpekkieTwitchBot.General.FileHandling.Common.Interface;
+using SpekkieTwitchBot.General.FileHandling.Timer;
+using SpekkieTwitchBot.General.FileHandling.Twitch.Interface;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions;
 using SpekkieTwitchBot.Systems.Twitch.Abstractions.Auth;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 using SpotifyAuthService;
 
@@ -27,8 +31,11 @@ public class OverlayStateService(
     ITwitchAuthTokenProvider tokens,
     ISpotifyService spotify,
     IStreamEventBus eventBus,
+    TimerFileReader timerReader,
+    SupportTotalsFeature supportTotals,
+    ITwitchFileReader twitchFiles,
     Logger logger)
-    : BackgroundService
+    : BackgroundService, IOverlayAfkWriter, IOverlayTimerWriter
 {
     private static readonly string OutputPath =
         Path.Combine(BotPaths.BaseDir, "Output", "overlay-state.json");
@@ -44,7 +51,21 @@ public class OverlayStateService(
     private static readonly string ConfigPath =
         Path.Combine(BotPaths.BaseDir, "Settings", "overlay-event.json");
 
+    // Serializes overlay-state.json writes so an on-demand !afk/!back write can't collide with the
+    // 5-second loop write (both go through WriteOverlayStateAsync).
+    private readonly SemaphoreSlim _writeLock = new(1, 1);
+
+    // Set by !afk/!back via SetAfkAsync (command thread), read by the writer loop. Volatile so the
+    // loop sees the latest value without a lock.
+    private volatile bool _afk;
+
+    // Set by !pausetimer/!starttimer via SetTimerRunningAsync (command thread), read by the writer loop.
+    // Volatile so the loop sees the latest value without a lock. The marathon timer starts paused.
+    private volatile bool _timerRunning;
+
     private OverlayEventConfig _eventConfig = new();
+    // Last successfully read goals config, reused if a tick reads goals.json mid-write (partial JSON).
+    private StreamGoalsConfig? _lastGoals;
     private string _accountName = "";
     private string _latestFollower = "";
     private int _followerCount;
@@ -110,19 +131,44 @@ public class OverlayStateService(
         return Task.CompletedTask;
     }
 
+    // Flip the afk flag and persist immediately so !afk/!back take effect on the overlay without
+    // waiting for the next loop tick. The flag itself is also read by the loop write.
+    public async Task SetAfkAsync(bool afk, bool timerRunning, CancellationToken ct)
+    {
+        _afk = afk;
+        _timerRunning = timerRunning;
+        await WriteOverlayStateAsync(ct);
+    }
+
+    // Flip the timerRunning flag and persist immediately so !pausetimer/!starttimer take effect on the
+    // overlay without waiting for the next loop tick. The flag itself is also read by the loop write.
+    public async Task SetTimerRunningAsync(bool running, CancellationToken ct)
+    {
+        _timerRunning = running;
+        await WriteOverlayStateAsync(ct);
+    }
+
     private async Task WriteOverlayStateAsync(CancellationToken ct)
     {
+        await _writeLock.WaitAsync(ct);
         try
         {
             (string title, string artist) = await GetNowPlayingAsync(ct);
             RunTimeWar? war = warService.LastKnownWar;
+
+            string timer = timerReader.ReadRemainingTime();
+            SupportTotals totals = supportTotals.Snapshot;
+            OverlaySubGoal subGoal = await ReadSubGoalAsync();
 
             OverlayState state = new()
             {
                 Mode = modeController.Resolve(),
                 Layout = layoutController.Resolve(),
                 UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
+                Timer = timer,
                 IsWarActive = warService.IsWarActive,
+                Afk = _afk,
+                TimerRunning = _timerRunning,
                 AccountName = _accountName,
                 Event = new OverlayEventInfo
                 {
@@ -136,6 +182,9 @@ public class OverlayStateService(
                     FollowerCount = _followerCount,
                     LatestSub = _latestSub,
                     SubscriberCount = _subscriberCount,
+                    BitsTotal = totals.BitsTotal,
+                    DonationTotal = totals.DonationTotal,
+                    SubGoal = subGoal,
                     NowPlaying = new OverlayNowPlaying { Title = title, Artist = artist },
                     Socials = _eventConfig.Socials
                 },
@@ -149,6 +198,10 @@ public class OverlayStateService(
         catch (Exception ex)
         {
             logger.LogError($"[Overlay] Error writing overlay state: {ex.Message}");
+        }
+        finally
+        {
+            _writeLock.Release();
         }
     }
 
@@ -209,6 +262,33 @@ public class OverlayStateService(
         return info;
     }
 
+    // Read the active sub goal from goals.json (kept current by FollowSubFeature). The displayed goal
+    // is the next unreached tier; once all tiers are cleared Goal collapses to the count and Reward is
+    // empty. A failed/partial read falls back to the last good config so the overlay never flickers.
+    private async Task<OverlaySubGoal> ReadSubGoalAsync()
+    {
+        try
+        {
+            StreamGoalsConfig? goals = await twitchFiles.ReadGoalsConfigAsync();
+            if (goals != null) _lastGoals = goals;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"[Overlay] Failed to read goals config: {ex.Message}");
+        }
+
+        SubGoalConfig? sub = _lastGoals?.SubGoal;
+        if (sub == null) return new OverlaySubGoal();
+
+        SubGoalTier? next = sub.NextTier;
+        return new OverlaySubGoal
+        {
+            Current = sub.CurrentAmount,
+            Goal = next?.Goal ?? sub.CurrentAmount,
+            Reward = next?.RewardEn ?? ""
+        };
+    }
+
     private async Task<(string title, string artist)> GetNowPlayingAsync(CancellationToken ct)
     {
         try
@@ -223,12 +303,18 @@ public class OverlayStateService(
         }
     }
 
-    private static OverlayWar BuildWarOverlay(RunTimeWar war) => new()
+    private static OverlayWar BuildWarOverlay(RunTimeWar war)
     {
-        Home = BuildTeamOverlay(war.Clan, "home"),
-        Away = BuildTeamOverlay(war.Opponent, "away"),
-        Stats = BuildWarStats(war)
-    };
+        // A war without both clan blocks carries nothing to render (happens on "notInWar" placeholders).
+        if (war.Clan == null || war.Opponent == null) return new OverlayWar();
+
+        return new OverlayWar
+        {
+            Home = BuildTeamOverlay(war.Clan, "home"),
+            Away = BuildTeamOverlay(war.Opponent, "away"),
+            Stats = BuildWarStats(war)
+        };
+    }
 
     private static OverlayTeam BuildTeamOverlay(RunTimeClan clan, string side) => new()
     {
@@ -237,7 +323,9 @@ public class OverlayStateService(
         Stars = clan.Stars,
         // Period decimal regardless of host culture; the overlay shows this string verbatim.
         DestructionPct = clan.DestructionPercentage.ToString("0.0", CultureInfo.InvariantCulture) + "%",
-        Players = clan.Members
+        // Members is null on a "notInWar" placeholder response from the CoC API; treat it as an empty roster
+        // rather than letting LINQ throw ArgumentNullException into the 5-second writer loop.
+        Players = (clan.Members ?? [])
             .OrderBy(m => m.MapPosition)
             .Select(m =>
             {
@@ -265,14 +353,14 @@ public class OverlayStateService(
             AttacksUsedAway = $"{war.Opponent.Attacks}/{maxPerTeam}",
             AvgTimeHome = CalculateAvgTime(war.Clan),
             AvgTimeAway = CalculateAvgTime(war.Opponent),
-            HitRateHome = CalculateHitRate(war.Clan, war.TeamSize),
-            HitRateAway = CalculateHitRate(war.Opponent, war.TeamSize)
+            HitRateHome = CalculateHitRate(war.Clan),
+            HitRateAway = CalculateHitRate(war.Opponent)
         };
     }
 
     private static string CalculateAvgTime(RunTimeClan clan)
     {
-        List<double> durations = clan.Members
+        List<double> durations = (clan.Members ?? [])
             .Where(m => m.Attacks?.Any() == true)
             .SelectMany(m => m.Attacks)
             .Select(a => a.Duration)
@@ -284,11 +372,15 @@ public class OverlayStateService(
         return $"{(int)avg / 60}:{(int)avg % 60:D2}";
     }
 
-    private static int CalculateHitRate(RunTimeClan clan, int teamSize)
+    internal static int CalculateHitRate(RunTimeClan clan)
     {
-        if (teamSize == 0) return 0;
-        int hits = clan.Members.Count(m => m.Attacks?.Any() == true);
-        return (int)Math.Round((double)hits / teamSize * 100);
+        var attacks = (clan.Members ?? [])
+            .Where(m => m.Attacks != null)
+            .SelectMany(m => m.Attacks)
+            .ToList();
+        if (attacks.Count == 0) return 0;
+        int triples = attacks.Count(a => a.Stars == 3);
+        return (int)Math.Round((double)triples / attacks.Count * 100);
     }
 
     private void LoadEventConfig()
@@ -345,6 +437,7 @@ public class OverlayStateService(
     {
         _configWatcher?.Dispose();
         _watcherDebounce?.Dispose();
+        _writeLock.Dispose();
         base.Dispose();
     }
 }

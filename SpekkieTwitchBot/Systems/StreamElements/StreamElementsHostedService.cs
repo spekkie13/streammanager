@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Hosting;
 using SpekkieTwitchBot.General.FileHandling;
+using SpekkieTwitchBot.Systems.Twitch.Application.Features;
 using SpekkieTwitchBot.Systems.Twitch.Application.Features.Marathon;
 using SpekkieTwitchBot.Systems.Twitch.Models.Events;
 
@@ -9,16 +10,19 @@ public sealed class StreamElementsHostedService : IHostedService
 {
     private readonly StreamElementsClient _Client;
     private readonly MarathonTimerFeature _Marathon;
+    private readonly SupportTotalsFeature _SupportTotals;
     private readonly Logger _Logger;
     private CancellationTokenSource? _Cts;
 
     public StreamElementsHostedService(
         StreamElementsClient client,
         MarathonTimerFeature marathon,
+        SupportTotalsFeature supportTotals,
         Logger logger)
     {
         _Client = client;
         _Marathon = marathon;
+        _SupportTotals = supportTotals;
         _Logger = logger;
 
         _Client.OnDonation += HandleDonation;
@@ -43,5 +47,7 @@ public sealed class StreamElementsHostedService : IHostedService
     }
 
     private Task HandleDonation(DonationHappened e, CancellationToken ct)
-        => _Marathon.HandleDonationAsync(e.UserName, e.Amount, ct);
+        => Task.WhenAll(
+            _Marathon.HandleDonationAsync(e.UserName, e.Amount, ct),
+            _SupportTotals.HandleDonationAsync(e.Amount, ct));
 }

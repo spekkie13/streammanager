@@ -29,7 +29,7 @@ public sealed class StreamElementsSocketIoClient(Logger logger)
 
         try
         {
-            logger.LogWarning("[SE WS] Connecting...");
+            logger.LogInfo("[SE WS] Connecting...");
             await _Ws.ConnectAsync(RealtimeUri, _Cts.Token).ConfigureAwait(false);
             _ = Task.Run(() => ReceiveLoop(_Cts.Token), _Cts.Token);
         }
@@ -152,7 +152,7 @@ public sealed class StreamElementsSocketIoClient(Logger logger)
                 switch (packet[1])
                 {
                     case '0': // SIO connect
-                        logger.LogWarning("[SE WS] Socket.IO connected");
+                        logger.LogInfo("[SE WS] Socket.IO connected");
                         OnSocketConnected?.Invoke();
                         break;
 

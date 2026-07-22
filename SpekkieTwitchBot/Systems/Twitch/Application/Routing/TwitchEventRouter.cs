@@ -16,12 +16,14 @@ public sealed class TwitchEventRouter(
     FollowSubFeature followSub,
     ChannelPointsFeature channelPoints,
     TimedMessagesFeature timedMessages,
-    MarathonTimerFeature marathon)
+    MarathonTimerFeature marathon,
+    SupportTotalsFeature supportTotals)
 {
     public async Task InitializeAsync(CancellationToken ct)
     {
         await followSub.InitializeAsync(ct);
         await timedMessages.InitializeAsync(ct);
+        await supportTotals.InitializeAsync(ct);
     }
 
     public void Wire()
@@ -64,7 +66,9 @@ public sealed class TwitchEventRouter(
             marathon.HandleSubAsync(ev, ct));
 
     private Task OnBits(BitsHappened ev, CancellationToken ct)
-        => marathon.HandleBitsAsync(ev, ct);
+        => Task.WhenAll(
+            marathon.HandleBitsAsync(ev, ct),
+            supportTotals.HandleBitsAsync(ev, ct));
 
     private async Task OnChannelPointRedeemed(ChannelPointRedeemed ev, CancellationToken ct)
     {
