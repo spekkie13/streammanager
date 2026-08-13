@@ -10,15 +10,17 @@ namespace SpotifyAuthService.Auth;
 public class SpotifyAuthService
 {
     private readonly SpotifyFileReader _SpotifyFileReader;
+    private readonly SpotifyFileWriter _SpotifyFileWriter;
     private readonly Logger _Logger;
     private static SpotifyAuth? _SpotifyAuth;
     // The auth file is re-read on every (re)configure; only log when its contents actually changed so a
     // reconnect loop can't fill the log with identical "Spotify Auth loaded" lines.
     private static string? _LastLoggedAuth;
 
-    public SpotifyAuthService(SpotifyFileReader spotifyFileReader, Logger logger)
+    public SpotifyAuthService(SpotifyFileReader spotifyFileReader, SpotifyFileWriter spotifyFileWriter, Logger logger)
     {
         _SpotifyFileReader = spotifyFileReader;
+        _SpotifyFileWriter = spotifyFileWriter;
         _Logger = logger;
     }
     
@@ -39,10 +41,39 @@ public class SpotifyAuthService
     
     public async Task<SpotifyAuth> FixAuth(SpotifyAuth spotifyAuth)
     {
-        string newAccessToken = await RefreshAccessTokenAsync(spotifyAuth);
-        spotifyAuth.Token = newAccessToken;
-        
+        TokenResponse tokenData = await RefreshAccessTokenAsync(spotifyAuth);
+        spotifyAuth.Token = tokenData.AccessToken;
+
+        // Spotify may hand back a rotated refresh_token. Persisting it is what keeps the next
+        // refresh working — dropping it leaves the file holding a superseded token.
+        if (!string.IsNullOrWhiteSpace(tokenData.RefreshToken) &&
+            tokenData.RefreshToken != spotifyAuth.RefreshToken)
+        {
+            spotifyAuth.RefreshToken = tokenData.RefreshToken;
+            PersistAuth(spotifyAuth);
+        }
+
         return spotifyAuth;
+    }
+
+    private void PersistAuth(SpotifyAuth spotifyAuth)
+    {
+        try
+        {
+            // Ignore nulls so round-tripping the file never introduces keys it did not have.
+            string json = JsonConvert.SerializeObject(spotifyAuth, Formatting.Indented,
+                new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+
+            _SpotifyFileWriter.WriteSpotifyAuthFile(json);
+            _LastLoggedAuth = null; // contents changed — let the next load log the new fingerprint
+            _Logger.LogInfo("[SPOTIFY] Rotated refresh_token persisted to Spotify.json");
+        }
+        catch (Exception ex)
+        {
+            // A failed write is not fatal for this session — the in-memory token still works until
+            // it expires — but it will resurface as invalid_grant later, so make it visible now.
+            _Logger.LogError($"[SPOTIFY] Could not persist rotated refresh_token: {ex.Message}");
+        }
     }
     
     /*
@@ -107,7 +138,7 @@ public class SpotifyAuthService
         };
     }*/
     
-    private async Task<string> RefreshAccessTokenAsync(SpotifyAuth spotifyAuth)
+    private async Task<TokenResponse> RefreshAccessTokenAsync(SpotifyAuth spotifyAuth)
     {
         using HttpClient client = new HttpClient();
         // Refresh tokens can contain characters that are not form-body safe (-, _, =) — encode them so a
@@ -127,16 +158,35 @@ public class SpotifyAuthService
             // revoked and needs a one-time re-auth). Surfacing it beats a bare 400.
             string reason = $"token refresh failed: {(int)response.StatusCode} {response.ReasonPhrase} — {responseData}";
             _Logger.LogError($"[SPOTIFY] {reason}");
-            throw new SpotifyAuthException(reason);
+            throw new SpotifyAuthException(reason, IsInvalidGrant(responseData));
         }
 
         TokenResponse? tokenData = JsonConvert.DeserializeObject<TokenResponse>(responseData);
-        string? accessToken = tokenData?.AccessToken;
 
-        if (string.IsNullOrWhiteSpace(accessToken))
+        if (tokenData == null || string.IsNullOrWhiteSpace(tokenData.AccessToken))
             throw new SpotifyAuthException("token refresh returned no access_token");
 
-        return accessToken;
+        return tokenData;
+    }
+
+    // invalid_grant means the refresh token is permanently dead (revoked, or the client secret was
+    // rotated out from under it). Anything else — 500s, rate limits, network blips — is transient.
+    private static bool IsInvalidGrant(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody)) return false;
+
+        try
+        {
+            string? error = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseBody)
+                ?.GetValueOrDefault("error");
+            return string.Equals(error, "invalid_grant", StringComparison.OrdinalIgnoreCase);
+        }
+        catch (JsonException)
+        {
+            // Non-JSON body (proxy error page, truncated response) — fall back to a substring check
+            // rather than treating an unparseable body as transient forever.
+            return responseBody.Contains("invalid_grant", StringComparison.OrdinalIgnoreCase);
+        }
     }
     
     private static string GetBasicAuthHeader(string? clientId, string? clientSecret)

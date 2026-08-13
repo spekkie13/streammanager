@@ -13,11 +13,21 @@ public class SpotifyFileReader
     
     private static readonly string BaseDir = BotPaths.BaseDir;
 
+    public static string SpotifyAuthFilePath =>
+        $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Spotify.json";
+
     public string ReadSpotifyAuthFile()
     {
-        string dir = $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Spotify.json";
-        string jsonData = _FileReader.Read(dir);
+        string jsonData = _FileReader.Read(SpotifyAuthFilePath);
 
         return jsonData;
+    }
+
+    // Lets callers notice an out-of-band re-auth (Tools/Reauth-Spotify.ps1 rewriting the file)
+    // without re-reading and re-parsing it on every poll.
+    public static DateTime GetSpotifyAuthLastWriteUtc()
+    {
+        string path = SpotifyAuthFilePath;
+        return File.Exists(path) ? File.GetLastWriteTimeUtc(path) : DateTime.MinValue;
     }
 }

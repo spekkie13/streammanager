@@ -10,10 +10,14 @@ public sealed class SpotifyHostedService : BackgroundService
 {
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(30);
 
+    // Nothing to retry while waiting on a human — just tick slowly enough to notice the re-auth.
+    private static readonly TimeSpan ReauthPollDelay = TimeSpan.FromMinutes(1);
+
     private readonly SpotifyService _Spotify;
     private readonly SpotifyFileWriter _SpotifyFileWriter;
     private readonly Logger _Logger;
     private bool _FailureLogged;
+    private bool _ReauthLogged;
 
     public SpotifyHostedService(
         SpotifyService spotify,
@@ -44,10 +48,24 @@ public sealed class SpotifyHostedService : BackgroundService
                 {
                     durationLeft = await TickAsync(stoppingToken).ConfigureAwait(false);
                     _FailureLogged = false;
+                    _ReauthLogged = false;
                 }
                 catch (OperationCanceledException)
                 {
                     throw;
+                }
+                catch (Auth.SpotifyAuthException ex) when (ex.RequiresReauthorization)
+                {
+                    // CustomSpotifyHttpClient already logged the actionable instructions once, and it
+                    // stops issuing token requests until Spotify.json changes — so keep looping (that
+                    // is what notices the fix) but stay quiet and cheap in the meantime.
+                    if (!_ReauthLogged)
+                    {
+                        _ReauthLogged = true;
+                        _Logger.LogError("[SPOTIFY-HOST] now-playing paused until Spotify is re-authorized.");
+                    }
+
+                    durationLeft = (int)ReauthPollDelay.TotalMilliseconds;
                 }
                 catch (Exception ex)
                 {

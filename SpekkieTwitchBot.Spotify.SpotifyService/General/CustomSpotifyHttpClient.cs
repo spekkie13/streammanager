@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.General.FileHandling;
+using SpekkieTwitchBot.General.FileHandling.Spotify;
 
 namespace SpotifyAuthService.General;
 
@@ -19,10 +20,18 @@ public sealed class CustomSpotifyHttpClient
     // request each time. Failures are cached and retried at most once per cooldown instead.
     private static readonly TimeSpan AuthRetryCooldown = TimeSpan.FromMinutes(5);
 
+    private const string ReauthScript = "SpekkieTwitchBot.Spotify.SpotifyService/Tools/Reauth-Spotify.ps1";
+
     private readonly SemaphoreSlim _SetupLock = new(1, 1);
     private volatile bool _IsConfigured;
     private DateTime _NextAuthAttemptUtc = DateTime.MinValue;
     private string? _LastAuthError;
+
+    // A revoked refresh token is not a transient failure — retrying on a timer can never fix it.
+    // Instead of backing off forever, stop attempting and wait for Spotify.json to actually change
+    // on disk, which is exactly what the re-auth script does.
+    private bool _ReauthRequired;
+    private DateTime _AuthFileStampAtFailure;
 
     public CustomSpotifyHttpClient(HttpClient client, Auth.SpotifyAuthService spotifyAuthService, Logger logger)
     {
@@ -40,7 +49,19 @@ public sealed class CustomSpotifyHttpClient
         {
             if (_IsConfigured) return;
 
-            // Still inside the cooldown from a previous failure — fail fast and silently.
+            // Waiting on a human to re-authorize: no point issuing token requests until the
+            // credentials file is rewritten, but pick it up automatically once it is.
+            if (_ReauthRequired)
+            {
+                if (SpotifyFileReader.GetSpotifyAuthLastWriteUtc() == _AuthFileStampAtFailure)
+                    throw new Auth.SpotifyAuthException(
+                        _LastAuthError ?? "Spotify re-authorization required", true);
+
+                _Logger.LogInfo("[SPOTIFY] Spotify.json changed — retrying authorization.");
+                _ReauthRequired = false;
+            }
+
+            // Still inside the cooldown from a previous transient failure — fail fast and silently.
             if (DateTime.UtcNow < _NextAuthAttemptUtc)
                 throw new Auth.SpotifyAuthException(_LastAuthError ?? "Spotify auth unavailable");
 
@@ -63,6 +84,7 @@ public sealed class CustomSpotifyHttpClient
                 _IsConfigured = true;
                 _NextAuthAttemptUtc = DateTime.MinValue;
                 _LastAuthError = null;
+                _ReauthRequired = false;
 
                 _Logger.LogInfo("[SPOTIFY] EnsureConfigured END");
             }
@@ -73,9 +95,23 @@ public sealed class CustomSpotifyHttpClient
             catch (Exception ex)
             {
                 _LastAuthError = ex.Message;
-                _NextAuthAttemptUtc = DateTime.UtcNow.Add(AuthRetryCooldown);
-                _Logger.LogError(
-                    $"[SPOTIFY] Auth failed, retrying in {AuthRetryCooldown.TotalMinutes:0} min: {ex.Message}");
+
+                if (ex is Auth.SpotifyAuthException { RequiresReauthorization: true })
+                {
+                    _ReauthRequired = true;
+                    _AuthFileStampAtFailure = SpotifyFileReader.GetSpotifyAuthLastWriteUtc();
+                    _Logger.LogError(
+                        "[SPOTIFY] Re-authorization required — the refresh token is no longer valid and retrying " +
+                        $"cannot fix it. Run {ReauthScript}; the new token is picked up automatically, no restart " +
+                        "needed. Spotify polling is paused until then.");
+                }
+                else
+                {
+                    _NextAuthAttemptUtc = DateTime.UtcNow.Add(AuthRetryCooldown);
+                    _Logger.LogError(
+                        $"[SPOTIFY] Auth failed, retrying in {AuthRetryCooldown.TotalMinutes:0} min: {ex.Message}");
+                }
+
                 throw;
             }
         }
