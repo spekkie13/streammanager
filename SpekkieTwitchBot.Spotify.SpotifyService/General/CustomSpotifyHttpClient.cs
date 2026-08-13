@@ -5,7 +5,6 @@ using Newtonsoft.Json.Linq;
 using SpekkieClassLibrary.Spotify.Auth;
 using SpekkieClassLibrary.Spotify.Song;
 using SpekkieTwitchBot.General.FileHandling;
-using SpekkieTwitchBot.General.FileHandling.Spotify;
 
 namespace SpotifyAuthService.General;
 
@@ -53,7 +52,7 @@ public sealed class CustomSpotifyHttpClient
             // credentials file is rewritten, but pick it up automatically once it is.
             if (_ReauthRequired)
             {
-                if (SpotifyFileReader.GetSpotifyAuthLastWriteUtc() == _AuthFileStampAtFailure)
+                if (_SpotifyAuthService.GetAuthFileStampUtc() == _AuthFileStampAtFailure)
                     throw new Auth.SpotifyAuthException(
                         _LastAuthError ?? "Spotify re-authorization required", true);
 
@@ -99,7 +98,7 @@ public sealed class CustomSpotifyHttpClient
                 if (ex is Auth.SpotifyAuthException { RequiresReauthorization: true })
                 {
                     _ReauthRequired = true;
-                    _AuthFileStampAtFailure = SpotifyFileReader.GetSpotifyAuthLastWriteUtc();
+                    _AuthFileStampAtFailure = _SpotifyAuthService.GetAuthFileStampUtc();
                     _Logger.LogError(
                         "[SPOTIFY] Re-authorization required — the refresh token is no longer valid and retrying " +
                         $"cannot fix it. Run {ReauthScript}; the new token is picked up automatically, no restart " +
