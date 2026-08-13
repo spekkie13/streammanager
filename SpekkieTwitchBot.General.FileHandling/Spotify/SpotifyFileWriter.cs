@@ -10,6 +10,13 @@ public class SpotifyFileWriter(ITextFileWriter fileWriter)
     
     private static readonly string BaseDir = BotPaths.BaseDir;
 
+    // Spotify can hand back a rotated refresh_token on any refresh; if it is not persisted the
+    // bot keeps presenting the superseded one and eventually fails with invalid_grant.
+    public virtual void WriteSpotifyAuthFile(string json)
+    {
+        fileWriter.Write(SpotifyFileReader.SpotifyAuthFilePath, json);
+    }
+
     public virtual void WriteSongFile(string text)
     {
         string[] parts = text.Split(" by ", 2);
