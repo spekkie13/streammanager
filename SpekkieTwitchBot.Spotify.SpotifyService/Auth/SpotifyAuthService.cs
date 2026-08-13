@@ -12,19 +12,30 @@ public class SpotifyAuthService
     private readonly SpotifyFileReader _SpotifyFileReader;
     private readonly SpotifyFileWriter _SpotifyFileWriter;
     private readonly Logger _Logger;
+    // Null in production (nothing registers an HttpMessageHandler, so DI uses the default); tests
+    // supply a stub so the token endpoint can be exercised without touching the network.
+    private readonly HttpMessageHandler? _HttpMessageHandler;
     private static SpotifyAuth? _SpotifyAuth;
     // The auth file is re-read on every (re)configure; only log when its contents actually changed so a
     // reconnect loop can't fill the log with identical "Spotify Auth loaded" lines.
     private static string? _LastLoggedAuth;
 
-    public SpotifyAuthService(SpotifyFileReader spotifyFileReader, SpotifyFileWriter spotifyFileWriter, Logger logger)
+    public SpotifyAuthService(
+        SpotifyFileReader spotifyFileReader,
+        SpotifyFileWriter spotifyFileWriter,
+        Logger logger,
+        HttpMessageHandler? httpMessageHandler = null)
     {
         _SpotifyFileReader = spotifyFileReader;
         _SpotifyFileWriter = spotifyFileWriter;
         _Logger = logger;
+        _HttpMessageHandler = httpMessageHandler;
     }
-    
-    public SpotifyAuth GetSpotifyAuth()
+
+    // When this changes, an out-of-band re-auth has happened and a failed grant is worth retrying.
+    public virtual DateTime GetAuthFileStampUtc() => _SpotifyFileReader.GetSpotifyAuthLastWriteUtc();
+
+    public virtual SpotifyAuth GetSpotifyAuth()
     {
         string jsonData = _SpotifyFileReader.ReadSpotifyAuthFile();
         _SpotifyAuth = JsonConvert.DeserializeObject<SpotifyAuth>(jsonData) ?? new SpotifyAuth();
@@ -39,7 +50,7 @@ public class SpotifyAuthService
         return _SpotifyAuth;
     }
     
-    public async Task<SpotifyAuth> FixAuth(SpotifyAuth spotifyAuth)
+    public virtual async Task<SpotifyAuth> FixAuth(SpotifyAuth spotifyAuth)
     {
         TokenResponse tokenData = await RefreshAccessTokenAsync(spotifyAuth);
         spotifyAuth.Token = tokenData.AccessToken;
@@ -140,7 +151,9 @@ public class SpotifyAuthService
     
     private async Task<TokenResponse> RefreshAccessTokenAsync(SpotifyAuth spotifyAuth)
     {
-        using HttpClient client = new HttpClient();
+        using HttpClient client = _HttpMessageHandler is null
+            ? new HttpClient()
+            : new HttpClient(_HttpMessageHandler, disposeHandler: false);
         // Refresh tokens can contain characters that are not form-body safe (-, _, =) — encode them so a
         // valid token is never rejected as a malformed grant.
         StringContent requestBody = new StringContent(

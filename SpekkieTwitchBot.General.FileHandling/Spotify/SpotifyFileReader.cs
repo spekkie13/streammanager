@@ -16,7 +16,7 @@ public class SpotifyFileReader
     public static string SpotifyAuthFilePath =>
         $"{BaseDir}{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}Spotify.json";
 
-    public string ReadSpotifyAuthFile()
+    public virtual string ReadSpotifyAuthFile()
     {
         string jsonData = _FileReader.Read(SpotifyAuthFilePath);
 
@@ -25,7 +25,7 @@ public class SpotifyFileReader
 
     // Lets callers notice an out-of-band re-auth (Tools/Reauth-Spotify.ps1 rewriting the file)
     // without re-reading and re-parsing it on every poll.
-    public static DateTime GetSpotifyAuthLastWriteUtc()
+    public virtual DateTime GetSpotifyAuthLastWriteUtc()
     {
         string path = SpotifyAuthFilePath;
         return File.Exists(path) ? File.GetLastWriteTimeUtc(path) : DateTime.MinValue;
